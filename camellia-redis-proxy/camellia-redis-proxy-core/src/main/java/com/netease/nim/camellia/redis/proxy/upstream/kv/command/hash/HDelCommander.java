@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -12,10 +13,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * HDEL key field [field ...]
@@ -58,21 +59,46 @@ public class HDelCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
-        int fieldSize = objects.length - 2;
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        Set<BytesKey> fields = new HashSet<>(objects.length - 2);
+        for (int i = 2; i < objects.length; i++) {
+            fields.add(new BytesKey(objects[i]));
+        }
+
+        int delCount = -1;
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
+            if (map != null) {
+                delCount = 0;
+                for (BytesKey field : fields) {
+                    if (map.containsKey(field)) {
+                        delCount ++;
+                        map.remove(field);
+                    }
+                }
+            }
+        }
+        if (delCount >= 0) {
+            KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+        } else {
+            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
+        int fieldSize = fields.size();
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             byte[][] subKeys = new byte[fieldSize][];
-            for (int i=2; i<objects.length; i++) {
-                subKeys[i-2] = keyDesign.hashFieldSubKey(keyMeta, key, objects[i]);
+            int i=0;
+            for (BytesKey field : fields) {
+                subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field.getKey());
+                i++;
             }
             if (encodeVersion == EncodeVersion.version_0) {
-                int delCount = 0;
-                boolean[] exists = kvClient.exists(subKeys);
-                for (boolean exist : exists) {
-                    if (exist) {
-                        delCount ++;
-                    }
+                if (delCount < 0) {
+                    boolean[] exists = kvClient.exists(subKeys);
+                    delCount = Utils.count(exists);
                 }
                 if (delCount > 0) {
                     int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
@@ -95,53 +121,6 @@ public class HDelCommander extends Commander {
             }
         }
 
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-
-        {
-            if (fieldSize == 1) {
-                byte[] field = objects[2];
-
-                byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
-                Command cmd1 = new Command(new byte[][]{RedisCommand.HDEL.raw(), cacheKey, field});
-                Command cmd2 = new Command(new byte[][]{RedisCommand.DEL.raw(), hashFieldCacheKey});
-                List<Command> commands = new ArrayList<>(2);
-                commands.add(cmd1);
-                commands.add(cmd2);
-                List<Reply> replies = sync(cacheRedisTemplate.sendCommand(commands));
-                boolean hit = false;
-                for (Reply reply : replies) {
-                    if (reply instanceof ErrorReply) {
-                        return reply;
-                    }
-                    if (reply instanceof IntegerReply) {
-                        if (((IntegerReply) reply).getInteger() > 0) {
-                            hit = true;
-                        }
-                    }
-                }
-
-                byte[] hashFieldSubKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
-
-                if (!hit && keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
-                    hit = kvClient.exists(hashFieldSubKey);
-                }
-
-                if (hit && keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
-                    int size = BytesUtils.toInt(keyMeta.getExtra());
-                    byte[] extra = BytesUtils.toBytes(size - 1);
-                    keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                    keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-                }
-
-                kvClient.delete(hashFieldSubKey);
-                if (hit || keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
-                    return IntegerReply.REPLY_1;
-                } else {
-                    return IntegerReply.REPLY_0;
-                }
-            }
-        }
-
         List<Command> commands = new ArrayList<>(fieldSize + 1);
 
         byte[][] args = new byte[fieldSize][];
@@ -151,11 +130,13 @@ public class HDelCommander extends Commander {
 
         byte[][] subKeys = new byte[fieldSize][];
 
-        for (int i=2; i<objects.length; i++) {
-            byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, objects[i]);
+        int i=0;
+        for (BytesKey field : fields) {
+            byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field.getKey());
             Command cmd = new Command(new byte[][]{RedisCommand.DEL.raw(), hashFieldCacheKey});
             commands.add(cmd);
-            subKeys[i-2] = keyDesign.hashFieldSubKey(keyMeta, key, objects[i]);
+            subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field.getKey());
+            i++;
         }
         List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commands));
         for (Reply reply : replyList) {
@@ -173,43 +154,24 @@ public class HDelCommander extends Commander {
             }
         }
 
-        if (result != null) {
-            kvClient.batchDelete(subKeys);
-            return result;
+        if (result instanceof IntegerReply) {
+            delCount = ((IntegerReply) result).getInteger().intValue();
         }
+
         if (encodeVersion == EncodeVersion.version_2) {
-            int cacheHitCount = 0;
-            List<byte[]> cacheMissFieldStoreKey = new ArrayList<>();
-            for (int i=1; i<replyList.size(); i++) {
-                Reply reply = replyList.get(i);
-                if (reply instanceof IntegerReply) {
-                    Long integer = ((IntegerReply) reply).getInteger();
-                    if (integer == 0) {
-                        cacheMissFieldStoreKey.add(subKeys[i-1]);
-                    } else {
-                        cacheHitCount ++;
-                    }
+            if (delCount < 0) {
+                boolean[] exists = kvClient.exists(subKeys);
+                delCount = Utils.count(exists);
+            }
+            if (delCount > 0) {
+                int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
+                if (size <= 0) {
+                    keyMetaServer.deleteKeyMeta(key);
                 } else {
-                    cacheMissFieldStoreKey.add(subKeys[i-1]);
+                    byte[] extra = BytesUtils.toBytes(size);
+                    keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+                    keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                 }
-            }
-            if (cacheMissFieldStoreKey.isEmpty()) {
-                return IntegerReply.parse(fieldSize);
-            }
-            int delCount = cacheHitCount;
-            boolean[] exists = kvClient.exists(cacheMissFieldStoreKey.toArray(new byte[0][0]));
-            for (boolean exist : exists) {
-                if (exist) {
-                    delCount ++;
-                }
-            }
-            int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
-            if (size <= 0) {
-                keyMetaServer.deleteKeyMeta(key);
-            } else {
-                byte[] extra = BytesUtils.toBytes(size);
-                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
             }
             kvClient.batchDelete(subKeys);
             return IntegerReply.parse(delCount);

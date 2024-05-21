@@ -53,6 +53,9 @@ public abstract class Hash0Commander extends Commander {
     }
 
     protected final ErrorReply buildCache(byte[] cacheKey, Map<BytesKey, byte[]> map) {
+        if (map.isEmpty()) {
+            return null;
+        }
         //build cache
         byte[][] args1 = new byte[map.size() * 2 + 2][];
         args1[0] = RedisCommand.HSET.raw();

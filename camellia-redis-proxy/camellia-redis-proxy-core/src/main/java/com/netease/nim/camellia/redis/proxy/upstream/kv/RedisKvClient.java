@@ -206,8 +206,8 @@ public class RedisKvClient implements IUpstreamClient {
         gcExecutor.start();
 
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.meta.cache.enable", true);
-        boolean metaLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.mete.local.cache.enable", true);
-        CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, metaLocalCacheEnable);
+
+        CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable);
 
         RedisTemplate cacheRedisTemplate = initRedisTemplate("kv.redis.cache");
         RedisTemplate storeRedisTemplate = initRedisTemplate("kv.redis.store");

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -56,33 +57,39 @@ public class HKeysCommander extends Hash0Commander {
         if (keyMeta.getKeyType() != KeyType.hash) {
             return ErrorReply.WRONG_TYPE;
         }
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-            if (map.isEmpty()) {
-                return MultiBulkReply.EMPTY;
-            }
-            Reply[] replies = new Reply[map.size()];
-            int i = 0;
-            for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
-                replies[i] = new BulkReply(entry.getKey().getKey());
-                i++;
-            }
-            return new MultiBulkReply(replies);
-        }
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
+            if (map != null) {
+                KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply(map);
+            }
+        }
+
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
+            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+            if (cacheConfig.isHashLocalCacheEnable()) {
+                cacheConfig.getHashLRUCache().putAll(cacheKey, map);
+            }
+            return toReply(map);
+        }
+
         Reply reply = checkCache(script, cacheKey, new byte[][]{hgetallCacheMillis()});
         if (reply != null) {
+            KVMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return reply;
         }
 
-        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+        KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        if (map.isEmpty()) {
-            return MultiBulkReply.EMPTY;
+        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            cacheConfig.getHashLRUCache().putAll(cacheKey, map);
         }
 
         ErrorReply errorReply = buildCache(cacheKey, map);
@@ -90,6 +97,13 @@ public class HKeysCommander extends Hash0Commander {
             return errorReply;
         }
 
+        return toReply(map);
+    }
+
+    private MultiBulkReply toReply(Map<BytesKey, byte[]> map) {
+        if (map.isEmpty()) {
+            return MultiBulkReply.EMPTY;
+        }
         Reply[] replies = new Reply[map.size()];
         int i = 0;
         for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {

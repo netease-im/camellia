@@ -1,8 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
+import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
@@ -20,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class DefaultKeyMetaServer implements KeyMetaServer {
 
-    private final ConcurrentLinkedHashMap<BytesKey, KeyMeta> localCache;
+    private final KeyMetaLRUCache keyMetaLRUCache;
     private final ConcurrentLinkedHashMap<BytesKey, Long> delayCacheKeyMap;
     private final KVClient kvClient;
     private final RedisTemplate redisTemplate;
@@ -38,30 +39,27 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 .initialCapacity(cacheConfig.keyMetaCacheDelayMapSize())
                 .maximumWeightedCapacity(cacheConfig.keyMetaCacheDelayMapSize())
                 .build();
-        this.localCache = new ConcurrentLinkedHashMap.Builder<BytesKey, KeyMeta>()
-                .initialCapacity(cacheConfig.metaLocalCacheCapacity())
-                .maximumWeightedCapacity(cacheConfig.metaLocalCacheCapacity())
-                .build();
-        ClusterModeStatus.registerClusterModeSlotRefreshCallback(localCache::clear);
+        this.keyMetaLRUCache = cacheConfig.getKeyMetaLRUCache();
     }
 
     @Override
     public KeyMeta getKeyMeta(byte[] key) {
-        byte[] metaKey = keyDesign.metaKey(key);
-
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            BytesKey bytesKey = new BytesKey(metaKey);
-            KeyMeta keyMeta = localCache.get(bytesKey);
+            KeyMeta keyMeta = keyMetaLRUCache.get(key);
             if (keyMeta != null && keyMeta.isExpire()) {
-                localCache.remove(bytesKey);
+                keyMetaLRUCache.remove(key);
                 keyMeta = null;
             }
             if (keyMeta != null) {
+                KVMonitor.localCache(cacheConfig.getNamespace(), "key_meta");
                 return keyMeta;
             }
         }
 
+        byte[] metaKey = keyDesign.metaKey(key);
+
         if (!cacheConfig.isMetaCacheEnable()) {
+            KVMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
                 return null;
@@ -72,7 +70,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 return null;
             }
             if (cacheConfig.isMetaLocalCacheEnable()) {
-                localCache.put(new BytesKey(metaKey), keyMeta);
+                keyMetaLRUCache.put(key, keyMeta);
             }
             return keyMeta;
         }
@@ -98,10 +96,13 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                     }
                 }
                 if (cacheConfig.isMetaLocalCacheEnable()) {
-                    localCache.put(new BytesKey(metaKey), keyMeta);
+                    keyMetaLRUCache.put(key, keyMeta);
                 }
+                KVMonitor.redisCache(cacheConfig.getNamespace(), "key_meta");
                 return keyMeta;
             }
+            KVMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
+
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
                 return null;
@@ -125,7 +126,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
             }
             if (cacheConfig.isMetaLocalCacheEnable()) {
-                localCache.put(new BytesKey(metaKey), keyMeta);
+                keyMetaLRUCache.put(key, keyMeta);
             }
             return keyMeta;
         }
@@ -147,7 +148,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     public void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta) {
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            localCache.put(new BytesKey(metaKey), keyMeta);
+            keyMetaLRUCache.put(key, keyMeta);
         }
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply;
@@ -171,7 +172,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     public void deleteKeyMeta(byte[] key) {
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            localCache.remove(new BytesKey(metaKey));
+            keyMetaLRUCache.remove(key);
         }
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply = sync(redisTemplate.sendDel(metaKey));
@@ -185,13 +186,14 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public boolean existsKeyMeta(byte[] key) {
-        byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            KeyMeta keyMeta = localCache.get(new BytesKey(metaKey));
+            KeyMeta keyMeta = keyMetaLRUCache.get(key);
             if (keyMeta != null) {
                 return !keyMeta.isExpire();
             }
         }
+
+        byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply = sync(redisTemplate.sendExists(metaKey));
             if (reply instanceof ErrorReply) {
@@ -226,7 +228,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         if (keyMeta == null || keyMeta.isExpire()) {
             kvClient.delete(metaKey);
             if (cacheConfig.isMetaLocalCacheEnable()) {
-                localCache.remove(new BytesKey(metaKey));
+                keyMetaLRUCache.remove(key);
             }
             if (cacheConfig.isMetaCacheEnable()) {
                 Reply reply = sync(redisTemplate.sendDel(metaKey));

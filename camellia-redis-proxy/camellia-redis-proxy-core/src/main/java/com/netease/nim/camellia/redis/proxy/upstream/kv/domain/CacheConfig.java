@@ -1,20 +1,56 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by caojiajun on 2024/4/8
  */
 public class CacheConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
+
     private final String namespace;
     private final boolean metaCacheEnable;
-    private final boolean metaLocalCacheEnable;
+    private boolean metaLocalCacheEnable;
+    private boolean hashLocalCacheEnable;
+    private final HashLRUCache hashLRUCache;
+    private final KeyMetaLRUCache keyMetaLRUCache;
 
-    public CacheConfig(String namespace, boolean metaCacheEnable, boolean metaLocalCacheEnable) {
+    public CacheConfig(String namespace, boolean metaCacheEnable) {
         this.namespace = namespace;
         this.metaCacheEnable = metaCacheEnable;
-        this.metaLocalCacheEnable = metaLocalCacheEnable;
+        initCacheConfig();
+        this.hashLRUCache = new HashLRUCache(namespace);
+        this.keyMetaLRUCache = new KeyMetaLRUCache(namespace);
+        ProxyDynamicConf.registerCallback(this::initCacheConfig);
+    }
+
+    private void initCacheConfig() {
+        boolean metaLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.mete.local.cache.enable", true);
+        if ((this.metaLocalCacheEnable && !metaLocalCacheEnable) || (!this.metaLocalCacheEnable && metaLocalCacheEnable)) {
+            this.metaLocalCacheEnable = metaLocalCacheEnable;
+            if (!metaLocalCacheEnable) {
+                keyMetaLRUCache.clear();
+            }
+            logger.info("kv.key.mete.local.cache.enable = {}", metaLocalCacheEnable);
+        }
+        boolean hashLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.hash.local.cache.enable", true);
+        if ((this.hashLocalCacheEnable && !hashLocalCacheEnable) || (!this.hashLocalCacheEnable && hashLocalCacheEnable)) {
+            this.hashLocalCacheEnable = hashLocalCacheEnable;
+            if (!hashLocalCacheEnable) {
+                hashLRUCache.clear();
+            }
+            logger.info("kv.hash.local.cache.enable = {}", hashLocalCacheEnable);
+        }
+    }
+
+    public String getNamespace() {
+        return namespace;
     }
 
     public boolean isMetaCacheEnable() {
@@ -25,8 +61,16 @@ public class CacheConfig {
         return metaLocalCacheEnable;
     }
 
-    public int metaLocalCacheCapacity() {
-        return RedisKvConf.getInt(namespace, "kv.key.meta.local.cache.capacity", 100000);
+    public boolean isHashLocalCacheEnable() {
+        return hashLocalCacheEnable;
+    }
+
+    public HashLRUCache getHashLRUCache() {
+        return hashLRUCache;
+    }
+
+    public KeyMetaLRUCache getKeyMetaLRUCache() {
+        return keyMetaLRUCache;
     }
 
     public long metaCacheMillis() {

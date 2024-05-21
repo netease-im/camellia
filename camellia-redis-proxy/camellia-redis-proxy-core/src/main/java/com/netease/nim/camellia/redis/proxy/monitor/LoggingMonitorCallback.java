@@ -128,6 +128,13 @@ public class LoggingMonitorCallback implements MonitorCallback {
                 logger.info("resource={},command={},msg={},count={}", upstreamFailStats.getResource(),
                         upstreamFailStats.getCommand(), upstreamFailStats.getMsg(), upstreamFailStats.getCount());
             }
+
+            logger.info("====kv.stats====");
+            List<KVStats> kvStatsList = stats.getKvStatsList();
+            for (KVStats kvStats : kvStatsList) {
+                logger.info("namespace={},operation={},local={},redis={},store={},localCacheHit={},redisCacheHit={}", kvStats.getNamespace(), kvStats.getOperation(),
+                        kvStats.getLocal(), kvStats.getRedis(), kvStats.getStore(), kvStats.getLocalCacheHit(), kvStats.getRedisCacheHit());
+            }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

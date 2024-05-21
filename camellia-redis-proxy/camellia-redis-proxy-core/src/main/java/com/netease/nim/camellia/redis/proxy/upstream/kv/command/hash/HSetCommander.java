@@ -2,7 +2,9 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -95,6 +97,29 @@ public class HSetCommander extends Commander {
                 return ErrorReply.WRONG_TYPE;
             }
         }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        int existsCount = -1;
+        if (!first && cacheConfig.isHashLocalCacheEnable()) {
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+            Map<BytesKey, byte[]> map = hashLRUCache.hgetAll(cacheKey);
+            if (map != null) {
+                existsCount = 0;
+                for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
+                    if (map.containsKey(entry.getKey())) {
+                        existsCount ++;
+                    }
+                    map.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if (existsCount >= 0) {
+            KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+        } else {
+            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (first || encodeVersion == EncodeVersion.version_1) {
@@ -123,12 +148,9 @@ public class HSetCommander extends Commander {
                 subKeys[i] = subKey;
                 i++;
             }
-            boolean[] exists = kvClient.exists(subKeys);
-            int existsCount = 0;
-            for (boolean exist : exists) {
-                if (exist) {
-                    existsCount ++;
-                }
+            if (existsCount < 0) {
+                boolean[] exists = kvClient.exists(subKeys);
+                existsCount = Utils.count(exists);
             }
             int add = list.size() - existsCount;
             if (add > 0) {
@@ -143,7 +165,6 @@ public class HSetCommander extends Commander {
         }
 
         //param parse
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         List<Command> commands = new ArrayList<>(fieldMap.size());
         List<KeyValue> list = new ArrayList<>(fieldMap.size());
         List<byte[]> fieldList = new ArrayList<>(fieldMap.size());
@@ -200,18 +221,16 @@ public class HSetCommander extends Commander {
         }
 
         if (keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
-            int existsCount = existsFields;
-            if (!unknownFields.isEmpty()) {
-                byte[][] subKeys = new byte[unknownFields.size()][];
-                for (int i=0; i<unknownFields.size(); i++) {
-                    byte[] field = unknownFields.get(i);
-                    subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field);
-                }
-                boolean[] exists = kvClient.exists(subKeys);
-                for (boolean exist : exists) {
-                    if (exist) {
-                        existsCount ++;
+            if (existsCount < 0) {
+                existsCount = existsFields;
+                if (!unknownFields.isEmpty()) {
+                    byte[][] subKeys = new byte[unknownFields.size()][];
+                    for (int i = 0; i < unknownFields.size(); i++) {
+                        byte[] field = unknownFields.get(i);
+                        subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field);
                     }
+                    boolean[] exists = kvClient.exists(subKeys);
+                    existsCount += Utils.count(exists);
                 }
             }
             kvClient.batchPut(list);

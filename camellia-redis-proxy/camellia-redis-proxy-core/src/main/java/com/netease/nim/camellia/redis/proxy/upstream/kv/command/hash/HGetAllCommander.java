@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -13,6 +14,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -59,33 +61,41 @@ public class HGetAllCommander extends Hash0Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-            if (map.isEmpty()) {
-                return MultiBulkReply.EMPTY;
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
+            if (map != null) {
+                KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply(map);
             }
-            Reply[] replies = new Reply[map.size() * 2];
-            int i = 0;
-            for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
-                replies[i] = new BulkReply(entry.getKey().getKey());
-                replies[i + 1] = new BulkReply(entry.getValue());
-                i += 2;
-            }
-            return new MultiBulkReply(replies);
         }
 
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
+            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+            if (cacheConfig.isHashLocalCacheEnable()) {
+                cacheConfig.getHashLRUCache().putAll(cacheKey, map);
+            }
+            return toReply(map);
+        }
 
         Reply reply = checkCache(script, cacheKey, new byte[][]{hgetallCacheMillis()});
         if (reply != null) {
+            KVMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (cacheConfig.isHashLocalCacheEnable()) {
+                if (reply instanceof MultiBulkReply) {
+                    cacheConfig.getHashLRUCache().putAll(cacheKey, toMap((MultiBulkReply) reply));
+                }
+            }
             return reply;
         }
+        KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-
-        if (map.isEmpty()) {
-            return MultiBulkReply.EMPTY;
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            cacheConfig.getHashLRUCache().putAll(cacheKey, map);
         }
 
         ErrorReply errorReply = buildCache(cacheKey, map);
@@ -93,6 +103,13 @@ public class HGetAllCommander extends Hash0Commander {
             return errorReply;
         }
 
+        return toReply(map);
+    }
+
+    private MultiBulkReply toReply(Map<BytesKey, byte[]> map) {
+        if (map.isEmpty()) {
+            return MultiBulkReply.EMPTY;
+        }
         Reply[] replies = new Reply[map.size() * 2];
         int i = 0;
         for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
@@ -101,6 +118,19 @@ public class HGetAllCommander extends Hash0Commander {
             i += 2;
         }
         return new MultiBulkReply(replies);
+    }
+
+    private Map<BytesKey, byte[]> toMap(MultiBulkReply reply) {
+        Reply[] replies = reply.getReplies();
+        Map<BytesKey, byte[]> map = new HashMap<>(replies.length / 2);
+        for (int i = 0; i < replies.length; i += 2) {
+            Reply field = replies[i];
+            Reply value = replies[i + 1];
+            if (field instanceof BulkReply && value instanceof BulkReply) {
+                map.put(new BytesKey(((BulkReply) field).getRaw()), ((BulkReply) value).getRaw());
+            }
+        }
+        return map;
     }
 
 }

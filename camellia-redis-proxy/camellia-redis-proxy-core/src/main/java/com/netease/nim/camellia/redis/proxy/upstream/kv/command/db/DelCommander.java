@@ -43,16 +43,18 @@ public class DelCommander extends Commander {
             ret = 1;
             gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
             //
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             KeyType keyType = keyMeta.getKeyType();
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
             if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1
                     || encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
                 storeRedisTemplate.sendDel(cacheKey);
             }
             if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
                 cacheRedisTemplate.sendDel(cacheKey);
+            }
+            if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
+                cacheConfig.getHashLRUCache().del(cacheKey);
             }
         }
         return IntegerReply.parse(ret);
