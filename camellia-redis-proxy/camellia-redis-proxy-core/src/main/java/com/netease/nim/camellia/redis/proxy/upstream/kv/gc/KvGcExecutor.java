@@ -4,6 +4,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.KVGcMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -19,7 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
@@ -30,23 +31,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by caojiajun on 2024/4/22
  */
 public class KvGcExecutor {
     private static final Logger logger = LoggerFactory.getLogger(KvGcExecutor.class);
-
-    private static final LongAdder deleteSubKeys = new LongAdder();
-    static {
-        ExecutorUtils.scheduleAtFixedRate(() -> {
-            long count = deleteSubKeys.sumThenReset();
-            if (count > 0) {
-                logger.info("delete sub keys, count = {}", count);
-            }
-        }, 30, 30, TimeUnit.SECONDS);
-    }
 
     private final KVClient kvClient;
     private final KeyDesign keyDesign;
@@ -79,6 +69,10 @@ public class KvGcExecutor {
                 this.redisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(env, resourceTable));
             }
         }
+    }
+
+    public int pending() {
+        return deleteExecutor.getQueueSize();
     }
 
     public void start() {
@@ -151,6 +145,7 @@ public class KvGcExecutor {
                         if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
                             kvClient.checkAndDelete(startKey, keyValue.getValue());
                             deleteMetaKeys ++;
+                            KVGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
                         } else {
                             //如果kv不支持cas的删除，则hash到特定的proxy节点处理，避免并发问题
                             try {
@@ -159,6 +154,7 @@ public class KvGcExecutor {
                                     logger.error("send clean expired key meta in kv failed, reply = {}", ((ErrorReply) reply).getError());
                                 } else {
                                     deleteMetaKeys++;
+                                    KVGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
                                 }
                             } catch (Exception e) {
                                 logger.error("send clean expired key meta in kv error", e);
@@ -209,6 +205,7 @@ public class KvGcExecutor {
                 if (!toDeleteKeys.isEmpty()) {
                     kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
                     deleteSubKeys += toDeleteKeys.size();
+                    KVGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
                 }
                 if (scan.size() < limit) {
                     break;
@@ -328,7 +325,7 @@ public class KvGcExecutor {
                 if (logger.isDebugEnabled()) {
                     logger.debug("sub key delete, count = {}", count);
                 }
-                deleteSubKeys.add(count);
+                KVGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), count);
             } catch (Exception e) {
                 logger.warn("add delete task error, ex = {}", e.toString());
             }

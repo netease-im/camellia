@@ -129,12 +129,25 @@ public class LoggingMonitorCallback implements MonitorCallback {
                         upstreamFailStats.getCommand(), upstreamFailStats.getMsg(), upstreamFailStats.getCount());
             }
 
-            logger.info("====kv.stats====");
-            List<KVStats> kvStatsList = stats.getKvStatsList();
-            for (KVStats kvStats : kvStatsList) {
-                logger.info("namespace={},operation={},local={},redis={},store={},localCacheHit={},redisCacheHit={}", kvStats.getNamespace(), kvStats.getOperation(),
-                        kvStats.getLocal(), kvStats.getRedis(), kvStats.getStore(), kvStats.getLocalCacheHit(), kvStats.getRedisCacheHit());
+            logger.info("====kv.cache.stats====");
+            List<KVCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
+            for (KVCacheStats kvCacheStats : kvCacheStatsList) {
+                logger.info("namespace={},operation={},local={},redis={},store={},localCacheHit={},redisCacheHit={}", kvCacheStats.getNamespace(), kvCacheStats.getOperation(),
+                        kvCacheStats.getLocal(), kvCacheStats.getRedis(), kvCacheStats.getStore(), kvCacheStats.getLocalCacheHit(), kvCacheStats.getRedisCacheHit());
             }
+
+            logger.info("====kv.executor.stats====");
+            List<KVExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
+            for (KVExecutorStats kvExecutorStats : kvExecutorStatsList) {
+                logger.info("name={},pending={}", kvExecutorStats.getName(), kvExecutorStats.getPending());
+            }
+
+            logger.info("====kv.gc.stats====");
+            List<KVGcStats> kvGcStatsList = stats.getKvGcStatsList();
+            for (KVGcStats kvGcStats : kvGcStatsList) {
+                logger.info("namespace={},deleteMetakeys={},deleteSubKeys={}", kvGcStats.getNamespace(), kvGcStats.getDeleteMetaKeys(), kvGcStats.getDeleteSubKeys());
+            }
+
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

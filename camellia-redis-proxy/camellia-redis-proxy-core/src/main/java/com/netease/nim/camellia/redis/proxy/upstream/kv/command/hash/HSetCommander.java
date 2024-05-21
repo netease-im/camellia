@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
@@ -115,9 +115,9 @@ public class HSetCommander extends Commander {
             }
         }
         if (existsCount >= 0) {
-            KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
         } else {
-            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();

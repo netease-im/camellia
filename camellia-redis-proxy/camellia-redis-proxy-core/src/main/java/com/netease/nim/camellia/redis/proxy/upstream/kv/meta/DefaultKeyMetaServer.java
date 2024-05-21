@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
@@ -51,7 +51,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 keyMeta = null;
             }
             if (keyMeta != null) {
-                KVMonitor.localCache(cacheConfig.getNamespace(), "key_meta");
+                KVCacheMonitor.localCache(cacheConfig.getNamespace(), "key_meta");
                 return keyMeta;
             }
         }
@@ -59,7 +59,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         byte[] metaKey = keyDesign.metaKey(key);
 
         if (!cacheConfig.isMetaCacheEnable()) {
-            KVMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
                 return null;
@@ -98,10 +98,10 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 if (cacheConfig.isMetaLocalCacheEnable()) {
                     keyMetaLRUCache.put(key, keyMeta);
                 }
-                KVMonitor.redisCache(cacheConfig.getNamespace(), "key_meta");
+                KVCacheMonitor.redisCache(cacheConfig.getNamespace(), "key_meta");
                 return keyMeta;
             }
-            KVMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
 
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {

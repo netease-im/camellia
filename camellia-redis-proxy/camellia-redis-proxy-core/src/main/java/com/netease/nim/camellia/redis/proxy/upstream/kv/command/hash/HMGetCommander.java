@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -82,14 +82,14 @@ public class HMGetCommander extends Commander {
                     byte[] bytes = map.get(new BytesKey(objects[i - 2]));
                     replies[i - 2] = bytes == null ? BulkReply.NIL_REPLY : new BulkReply(bytes);
                 }
-                KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new MultiBulkReply(replies);
             }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             List<BytesKey> list = new ArrayList<>(objects.length - 2);
             byte[][] subKeys = new byte[objects.length - 2][];
             for (int i=2; i<objects.length; i++) {
@@ -126,7 +126,7 @@ public class HMGetCommander extends Commander {
                 String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
                 if (type.equalsIgnoreCase("1")) {
                     cacheRedisTemplate.sendPExpire(key, cacheConfig.hgetallCacheMillis());
-                    KVMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    KVCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return replies[1];
                 }
             }
@@ -158,11 +158,11 @@ public class HMGetCommander extends Commander {
                 cacheMissingFields.add(field);
             }
             if (cacheMissingFields.isEmpty()) {
-                KVMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                KVCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(fields, hitMap);
             }
 
-            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
             byte[][] subKeys = new byte[cacheMissingFields.size()][];
             int i=0;

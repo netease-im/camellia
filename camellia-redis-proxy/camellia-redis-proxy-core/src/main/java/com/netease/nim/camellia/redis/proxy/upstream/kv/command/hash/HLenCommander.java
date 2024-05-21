@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -55,11 +55,11 @@ public class HLenCommander extends Commander {
             if (cacheConfig.isHashLocalCacheEnable()) {
                 long hlen = cacheConfig.getHashLRUCache().hlen(cacheKey);
                 if (hlen >= 0) {
-                    KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return IntegerReply.parse(hlen);
                 }
             }
-            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             long size = getSizeFromKv(keyMeta, key);
             return IntegerReply.parse(size);
         } else if (encodeVersion == EncodeVersion.version_3) {
@@ -67,7 +67,7 @@ public class HLenCommander extends Commander {
             if (cacheConfig.isHashLocalCacheEnable()) {
                 long hlen = cacheConfig.getHashLRUCache().hlen(cacheKey);
                 if (hlen >= 0) {
-                    KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return IntegerReply.parse(hlen);
                 }
             }
@@ -75,11 +75,11 @@ public class HLenCommander extends Commander {
             if (reply instanceof IntegerReply) {
                 Long size = ((IntegerReply) reply).getInteger();
                 if (size != null && size > 0) {
-                    KVMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    KVCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return reply;
                 }
             }
-            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             long size = getSizeFromKv(keyMeta, key);
             return IntegerReply.parse(size);
         } else {

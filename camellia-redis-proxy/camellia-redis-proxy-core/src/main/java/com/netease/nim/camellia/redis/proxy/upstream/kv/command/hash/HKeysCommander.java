@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -63,7 +63,7 @@ public class HKeysCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
             if (map != null) {
-                KVMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(map);
             }
         }
@@ -71,7 +71,7 @@ public class HKeysCommander extends Hash0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (cacheConfig.isHashLocalCacheEnable()) {
                 cacheConfig.getHashLRUCache().putAll(cacheKey, map);
@@ -81,11 +81,11 @@ public class HKeysCommander extends Hash0Commander {
 
         Reply reply = checkCache(script, cacheKey, new byte[][]{hgetallCacheMillis()});
         if (reply != null) {
-            KVMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KVCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return reply;
         }
 
-        KVMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {

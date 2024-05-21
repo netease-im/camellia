@@ -39,7 +39,9 @@ public class Stats {
     private List<HotKeyCacheStats> hotKeyCacheStatsList = new ArrayList<>();
     private List<SlowCommandStats> slowCommandStatsList = new ArrayList<>();
     private List<UpstreamFailStats> upstreamFailStatsList = new ArrayList<>();
-    private List<KVStats> kvStatsList = new ArrayList<>();
+    private List<KVCacheStats> kvCacheStatsList = new ArrayList<>();
+    private List<KVExecutorStats> kvExecutorStatsList = new ArrayList<>();
+    private List<KVGcStats> kvGcStatsList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -257,11 +259,27 @@ public class Stats {
         this.upstreamFailStatsList = upstreamFailStatsList;
     }
 
-    public List<KVStats> getKvStatsList() {
-        return kvStatsList;
+    public List<KVCacheStats> getKvCacheStatsList() {
+        return kvCacheStatsList;
     }
 
-    public void setKvStatsList(List<KVStats> kvStatsList) {
-        this.kvStatsList = kvStatsList;
+    public void setKvCacheStatsList(List<KVCacheStats> kvCacheStatsList) {
+        this.kvCacheStatsList = kvCacheStatsList;
+    }
+
+    public List<KVExecutorStats> getKvExecutorStatsList() {
+        return kvExecutorStatsList;
+    }
+
+    public void setKvExecutorStatsList(List<KVExecutorStats> kvExecutorStatsList) {
+        this.kvExecutorStatsList = kvExecutorStatsList;
+    }
+
+    public List<KVGcStats> getKvGcStatsList() {
+        return kvGcStatsList;
+    }
+
+    public void setKvGcStatsList(List<KVGcStats> kvGcStatsList) {
+        this.kvGcStatsList = kvGcStatsList;
     }
 }

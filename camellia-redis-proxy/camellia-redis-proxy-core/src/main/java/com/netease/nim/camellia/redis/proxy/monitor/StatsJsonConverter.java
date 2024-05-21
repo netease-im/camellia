@@ -314,6 +314,43 @@ public class StatsJsonConverter {
             upstreamFailStatsJsonArray.add(upstreamFailStatsJson);
         }
         monitorJson.put("upstreamFailStats", upstreamFailStatsJsonArray);
+
+        List<KVCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
+        JSONArray kvCacheStatsJsonArray = new JSONArray();
+        for (KVCacheStats kvCacheStats : kvCacheStatsList) {
+            JSONObject kvStatsJson = new JSONObject();
+            kvStatsJson.put("namespace", kvCacheStats.getNamespace());
+            kvStatsJson.put("operation", kvCacheStats.getOperation());
+            kvStatsJson.put("local", kvCacheStats.getLocal());
+            kvStatsJson.put("redis", kvCacheStats.getRedis());
+            kvStatsJson.put("store", kvCacheStats.getStore());
+            kvStatsJson.put("localCacheHit", kvCacheStats.getLocalCacheHit());
+            kvStatsJson.put("redisCacheHit", kvCacheStats.getRedisCacheHit());
+            kvCacheStatsJsonArray.add(kvStatsJson);
+        }
+        monitorJson.put("kvCacheStats", kvCacheStatsJsonArray);
+
+        List<KVExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
+        JSONArray kvExecutorJsonArray = new JSONArray();
+        for (KVExecutorStats kvExecutorStats : kvExecutorStatsList) {
+            JSONObject kvExecutorJson = new JSONObject();
+            kvExecutorJson.put("name", kvExecutorStats.getName());
+            kvExecutorJson.put("pending", kvExecutorStats.getPending());
+            kvExecutorJsonArray.add(kvExecutorJson);
+        }
+        monitorJson.put("kvExecutorStats", kvExecutorJsonArray);
+
+        List<KVGcStats> kvGcStatsList = stats.getKvGcStatsList();
+        JSONArray kvGcStatsJsonArray = new JSONArray();
+        for (KVGcStats kvGcStats : kvGcStatsList) {
+            JSONObject kvGcStatsJson = new JSONObject();
+            kvGcStatsJson.put("namespace", kvGcStats.getNamespace());
+            kvGcStatsJson.put("deleteMetaKeys", kvGcStats.getDeleteMetaKeys());
+            kvGcStatsJson.put("deleteSubKeys", kvGcStats.getDeleteSubKeys());
+            kvGcStatsJsonArray.add(kvGcStatsJson);
+        }
+        monitorJson.put("kvGcStats", kvGcStatsJsonArray);
+
         return monitorJson.toJSONString();
     }
 }
