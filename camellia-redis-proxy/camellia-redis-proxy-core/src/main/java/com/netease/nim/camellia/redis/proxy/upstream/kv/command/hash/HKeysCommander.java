@@ -81,7 +81,7 @@ public class HKeysCommander extends Hash0Commander {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().putAll(cacheKey, map);
+                cacheConfig.getHashLRUCache().putAllForRead(cacheKey, map);
             }
             return toReply(map);
         }
@@ -96,7 +96,7 @@ public class HKeysCommander extends Hash0Commander {
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
-            cacheConfig.getHashLRUCache().putAll(cacheKey, map);
+            cacheConfig.getHashLRUCache().putAllForRead(cacheKey, map);
         }
 
         ErrorReply errorReply = buildCache(cacheKey, map);

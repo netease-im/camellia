@@ -127,12 +127,21 @@ public class HSetCommander extends Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
             HashLRUCache.LRUCacheWriteResult cacheWriteResult = hashLRUCache.hset(cacheKey, fieldMap);
+            if (cacheWriteResult == null) {
+                if (first) {
+                    hashLRUCache.putAllForWrite(cacheKey, fieldMap);
+                    cacheWriteResult = new HashLRUCache.LRUCacheWriteResult(fieldMap.size(), fieldMap);
+                }
+            }
+
             if (cacheWriteResult != null && result == null) {
                 existsCount = cacheWriteResult.getInfluencedFields();
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 result = hashWriteBuffer.put(cacheKey, cacheWriteResult.getCache());
             }
+
         }
+
         if (result == null) {
             result = NoOpResult.INSTANCE;
         }

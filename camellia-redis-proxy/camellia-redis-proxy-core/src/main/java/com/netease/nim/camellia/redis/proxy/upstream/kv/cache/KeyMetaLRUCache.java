@@ -30,13 +30,14 @@ public class KeyMetaLRUCache {
     private void rebuild() {
         int capacity = RedisKvConf.getInt(namespace, "kv.key.meta.lru.cache.capacity", 100000);
         if (this.capacity != capacity) {
-            if (this.localCache != null) {
-                this.localCache.clear();
+            if (localCache == null) {
+                this.localCache = new ConcurrentLinkedHashMap.Builder<BytesKey, KeyMeta>()
+                        .initialCapacity(capacity)
+                        .maximumWeightedCapacity(capacity)
+                        .build();
+            } else {
+                this.localCache.setCapacity(capacity);
             }
-            this.localCache = new ConcurrentLinkedHashMap.Builder<BytesKey, KeyMeta>()
-                    .initialCapacity(capacity)
-                    .maximumWeightedCapacity(capacity)
-                    .build();
             logger.info("key meta lru cache build, capacity = {}", capacity);
         }
         this.capacity = capacity;
