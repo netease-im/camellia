@@ -135,6 +135,7 @@ public class HashLRUCache {
 
     public void clear() {
         localCache.clear();
+        localCacheForWrite.clear();
     }
 
     private LRUCacheWriteResult hset0(ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> cache, byte[] key, Map<BytesKey, byte[]> fieldMap) {
