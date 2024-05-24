@@ -29,7 +29,7 @@ public class HashLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.hash.local.cache.capacity", 100000);
+        int capacity = RedisKvConf.getInt(namespace, "kv.hash.lru.cache.capacity", 100000);
         if (this.capacity != capacity) {
             if (this.localCache != null) {
                 this.localCache.clear();
