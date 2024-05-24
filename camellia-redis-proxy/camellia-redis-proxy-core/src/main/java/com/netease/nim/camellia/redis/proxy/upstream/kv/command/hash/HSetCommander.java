@@ -126,19 +126,11 @@ public class HSetCommander extends Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-            Map<BytesKey, byte[]> map = hashLRUCache.hgetAll(cacheKey);
-            if (map != null) {
-                existsCount = 0;
-                for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
-                    if (map.containsKey(entry.getKey())) {
-                        existsCount ++;
-                    }
-                    map.put(entry.getKey(), entry.getValue());
-                }
-                if (result == null) {
-                    result = hashWriteBuffer.put(cacheKey, map);
-                }
+            HashLRUCache.LRUCacheWriteResult cacheWriteResult = hashLRUCache.hset(cacheKey, fieldMap);
+            if (cacheWriteResult != null && result == null) {
+                existsCount = cacheWriteResult.getInfluencedFields();
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                result = hashWriteBuffer.put(cacheKey, cacheWriteResult.getCache());
             }
         }
         if (result == null) {

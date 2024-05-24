@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -73,7 +74,7 @@ public class HDelCommander extends Commander {
 
         int delCount = -1;
 
-        final Result result;
+        Result result = null;
         boolean deleteAll = false;
         WriteBufferValue<Map<BytesKey, byte[]>> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
@@ -94,21 +95,15 @@ public class HDelCommander extends Commander {
                 return IntegerReply.REPLY_0;
             }
             deleteAll = map.isEmpty();
-        } else {
-            result = NoOpResult.INSTANCE;
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
-            if (map != null) {
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+            HashLRUCache.LRUCacheWriteResult cacheWriteResult = hashLRUCache.hdel(cacheKey, fields);
+            if (cacheWriteResult != null && result == null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                delCount = 0;
-                for (BytesKey field : fields) {
-                    byte[] remove = map.remove(field);
-                    if (remove != null) {
-                        delCount ++;
-                    }
-                }
+                delCount = cacheWriteResult.getInfluencedFields();
+                result = hashWriteBuffer.put(cacheKey, cacheWriteResult.getCache());
             }
         }
         if (delCount < 0) {
@@ -119,6 +114,10 @@ public class HDelCommander extends Commander {
                 return IntegerReply.parse(fields.size());
             }
             return IntegerReply.REPLY_0;
+        }
+
+        if (result == null) {
+            result = NoOpResult.INSTANCE;
         }
 
         int fieldSize = fields.size();

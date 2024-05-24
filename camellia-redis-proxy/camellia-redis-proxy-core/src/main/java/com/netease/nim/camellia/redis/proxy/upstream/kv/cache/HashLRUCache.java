@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by caojiajun on 2024/5/21
@@ -51,6 +52,36 @@ public class HashLRUCache {
         return localCache.get(new BytesKey(key));
     }
 
+    public LRUCacheWriteResult hset(byte[] key, Map<BytesKey, byte[]> fieldMap) {
+        Map<BytesKey, byte[]> map = localCache.get(new BytesKey(key));
+        if (map == null) {
+            return null;
+        }
+        int count = 0;
+        for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
+            byte[] put = map.put(entry.getKey(), entry.getValue());
+            if (put != null) {
+                count ++;
+            }
+        }
+        return new LRUCacheWriteResult(count, map);
+    }
+
+    public LRUCacheWriteResult hdel(byte[] key, Set<BytesKey> fields) {
+        Map<BytesKey, byte[]> map = localCache.get(new BytesKey(key));
+        if (map == null) {
+            return null;
+        }
+        int count = 0;
+        for (BytesKey field : fields) {
+            byte[] remove = map.remove(field);
+            if (remove != null) {
+                count ++;
+            }
+        }
+        return new LRUCacheWriteResult(count, map);
+    }
+
     public long hlen(byte[] key) {
         Map<BytesKey, byte[]> map = localCache.get(new BytesKey(key));
         if (map == null) {
@@ -71,12 +102,22 @@ public class HashLRUCache {
         localCache.remove(new BytesKey(key));
     }
 
-    public void hset(byte[] key, byte[] field, byte[] value) {
-        Map<BytesKey, byte[]> map = localCache.get(new BytesKey(key));
-        if (map == null) {
-            return;
+    public static class LRUCacheWriteResult {
+        private final int influencedFields;
+        private final Map<BytesKey, byte[]> cache;
+
+        public LRUCacheWriteResult(int influencedFields, Map<BytesKey, byte[]> cache) {
+            this.influencedFields = influencedFields;
+            this.cache = cache;
         }
-        map.put(new BytesKey(field), value);
+
+        public int getInfluencedFields() {
+            return influencedFields;
+        }
+
+        public Map<BytesKey, byte[]> getCache() {
+            return cache;
+        }
     }
 
     public void clear() {

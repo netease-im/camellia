@@ -120,9 +120,8 @@ public class WriteBuffer<T> {
     }
 
     private Deque<WriteBufferValue<T>> checkDeque(BytesKey bytesKey) {
-        Deque<WriteBufferValue<T>> deque;
+        Deque<WriteBufferValue<T>> deque = writeBuffer.get(bytesKey);
         if (writeBufferSize.sum() > maxWriteBufferSize) {
-            deque = writeBuffer.get(bytesKey);
             if (deque == null) {
                 return null;
             }
@@ -132,7 +131,9 @@ public class WriteBuffer<T> {
             }
             return deque;
         }
-        deque = new ArrayDeque<>();
+        if (deque == null) {
+            deque = new ArrayDeque<>();
+        }
         writeBuffer.put(bytesKey, deque);
         return deque;
     }
