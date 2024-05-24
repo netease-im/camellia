@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor.model;
 /**
  * Created by caojiajun on 2024/5/21
  */
-public class KVGcStats {
+public class KvGcStats {
 
     private String namespace;
     private long deleteMetaKeys;

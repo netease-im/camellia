@@ -18,15 +18,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by caojiajun on 2024/4/17
  */
-public class RedisKvClientExecutor {
+public class KvExecutors {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisKvClientExecutor.class);
+    private static final Logger logger = LoggerFactory.getLogger(KvExecutors.class);
 
-    private static volatile RedisKvClientExecutor INSTANCE;
+    private static volatile KvExecutors INSTANCE;
 
-    private final CamelliaHashedExecutor executor;
+    private final CamelliaHashedExecutor commandExecutor;
+    private final CamelliaHashedExecutor asyncWriteExecutor;
 
-    private RedisKvClientExecutor() {
+    private KvExecutors() {
         EventLoopGroup eventLoopGroup;
         int nettyWorkThreads = ProxyDynamicConf.getInt("kv.redis.netty.work.threads", SysUtils.getCpuNum() * 2);
         NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
@@ -42,24 +43,33 @@ public class RedisKvClientExecutor {
 
         Runnable workThreadInitCallback = () -> RedisConnectionHub.getInstance().updateEventLoop(eventLoopGroup.next());
 
-        int threads = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
-        int queueSize = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
-        executor = new CamelliaHashedExecutor("kv-command-executor", threads, queueSize, new CamelliaHashedExecutor.AbortPolicy(), workThreadInitCallback);
-        logger.info("RedisKvClientExecutor init success, nettyWorkThreads = {}, threads = {}, queueSize = {}", nettyWorkThreads, threads, queueSize);
+        int threads1 = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
+        int queueSize1 = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
+        commandExecutor = new CamelliaHashedExecutor("kv-command-executor", threads1, queueSize1, new CamelliaHashedExecutor.AbortPolicy(), workThreadInitCallback);
+        logger.info("KvCommandExecutor init success, nettyWorkThreads = {}, threads = {}, queueSize = {}", nettyWorkThreads, threads1, queueSize1);
+
+        int threads2 = ProxyDynamicConf.getInt("kv.async.write.executor.threads", SysUtils.getCpuNum() * 4);
+        int queueSize2 = ProxyDynamicConf.getInt("kv.async.write.executor.queue.size", 1000000);
+        asyncWriteExecutor = new CamelliaHashedExecutor("kv-async-write-executor", threads2, queueSize2, new CamelliaHashedExecutor.AbortPolicy());
+        logger.info("KvAsyncWriteExecutor init success, threads = {}, queueSize = {}", threads2, queueSize2);
     }
 
-    public static RedisKvClientExecutor getInstance() {
+    public static KvExecutors getInstance() {
         if (INSTANCE == null) {
-            synchronized (RedisKvClientExecutor.class) {
+            synchronized (KvExecutors.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new RedisKvClientExecutor();
+                    INSTANCE = new KvExecutors();
                 }
             }
         }
         return INSTANCE;
     }
 
-    public CamelliaHashedExecutor getExecutor() {
-        return executor;
+    public CamelliaHashedExecutor getCommandExecutor() {
+        return commandExecutor;
+    }
+
+    public CamelliaHashedExecutor getAsyncWriteExecutor() {
+        return asyncWriteExecutor;
     }
 }

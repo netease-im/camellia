@@ -3,12 +3,14 @@ package com.netease.nim.camellia.redis.proxy.monitor.model;
 /**
  * Created by caojiajun on 2024/5/21
  */
-public class KVCacheStats {
+public class KvCacheStats {
     private String namespace;
     private String operation;
+    private long writeBuffer;
     private long local;
     private long redis;
     private long store;
+    private double writeBufferHit;
     private double localCacheHit;
     private double redisCacheHit;
 
@@ -26,6 +28,14 @@ public class KVCacheStats {
 
     public void setOperation(String operation) {
         this.operation = operation;
+    }
+
+    public long getWriteBuffer() {
+        return writeBuffer;
+    }
+
+    public void setWriteBuffer(long writeBuffer) {
+        this.writeBuffer = writeBuffer;
     }
 
     public long getLocal() {
@@ -50,6 +60,14 @@ public class KVCacheStats {
 
     public void setStore(long store) {
         this.store = store;
+    }
+
+    public double getWriteBufferHit() {
+        return writeBufferHit;
+    }
+
+    public void setWriteBufferHit(double writeBufferHit) {
+        this.writeBufferHit = writeBufferHit;
     }
 
     public double getLocalCacheHit() {

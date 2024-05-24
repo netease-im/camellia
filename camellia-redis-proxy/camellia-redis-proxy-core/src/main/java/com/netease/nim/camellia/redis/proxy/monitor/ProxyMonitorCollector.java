@@ -138,9 +138,10 @@ public class ProxyMonitorCollector {
             stats.setSlowCommandStatsList(SlowCommandMonitor.collect());
             stats.setHotKeyCacheStatsList(HotKeyCacheMonitor.collect());
             stats.setUpstreamFailStatsList(UpstreamFailMonitor.collect());
-            stats.setKvCacheStatsList(KVCacheMonitor.collect());
-            stats.setKvExecutorStatsList(KVExecutorMonitor.collect());
-            stats.setKvGcStatsList(KVGcMonitor.collect());
+            stats.setKvCacheStatsList(KvCacheMonitor.collect());
+            stats.setKvExecutorStatsList(KvExecutorMonitor.collect());
+            stats.setKvGcStatsList(KvGcMonitor.collect());
+            stats.setKvWriteBufferStatsList(KvWriterBufferMonitor.collect());
 
             ProxyMonitorCollector.stats = stats;
 

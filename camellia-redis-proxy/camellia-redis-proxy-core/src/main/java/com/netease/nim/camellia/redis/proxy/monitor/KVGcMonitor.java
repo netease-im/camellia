@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.netease.nim.camellia.redis.proxy.monitor.model.KVGcStats;
+import com.netease.nim.camellia.redis.proxy.monitor.model.KvGcStats;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.LongAdder;
 /**
  * Created by caojiajun on 2024/5/21
  */
-public class KVGcMonitor {
+public class KvGcMonitor {
 
     private static final ConcurrentHashMap<String, LongAdder> map1 = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, LongAdder> map2 = new ConcurrentHashMap<>();
@@ -26,15 +26,15 @@ public class KVGcMonitor {
         CamelliaMapUtils.computeIfAbsent(map2, namespace, k -> new LongAdder()).add(deleteSubKeys);
     }
 
-    public static List<KVGcStats> collect() {
+    public static List<KvGcStats> collect() {
         Set<String> namespace = new HashSet<>();
         namespace.addAll(map1.keySet());
         namespace.addAll(map2.keySet());
-        List<KVGcStats> list = new ArrayList<>();
+        List<KvGcStats> list = new ArrayList<>();
         for (String string : namespace) {
             LongAdder count1 = map1.get(string);
             LongAdder count2 = map2.get(string);
-            KVGcStats stats = new KVGcStats();
+            KvGcStats stats = new KvGcStats();
             stats.setNamespace(string);
             stats.setDeleteMetaKeys(count1 == null ? 0 : count1.sumThenReset());
             stats.setDeleteSubKeys(count2 == null ? 0 : count2.sumThenReset());

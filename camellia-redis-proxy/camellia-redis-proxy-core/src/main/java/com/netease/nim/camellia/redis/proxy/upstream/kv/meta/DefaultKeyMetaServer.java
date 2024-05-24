@@ -1,9 +1,14 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvGcMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.KvExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
@@ -12,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
 public class DefaultKeyMetaServer implements KeyMetaServer {
 
     private final KeyMetaLRUCache keyMetaLRUCache;
+    private final WriteBuffer<KeyMeta> writeBuffer;
+    private final CamelliaHashedExecutor asyncWriteExecutor;
     private final ConcurrentLinkedHashMap<BytesKey, Long> delayCacheKeyMap;
     private final KVClient kvClient;
     private final RedisTemplate redisTemplate;
@@ -39,11 +47,28 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 .initialCapacity(cacheConfig.keyMetaCacheDelayMapSize())
                 .maximumWeightedCapacity(cacheConfig.keyMetaCacheDelayMapSize())
                 .build();
+        this.asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
         this.keyMetaLRUCache = cacheConfig.getKeyMetaLRUCache();
+        this.writeBuffer = WriteBuffer.newWriteBuffer(cacheConfig.getNamespace(), "key.meta");
     }
 
     @Override
     public KeyMeta getKeyMeta(byte[] key) {
+        WriteBufferValue<KeyMeta> writeBufferValue = writeBuffer.get(key);
+        if (writeBufferValue != null) {
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), "getKeyMeta");
+            KeyMeta keyMeta = writeBufferValue.getValue();
+            if (keyMeta == null) {
+                return null;
+            }
+            if (!keyMeta.isExpire()) {
+                return keyMeta;
+            } else {
+                deleteKeyMeta(key);
+                return null;
+            }
+        }
+
         if (cacheConfig.isMetaLocalCacheEnable()) {
             KeyMeta keyMeta = keyMetaLRUCache.get(key);
             if (keyMeta != null && keyMeta.isExpire()) {
@@ -51,7 +76,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 keyMeta = null;
             }
             if (keyMeta != null) {
-                KVCacheMonitor.localCache(cacheConfig.getNamespace(), "key_meta");
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), "getKeyMeta");
                 return keyMeta;
             }
         }
@@ -59,7 +84,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         byte[] metaKey = keyDesign.metaKey(key);
 
         if (!cacheConfig.isMetaCacheEnable()) {
-            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "getKeyMeta");
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
                 return null;
@@ -67,6 +92,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
             if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
+                KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
                 return null;
             }
             if (cacheConfig.isMetaLocalCacheEnable()) {
@@ -98,10 +124,10 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 if (cacheConfig.isMetaLocalCacheEnable()) {
                     keyMetaLRUCache.put(key, keyMeta);
                 }
-                KVCacheMonitor.redisCache(cacheConfig.getNamespace(), "key_meta");
+                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), "getKeyMeta");
                 return keyMeta;
             }
-            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), "key_meta");
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "getKeyMeta");
 
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
@@ -110,6 +136,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             keyMeta = KeyMeta.fromBytes(keyValue.getValue());
             if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
+                KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
                 if (keyMeta != null) {
                     gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
                 }
@@ -146,6 +173,8 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta) {
+        Result result = writeBuffer.put(key, keyMeta);
+
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
             keyMetaLRUCache.put(key, keyMeta);
@@ -160,6 +189,20 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 throw new KvException(((ErrorReply) reply).getError());
             }
         }
+        if (!result.isKvWriteDelayEnable()) {
+            put(metaKey, keyMeta);
+        } else {
+            asyncWriteExecutor.submit(key, () -> {
+                try {
+                    put(metaKey, keyMeta);
+                } finally {
+                    result.kvWriteDone();
+                }
+            });
+        }
+    }
+
+    private void put(byte[] metaKey, KeyMeta keyMeta) {
         if (keyMeta.getExpireTime() > 0 && kvClient.supportTTL()) {
             long ttl = keyMeta.getExpireTime() - System.currentTimeMillis();
             kvClient.put(metaKey, keyMeta.toBytes(), ttl);
@@ -170,6 +213,8 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public void deleteKeyMeta(byte[] key) {
+        Result result = writeBuffer.put(key, null);
+
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
             keyMetaLRUCache.remove(key);
@@ -181,14 +226,42 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             }
             delayCacheKeyMap.remove(new BytesKey(key));
         }
-        kvClient.delete(metaKey);
+        if (result.isKvWriteDelayEnable()) {
+            asyncWriteExecutor.submit(key, () -> {
+                try {
+                    kvClient.delete(metaKey);
+                    KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
+                } finally {
+                    result.kvWriteDone();
+                }
+            });
+        } else {
+            kvClient.delete(metaKey);
+            KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
+        }
     }
 
     @Override
     public boolean existsKeyMeta(byte[] key) {
+        WriteBufferValue<KeyMeta> writeBufferValue = writeBuffer.get(key);
+        if (writeBufferValue != null) {
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), "existsKeyMeta");
+            KeyMeta keyMeta = writeBufferValue.getValue();
+            if (keyMeta == null) {
+                return false;
+            }
+            if (!keyMeta.isExpire()) {
+                return true;
+            } else {
+                deleteKeyMeta(key);
+                return false;
+            }
+        }
+
         if (cacheConfig.isMetaLocalCacheEnable()) {
             KeyMeta keyMeta = keyMetaLRUCache.get(key);
             if (keyMeta != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), "existsKeyMeta");
                 return !keyMeta.isExpire();
             }
         }
@@ -201,10 +274,12 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             }
             if (reply instanceof IntegerReply) {
                 if (((IntegerReply) reply).getInteger().intValue() > 0) {
+                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), "existsKeyMeta");
                     return true;
                 }
             }
         }
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "existsKeyMeta");
         KeyValue keyValue = kvClient.get(metaKey);
         if (keyValue == null || keyValue.getValue() == null) {
             return false;
@@ -212,6 +287,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
         if (keyMeta == null || keyMeta.isExpire()) {
             kvClient.delete(metaKey);
+            KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
             return false;
         }
         return true;

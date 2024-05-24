@@ -39,9 +39,10 @@ public class Stats {
     private List<HotKeyCacheStats> hotKeyCacheStatsList = new ArrayList<>();
     private List<SlowCommandStats> slowCommandStatsList = new ArrayList<>();
     private List<UpstreamFailStats> upstreamFailStatsList = new ArrayList<>();
-    private List<KVCacheStats> kvCacheStatsList = new ArrayList<>();
-    private List<KVExecutorStats> kvExecutorStatsList = new ArrayList<>();
-    private List<KVGcStats> kvGcStatsList = new ArrayList<>();
+    private List<KvCacheStats> kvCacheStatsList = new ArrayList<>();
+    private List<KvExecutorStats> kvExecutorStatsList = new ArrayList<>();
+    private List<KvGcStats> kvGcStatsList = new ArrayList<>();
+    private List<KvWriteBufferStats> kvWriteBufferStatsList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -259,27 +260,35 @@ public class Stats {
         this.upstreamFailStatsList = upstreamFailStatsList;
     }
 
-    public List<KVCacheStats> getKvCacheStatsList() {
+    public List<KvCacheStats> getKvCacheStatsList() {
         return kvCacheStatsList;
     }
 
-    public void setKvCacheStatsList(List<KVCacheStats> kvCacheStatsList) {
+    public void setKvCacheStatsList(List<KvCacheStats> kvCacheStatsList) {
         this.kvCacheStatsList = kvCacheStatsList;
     }
 
-    public List<KVExecutorStats> getKvExecutorStatsList() {
+    public List<KvExecutorStats> getKvExecutorStatsList() {
         return kvExecutorStatsList;
     }
 
-    public void setKvExecutorStatsList(List<KVExecutorStats> kvExecutorStatsList) {
+    public void setKvExecutorStatsList(List<KvExecutorStats> kvExecutorStatsList) {
         this.kvExecutorStatsList = kvExecutorStatsList;
     }
 
-    public List<KVGcStats> getKvGcStatsList() {
+    public List<KvGcStats> getKvGcStatsList() {
         return kvGcStatsList;
     }
 
-    public void setKvGcStatsList(List<KVGcStats> kvGcStatsList) {
+    public void setKvGcStatsList(List<KvGcStats> kvGcStatsList) {
         this.kvGcStatsList = kvGcStatsList;
+    }
+
+    public List<KvWriteBufferStats> getKvWriteBufferStatsList() {
+        return kvWriteBufferStatsList;
+    }
+
+    public void setKvWriteBufferStatsList(List<KvWriteBufferStats> kvWriteBufferStatsList) {
+        this.kvWriteBufferStatsList = kvWriteBufferStatsList;
     }
 }

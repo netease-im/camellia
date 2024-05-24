@@ -130,22 +130,32 @@ public class LoggingMonitorCallback implements MonitorCallback {
             }
 
             logger.info("====kv.cache.stats====");
-            List<KVCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
-            for (KVCacheStats kvCacheStats : kvCacheStatsList) {
-                logger.info("namespace={},operation={},local={},redis={},store={},localCacheHit={},redisCacheHit={}", kvCacheStats.getNamespace(), kvCacheStats.getOperation(),
-                        kvCacheStats.getLocal(), kvCacheStats.getRedis(), kvCacheStats.getStore(), kvCacheStats.getLocalCacheHit(), kvCacheStats.getRedisCacheHit());
+            List<KvCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
+            for (KvCacheStats kvCacheStats : kvCacheStatsList) {
+                logger.info("namespace={},operation={},writeBuffer={},local={},redis={},store={},writeBufferHit={},localCacheHit={},redisCacheHit={}",
+                        kvCacheStats.getNamespace(), kvCacheStats.getOperation(),
+                        kvCacheStats.getWriteBuffer(), kvCacheStats.getLocal(), kvCacheStats.getRedis(), kvCacheStats.getStore(),
+                        kvCacheStats.getWriteBufferHit(), kvCacheStats.getLocalCacheHit(), kvCacheStats.getRedisCacheHit());
             }
 
             logger.info("====kv.executor.stats====");
-            List<KVExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
-            for (KVExecutorStats kvExecutorStats : kvExecutorStatsList) {
+            List<KvExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
+            for (KvExecutorStats kvExecutorStats : kvExecutorStatsList) {
                 logger.info("name={},pending={}", kvExecutorStats.getName(), kvExecutorStats.getPending());
             }
 
             logger.info("====kv.gc.stats====");
-            List<KVGcStats> kvGcStatsList = stats.getKvGcStatsList();
-            for (KVGcStats kvGcStats : kvGcStatsList) {
-                logger.info("namespace={},deleteMetakeys={},deleteSubKeys={}", kvGcStats.getNamespace(), kvGcStats.getDeleteMetaKeys(), kvGcStats.getDeleteSubKeys());
+            List<KvGcStats> kvGcStatsList = stats.getKvGcStatsList();
+            for (KvGcStats kvGcStats : kvGcStatsList) {
+                logger.info("namespace={},deleteMetaKeys={},deleteSubKeys={}", kvGcStats.getNamespace(), kvGcStats.getDeleteMetaKeys(), kvGcStats.getDeleteSubKeys());
+            }
+
+            logger.info("====kv.write.buffer.stats====");
+            List<KvWriteBufferStats> kvWriteBufferStatsList = stats.getKvWriteBufferStatsList();
+            for (KvWriteBufferStats kvWriteBufferStats : kvWriteBufferStatsList) {
+                logger.info("namespace={},type={},writeBufferCacheHit={},syncWrite={},asyncWrite={},asyncWriteDone={},pending={}",
+                        kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getWriteBufferCacheHit(),
+                        kvWriteBufferStats.getSyncWrite(), kvWriteBufferStats.getAsyncWrite(), kvWriteBufferStats.getAsyncWriteDone(), kvWriteBufferStats.getPending());
             }
 
             logger.info("<<<<<<<END<<<<<<<");

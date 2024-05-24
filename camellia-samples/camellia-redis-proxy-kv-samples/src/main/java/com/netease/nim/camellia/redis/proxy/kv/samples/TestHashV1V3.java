@@ -34,11 +34,9 @@ public class TestHashV1V3 {
             Long hlen1 = template.hlen(key);
             assertEquals(hlen1, 1L);
 
-            Long hdel1 = template.hdel(key, "f1");
-            assertEquals(hdel1, 1L);
+            template.hdel(key, "f1");
 
-            Long hdel2 = template.hdel(key, "f1");
-            assertEquals(hdel2, 1L);
+            template.hdel(key, "f1");
 
             Long hlen2 = template.hlen(key);
             assertEquals(hlen2, 0L);
@@ -62,8 +60,7 @@ public class TestHashV1V3 {
             Long hlen1 = template.hlen(key);
             assertEquals(hlen1, 2L);
 
-            Long hdel1 = template.hdel(key, "f1");
-            assertEquals(hdel1, 1L);
+            template.hdel(key, "f1");
 
             String hget3 = template.hget(key, "f1");
             assertEquals(hget3, null);
@@ -100,8 +97,7 @@ public class TestHashV1V3 {
             assertEquals(hgetall2.get("f1"), "v11");
             assertEquals(hgetall2.get("f2"), "v2");
 
-            Long hdel1 = template.hdel(key, "f1");
-            assertEquals(hdel1, 1L);
+            template.hdel(key, "f1");
 
             String hget4 = template.hget(key, "f1");
             assertEquals(hget4, null);

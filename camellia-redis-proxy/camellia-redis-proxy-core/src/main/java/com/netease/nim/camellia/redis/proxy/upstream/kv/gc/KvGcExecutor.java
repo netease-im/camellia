@@ -4,7 +4,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.monitor.KVGcMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvGcMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -145,7 +145,7 @@ public class KvGcExecutor {
                         if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
                             kvClient.checkAndDelete(startKey, keyValue.getValue());
                             deleteMetaKeys ++;
-                            KVGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
+                            KvGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
                         } else {
                             //如果kv不支持cas的删除，则hash到特定的proxy节点处理，避免并发问题
                             try {
@@ -154,7 +154,7 @@ public class KvGcExecutor {
                                     logger.error("send clean expired key meta in kv failed, reply = {}", ((ErrorReply) reply).getError());
                                 } else {
                                     deleteMetaKeys++;
-                                    KVGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
+                                    KvGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
                                 }
                             } catch (Exception e) {
                                 logger.error("send clean expired key meta in kv error", e);
@@ -205,7 +205,7 @@ public class KvGcExecutor {
                 if (!toDeleteKeys.isEmpty()) {
                     kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
                     deleteSubKeys += toDeleteKeys.size();
-                    KVGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
+                    KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
                 }
                 if (scan.size() < limit) {
                     break;
@@ -325,7 +325,7 @@ public class KvGcExecutor {
                 if (logger.isDebugEnabled()) {
                     logger.debug("sub key delete, count = {}", count);
                 }
-                KVGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), count);
+                KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), count);
             } catch (Exception e) {
                 logger.warn("add delete task error, ex = {}", e.toString());
             }

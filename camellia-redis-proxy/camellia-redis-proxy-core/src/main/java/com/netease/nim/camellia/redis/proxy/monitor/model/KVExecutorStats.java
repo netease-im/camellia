@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor.model;
 /**
  * Created by caojiajun on 2024/5/21
  */
-public class KVExecutorStats {
+public class KvExecutorStats {
 
     private String name;
     private int pending;

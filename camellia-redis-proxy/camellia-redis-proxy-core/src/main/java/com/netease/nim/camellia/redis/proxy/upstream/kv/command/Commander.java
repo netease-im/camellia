@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
@@ -13,8 +14,11 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -30,6 +34,8 @@ public abstract class Commander {
     protected final RedisTemplate cacheRedisTemplate;
     protected final RedisTemplate storeRedisTemplate;
     protected final KvGcExecutor gcExecutor;
+    protected final CamelliaHashedExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
+    protected final WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer;
 
     public Commander(CommanderConfig commanderConfig) {
         this.kvClient = commanderConfig.getKvClient();
@@ -40,6 +46,7 @@ public abstract class Commander {
         this.cacheRedisTemplate = commanderConfig.getCacheRedisTemplate();
         this.storeRedisTemplate = commanderConfig.getStoreRedisTemplate();
         this.gcExecutor = commanderConfig.getGcExecutor();
+        this.hashWriteBuffer = commanderConfig.getHashWriteBuffer();
     }
 
     public abstract RedisCommand redisCommand();

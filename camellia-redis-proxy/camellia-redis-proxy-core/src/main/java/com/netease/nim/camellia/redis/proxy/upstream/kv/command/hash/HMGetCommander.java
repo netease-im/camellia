@@ -2,11 +2,12 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -72,24 +73,29 @@ public class HMGetCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
+        byte[][] fields = new byte[objects.length - 2][];
+        System.arraycopy(objects, 2, fields, 0, objects.length - 2);
+
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<Map<BytesKey, byte[]>> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        if (writeBufferValue != null) {
+            Map<BytesKey, byte[]> map = writeBufferValue.getValue();
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return toReply2(fields, map);
+        }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
             if (map != null) {
-                Reply[] replies = new Reply[objects.length - 2];
-                for (int i = 2; i < objects.length; i++) {
-                    byte[] bytes = map.get(new BytesKey(objects[i - 2]));
-                    replies[i - 2] = bytes == null ? BulkReply.NIL_REPLY : new BulkReply(bytes);
-                }
-                KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return new MultiBulkReply(replies);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply2(fields, map);
             }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             List<BytesKey> list = new ArrayList<>(objects.length - 2);
             byte[][] subKeys = new byte[objects.length - 2][];
             for (int i=2; i<objects.length; i++) {
@@ -114,8 +120,6 @@ public class HMGetCommander extends Commander {
             return new MultiBulkReply(replies);
         }
 
-        byte[][] fields = new byte[objects.length - 2][];
-        System.arraycopy(objects, 2, fields, 0, objects.length - 2);
         {
             Reply reply = sync(cacheRedisTemplate.sendLua(script1, new byte[][]{cacheKey}, fields));
             if (reply instanceof ErrorReply) {
@@ -126,7 +130,7 @@ public class HMGetCommander extends Commander {
                 String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
                 if (type.equalsIgnoreCase("1")) {
                     cacheRedisTemplate.sendPExpire(key, cacheConfig.hgetallCacheMillis());
-                    KVCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return replies[1];
                 }
             }
@@ -158,11 +162,11 @@ public class HMGetCommander extends Commander {
                 cacheMissingFields.add(field);
             }
             if (cacheMissingFields.isEmpty()) {
-                KVCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return toReply(fields, hitMap);
+                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply1(fields, hitMap);
             }
 
-            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
             byte[][] subKeys = new byte[cacheMissingFields.size()][];
             int i=0;
@@ -197,11 +201,11 @@ public class HMGetCommander extends Commander {
                     }
                 }
             }
-            return toReply(fields, hitMap);
+            return toReply1(fields, hitMap);
         }
     }
 
-    private Reply toReply(byte[][] fields, Map<BytesKey, Reply> map) {
+    private Reply toReply1(byte[][] fields, Map<BytesKey, Reply> map) {
         Reply[] replies = new Reply[fields.length];
         int i=0;
         for (byte[] field : fields) {
@@ -210,6 +214,21 @@ public class HMGetCommander extends Commander {
                 replies[i] = BulkReply.NIL_REPLY;
             } else {
                 replies[i] = reply;
+            }
+            i ++;
+        }
+        return new MultiBulkReply(replies);
+    }
+
+    private Reply toReply2(byte[][] fields, Map<BytesKey, byte[]> map) {
+        Reply[] replies = new Reply[fields.length];
+        int i=0;
+        for (byte[] field : fields) {
+            byte[] bytes = map.get(new BytesKey(field));
+            if (bytes == null) {
+                replies[i] = BulkReply.NIL_REPLY;
+            } else {
+                replies[i] = new BulkReply(bytes);
             }
             i ++;
         }

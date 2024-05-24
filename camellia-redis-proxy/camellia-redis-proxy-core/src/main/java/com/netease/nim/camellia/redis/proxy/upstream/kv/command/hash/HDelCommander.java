@@ -2,7 +2,10 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -59,35 +62,67 @@ public class HDelCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         Set<BytesKey> fields = new HashSet<>(objects.length - 2);
         for (int i = 2; i < objects.length; i++) {
             fields.add(new BytesKey(objects[i]));
         }
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
         int delCount = -1;
+
+        final Result result;
+        boolean deleteAll = false;
+        WriteBufferValue<Map<BytesKey, byte[]>> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        if (writeBufferValue != null) {
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            Map<BytesKey, byte[]> map = writeBufferValue.getValue();
+            delCount = 0;
+            for (BytesKey field : fields) {
+                byte[] remove = map.remove(field);
+                if (remove != null) {
+                    delCount ++;
+                }
+            }
+            result = hashWriteBuffer.put(cacheKey, map);
+            if (delCount == 0) {
+                if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+                    return IntegerReply.parse(fields.size());
+                }
+                return IntegerReply.REPLY_0;
+            }
+            deleteAll = map.isEmpty();
+        } else {
+            result = NoOpResult.INSTANCE;
+        }
+
         if (cacheConfig.isHashLocalCacheEnable()) {
             Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
             if (map != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 delCount = 0;
                 for (BytesKey field : fields) {
-                    if (map.containsKey(field)) {
+                    byte[] remove = map.remove(field);
+                    if (remove != null) {
                         delCount ++;
-                        map.remove(field);
                     }
                 }
             }
         }
-        if (delCount >= 0) {
-            KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-        } else {
-            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        if (delCount < 0) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+        if (delCount == 0) {
+            if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+                return IntegerReply.parse(fields.size());
+            }
+            return IntegerReply.REPLY_0;
         }
 
         int fieldSize = fields.size();
 
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             byte[][] subKeys = new byte[fieldSize][];
             int i=0;
@@ -110,13 +145,19 @@ public class HDelCommander extends Commander {
                         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                     }
                 }
-                kvClient.batchDelete(subKeys);
+                batchDeleteSubKeys(cacheKey, result, subKeys);
                 return IntegerReply.parse(delCount);
             } else {
-                if (checkHLenZero(key, keyMeta)) {
-                    keyMetaServer.deleteKeyMeta(key);
+                if (!result.isKvWriteDelayEnable()) {
+                    if (checkHLenZero(key, keyMeta)) {
+                        keyMetaServer.deleteKeyMeta(key);
+                    }
+                } else {
+                    if (deleteAll) {
+                        keyMetaServer.deleteKeyMeta(key);
+                    }
                 }
-                kvClient.batchDelete(subKeys);
+                batchDeleteSubKeys(cacheKey, result, subKeys);
                 return IntegerReply.parse(fieldSize);
             }
         }
@@ -145,17 +186,19 @@ public class HDelCommander extends Commander {
             }
         }
         Reply luaReply = replyList.get(0);
-        Reply result = null;
+        Reply reply = null;
         if (luaReply instanceof MultiBulkReply) {
             Reply[] replies = ((MultiBulkReply) luaReply).getReplies();
             String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
             if (type.equalsIgnoreCase("1")) {//cache hit
-                result = replies[1];
+                reply = replies[1];
             }
         }
 
-        if (result instanceof IntegerReply) {
-            delCount = ((IntegerReply) result).getInteger().intValue();
+        if (delCount < 0) {
+            if (reply instanceof IntegerReply) {
+                delCount = ((IntegerReply) reply).getInteger().intValue();
+            }
         }
 
         if (encodeVersion == EncodeVersion.version_2) {
@@ -173,16 +216,36 @@ public class HDelCommander extends Commander {
                     keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                 }
             }
-            kvClient.batchDelete(subKeys);
+            batchDeleteSubKeys(cacheKey, result, subKeys);
             return IntegerReply.parse(delCount);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
-            if (checkHLenZero(key, keyMeta)) {
-                keyMetaServer.deleteKeyMeta(key);
+            if (!result.isKvWriteDelayEnable()) {
+                if (checkHLenZero(key, keyMeta)) {
+                    keyMetaServer.deleteKeyMeta(key);
+                }
+            } else {
+                if (deleteAll) {
+                    keyMetaServer.deleteKeyMeta(key);
+                }
             }
-            kvClient.batchDelete(subKeys);
+            batchDeleteSubKeys(cacheKey, result, subKeys);
             return IntegerReply.parse(fieldSize);
         } else {
             return ErrorReply.INTERNAL_ERROR;
+        }
+    }
+
+    private void batchDeleteSubKeys(byte[] cacheKey, Result result, byte[][] subKeys) {
+        if (!result.isKvWriteDelayEnable()) {
+            kvClient.batchDelete(subKeys);
+        } else {
+            asyncWriteExecutor.submit(cacheKey, () -> {
+                try {
+                    kvClient.batchDelete(subKeys);
+                } finally {
+                    result.kvWriteDone();
+                }
+            });
         }
     }
 

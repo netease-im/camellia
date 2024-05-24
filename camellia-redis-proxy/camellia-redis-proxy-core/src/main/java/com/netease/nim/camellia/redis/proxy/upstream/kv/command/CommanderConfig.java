@@ -1,12 +1,16 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
+import com.netease.nim.camellia.tools.utils.BytesKey;
+
+import java.util.Map;
 
 /**
  * Created by caojiajun on 2024/4/8
@@ -21,10 +25,11 @@ public class CommanderConfig {
     private final RedisTemplate cacheRedisTemplate;
     private final RedisTemplate storeRedisTemplate;
     private final KvGcExecutor gcExecutor;
+    private final WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer;
 
     public CommanderConfig(KVClient kvClient, KeyDesign keyDesign, CacheConfig cacheConfig,
                            KvConfig kvConfig, KeyMetaServer keyMetaServer,
-                           RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor) {
+                           RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor, WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer) {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.cacheConfig = cacheConfig;
@@ -33,6 +38,7 @@ public class CommanderConfig {
         this.cacheRedisTemplate = cacheRedisTemplate;
         this.storeRedisTemplate = storeRedisTemplate;
         this.gcExecutor = gcExecutor;
+        this.hashWriteBuffer = hashWriteBuffer;
     }
 
     public KVClient getKvClient() {
@@ -65,6 +71,10 @@ public class CommanderConfig {
 
     public KvGcExecutor getGcExecutor() {
         return gcExecutor;
+    }
+
+    public WriteBuffer<Map<BytesKey, byte[]>> getHashWriteBuffer() {
+        return hashWriteBuffer;
     }
 }
 

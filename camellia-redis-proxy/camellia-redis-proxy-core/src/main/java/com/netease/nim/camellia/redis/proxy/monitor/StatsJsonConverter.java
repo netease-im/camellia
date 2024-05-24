@@ -315,24 +315,26 @@ public class StatsJsonConverter {
         }
         monitorJson.put("upstreamFailStats", upstreamFailStatsJsonArray);
 
-        List<KVCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
+        List<KvCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
         JSONArray kvCacheStatsJsonArray = new JSONArray();
-        for (KVCacheStats kvCacheStats : kvCacheStatsList) {
+        for (KvCacheStats kvCacheStats : kvCacheStatsList) {
             JSONObject kvStatsJson = new JSONObject();
             kvStatsJson.put("namespace", kvCacheStats.getNamespace());
             kvStatsJson.put("operation", kvCacheStats.getOperation());
+            kvStatsJson.put("writeBuffer", kvCacheStats.getWriteBuffer());
             kvStatsJson.put("local", kvCacheStats.getLocal());
             kvStatsJson.put("redis", kvCacheStats.getRedis());
             kvStatsJson.put("store", kvCacheStats.getStore());
+            kvStatsJson.put("writeBufferHit", kvCacheStats.getWriteBufferHit());
             kvStatsJson.put("localCacheHit", kvCacheStats.getLocalCacheHit());
             kvStatsJson.put("redisCacheHit", kvCacheStats.getRedisCacheHit());
             kvCacheStatsJsonArray.add(kvStatsJson);
         }
         monitorJson.put("kvCacheStats", kvCacheStatsJsonArray);
 
-        List<KVExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
+        List<KvExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
         JSONArray kvExecutorJsonArray = new JSONArray();
-        for (KVExecutorStats kvExecutorStats : kvExecutorStatsList) {
+        for (KvExecutorStats kvExecutorStats : kvExecutorStatsList) {
             JSONObject kvExecutorJson = new JSONObject();
             kvExecutorJson.put("name", kvExecutorStats.getName());
             kvExecutorJson.put("pending", kvExecutorStats.getPending());
@@ -340,9 +342,9 @@ public class StatsJsonConverter {
         }
         monitorJson.put("kvExecutorStats", kvExecutorJsonArray);
 
-        List<KVGcStats> kvGcStatsList = stats.getKvGcStatsList();
+        List<KvGcStats> kvGcStatsList = stats.getKvGcStatsList();
         JSONArray kvGcStatsJsonArray = new JSONArray();
-        for (KVGcStats kvGcStats : kvGcStatsList) {
+        for (KvGcStats kvGcStats : kvGcStatsList) {
             JSONObject kvGcStatsJson = new JSONObject();
             kvGcStatsJson.put("namespace", kvGcStats.getNamespace());
             kvGcStatsJson.put("deleteMetaKeys", kvGcStats.getDeleteMetaKeys());
@@ -350,6 +352,21 @@ public class StatsJsonConverter {
             kvGcStatsJsonArray.add(kvGcStatsJson);
         }
         monitorJson.put("kvGcStats", kvGcStatsJsonArray);
+
+        List<KvWriteBufferStats> kvWriteBufferStatsList = stats.getKvWriteBufferStatsList();
+        JSONArray kvWriteBufferStatsJsonArray = new JSONArray();
+        for (KvWriteBufferStats kvWriteBufferStats : kvWriteBufferStatsList) {
+            JSONObject kvWriteBufferStatsJson = new JSONObject();
+            kvWriteBufferStatsJson.put("namespace", kvWriteBufferStats.getNamespace());
+            kvWriteBufferStatsJson.put("type", kvWriteBufferStats.getType());
+            kvWriteBufferStatsJson.put("writeBufferCacheHit", kvWriteBufferStats.getWriteBufferCacheHit());
+            kvWriteBufferStatsJson.put("syncWrite", kvWriteBufferStats.getSyncWrite());
+            kvWriteBufferStatsJson.put("asyncWrite", kvWriteBufferStats.getAsyncWrite());
+            kvWriteBufferStatsJson.put("asyncWriteDone", kvWriteBufferStats.getAsyncWriteDone());
+            kvWriteBufferStatsJson.put("pending", kvWriteBufferStats.getPending());
+            kvWriteBufferStatsJsonArray.add(kvWriteBufferStatsJson);
+        }
+        monitorJson.put("kvWriteBufferStats", kvWriteBufferStatsJsonArray);
 
         return monitorJson.toJSONString();
     }

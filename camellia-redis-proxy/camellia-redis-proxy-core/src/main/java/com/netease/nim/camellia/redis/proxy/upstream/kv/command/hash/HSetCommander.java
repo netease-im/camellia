@@ -2,8 +2,11 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -101,7 +104,27 @@ public class HSetCommander extends Commander {
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         int existsCount = -1;
-        if (!first && cacheConfig.isHashLocalCacheEnable()) {
+        Result result = null;
+        if (first) {
+            existsCount = 0;
+            result = hashWriteBuffer.put(cacheKey, fieldMap);
+        } else {
+            WriteBufferValue<Map<BytesKey, byte[]>> value = hashWriteBuffer.get(cacheKey);
+            if (value != null) {
+                Map<BytesKey, byte[]> map = value.getValue();
+                existsCount = 0;
+                for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
+                    if (map.containsKey(entry.getKey())) {
+                        existsCount ++;
+                    }
+                    map.put(entry.getKey(), entry.getValue());
+                }
+                result = hashWriteBuffer.put(cacheKey, map);
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
+        }
+
+        if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
             Map<BytesKey, byte[]> map = hashLRUCache.hgetAll(cacheKey);
             if (map != null) {
@@ -112,12 +135,18 @@ public class HSetCommander extends Commander {
                     }
                     map.put(entry.getKey(), entry.getValue());
                 }
+                if (result == null) {
+                    result = hashWriteBuffer.put(cacheKey, map);
+                }
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
         }
-        if (existsCount >= 0) {
-            KVCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-        } else {
-            KVCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        if (result == null) {
+            result = NoOpResult.INSTANCE;
+        }
+
+        if (existsCount < 0) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
@@ -131,7 +160,7 @@ public class HSetCommander extends Commander {
                 KeyValue keyValue = new KeyValue(subKey, value);
                 list.add(keyValue);
             }
-            kvClient.batchPut(list);
+            batchPut(cacheKey, result, list);
             return IntegerReply.parse(list.size());
         }
 
@@ -160,7 +189,7 @@ public class HSetCommander extends Commander {
                         keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size));
                 keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
             }
-            kvClient.batchPut(list);
+            batchPut(cacheKey, result, list);
             return IntegerReply.parse(add);
         }
 
@@ -233,7 +262,6 @@ public class HSetCommander extends Commander {
                     existsCount += Utils.count(exists);
                 }
             }
-            kvClient.batchPut(list);
             int add = list.size() - existsCount;
             if (add > 0) {
                 int size = BytesUtils.toInt(keyMeta.getExtra());
@@ -242,12 +270,27 @@ public class HSetCommander extends Commander {
                         keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size));
                 keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
             }
+            batchPut(cacheKey, result, list);
             return IntegerReply.parse(add);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
-            kvClient.batchPut(list);
+            batchPut(cacheKey, result, list);
             return IntegerReply.parse(list.size());//可能不准
         } else {
             return ErrorReply.INTERNAL_ERROR;
+        }
+    }
+
+    private void batchPut(byte[] cacheKey, Result result, List<KeyValue> list) {
+        if (!result.isKvWriteDelayEnable()) {
+            kvClient.batchPut(list);
+        } else {
+            asyncWriteExecutor.submit(cacheKey, () -> {
+                try {
+                    kvClient.batchPut(list);
+                } finally {
+                    result.kvWriteDone();
+                }
+            });
         }
     }
 

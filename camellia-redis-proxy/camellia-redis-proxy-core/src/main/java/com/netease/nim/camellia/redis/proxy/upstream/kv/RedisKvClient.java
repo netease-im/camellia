@@ -9,15 +9,16 @@ import com.netease.nim.camellia.redis.base.resource.RedisKvResource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.KVExecutorMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvExecutorMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisKvClientExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.KvExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
@@ -32,12 +33,14 @@ import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtil
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -103,7 +106,7 @@ public class RedisKvClient implements IUpstreamClient {
 
     @Override
     public void start() {
-        this.executor = RedisKvClientExecutor.getInstance().getExecutor();
+        this.executor = KvExecutors.getInstance().getCommandExecutor();
         this.commanders = initCommanders();
         logger.info("RedisKvClient start success, resource = {}", getResource());
     }
@@ -205,7 +208,7 @@ public class RedisKvClient implements IUpstreamClient {
 
         KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyDesign, kvConfig);
         gcExecutor.start();
-        KVExecutorMonitor.register(namespace, gcExecutor);
+        KvExecutorMonitor.register(namespace, gcExecutor);
 
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.meta.cache.enable", true);
 
@@ -216,8 +219,10 @@ public class RedisKvClient implements IUpstreamClient {
 
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, storeRedisTemplate, keyDesign, gcExecutor, cacheConfig);
 
+        WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer = WriteBuffer.newWriteBuffer(namespace, "hash");
+
         CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyDesign, cacheConfig, kvConfig,
-                keyMetaServer, cacheRedisTemplate, storeRedisTemplate, gcExecutor);
+                keyMetaServer, cacheRedisTemplate, storeRedisTemplate, gcExecutor, hashWriteBuffer);
 
         return new Commanders(commanderConfig);
     }
