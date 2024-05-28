@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.mq.isolation.controller.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.CacheUtil;
+import com.netease.nim.camellia.mq.isolation.controller.conf.MqIsolationControllerConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.*;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStats;
@@ -31,6 +33,7 @@ public class RouteService {
     private static final String sender_stats = "sender_stats";
     private static final String consumer_instance_list = "consumer_instance_list";
     private static final String consumer_stats = "consumer_stats";
+    private static final String select_mq_info = "select_mq_info";
 
     @Autowired
     private CamelliaRedisTemplate template;
@@ -41,6 +44,9 @@ public class RouteService {
     @Autowired
     private HeartbeatService heartbeatService;
 
+    @Autowired
+    private MqIsolationControllerConfig config;
+
     private final CamelliaLocalCache cache = new CamelliaLocalCache();
 
     public List<MqInfo> selectMqInfo(String namespace, String bizId) {
@@ -48,9 +54,33 @@ public class RouteService {
         if (valueWrapper != null) {
             return (List<MqInfo>) valueWrapper.get();
         } else {
-            List<MqInfo> mqInfos = selectMqInfo0(namespace, bizId);
-            cache.put(namespace, bizId, mqInfos, 1);
+            List<MqInfo> mqInfos = selectMqInfo0WithCache(namespace, bizId);
+            cache.put(namespace, bizId, mqInfos, config.getRouteLocalCacheSeconds());
             return mqInfos;
+        }
+    }
+
+    private List<MqInfo> selectMqInfo0WithCache(String namespace, String bizId) {
+        String cacheKey = CacheUtil.buildCacheKey(select_mq_info, namespace, bizId);
+        String string = template.get(cacheKey);
+        if (string == null) {
+            List<MqInfo> mqInfos = selectMqInfo0(namespace, bizId);
+            template.setex(cacheKey, config.getRouteRedisCacheSeconds(), JSONArray.toJSONString(mqInfos));
+            return mqInfos;
+        }
+        return JSONArray.parseArray(string, MqInfo.class);
+    }
+
+    private void refreshCache(String namespace, String bizId) {
+        String cacheKey = CacheUtil.buildCacheKey(select_mq_info, namespace, bizId);
+        Long ttl = template.ttl(cacheKey);
+        int ttlThreshold = config.getRouteRedisCacheSeconds() - config.getRouteRedisCacheRefreshSeconds();
+        if (ttlThreshold < 0) {
+            ttlThreshold = 1;
+        }
+        if (ttl < ttlThreshold) {
+            List<MqInfo> mqInfos = selectMqInfo0(namespace, bizId);
+            template.setex(cacheKey, config.getRouteRedisCacheSeconds(), JSONArray.toJSONString(mqInfos));
         }
     }
 
@@ -218,6 +248,7 @@ public class RouteService {
                 pipeline.expire(key, expireSeconds * 2);
                 pipeline.sync();
             }
+            refreshCache(namespace, bizId);
         }
     }
 
@@ -265,6 +296,7 @@ public class RouteService {
                 pipeline.expire(key, expireSeconds * 2);
                 pipeline.sync();
             }
+            refreshCache(namespace, bizId);
         }
     }
 

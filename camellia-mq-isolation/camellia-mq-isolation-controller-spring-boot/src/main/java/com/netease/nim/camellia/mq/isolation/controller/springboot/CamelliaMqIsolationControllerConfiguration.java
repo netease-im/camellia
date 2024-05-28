@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.mq.isolation.controller.springboot;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.mq.isolation.controller.conf.MqIsolationControllerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,10 @@ public class CamelliaMqIsolationControllerConfiguration {
         config.setCamelliaConfigUrl(url);
         config.setCamelliaConfigReloadIntervalSeconds(intervalSeconds);
         config.setCamelliaConfigNamespace(namespace);
-        logger.info("MqIsolationControllerConfig init success, camelliaConfigUrl = {}, camelliaConfigReloadIntervalSeconds = {}, camelliaConfigNamespace = {}",
-                url, intervalSeconds, namespace);
+        config.setRouteLocalCacheSeconds(properties.getRouteLocalCacheSeconds());
+        config.setRouteRedisCacheSeconds(properties.getRouteRedisCacheSeconds());
+        config.setRouteRedisCacheRefreshSeconds(properties.getRouteRedisCacheRefreshSeconds());
+        logger.info("MqIsolationControllerConfig init success, config = {}", JSONObject.toJSONString(config));
         return config;
     }
 }
