@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -170,6 +171,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             }
             //get master addr by name
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME))) {
+                ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, sentinel command not support param = " + param);
                 return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
             }
             if (args.length < 3) {
@@ -206,6 +208,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             String param = Utils.bytesToString(args[1]);
             //only support +switch-master
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.MASTER_SWITCH))) {
+                ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, subscribe command not support param = " + param);
                 return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
             }
             Reply[] replies = new Reply[3];
@@ -217,6 +220,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             connection.subscribe = true;
             return future;
         }
+        ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, not support command = " + redisCommand);
         //other command not support
         return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
     }
