@@ -40,9 +40,42 @@ public class KeyDesign {
         return namespace;
     }
 
+    public byte[] getMetaPrefix() {
+        return metaPrefix;
+    }
+
+    public byte[] getSubKeyPrefix() {
+        return subKeyPrefix;
+    }
+
+    public byte[] getSubKeyPrefix2() {
+        return subKey2Prefix;
+    }
+
+    public byte[] getSubIndexKeyPrefix() {
+        return indexKeyPrefix;
+    }
+
+    //
+    // meta key
+    //
+
     public byte[] metaKey(byte[] key) {
         return BytesUtils.merge(prefix(metaPrefix, key), key);
     }
+
+    public byte[] decodeKeyByMetaKey(byte[] metaKey) {
+        if (metaKey.length <= prefixLen) {
+            return null;
+        }
+        byte[] key = new byte[metaKey.length - prefixLen];
+        System.arraycopy(metaKey, prefixLen, key, 0, key.length);
+        return key;
+    }
+
+    //
+    // cache key
+    //
 
     public byte[] cacheKey(KeyMeta keyMeta, byte[] key) {
         long version = keyMeta.getKeyVersion();
@@ -60,36 +93,6 @@ public class KeyDesign {
         return data;
     }
 
-    public byte[] hashFieldSubKey(KeyMeta keyMeta, byte[] key, byte[] field) {
-        byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(prefix(subKeyPrefix, key), keySize, key);
-        data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
-        if (field.length > 0) {
-            data = BytesUtils.merge(data, field);
-        }
-        return data;
-    }
-
-    public byte[] zsetMemberSubKey1(KeyMeta keyMeta, byte[] key, byte[] member) {
-        byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(prefix(subKeyPrefix, key), keySize, key);
-        data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
-        if (member.length > 0) {
-            data = BytesUtils.merge(data, member);
-        }
-        return data;
-    }
-
-    public byte[] zsetIndexSubKey(KeyMeta keyMeta, byte[] key, Index index) {
-        byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(prefix(indexKeyPrefix, key), keySize, key);
-        data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
-        if (index != null && index.getRef().length > 0) {
-            data = BytesUtils.merge(data, index.getRef());
-        }
-        return data;
-    }
-
     public byte[] zsetMemberIndexCacheKey(KeyMeta keyMeta, byte[] key, Index index) {
         long version = keyMeta.getKeyVersion();
         key = BytesUtils.merge(HASH_TAG_LEFT, key, HASH_TAG_RIGHT);
@@ -100,10 +103,71 @@ public class KeyDesign {
         return data;
     }
 
-    public byte[] zsetMemberSubKey2(KeyMeta keyMeta, byte[] key, byte[] member, byte[] score) {
+    //
+    // sub key
+    // prefix
+    //
+
+    private byte[] prefix(byte[] prefix, byte[] key) {
+        byte[] array = new byte[prefix.length + 8];
+        System.arraycopy(prefix, 0, array, 0, prefix.length);
+        byte[] md5 = MD5Util.md5(key);
+        System.arraycopy(md5, 0, array, prefix.length, 8);
+        return array;
+    }
+
+    public byte[] subKeyPrefix(KeyMeta keyMeta, byte[] key) {
+        byte[] keySize = BytesUtils.toBytes(key.length);
+        byte[] data = BytesUtils.merge(prefix(subKeyPrefix, key), keySize, key);
+        data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
+        return data;
+    }
+
+    public byte[] subKeyPrefix2(KeyMeta keyMeta, byte[] key) {
         byte[] keySize = BytesUtils.toBytes(key.length);
         byte[] data = BytesUtils.merge(prefix(subKey2Prefix, key), keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
+        return data;
+    }
+
+    public byte[] subIndexKeyPrefix(KeyMeta keyMeta, byte[] key) {
+        byte[] keySize = BytesUtils.toBytes(key.length);
+        byte[] data = BytesUtils.merge(prefix(indexKeyPrefix, key), keySize, key);
+        data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
+        return data;
+    }
+
+    //
+    // sub key
+    // encode
+    //
+
+    public byte[] hashFieldSubKey(KeyMeta keyMeta, byte[] key, byte[] field) {
+        byte[] data = subKeyPrefix(keyMeta, key);
+        if (field.length > 0) {
+            data = BytesUtils.merge(data, field);
+        }
+        return data;
+    }
+
+    public byte[] zsetMemberSubKey1(KeyMeta keyMeta, byte[] key, byte[] member) {
+        byte[] data = subKeyPrefix(keyMeta, key);
+        if (member.length > 0) {
+            data = BytesUtils.merge(data, member);
+        }
+        return data;
+    }
+
+    public byte[] zsetIndexSubKey(KeyMeta keyMeta, byte[] key, Index index) {
+        byte[] data = subIndexKeyPrefix(keyMeta, key);
+        if (index != null && index.getRef().length > 0) {
+            data = BytesUtils.merge(data, index.getRef());
+        }
+        return data;
+    }
+
+    public byte[] zsetMemberSubKey2(KeyMeta keyMeta, byte[] key, byte[] member, byte[] score) {
+        byte[] data = subKeyPrefix2(keyMeta, key);
         if (score.length > 0) {
             data = BytesUtils.merge(data, score);
         }
@@ -111,6 +175,22 @@ public class KeyDesign {
             data = BytesUtils.merge(data, member);
         }
         return data;
+    }
+
+    //
+    // sub key
+    // decode
+    //
+
+    public byte[] decodeKeyBySubKey(byte[] subKey) {
+        int keyLen = BytesUtils.toInt(subKey, prefixLen);
+        byte[] key = new byte[keyLen];
+        System.arraycopy(subKey, prefixLen + 4, key, 0, keyLen);
+        return key;
+    }
+
+    public long decodeKeyVersionBySubKey(byte[] subKey, int keyLen) {
+        return BytesUtils.toLong(subKey, prefixLen + 4 + keyLen);
     }
 
     public byte[] decodeHashFieldBySubKey(byte[] subKey, byte[] key) {
@@ -141,41 +221,9 @@ public class KeyDesign {
         return member;
     }
 
-    public byte[] getMetaPrefix() {
-        return metaPrefix;
-    }
-
-    public byte[] decodeKeyByMetaKey(byte[] metaKey) {
-        if (metaKey.length <= prefixLen) {
-            return null;
-        }
-        byte[] key = new byte[metaKey.length - prefixLen];
-        System.arraycopy(metaKey, prefixLen, key, 0, key.length);
-        return key;
-    }
-
-    public byte[] getSubKeyPrefix() {
-        return subKeyPrefix;
-    }
-
-    public byte[] decodeKeyBySubKey(byte[] subKey) {
-        int keyLen = BytesUtils.toInt(subKey, prefixLen);
-        byte[] key = new byte[keyLen];
-        System.arraycopy(subKey, prefixLen + 4, key, 0, keyLen);
-        return key;
-    }
-
-    public long decodeKeyVersionBySubKey(byte[] subKey, int keyLen) {
-        return BytesUtils.toLong(subKey, prefixLen + 4 + keyLen);
-    }
-
-    private byte[] prefix(byte[] prefix, byte[] key) {
-        byte[] array = new byte[prefix.length + 8];
-        System.arraycopy(prefix, 0, array, 0, prefix.length);
-        byte[] md5 = MD5Util.md5(key);
-        System.arraycopy(md5, 0, array, prefix.length, 8);
-        return array;
-    }
+    //
+    // encode version
+    //
 
     public EncodeVersion hashKeyMetaVersion() {
         int version = ProxyDynamicConf.getInt("kv.hash.key.meta.version", 0);

@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
@@ -87,7 +88,7 @@ public class KvGcExecutor {
                     return;
                 }
                 boolean scanMetaKeysSuccess = true;
-                boolean scanSubKeysSuccess = true;
+                boolean scanSubKeysSuccess;
                 if (!kvClient.supportTTL()) {
                     scanMetaKeysSuccess = scanMetaKeys();
                 }
@@ -184,33 +185,38 @@ public class KvGcExecutor {
                     .initialCapacity(10000)
                     .maximumWeightedCapacity(10000)
                     .build();
-            byte[] storePrefix = keyDesign.getSubKeyPrefix();
-            byte[] startKey = storePrefix;
-            int limit = kvConfig.scanBatch();
-            while (true) {
-                List<KeyValue> scan = kvClient.scanByPrefix(startKey, storePrefix, limit, Sort.ASC, false);
-                if (scan.isEmpty()) {
-                    break;
-                }
-                List<byte[]> toDeleteKeys = new ArrayList<>();
-                for (KeyValue keyValue : scan) {
-                    startKey = keyValue.getKey();
-                    byte[] key = keyDesign.decodeKeyBySubKey(startKey);
-                    long keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
-                    KeyStatus keyStatus = checkExpireOrNotExists(cacheMap, key, keyVersion);
-                    if (keyStatus == KeyStatus.NOT_EXISTS || keyStatus == KeyStatus.EXPIRE) {
-                        toDeleteKeys.add(keyValue.getKey());
+            List<byte[]> prefixList = new ArrayList<>();
+            prefixList.add(keyDesign.getSubKeyPrefix());
+            prefixList.add(keyDesign.getSubKeyPrefix2());
+            prefixList.add(keyDesign.getSubIndexKeyPrefix());
+            for (byte[] prefix : prefixList) {
+                byte[] startKey = prefix;
+                int limit = kvConfig.scanBatch();
+                while (true) {
+                    List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+                    if (scan.isEmpty()) {
+                        break;
                     }
+                    List<byte[]> toDeleteKeys = new ArrayList<>();
+                    for (KeyValue keyValue : scan) {
+                        startKey = keyValue.getKey();
+                        byte[] key = keyDesign.decodeKeyBySubKey(startKey);
+                        long keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
+                        KeyStatus keyStatus = checkExpireOrNotExists(cacheMap, key, keyVersion);
+                        if (keyStatus == KeyStatus.NOT_EXISTS || keyStatus == KeyStatus.EXPIRE) {
+                            toDeleteKeys.add(keyValue.getKey());
+                        }
+                    }
+                    if (!toDeleteKeys.isEmpty()) {
+                        kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
+                        deleteSubKeys += toDeleteKeys.size();
+                        KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
+                    }
+                    if (scan.size() < limit) {
+                        break;
+                    }
+                    TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                 }
-                if (!toDeleteKeys.isEmpty()) {
-                    kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
-                    deleteSubKeys += toDeleteKeys.size();
-                    KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
-                }
-                if (scan.size() < limit) {
-                    break;
-                }
-                TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
             }
             cacheMap.clear();
             logger.info("scan sub keys end, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
@@ -300,27 +306,9 @@ public class KvGcExecutor {
                 int count = 0;
                 KeyType keyType = keyMeta.getKeyType();
                 if (keyType == KeyType.hash) {
-                    byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
-                    byte[] prefix = startKey;
-                    int limit = kvConfig.scanBatch();
-                    while (true) {
-                        List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
-                        if (scan.isEmpty()) {
-                            break;
-                        }
-                        byte[][] keys = new byte[scan.size()][];
-                        int i=0;
-                        for (KeyValue keyValue : scan) {
-                            keys[i] = keyValue.getKey();
-                            startKey = keyValue.getKey();
-                            i++;
-                        }
-                        kvClient.batchDelete(keys);
-                        count += keys.length;
-                        if (scan.size() < limit) {
-                            break;
-                        }
-                    }
+                    count = clearHashSubKeys();
+                } else if (keyType == KeyType.zset) {
+                    count = clearZSetSubKeys();
                 }
                 if (logger.isDebugEnabled()) {
                     logger.debug("sub key delete, count = {}", count);
@@ -331,5 +319,48 @@ public class KvGcExecutor {
             }
         }
 
+        private int clearHashSubKeys() {
+            return clearByPrefix(keyDesign.subKeyPrefix(keyMeta, key));
+        }
+
+        private int clearZSetSubKeys() {
+            int count = 0;
+            EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+            if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
+                count += clearByPrefix(keyDesign.subKeyPrefix(keyMeta, key));
+            }
+            if (encodeVersion == EncodeVersion.version_0) {
+                count += clearByPrefix(keyDesign.subKeyPrefix2(keyMeta, key));
+            }
+            if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
+                count += clearByPrefix(keyDesign.subIndexKeyPrefix(keyMeta, key));
+            }
+            return count;
+        }
+
+        private int clearByPrefix(byte[] prefix) {
+            int count = 0;
+            byte[] startKey = prefix;
+            int limit = kvConfig.scanBatch();
+            while (true) {
+                List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+                if (scan.isEmpty()) {
+                    break;
+                }
+                byte[][] keys = new byte[scan.size()][];
+                int i = 0;
+                for (KeyValue keyValue : scan) {
+                    keys[i] = keyValue.getKey();
+                    startKey = keyValue.getKey();
+                    i++;
+                }
+                kvClient.batchDelete(keys);
+                count += keys.length;
+                if (scan.size() < limit) {
+                    break;
+                }
+            }
+            return count;
+        }
     }
 }
