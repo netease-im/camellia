@@ -14,6 +14,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
 
@@ -61,12 +62,19 @@ public class ZScoreCommander extends Commander {
 
         byte[] member = objects[2];
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            Double zscore = cacheConfig.getZSetLRUCache().zscore(cacheKey, new BytesKey(member));
+            if (zscore != null) {
+                return new BulkReply(Utils.doubleToBytes(zscore));
+            }
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
             return zscoreFromKv(keyMeta, key, member);
         }
-
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         if (encodeVersion == EncodeVersion.version_1) {
             Reply reply = checkCache(script, cacheKey, new byte[][]{member, zsetRangeCacheMillis()});

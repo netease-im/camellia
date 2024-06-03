@@ -48,6 +48,12 @@ public class ZCardCommander extends Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_3) {
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            if (cacheConfig.isZSetLocalCacheEnable()) {
+                int zcard = cacheConfig.getZSetLRUCache().zcard(cacheKey);
+                if (zcard >= 0) {
+                    return IntegerReply.parse(zcard);
+                }
+            }
             return sync(storeRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCARD.raw(), cacheKey})));
         } else {
             return IntegerReply.parse(BytesUtils.toInt(keyMeta.getExtra()));

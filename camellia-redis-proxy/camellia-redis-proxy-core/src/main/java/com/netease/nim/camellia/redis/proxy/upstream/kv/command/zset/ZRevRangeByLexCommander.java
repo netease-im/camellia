@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -58,20 +59,7 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
-            return zrevrangeByLexVersion0OrVersion2(keyMeta, key, objects);
-        }
-        if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script, true);
-        }
-        if (encodeVersion == EncodeVersion.version_3) {
-            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
-        }
-        return ErrorReply.INTERNAL_ERROR;
-    }
 
-    private Reply zrevrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         ZSetLex minLex;
         ZSetLex maxLex;
         ZSetLimit limit;
@@ -88,6 +76,29 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         if (minLex.isMax() || maxLex.isMin()) {
             return MultiBulkReply.EMPTY;
         }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            List<ZSet.Member> list = cacheConfig.getZSetLRUCache().zrevrangeByLex(cacheKey, minLex, maxLex, limit);
+            if (list != null) {
+                return ZSetTupleUtils.toReplyOfMember(list, false);
+            }
+        }
+
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+            return zrevrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);
+        }
+        if (encodeVersion == EncodeVersion.version_1) {
+            return zrangeVersion1(keyMeta, key, objects, script, true);
+        }
+        if (encodeVersion == EncodeVersion.version_3) {
+            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
+        }
+        return ErrorReply.INTERNAL_ERROR;
+    }
+
+    private Reply zrevrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         byte[] startKey;
         if (maxLex.isMax()) {
             startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]));

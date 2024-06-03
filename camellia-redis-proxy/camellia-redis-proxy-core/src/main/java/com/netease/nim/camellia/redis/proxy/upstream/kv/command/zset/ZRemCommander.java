@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -58,6 +59,16 @@ public class ZRemCommander extends Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            List<BytesKey> members = new ArrayList<>();
+            for (int i=2; i<objects.length; i++) {
+                members.add(new BytesKey(objects[i]));
+            }
+            cacheConfig.getZSetLRUCache().zrem(cacheKey, members);
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
             return zremVersion0(keyMeta, key, objects);

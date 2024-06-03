@@ -2,10 +2,10 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -60,32 +60,8 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
-        boolean withScores = false;
-        if (objects.length >= 5) {
-            for (int i=4; i<objects.length; i++) {
-                withScores = Utils.bytesToString(objects[i]).equalsIgnoreCase(RedisKeyword.WITHSCORES.name());
-                if (withScores) {
-                    break;
-                }
-            }
-        }
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0) {
-            return zrevrangeByScoreVersion0(keyMeta, key, objects, withScores);
-        }
-        if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script, true);
-        }
-        if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, withScores, script, true);
-        }
-        if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, withScores);
-        }
-        return ErrorReply.INTERNAL_ERROR;
-    }
+        boolean withScores = ZSetWithScoresUtils.isWithScores(objects, 4);
 
-    private Reply zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
         ZSetScore maxScore;
         ZSetScore minScore;
         ZSetLimit limit;
@@ -99,6 +75,32 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
         if (minScore.getScore() > maxScore.getScore()) {
             return MultiBulkReply.EMPTY;
         }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            List<ZSet.Member> list = cacheConfig.getZSetLRUCache().zrevrangeByScore(cacheKey, minScore, maxScore, limit);
+            if (list != null) {
+                return ZSetTupleUtils.toReplyOfMember(list, withScores);
+            }
+        }
+
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0) {
+            return zrevrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
+        }
+        if (encodeVersion == EncodeVersion.version_1) {
+            return zrangeVersion1(keyMeta, key, objects, script, true);
+        }
+        if (encodeVersion == EncodeVersion.version_2) {
+            return zrangeVersion2(keyMeta, key, objects, withScores, script, true);
+        }
+        if (encodeVersion == EncodeVersion.version_3) {
+            return zrangeVersion3(keyMeta, key, objects, withScores);
+        }
+        return ErrorReply.INTERNAL_ERROR;
+    }
+
+    private Reply zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
         byte[] startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         byte[] endKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         int batch = kvConfig.scanBatch();

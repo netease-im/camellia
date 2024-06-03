@@ -56,9 +56,18 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
+
+        int start = (int) Utils.bytesToNum(objects[2]);
+        int stop = (int) Utils.bytesToNum(objects[3]);
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            cacheConfig.getZSetLRUCache().zremrangeByRank(cacheKey, start, stop);
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByRank(keyMeta, key, objects);
+            return zremrangeByRank(keyMeta, key, start, stop);
         }
         byte[][] zrangeArgs = new byte[objects.length][];
         System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
@@ -76,24 +85,15 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByRank(KeyMeta keyMeta, byte[] key, byte[][] objects) {
-        int start = (int) Utils.bytesToNum(objects[2]);
-        int stop = (int) Utils.bytesToNum(objects[3]);
-
+    private Reply zremrangeByRank(KeyMeta keyMeta, byte[] key, int start, int stop) {
         int size = BytesUtils.toInt(keyMeta.getExtra());
-
-        if (start < 0) {
-            start += size;
-        }
-        if (stop < 0) {
-            stop += size;
-        }
-        if (start < 0) {
-            start = 0;
-        }
-        if (stop < 0 || start > stop) {
+        ZSetRank rank = new ZSetRank(start, stop, size);
+        if (rank.isEmptyRank()) {
             return MultiBulkReply.EMPTY;
         }
+        start = rank.getStart();
+        stop = rank.getStop();
+
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         int ret = zremrangeByRank0(keyMeta, key, startKey, startKey, start, stop);
         if (ret > 0) {

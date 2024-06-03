@@ -60,26 +60,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByLexVersion0OrVersion1(keyMeta, key, objects);
-        }
-        if (encodeVersion == EncodeVersion.version_2) {
-            return zremrangeByLexVersion0OrVersion1(keyMeta, key, objects);
-        }
-        byte[][] zrangeArgs = new byte[objects.length][];
-        System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
-        zrangeArgs[0] = RedisCommand.ZRANGEBYLEX.raw();
-        if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, zrangeArgs, script);
-        }
-        if (encodeVersion == EncodeVersion.version_3) {
-            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
-        }
-        return ErrorReply.INTERNAL_ERROR;
-    }
 
-    private Reply zremrangeByLexVersion0OrVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         ZSetLex minLex;
         ZSetLex maxLex;
@@ -95,6 +76,29 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         if (minLex.isMax() || maxLex.isMin()) {
             return MultiBulkReply.EMPTY;
         }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            cacheConfig.getZSetLRUCache().zremrangeByLex(cacheKey, minLex, maxLex);
+        }
+
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+            return zremrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex);
+        }
+        byte[][] zrangeArgs = new byte[objects.length][];
+        System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
+        zrangeArgs[0] = RedisCommand.ZRANGEBYLEX.raw();
+        if (encodeVersion == EncodeVersion.version_1) {
+            return zremrangeVersion1(keyMeta, key, zrangeArgs, script);
+        }
+        if (encodeVersion == EncodeVersion.version_3) {
+            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
+        }
+        return ErrorReply.INTERNAL_ERROR;
+    }
+
+    private Reply zremrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex) {
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         byte[] startKey;
         if (minLex.isMin()) {
             startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);

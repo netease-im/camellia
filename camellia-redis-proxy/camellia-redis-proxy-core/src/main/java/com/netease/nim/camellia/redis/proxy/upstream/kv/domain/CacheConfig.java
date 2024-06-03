@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +19,10 @@ public class CacheConfig {
     private final boolean metaCacheEnable;
     private boolean metaLocalCacheEnable;
     private boolean hashLocalCacheEnable;
-    private final HashLRUCache hashLRUCache;
+    private boolean zsetLocalCacheEnable;
     private final KeyMetaLRUCache keyMetaLRUCache;
+    private final HashLRUCache hashLRUCache;
+    private final ZSetLRUCache zSetLRUCache;
 
     public CacheConfig(String namespace, boolean metaCacheEnable) {
         this.namespace = namespace;
@@ -27,6 +30,7 @@ public class CacheConfig {
         initCacheConfig();
         this.hashLRUCache = new HashLRUCache(namespace);
         this.keyMetaLRUCache = new KeyMetaLRUCache(namespace);
+        this.zSetLRUCache = new ZSetLRUCache(namespace);
         ProxyDynamicConf.registerCallback(this::initCacheConfig);
     }
 
@@ -47,6 +51,14 @@ public class CacheConfig {
             }
             logger.info("kv.hash.local.cache.enable = {}", hashLocalCacheEnable);
         }
+        boolean zsetLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.zset.local.cache.enable", true);
+        if ((this.zsetLocalCacheEnable && !zsetLocalCacheEnable) || (!this.zsetLocalCacheEnable && zsetLocalCacheEnable)) {
+            this.zsetLocalCacheEnable = zsetLocalCacheEnable;
+            if (!zsetLocalCacheEnable) {
+                zSetLRUCache.clear();
+            }
+            logger.info("kv.zset.local.cache.enable = {}", zsetLocalCacheEnable);
+        }
     }
 
     public String getNamespace() {
@@ -65,12 +77,20 @@ public class CacheConfig {
         return hashLocalCacheEnable;
     }
 
-    public HashLRUCache getHashLRUCache() {
-        return hashLRUCache;
+    public boolean isZSetLocalCacheEnable() {
+        return zsetLocalCacheEnable;
     }
 
     public KeyMetaLRUCache getKeyMetaLRUCache() {
         return keyMetaLRUCache;
+    }
+
+    public HashLRUCache getHashLRUCache() {
+        return hashLRUCache;
+    }
+
+    public ZSetLRUCache getZSetLRUCache() {
+        return zSetLRUCache;
     }
 
     public long metaCacheMillis() {

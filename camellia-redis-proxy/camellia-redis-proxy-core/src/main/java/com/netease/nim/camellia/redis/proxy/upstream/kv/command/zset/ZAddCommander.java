@@ -87,6 +87,15 @@ public class ZAddCommander extends Commander {
             encodeVersion = keyMeta.getEncodeVersion();
         }
 
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            if (first) {
+                cacheConfig.getZSetLRUCache().zaddAll(cacheKey, memberMap);
+            } else {
+                cacheConfig.getZSetLRUCache().zadd(cacheKey, memberMap);
+            }
+        }
+
         if (encodeVersion == EncodeVersion.version_0) {
             return zaddVersion0(keyMeta, key, first, memberSize, memberMap);
         }

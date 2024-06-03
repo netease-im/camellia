@@ -2,10 +2,10 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -60,16 +60,25 @@ public class ZRangeCommander extends ZRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
-        boolean withScores = false;
-        if (objects.length == 5) {
-            withScores = Utils.bytesToString(objects[4]).equalsIgnoreCase(RedisKeyword.WITHSCORES.name());
-            if (!withScores) {
-                return ErrorReply.SYNTAX_ERROR;
+        boolean withScores = ZSetWithScoresUtils.isWithScores(objects, 4);
+        if (objects.length == 5 && !withScores) {
+            return ErrorReply.SYNTAX_ERROR;
+        }
+
+        int start = (int) Utils.bytesToNum(objects[2]);
+        int stop = (int) Utils.bytesToNum(objects[3]);
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            List<ZSet.Member> list = cacheConfig.getZSetLRUCache().zrange(cacheKey, start, stop);
+            if (list != null) {
+                return ZSetTupleUtils.toReplyOfMember(list, withScores);
             }
         }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zrangeVersion0(keyMeta, key, objects, withScores);
+            return zrangeVersion0(keyMeta, key, start, stop, withScores);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zrangeVersion1(keyMeta, key, objects, script, true);
@@ -83,24 +92,15 @@ public class ZRangeCommander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrangeVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
-        int start = (int) Utils.bytesToNum(objects[2]);
-        int stop = (int) Utils.bytesToNum(objects[3]);
-
+    private Reply zrangeVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
         int size = BytesUtils.toInt(keyMeta.getExtra());
-
-        if (start < 0) {
-            start += size;
-        }
-        if (stop < 0) {
-            stop += size;
-        }
-        if (start < 0) {
-            start = 0;
-        }
-        if (stop < 0 || start > stop) {
+        ZSetRank zSetRank = new ZSetRank(start, stop, size);
+        if (zSetRank.isEmptyRank()) {
             return MultiBulkReply.EMPTY;
         }
+        start = zSetRank.getStart();
+        stop = zSetRank.getStop();
+
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         List<ZSetTuple> list = zrange0(key, startKey, startKey, start, stop, withScores);
 

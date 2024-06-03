@@ -57,9 +57,27 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
+
+        ZSetScore minScore;
+        ZSetScore maxScore;
+        try {
+            minScore = ZSetScore.fromBytes(objects[2]);
+            maxScore = ZSetScore.fromBytes(objects[3]);
+        } catch (Exception e) {
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (minScore.getScore() > maxScore.getScore()) {
+            return IntegerReply.REPLY_0;
+        }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            cacheConfig.getZSetLRUCache().zremrangeByScore(cacheKey, minScore, maxScore);
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByScore(keyMeta, key, objects);
+            return zremrangeByScore(keyMeta, key, minScore, maxScore);
         }
         byte[][] zrangeArgs = new byte[objects.length][];
         System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
@@ -77,18 +95,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, byte[][] objects) {
-        ZSetScore minScore;
-        ZSetScore maxScore;
-        try {
-            minScore = ZSetScore.fromBytes(objects[2]);
-            maxScore = ZSetScore.fromBytes(objects[3]);
-        } catch (Exception e) {
-            return ErrorReply.SYNTAX_ERROR;
-        }
-        if (minScore.getScore() > maxScore.getScore()) {
-            return IntegerReply.REPLY_0;
-        }
+    private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore) {
         byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         int batch = kvConfig.scanBatch();
