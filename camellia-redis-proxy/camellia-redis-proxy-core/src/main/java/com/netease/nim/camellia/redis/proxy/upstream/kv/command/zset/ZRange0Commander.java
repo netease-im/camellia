@@ -167,10 +167,6 @@ public abstract class ZRange0Commander extends Commander {
                 break;
             }
         }
-        if (cacheConfig.isZSetLocalCacheEnable()) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            cacheConfig.getZSetLRUCache().zaddAll(cacheKey, list);
-        }
         return list;
     }
 

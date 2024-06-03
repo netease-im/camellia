@@ -135,7 +135,7 @@ public class ZRangeCommander extends ZRange0Commander {
                 if (count >= start) {
                     byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                     if (withScores) {
-                        double score = BytesUtils.toDouble(keyValue.getValue());
+                        double score = Utils.bytesToDouble(keyValue.getValue());
                         list.add(new ZSetTuple(new BytesKey(member), score));
                     } else {
                         list.add(new ZSetTuple(new BytesKey(member), null));

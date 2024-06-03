@@ -129,7 +129,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         int toRemoveSize = toRemoveMembers.size();
 
         if (encodeVersion == EncodeVersion.version_0) {
-            byte[][] deleteStoreKeys = new byte[toRemoveSize][];
+            byte[][] deleteStoreKeys = new byte[toRemoveSize*2][];
             int i = 0;
             for (Map.Entry<BytesKey, Double> entry : toRemoveMembers.entrySet()) {
                 deleteStoreKeys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());
@@ -161,7 +161,9 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
 
             List<Command> commands = new ArrayList<>(2);
             commands.add(new Command(zremCmd));
-            commands.add(new Command(deleteCmd.toArray(new byte[0][0])));
+            if (deleteCmd.size() > 1) {
+                commands.add(new Command(deleteCmd.toArray(new byte[0][0])));
+            }
 
             List<CompletableFuture<Reply>> futures = cacheRedisTemplate.sendCommand(commands);
 
@@ -216,7 +218,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 if (!pass) {
                     continue;
                 }
-                map.put(new BytesKey(keyValue.getKey()), Utils.bytesToDouble(keyValue.getValue()));
+                map.put(new BytesKey(member), Utils.bytesToDouble(keyValue.getValue()));
             }
             if (scan.size() < scanBatch) {
                 break;

@@ -115,8 +115,7 @@ public class ZScoreCommander extends Commander {
         if (keyValue == null || keyValue.getValue() == null) {
             return BulkReply.NIL_REPLY;
         }
-        double score = BytesUtils.toDouble(keyValue.getValue());
-        return new BulkReply(Utils.doubleToBytes(score));
+        return new BulkReply(keyValue.getValue());
     }
 
     protected final byte[] zsetRangeCacheMillis() {

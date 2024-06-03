@@ -102,7 +102,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             return zremrangeVersion2(keyMeta, key, cacheKey, args, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zremrangeVersion3(keyMeta, key, cacheKey, objects);
+            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand());
         }
         return ErrorReply.INTERNAL_ERROR;
     }
@@ -110,7 +110,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
     private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, Map<BytesKey, Double> localCacheResult) {
         if (localCacheResult != null) {
             int size = BytesUtils.toInt(keyMeta.getExtra());
-            byte[][] deleteStoreKeys = new byte[localCacheResult.size()][];
+            byte[][] deleteStoreKeys = new byte[localCacheResult.size()*2][];
             int i = 0;
             for (Map.Entry<BytesKey, Double> entry : localCacheResult.entrySet()) {
                 deleteStoreKeys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());

@@ -123,9 +123,16 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final Reply zremrangeVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects) {
+    protected final Reply zremrangeVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, RedisCommand redisCommand) {
         byte[][] cmd = new byte[objects.length][];
         System.arraycopy(objects, 0, cmd, 0, objects.length);
+        if (redisCommand == RedisCommand.ZREMRANGEBYSCORE) {
+            cmd[0] = RedisCommand.ZRANGEBYSCORE.raw();
+        } else if (redisCommand == RedisCommand.ZREMRANGEBYRANK) {
+            cmd[0] = RedisCommand.ZRANGE.raw();
+        } else {
+            return ErrorReply.INTERNAL_ERROR;
+        }
         cmd[1] = cacheKey;
         Reply reply = sync(storeRedisTemplate.sendCommand(new Command(cmd)));
         if (reply instanceof ErrorReply) {

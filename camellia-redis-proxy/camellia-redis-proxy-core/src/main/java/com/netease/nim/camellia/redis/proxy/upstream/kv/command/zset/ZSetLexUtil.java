@@ -14,16 +14,24 @@ public class ZSetLexUtil {
         }
         if (!maxLex.isMax()) {
             if (maxLex.isExcludeLex()) {
-                return BytesUtils.compare(member, maxLex.getLex()) < 0;
+                if (BytesUtils.compare(member, maxLex.getLex()) >= 0) {
+                    return false;
+                }
             } else {
-                return BytesUtils.compare(member, maxLex.getLex()) <= 0;
+                if (BytesUtils.compare(member, maxLex.getLex()) > 0) {
+                    return false;
+                }
             }
         }
         if (!minLex.isMin()) {
             if (minLex.isExcludeLex()) {
-                return BytesUtils.compare(member, minLex.getLex()) > 0;
+                if (BytesUtils.compare(member, minLex.getLex()) <= 0) {
+                    return false;
+                }
             } else {
-                return BytesUtils.compare(member, minLex.getLex()) >= 0;
+                if (BytesUtils.compare(member, minLex.getLex()) < 0) {
+                    return false;
+                }
             }
         }
         return true;

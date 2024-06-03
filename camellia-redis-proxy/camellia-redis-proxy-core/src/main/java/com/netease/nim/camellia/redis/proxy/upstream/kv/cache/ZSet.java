@@ -58,6 +58,8 @@ public class ZSet {
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
+        start = rank.getStart();
+        stop = rank.getStop();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (ZSetTuple member : this.rank) {
@@ -77,9 +79,11 @@ public class ZSet {
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
+        start = rank.getStart();
+        stop = rank.getStop();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (int i=this.rank.size() - 1; i>0; i--) {
+        for (int i=this.rank.size() - 1; i>=0; i--) {
             ZSetTuple member = this.rank.get(i);
             if (count >= start) {
                 result.add(member);
@@ -103,7 +107,7 @@ public class ZSet {
             if (count >= limit.getOffset()) {
                 result.add(member);
             }
-            if (result.size() >= limit.getCount()) {
+            if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
                 break;
             }
             count ++;
@@ -114,7 +118,7 @@ public class ZSet {
     public List<ZSetTuple> zrevrangeByScore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (int i=this.score.size() - 1; i>0; i--) {
+        for (int i=this.score.size() - 1; i>=0; i--) {
             ZSetTuple member = this.score.get(i);
             boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
@@ -123,7 +127,7 @@ public class ZSet {
             if (count >= limit.getOffset()) {
                 result.add(member);
             }
-            if (result.size() >= limit.getCount()) {
+            if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
                 break;
             }
             count ++;
@@ -142,7 +146,7 @@ public class ZSet {
             if (count >= limit.getOffset()) {
                 result.add(member);
             }
-            if (result.size() >= limit.getCount()) {
+            if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
                 break;
             }
             count++;
@@ -153,7 +157,7 @@ public class ZSet {
     public List<ZSetTuple> zrevrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (int i=this.rank.size() - 1; i>0; i--) {
+        for (int i=this.rank.size() - 1; i>=0; i--) {
             ZSetTuple member = this.rank.get(i);
             boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
             if (!pass) {
@@ -162,7 +166,7 @@ public class ZSet {
             if (count >= limit.getOffset()) {
                 result.add(member);
             }
-            if (result.size() >= limit.getCount()) {
+            if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
                 break;
             }
             count++;
@@ -197,6 +201,8 @@ public class ZSet {
         if (rank.isEmptyRank()) {
             return new HashMap<>();
         }
+        start = rank.getStart();
+        stop = rank.getStop();
         Map<BytesKey, Double> map = new HashMap<>();
         int count = 0;
         for (ZSetTuple member : this.rank) {

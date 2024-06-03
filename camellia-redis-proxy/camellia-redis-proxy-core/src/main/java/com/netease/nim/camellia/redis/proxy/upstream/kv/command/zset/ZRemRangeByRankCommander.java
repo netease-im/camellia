@@ -91,7 +91,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
             return zremrangeVersion2(keyMeta, key, cacheKey, args, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zremrangeVersion3(keyMeta, key, cacheKey, objects);
+            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand());
         }
         return ErrorReply.INTERNAL_ERROR;
     }
@@ -106,7 +106,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         stop = rank.getStop();
 
         if (localCacheResult != null) {
-            byte[][] deleteStoreKeys = new byte[localCacheResult.size()][];
+            byte[][] deleteStoreKeys = new byte[localCacheResult.size()*2][];
             int i = 0;
             for (Map.Entry<BytesKey, Double> entry : localCacheResult.entrySet()) {
                 deleteStoreKeys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());
@@ -147,7 +147,8 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                 if (count >= start) {
                     byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                     list.add(keyValue.getKey());
-                    list.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue()));
+                    double score = Utils.bytesToDouble(keyValue.getValue());
+                    list.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, BytesUtils.toBytes(score)));
                 }
                 if (count >= stop) {
                     return deleteKv(list);
