@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -87,12 +88,28 @@ public class ZRangeByLexCommander extends ZRange0Commander {
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            List<ZSetTuple> list = cacheConfig.getZSetLRUCache().zrangeByLex(cacheKey, minLex, maxLex, limit);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            List<ZSetTuple> list = zSetLRUCache.zrangeByLex(cacheKey, minLex, maxLex, limit);
             if (list != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return ZSetTupleUtils.toReply(list, false);
             }
+            if (hotKey) {
+                ZSet zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    //
+                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    //
+                    list = zSet.zrangeByLex(minLex, maxLex, limit);
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    return ZSetTupleUtils.toReply(list, false);
+                }
+            }
         }
+
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);

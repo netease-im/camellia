@@ -3,7 +3,8 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -25,7 +26,7 @@ import java.util.Map;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZAddCommander extends Commander {
+public class ZAddCommander extends ZSet0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(ret1) == 1 then\n" +
@@ -87,23 +88,40 @@ public class ZAddCommander extends Commander {
             encodeVersion = keyMeta.getEncodeVersion();
         }
 
+        Map<BytesKey, Double> existsMap = null;
         if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
             if (first) {
-                cacheConfig.getZSetLRUCache().zaddAll(cacheKey, memberMap);
+                zSetLRUCache.zaddAll(cacheKey, memberMap);
             } else {
-                cacheConfig.getZSetLRUCache().zadd(cacheKey, memberMap);
+                existsMap = zSetLRUCache.zadd(cacheKey, memberMap);
+                if (existsMap == null) {
+                    if (hotKey) {
+                        ZSet zSet = loadLRUCache(keyMeta, key);
+                        if (zSet != null) {
+                            //
+                            zSetLRUCache.putZSet(cacheKey, zSet);
+                            //
+                            existsMap = zSet.zadd(memberMap);
+                        }
+                    }
+                }
             }
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return zaddVersion0(keyMeta, key, first, memberSize, memberMap);
+            return zaddVersion0(keyMeta, key, first, memberSize, memberMap, existsMap);
         }
         if (encodeVersion == EncodeVersion.version_1) {
-            return zaddVersion1(keyMeta, key, first, memberSize, memberMap);
+            return zaddVersion1(keyMeta, key, first, memberSize, memberMap, existsMap);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zaddVersion2(keyMeta, key, first, memberSize, memberMap);
+            return zaddVersion2(keyMeta, key, first, memberSize, memberMap, existsMap);
         }
         if (encodeVersion == EncodeVersion.version_3) {
             return zaddVersion3(keyMeta, key, memberSize, memberMap);
@@ -111,7 +129,7 @@ public class ZAddCommander extends Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zaddVersion0(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap) {
+    private Reply zaddVersion0(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap) {
         if (first) {
             List<KeyValue> list = new ArrayList<>(memberSize*2);
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
@@ -128,7 +146,7 @@ public class ZAddCommander extends Commander {
             return IntegerReply.parse(memberSize);
         } else {
             byte[][] existsKeys = new byte[memberSize][];
-            int j=0;
+            int j = 0;
             List<KeyValue> list = new ArrayList<>(memberSize * 2);
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
@@ -143,23 +161,35 @@ public class ZAddCommander extends Commander {
                 j++;
             }
             int existsCount = 0;
-            List<KeyValue> keyValues = kvClient.batchGet(existsKeys);
-            List<byte[]> toDeleteSubKey2 = new ArrayList<>(existsKeys.length);
-            for (KeyValue keyValue : keyValues) {
-                if (keyValue == null) {
-                    continue;
+            if (existsMap == null) {
+                List<KeyValue> keyValues = kvClient.batchGet(existsKeys);
+                List<byte[]> toDeleteSubKey2 = new ArrayList<>(memberSize);
+                for (KeyValue keyValue : keyValues) {
+                    if (keyValue == null) {
+                        continue;
+                    }
+                    if (keyValue.getValue() == null) {
+                        continue;
+                    }
+                    byte[] subKey1 = keyValue.getKey();
+                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(subKey1, key);
+                    byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue());
+                    toDeleteSubKey2.add(subKey2);
+                    existsCount++;
                 }
-                if (keyValue.getValue() == null) {
-                    continue;
+                if (!toDeleteSubKey2.isEmpty()) {
+                    kvClient.batchDelete(toDeleteSubKey2.toArray(new byte[0][0]));
                 }
-                byte[] subKey1 = keyValue.getKey();
-                byte[] member = keyDesign.decodeZSetMemberBySubKey1(subKey1, key);
-                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue());
-                toDeleteSubKey2.add(subKey2);
-                existsCount ++;
-            }
-            if (!toDeleteSubKey2.isEmpty()) {
-                kvClient.batchDelete(toDeleteSubKey2.toArray(new byte[0][0]));
+            } else {
+                existsCount = existsMap.size();
+                List<byte[]> toDeleteSubKey2 = new ArrayList<>(existsCount);
+                for (Map.Entry<BytesKey, Double> entry : existsMap.entrySet()) {
+                    byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, entry.getKey().getKey(), BytesUtils.toBytes(entry.getValue()));
+                    toDeleteSubKey2.add(subKey2);
+                }
+                if (!toDeleteSubKey2.isEmpty()) {
+                    kvClient.batchDelete(toDeleteSubKey2.toArray(new byte[0][0]));
+                }
             }
             int add = memberSize - existsCount;
             kvClient.batchPut(list);
@@ -168,7 +198,7 @@ public class ZAddCommander extends Commander {
         }
     }
 
-    private Reply zaddVersion1(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap) {
+    private Reply zaddVersion1(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap) {
         if (first) {
             List<KeyValue> list = new ArrayList<>(memberSize);
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
@@ -194,13 +224,19 @@ public class ZAddCommander extends Commander {
                 return reply;
             }
             int add = -1;
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                        if (replies[1] instanceof IntegerReply) {
-                            add = (((IntegerReply) replies[1]).getInteger()).intValue();
+
+            if (existsMap != null) {
+                add = memberSize - existsMap.size();
+            }
+            if (add < 0) {
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                    if (replies[0] instanceof BulkReply) {
+                        byte[] raw = ((BulkReply) replies[0]).getRaw();
+                        if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
+                            if (replies[1] instanceof IntegerReply) {
+                                add = (((IntegerReply) replies[1]).getInteger()).intValue();
+                            }
                         }
                     }
                 }
@@ -236,7 +272,7 @@ public class ZAddCommander extends Commander {
         }
     }
 
-    private Reply zaddVersion2(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap) {
+    private Reply zaddVersion2(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap) {
         List<KeyValue> list = new ArrayList<>(memberSize*2);
         if (first) {
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
@@ -283,13 +319,19 @@ public class ZAddCommander extends Commander {
             commands.addAll(cmdList);
             List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commands));
             Reply reply = replyList.get(0);
+
             int add = -1;
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                byte[] raw = ((BulkReply) replies[0]).getRaw();
-                if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                    if (replies[1] instanceof IntegerReply) {
-                        add = ((IntegerReply) replies[1]).getInteger().intValue();
+            if (existsMap != null) {
+                add = memberSize - existsMap.size();
+            }
+            if (add < 0) {
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                    byte[] raw = ((BulkReply) replies[0]).getRaw();
+                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
+                        if (replies[1] instanceof IntegerReply) {
+                            add = ((IntegerReply) replies[1]).getInteger().intValue();
+                        }
                     }
                 }
             }

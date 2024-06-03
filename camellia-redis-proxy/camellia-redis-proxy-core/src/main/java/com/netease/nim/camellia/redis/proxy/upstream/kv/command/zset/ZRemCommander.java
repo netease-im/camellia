@@ -4,6 +4,8 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
@@ -24,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  * Created by caojiajun on 2024/5/8
  */
-public class ZRemCommander extends Commander {
+public class ZRemCommander extends ZSet0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(ret1) == 1 then\n" +
@@ -67,10 +69,25 @@ public class ZRemCommander extends Commander {
 
         Map<BytesKey, Double> localCacheResult = null;
         if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            localCacheResult = cacheConfig.getZSetLRUCache().zrem(cacheKey, members);
+
+            localCacheResult = zSetLRUCache.zrem(cacheKey, members);
             if (localCacheResult != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
+            if (hotKey && localCacheResult == null) {
+                ZSet zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    //
+                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    //
+                    localCacheResult = zSet.zrem(members);
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             }
         }
 

@@ -7,11 +7,9 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -25,7 +23,7 @@ import java.util.Map;
 /**
  * Created by caojiajun on 2024/5/7
  */
-public abstract class ZRange0Commander extends Commander {
+public abstract class ZRange0Commander extends ZSet0Commander {
 
     public ZRange0Commander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -41,6 +39,7 @@ public abstract class ZRange0Commander extends Commander {
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
+
         byte[][] cmd = new byte[tuples.size() * 2 + 2][];
         cmd[0] = RedisCommand.ZADD.raw();
         cmd[1] = cacheKey;
@@ -142,32 +141,6 @@ public abstract class ZRange0Commander extends Commander {
 
     protected final byte[] zsetRangeCacheMillis() {
         return Utils.stringToBytes(String.valueOf(cacheConfig.zsetRangeCacheMillis()));
-    }
-
-    protected final List<ZSetTuple> zrangeAllFromKv(KeyMeta keyMeta, byte[] key) {
-        List<ZSetTuple> list = new ArrayList<>();
-        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
-        byte[] prefix = startKey;
-        int limit = kvConfig.scanBatch();
-        int zsetMaxSize = kvConfig.zsetMaxSize();
-        while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
-            if (scan.isEmpty()) {
-                break;
-            }
-            for (KeyValue keyValue : scan) {
-                byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
-                list.add(new ZSetTuple(new BytesKey(member), Utils.bytesToDouble(keyValue.getValue())));
-                startKey = keyValue.getKey();
-                if (list.size() >= zsetMaxSize) {
-                    break;
-                }
-            }
-            if (scan.size() < limit) {
-                break;
-            }
-        }
-        return list;
     }
 
     protected final Reply zrangeFromRedis(byte[] cacheKey, byte[] script, byte[][] args, boolean delayTtl) {

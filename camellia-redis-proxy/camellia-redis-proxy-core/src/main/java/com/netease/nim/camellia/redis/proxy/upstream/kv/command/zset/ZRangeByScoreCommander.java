@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -78,10 +79,26 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            List<ZSetTuple> list = cacheConfig.getZSetLRUCache().zrangebyscore(cacheKey, minScore, maxScore, limit);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            List<ZSetTuple> list = zSetLRUCache.zrangebyscore(cacheKey, minScore, maxScore, limit);
             if (list != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return ZSetTupleUtils.toReply(list, withScores);
+            }
+
+            if (hotKey) {
+                ZSet zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    //
+                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    //
+                    list = zSet.zrangebyscore(minScore, maxScore, limit);
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    return ZSetTupleUtils.toReply(list, withScores);
+                }
             }
         }
 

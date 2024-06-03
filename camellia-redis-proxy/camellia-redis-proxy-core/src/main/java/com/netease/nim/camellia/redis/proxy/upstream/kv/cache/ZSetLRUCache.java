@@ -3,11 +3,9 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetLex;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetLimit;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetScore;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetTuple;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +23,14 @@ public class ZSetLRUCache {
     private static final Logger logger = LoggerFactory.getLogger(ZSetLRUCache.class);
 
     private final String namespace;
+    private final HotKeyCalculator hotKeyCalculator;
+
     private int capacity;
     private ConcurrentLinkedHashMap<BytesKey, ZSet> localCache;
 
     public ZSetLRUCache(String namespace) {
         this.namespace = namespace;
+        this.hotKeyCalculator = new HotKeyCalculator(namespace, KeyType.zset);
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
         ClusterModeStatus.registerClusterModeSlotRefreshCallback(localCache::clear);
@@ -51,17 +52,16 @@ public class ZSetLRUCache {
         this.capacity = capacity;
     }
 
+    public boolean isHotKey(byte[] key) {
+        return hotKeyCalculator.isHotKey(key);
+    }
+
     public void zaddAll(byte[] cacheKey, Map<BytesKey, Double> map) {
         ZSet zSet = new ZSet(new HashMap<>(map));
         localCache.put(new BytesKey(cacheKey), zSet);
     }
 
-    public void zaddAll(byte[] cacheKey, List<ZSetTuple> list) {
-        Map<BytesKey, Double> map1 = new HashMap<>();
-        for (ZSetTuple tuple : list) {
-            map1.put(tuple.getMember(), tuple.getScore());
-        }
-        ZSet zSet = new ZSet(map1);
+    public void putZSet(byte[] cacheKey, ZSet zSet) {
         localCache.put(new BytesKey(cacheKey), zSet);
     }
 

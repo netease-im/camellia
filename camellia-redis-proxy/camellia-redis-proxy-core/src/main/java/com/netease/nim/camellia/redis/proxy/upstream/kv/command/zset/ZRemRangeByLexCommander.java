@@ -7,6 +7,8 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -91,12 +93,27 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            localCacheResult = cacheConfig.getZSetLRUCache().zremrangeByLex(cacheKey, minLex, maxLex);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            localCacheResult = zSetLRUCache.zremrangeByLex(cacheKey, minLex, maxLex);
             if (localCacheResult != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
             if (localCacheResult != null && localCacheResult.isEmpty()) {
                 return IntegerReply.REPLY_0;
+            }
+
+            if (hotKey && localCacheResult == null) {
+                ZSet zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    //
+                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    //
+                    localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             }
         }
 

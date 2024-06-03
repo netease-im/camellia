@@ -6,6 +6,8 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -78,18 +80,37 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         Map<BytesKey, Double> localCacheResult = null;
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            localCacheResult = cacheConfig.getZSetLRUCache().zremrangeByScore(cacheKey, minScore, maxScore);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            localCacheResult = zSetLRUCache.zremrangeByScore(cacheKey, minScore, maxScore);
             if (localCacheResult != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
             if (localCacheResult != null && localCacheResult.isEmpty()) {
                 return IntegerReply.REPLY_0;
             }
+
+            if (hotKey && localCacheResult == null) {
+                ZSet zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    //
+                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    //
+                    localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
+            }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
             return zremrangeByScore(keyMeta, key, minScore, maxScore, localCacheResult);
+        }
+
+        if (encodeVersion == EncodeVersion.version_3) {
+            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand());
         }
 
         byte[][] args = new byte[objects.length - 2][];
@@ -101,9 +122,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         if (encodeVersion == EncodeVersion.version_2) {
             return zremrangeVersion2(keyMeta, key, cacheKey, args, script);
         }
-        if (encodeVersion == EncodeVersion.version_3) {
-            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand());
-        }
+
         return ErrorReply.INTERNAL_ERROR;
     }
 
