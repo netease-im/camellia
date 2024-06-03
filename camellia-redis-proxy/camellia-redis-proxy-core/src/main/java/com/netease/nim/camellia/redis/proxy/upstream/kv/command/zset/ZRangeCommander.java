@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -68,26 +69,34 @@ public class ZRangeCommander extends ZRange0Commander {
         int start = (int) Utils.bytesToNum(objects[2]);
         int stop = (int) Utils.bytesToNum(objects[3]);
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            List<ZSet.Member> list = cacheConfig.getZSetLRUCache().zrange(cacheKey, start, stop);
+            List<ZSetTuple> list = cacheConfig.getZSetLRUCache().zrange(cacheKey, start, stop);
             if (list != null) {
-                return ZSetTupleUtils.toReplyOfMember(list, withScores);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, withScores);
             }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
         if (encodeVersion == EncodeVersion.version_0) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zrangeVersion0(keyMeta, key, start, stop, withScores);
         }
+
+        byte[][] args = new byte[objects.length - 2][];
+        System.arraycopy(objects, 2, args, 0, args.length);
+
         if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script, true);
+            return zrangeVersion1(keyMeta, key, cacheKey, args, script, true);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, withScores, script, true);
+            return zrangeVersion2(keyMeta, key, cacheKey, args, withScores, script, true);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, withScores);
+            return zrangeVersion3(keyMeta, key, cacheKey, objects, withScores);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
@@ -126,8 +135,8 @@ public class ZRangeCommander extends ZRange0Commander {
                 if (count >= start) {
                     byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                     if (withScores) {
-                        byte[] score = Utils.doubleToBytes(BytesUtils.toDouble(keyValue.getValue()));
-                        list.add(new ZSetTuple(new BytesKey(member), new BytesKey(score)));
+                        double score = BytesUtils.toDouble(keyValue.getValue());
+                        list.add(new ZSetTuple(new BytesKey(member), score));
                     } else {
                         list.add(new ZSetTuple(new BytesKey(member), null));
                     }

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -76,11 +77,13 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
             return MultiBulkReply.EMPTY;
         }
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            List<ZSet.Member> list = cacheConfig.getZSetLRUCache().zrevrangeByScore(cacheKey, minScore, maxScore, limit);
+            List<ZSetTuple> list = cacheConfig.getZSetLRUCache().zrevrangeByScore(cacheKey, minScore, maxScore, limit);
             if (list != null) {
-                return ZSetTupleUtils.toReplyOfMember(list, withScores);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, withScores);
             }
         }
 
@@ -88,14 +91,18 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             return zrevrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
         }
+
+        byte[][] args = new byte[objects.length - 2][];
+        System.arraycopy(objects, 2, args, 0, args.length);
+
         if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script, true);
+            return zrangeVersion1(keyMeta, key, cacheKey, args , script, true);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, withScores, script, true);
+            return zrangeVersion2(keyMeta, key, cacheKey, args, withScores, script, true);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, withScores);
+            return zrangeVersion3(keyMeta, key, cacheKey, objects, withScores);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
@@ -131,7 +138,7 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
                     byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
                     ZSetTuple tuple;
                     if (withScores) {
-                        tuple = new ZSetTuple(new BytesKey(member), new BytesKey(Utils.doubleToBytes(score)));
+                        tuple = new ZSetTuple(new BytesKey(member), score);
                     } else {
                         tuple = new ZSetTuple(new BytesKey(member), null);
                     }

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -60,6 +61,12 @@ public class ZRangeByLexCommander extends ZRange0Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
+        if (encodeVersion == EncodeVersion.version_3) {
+            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
+        }
+
         ZSetLex minLex;
         ZSetLex maxLex;
         ZSetLimit limit;
@@ -77,28 +84,31 @@ public class ZRangeByLexCommander extends ZRange0Commander {
             return MultiBulkReply.EMPTY;
         }
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            List<ZSet.Member> list = cacheConfig.getZSetLRUCache().zrangeByLex(cacheKey, minLex, maxLex, limit);
+            List<ZSetTuple> list = cacheConfig.getZSetLRUCache().zrangeByLex(cacheKey, minLex, maxLex, limit);
             if (list != null) {
-                return ZSetTupleUtils.toReplyOfMember(list, false);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, false);
             }
         }
-
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
-            return zrangeByLexVersion0OrVersion1(keyMeta, key, minLex, maxLex, limit);
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return zrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);
         }
+
+        byte[][] args = new byte[objects.length - 2][];
+        System.arraycopy(objects, 2, args, 0, args.length);
+
         if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script, true);
+            return zrangeVersion1(keyMeta, key, cacheKey, args, script, true);
         }
-        if (encodeVersion == EncodeVersion.version_3) {
-            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
-        }
+
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrangeByLexVersion0OrVersion1(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    private Reply zrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         byte[] startKey;
         if (minLex.isMin()) {
             startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);

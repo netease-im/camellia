@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -11,10 +12,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ZREMRANGEBYRANK key start stop
@@ -60,32 +63,40 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         int start = (int) Utils.bytesToNum(objects[2]);
         int stop = (int) Utils.bytesToNum(objects[3]);
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        Map<BytesKey, Double> localCacheResult = null;
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            cacheConfig.getZSetLRUCache().zremrangeByRank(cacheKey, start, stop);
+            localCacheResult = cacheConfig.getZSetLRUCache().zremrangeByRank(cacheKey, start, stop);
+            if (localCacheResult != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
+            if (localCacheResult != null && localCacheResult.isEmpty()) {
+                return IntegerReply.REPLY_0;
+            }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByRank(keyMeta, key, start, stop);
+            return zremrangeByRankVersion0(keyMeta, key, start, stop, localCacheResult);
         }
-        byte[][] zrangeArgs = new byte[objects.length][];
-        System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
-        zrangeArgs[0] = RedisCommand.ZRANGE.raw();
+
+        byte[][] args = new byte[objects.length - 2][];
+        System.arraycopy(objects, 2, args, 0, args.length);
+
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, zrangeArgs, script);
+            return zremrangeVersion1(keyMeta, key, cacheKey, args, script);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zremrangeVersion2(keyMeta, key, zrangeArgs, script);
+            return zremrangeVersion2(keyMeta, key, cacheKey, args, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            zrangeArgs[1] = keyDesign.cacheKey(keyMeta, key);
-            return zremrangeVersion3(keyMeta, key, zrangeArgs);
+            return zremrangeVersion3(keyMeta, key, cacheKey, objects);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByRank(KeyMeta keyMeta, byte[] key, int start, int stop) {
+    private Reply zremrangeByRankVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, Map<BytesKey, Double> localCacheResult) {
         int size = BytesUtils.toInt(keyMeta.getExtra());
         ZSetRank rank = new ZSetRank(start, stop, size);
         if (rank.isEmptyRank()) {
@@ -93,6 +104,20 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         }
         start = rank.getStart();
         stop = rank.getStop();
+
+        if (localCacheResult != null) {
+            byte[][] deleteStoreKeys = new byte[localCacheResult.size()][];
+            int i = 0;
+            for (Map.Entry<BytesKey, Double> entry : localCacheResult.entrySet()) {
+                deleteStoreKeys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());
+                deleteStoreKeys[i+1] = keyDesign.zsetMemberSubKey2(keyMeta, key, entry.getKey().getKey(), BytesUtils.toBytes(entry.getValue()));
+                i+=2;
+            }
+            kvClient.batchDelete(deleteStoreKeys);
+            size = size - localCacheResult.size();
+            updateKeyMeta(keyMeta, key, size);
+            return IntegerReply.parse(localCacheResult.size());
+        }
 
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         int ret = zremrangeByRank0(keyMeta, key, startKey, startKey, start, stop);

@@ -21,8 +21,8 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
         super(commanderConfig);
     }
 
-    protected final Reply zremrangeVersion1(KeyMeta keyMeta, byte[] key, byte[][] zrangeArgs, byte[] script) {
-        Reply reply = zrangeVersion1(keyMeta, key, zrangeArgs, script, false);
+    protected final Reply zremrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] args, byte[] script) {
+        Reply reply = zrangeVersion1(keyMeta, key, cacheKey, args, script, false);
         if (reply instanceof ErrorReply) {
             return reply;
         }
@@ -31,7 +31,6 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             if (replies.length == 0) {
                 return IntegerReply.REPLY_0;
             }
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] zremCmd = new byte[replies.length + 2][];
             zremCmd[0] = RedisCommand.ZREM.raw();
             zremCmd[1] = cacheKey;
@@ -68,8 +67,8 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final Reply zremrangeVersion2(KeyMeta keyMeta, byte[] key, byte[][] zrangeArgs, byte[] script) {
-        Reply reply = zrangeVersion2(keyMeta, key, zrangeArgs, false, script, false);
+    protected final Reply zremrangeVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] args, byte[] script) {
+        Reply reply = zrangeVersion2(keyMeta, key, cacheKey, args, false, script, false);
         if (reply instanceof ErrorReply) {
             return reply;
         }
@@ -78,7 +77,6 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             if (replies.length == 0) {
                 return IntegerReply.REPLY_0;
             }
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] zremCmd = new byte[replies.length + 2][];
             zremCmd[0] = RedisCommand.ZREM.raw();
             zremCmd[1] = cacheKey;
@@ -125,8 +123,11 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final Reply zremrangeVersion3(KeyMeta keyMeta, byte[] key, byte[][] zrangeArgs) {
-        Reply reply = sync(storeRedisTemplate.sendCommand(new Command(zrangeArgs)));
+    protected final Reply zremrangeVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects) {
+        byte[][] cmd = new byte[objects.length][];
+        System.arraycopy(objects, 0, cmd, 0, objects.length);
+        cmd[1] = cacheKey;
+        Reply reply = sync(storeRedisTemplate.sendCommand(new Command(cmd)));
         if (reply instanceof ErrorReply) {
             return reply;
         }
@@ -135,7 +136,6 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             if (replies.length == 0) {
                 return IntegerReply.REPLY_0;
             }
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] zremCmd = new byte[replies.length + 2][];
             zremCmd[0] = RedisCommand.ZREM.raw();
             zremCmd[1] = cacheKey;

@@ -8,11 +8,11 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetLimit;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetScore;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZSetTuple;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,37 +51,29 @@ public class ZSetLRUCache {
         this.capacity = capacity;
     }
 
-    public void zaddAll(byte[] cacheKey, Map<BytesKey, byte[]> map) {
-        Map<BytesKey, Double> map1 = new HashMap<>();
-        for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
-            map1.put(entry.getKey(), Double.parseDouble(Utils.bytesToString(entry.getValue())));
-        }
-        ZSet zSet = new ZSet(map1);
+    public void zaddAll(byte[] cacheKey, Map<BytesKey, Double> map) {
+        ZSet zSet = new ZSet(new HashMap<>(map));
         localCache.put(new BytesKey(cacheKey), zSet);
     }
 
     public void zaddAll(byte[] cacheKey, List<ZSetTuple> list) {
         Map<BytesKey, Double> map1 = new HashMap<>();
         for (ZSetTuple tuple : list) {
-            map1.put(tuple.getMember(), Double.parseDouble(Utils.bytesToString(tuple.getScore().getKey())));
+            map1.put(tuple.getMember(), tuple.getScore());
         }
         ZSet zSet = new ZSet(map1);
         localCache.put(new BytesKey(cacheKey), zSet);
     }
 
-    public Map<BytesKey, Double> zadd(byte[] cacheKey, Map<BytesKey, byte[]> map) {
+    public Map<BytesKey, Double> zadd(byte[] cacheKey, Map<BytesKey, Double> map) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
         }
-        Map<BytesKey, Double> map1 = new HashMap<>();
-        for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
-            map1.put(entry.getKey(), Utils.bytesToDouble(entry.getValue()));
-        }
-        return zSet.zadd(map1);
+        return zSet.zadd(map);
     }
 
-    public List<ZSet.Member> zrange(byte[] cacheKey, int start, int stop) {
+    public List<ZSetTuple> zrange(byte[] cacheKey, int start, int stop) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
@@ -89,7 +81,7 @@ public class ZSetLRUCache {
         return zSet.zrange(start, stop);
     }
 
-    public List<ZSet.Member> zrevrange(byte[] cacheKey, int start, int stop) {
+    public List<ZSetTuple> zrevrange(byte[] cacheKey, int start, int stop) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
@@ -97,7 +89,7 @@ public class ZSetLRUCache {
         return zSet.zrevrange(start, stop);
     }
 
-    public List<ZSet.Member> zrangebyscore(byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
+    public List<ZSetTuple> zrangebyscore(byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
@@ -105,7 +97,7 @@ public class ZSetLRUCache {
         return zSet.zrangebyscore(minScore, maxScore, limit);
     }
 
-    public List<ZSet.Member> zrevrangeByScore(byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
+    public List<ZSetTuple> zrevrangeByScore(byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
@@ -113,7 +105,7 @@ public class ZSetLRUCache {
         return zSet.zrevrangeByScore(minScore, maxScore, limit);
     }
 
-    public List<ZSet.Member> zrangeByLex(byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    public List<ZSetTuple> zrangeByLex(byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
@@ -121,7 +113,7 @@ public class ZSetLRUCache {
         return zSet.zrangeByLex(minLex, maxLex, limit);
     }
 
-    public List<ZSet.Member> zrevrangeByLex(byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    public List<ZSetTuple> zrevrangeByLex(byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;
@@ -145,7 +137,7 @@ public class ZSetLRUCache {
         return zSet.zcard();
     }
 
-    public Map<BytesKey, Double> zrem(byte[] cacheKey, List<BytesKey> members) {
+    public Map<BytesKey, Double> zrem(byte[] cacheKey, Collection<BytesKey> members) {
         ZSet zSet = localCache.get(new BytesKey(cacheKey));
         if (zSet == null) {
             return null;

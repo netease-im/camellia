@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -30,21 +31,22 @@ public abstract class ZRange0Commander extends Commander {
         super(commanderConfig);
     }
 
-    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects, byte[] script, boolean forRead) {
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-        byte[][] args = new byte[objects.length - 2][];
-        System.arraycopy(objects, 2, args, 0, args.length);
+    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] args, byte[] script, boolean forRead) {
         Reply reply = zrangeFromRedis(cacheKey, script, args, forRead);
         if (reply != null) {
+            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return reply;
         }
+
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
         List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
         byte[][] cmd = new byte[tuples.size() * 2 + 2][];
         cmd[0] = RedisCommand.ZADD.raw();
         cmd[1] = cacheKey;
         int i = 2;
         for (ZSetTuple tuple : tuples) {
-            cmd[i] = tuple.getScore().getKey();
+            cmd[i] = Utils.doubleToBytes(tuple.getScore());
             cmd[i + 1] = tuple.getMember().getKey();
             i += 2;
         }
@@ -66,17 +68,18 @@ public abstract class ZRange0Commander extends Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final Reply zrangeVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores, byte[] script, boolean forRead) {
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-        byte[][] args = new byte[objects.length - 2][];
-        System.arraycopy(objects, 2, args, 0, args.length);
+    protected final Reply zrangeVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] args, boolean withScores, byte[] script, boolean forRead) {
         Reply reply = zrangeFromRedis(cacheKey, script, args, forRead);
         if (reply != null) {
+            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (reply instanceof MultiBulkReply) {
                 return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores);
             }
             return reply;
         }
+
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
         List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
         byte[][] cmd = new byte[tuples.size() * 2 + 2][];
         cmd[0] = RedisCommand.ZADD.raw();
@@ -84,7 +87,7 @@ public abstract class ZRange0Commander extends Commander {
         List<Command> refCommands = new ArrayList<>();
         int i = 2;
         for (ZSetTuple tuple : tuples) {
-            cmd[i] = tuple.getScore().getKey();
+            cmd[i] = Utils.doubleToBytes(tuple.getScore());
             byte[] member = tuple.getMember().getKey();
             Index index = Index.fromRaw(member);
             cmd[i + 1] = index.getRef();
@@ -118,12 +121,11 @@ public abstract class ZRange0Commander extends Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final Reply zrangeVersion3(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+    protected final Reply zrangeVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, boolean withScores) {
         byte[][] cmd = new byte[objects.length][];
-        cmd[0] = objects[0];
+        System.arraycopy(objects, 0, cmd, 0, objects.length);
         cmd[1] = cacheKey;
-        System.arraycopy(objects, 2, cmd, 2, objects.length - 2);
+
         Reply reply = sync(storeRedisTemplate.sendCommand(new Command(cmd)));
         if (reply instanceof ErrorReply) {
             return reply;
@@ -155,7 +157,7 @@ public abstract class ZRange0Commander extends Commander {
             }
             for (KeyValue keyValue : scan) {
                 byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
-                list.add(new ZSetTuple(new BytesKey(member), new BytesKey(keyValue.getValue())));
+                list.add(new ZSetTuple(new BytesKey(member), Utils.bytesToDouble(keyValue.getValue())));
                 startKey = keyValue.getKey();
                 if (list.size() >= zsetMaxSize) {
                     break;
@@ -210,6 +212,9 @@ public abstract class ZRange0Commander extends Commander {
                 }
             }
         }
+
+        int indexTotal = missingMemberMap.size();
+
         if (!missingMemberMap.isEmpty()) {
             BytesKey[] bytesKeys = missingMemberMap.keySet().toArray(new BytesKey[0]);
             List<Command> commandList = new ArrayList<>(bytesKeys.length);
@@ -240,6 +245,9 @@ public abstract class ZRange0Commander extends Commander {
                 }
             }
         }
+
+        int indexCacheHit = indexTotal - missingMemberMap.size();
+
         if (!missingMemberMap.isEmpty()) {
             byte[][] batchGetKeys = new byte[missingMemberMap.size()][];
             int i=0;
@@ -272,6 +280,10 @@ public abstract class ZRange0Commander extends Commander {
                 }
             }
         }
+
+        KvCacheMonitor.redisCache(cacheConfig.getNamespace(), "zset_index", indexCacheHit);
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "zset_index", indexTotal - indexCacheHit);
+
         if (!missingMemberMap.isEmpty()) {
             ErrorLogCollector.collect(ZRange0Commander.class, "zrange kv index missing");
         }

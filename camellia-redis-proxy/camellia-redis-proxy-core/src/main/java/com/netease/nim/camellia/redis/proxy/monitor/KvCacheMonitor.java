@@ -36,9 +36,21 @@ public class KvCacheMonitor {
         counter.redisCache.increment();
     }
 
+    public static void redisCache(String namespace, String operation, long add) {
+        if (add <= 0) return;
+        Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
+        counter.redisCache.add(add);
+    }
+
     public static void kvStore(String namespace, String operation) {
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.kvStore.increment();
+    }
+
+    public static void kvStore(String namespace, String operation, long add) {
+        if (add <= 0) return;
+        Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
+        counter.kvStore.add(add);
     }
 
     public static List<KvCacheStats> collect() {

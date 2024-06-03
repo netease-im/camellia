@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -67,20 +68,24 @@ public class ZScoreCommander extends Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             Double zscore = cacheConfig.getZSetLRUCache().zscore(cacheKey, new BytesKey(member));
             if (zscore != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new BulkReply(Utils.doubleToBytes(zscore));
             }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zscoreFromKv(keyMeta, key, member);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
             Reply reply = checkCache(script, cacheKey, new byte[][]{member, zsetRangeCacheMillis()});
             if (reply != null) {
+                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return reply;
             }
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zscoreFromKv(keyMeta, key, member);
         }
 
@@ -88,13 +93,16 @@ public class ZScoreCommander extends Commander {
             Index index = Index.fromRaw(member);
             Reply reply = checkCache(script, cacheKey, new byte[][]{index.getRef(), zsetRangeCacheMillis()});
             if (reply != null) {
+                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return reply;
             }
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zscoreFromKv(keyMeta, key, member);
         }
 
         if (encodeVersion == EncodeVersion.version_3) {
             Index index = Index.fromRaw(member);
+            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return sync(storeRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZSCORE.raw(), cacheKey, index.getRef()})));
         }
 

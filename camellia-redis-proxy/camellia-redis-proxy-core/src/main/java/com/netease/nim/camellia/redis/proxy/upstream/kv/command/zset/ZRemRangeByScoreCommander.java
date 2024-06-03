@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -12,10 +13,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ZREMRANGEBYSCORE key min max
@@ -70,32 +73,56 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             return IntegerReply.REPLY_0;
         }
 
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        Map<BytesKey, Double> localCacheResult = null;
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            cacheConfig.getZSetLRUCache().zremrangeByScore(cacheKey, minScore, maxScore);
+            localCacheResult = cacheConfig.getZSetLRUCache().zremrangeByScore(cacheKey, minScore, maxScore);
+            if (localCacheResult != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
+            if (localCacheResult != null && localCacheResult.isEmpty()) {
+                return IntegerReply.REPLY_0;
+            }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByScore(keyMeta, key, minScore, maxScore);
+            return zremrangeByScore(keyMeta, key, minScore, maxScore, localCacheResult);
         }
-        byte[][] zrangeArgs = new byte[objects.length][];
-        System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
-        zrangeArgs[0] = RedisCommand.ZRANGEBYSCORE.raw();
+
+        byte[][] args = new byte[objects.length - 2][];
+        System.arraycopy(objects, 2, args, 0, args.length);
+
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, zrangeArgs, script);
+            return zremrangeVersion1(keyMeta, key, cacheKey, args, script);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zremrangeVersion2(keyMeta, key, zrangeArgs, script);
+            return zremrangeVersion2(keyMeta, key, cacheKey, args, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            zrangeArgs[1] = keyDesign.cacheKey(keyMeta, key);
-            return zremrangeVersion3(keyMeta, key, zrangeArgs);
+            return zremrangeVersion3(keyMeta, key, cacheKey, objects);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore) {
+    private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, Map<BytesKey, Double> localCacheResult) {
+        if (localCacheResult != null) {
+            int size = BytesUtils.toInt(keyMeta.getExtra());
+            byte[][] deleteStoreKeys = new byte[localCacheResult.size()][];
+            int i = 0;
+            for (Map.Entry<BytesKey, Double> entry : localCacheResult.entrySet()) {
+                deleteStoreKeys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());
+                deleteStoreKeys[i+1] = keyDesign.zsetMemberSubKey2(keyMeta, key, entry.getKey().getKey(), BytesUtils.toBytes(entry.getValue()));
+                i+=2;
+            }
+            kvClient.batchDelete(deleteStoreKeys);
+            size = size - localCacheResult.size();
+            updateKeyMeta(keyMeta, key, size);
+            return IntegerReply.parse(localCacheResult.size());
+        }
+
         byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         int batch = kvConfig.scanBatch();

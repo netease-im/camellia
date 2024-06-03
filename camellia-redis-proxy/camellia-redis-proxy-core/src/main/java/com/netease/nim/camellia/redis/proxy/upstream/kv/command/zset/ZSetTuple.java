@@ -9,9 +9,9 @@ import java.util.Objects;
  */
 public class ZSetTuple {
     private final BytesKey member;
-    private final BytesKey score;
+    private final Double score;
 
-    public ZSetTuple(BytesKey member, BytesKey score) {
+    public ZSetTuple(BytesKey member, Double score) {
         this.member = member;
         this.score = score;
     }
@@ -20,7 +20,7 @@ public class ZSetTuple {
         return member;
     }
 
-    public BytesKey getScore() {
+    public Double getScore() {
         return score;
     }
 

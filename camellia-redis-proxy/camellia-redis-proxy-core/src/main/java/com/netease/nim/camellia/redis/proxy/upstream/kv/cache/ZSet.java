@@ -12,8 +12,8 @@ import java.util.*;
 public class ZSet {
 
     private final Map<BytesKey, Double> memberMap;
-    private List<Member> rank = new ArrayList<>();
-    private List<Member> score = new ArrayList<>();
+    private List<ZSetTuple> rank = new ArrayList<>();
+    private List<ZSetTuple> score = new ArrayList<>();
 
     public ZSet(Map<BytesKey, Double> memberMap) {
         this.memberMap = memberMap;
@@ -21,16 +21,16 @@ public class ZSet {
     }
 
     private void refresh() {
-        List<Member> list = new ArrayList<>(memberMap.size());
+        List<ZSetTuple> list = new ArrayList<>(memberMap.size());
         for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
-            list.add(new Member(entry.getKey(), entry.getValue()));
+            list.add(new ZSetTuple(entry.getKey(), entry.getValue()));
         }
 
-        List<Member> rank = new ArrayList<>(list);
+        List<ZSetTuple> rank = new ArrayList<>(list);
         rank.sort((o1, o2) -> BytesUtils.compare(o1.getMember().getKey(), o2.getMember().getKey()));
         this.rank = rank;
 
-        List<Member> score = new ArrayList<>(list);
+        List<ZSetTuple> score = new ArrayList<>(list);
         score.sort((o1, o2) -> {
             int compare = Double.compare(o1.getScore(), o2.getScore());
             if (compare != 0) {
@@ -53,14 +53,14 @@ public class ZSet {
         return existsMap;
     }
 
-    public List<Member> zrange(int start, int stop) {
+    public List<ZSetTuple> zrange(int start, int stop) {
         ZSetRank rank = new ZSetRank(start, stop, memberMap.size());
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
-        List<Member> result = new ArrayList<>();
+        List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (Member member : this.rank) {
+        for (ZSetTuple member : this.rank) {
             if (count >= start) {
                 result.add(member);
             }
@@ -72,15 +72,15 @@ public class ZSet {
         return result;
     }
 
-    public List<Member> zrevrange(int start, int stop) {
+    public List<ZSetTuple> zrevrange(int start, int stop) {
         ZSetRank rank = new ZSetRank(start, stop, memberMap.size());
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
-        List<Member> result = new ArrayList<>();
+        List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (int i=this.rank.size() - 1; i>0; i--) {
-            Member member = this.rank.get(i);
+            ZSetTuple member = this.rank.get(i);
             if (count >= start) {
                 result.add(member);
             }
@@ -92,11 +92,11 @@ public class ZSet {
         return result;
     }
 
-    public List<Member> zrangebyscore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
-        List<Member> result = new ArrayList<>();
+    public List<ZSetTuple> zrangebyscore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
+        List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (Member member : score) {
-            boolean pass = ZSetScoreUtils.checkScore(member.score, minScore, maxScore);
+        for (ZSetTuple member : score) {
+            boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                continue;
             }
@@ -111,12 +111,12 @@ public class ZSet {
         return result;
     }
 
-    public List<Member> zrevrangeByScore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
-        List<Member> result = new ArrayList<>();
+    public List<ZSetTuple> zrevrangeByScore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
+        List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (int i=this.score.size() - 1; i>0; i--) {
-            Member member = this.score.get(i);
-            boolean pass = ZSetScoreUtils.checkScore(member.score, minScore, maxScore);
+            ZSetTuple member = this.score.get(i);
+            boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                 continue;
             }
@@ -131,10 +131,10 @@ public class ZSet {
         return result;
     }
 
-    public List<Member> zrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
-        List<Member> result = new ArrayList<>();
+    public List<ZSetTuple> zrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+        List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (Member member : this.rank) {
+        for (ZSetTuple member : this.rank) {
             boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
             if (!pass) {
                 continue;
@@ -150,11 +150,11 @@ public class ZSet {
         return result;
     }
 
-    public List<Member> zrevrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
-        List<Member> result = new ArrayList<>();
+    public List<ZSetTuple> zrevrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+        List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (int i=this.rank.size() - 1; i>0; i--) {
-            Member member = this.rank.get(i);
+            ZSetTuple member = this.rank.get(i);
             boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
             if (!pass) {
                 continue;
@@ -178,7 +178,7 @@ public class ZSet {
         return memberMap.size();
     }
 
-    public Map<BytesKey, Double> zrem(List<BytesKey> members) {
+    public Map<BytesKey, Double> zrem(Collection<BytesKey> members) {
         Map<BytesKey, Double> map = new HashMap<>();
         for (BytesKey bytesKey : members) {
             Double remove = memberMap.remove(bytesKey);
@@ -199,10 +199,10 @@ public class ZSet {
         }
         Map<BytesKey, Double> map = new HashMap<>();
         int count = 0;
-        for (Member member : this.rank) {
+        for (ZSetTuple member : this.rank) {
             if (count >= start) {
-                map.put(member.member, member.score);
-                memberMap.remove(member.member);
+                map.put(member.getMember(), member.getScore());
+                memberMap.remove(member.getMember());
             }
             if (count >= stop) {
                 break;
@@ -217,13 +217,13 @@ public class ZSet {
 
     public Map<BytesKey, Double> zremrangeByScore(ZSetScore minScore, ZSetScore maxScore) {
         Map<BytesKey, Double> map = new HashMap<>();
-        for (Member member : score) {
-            boolean pass = ZSetScoreUtils.checkScore(member.score, minScore, maxScore);
+        for (ZSetTuple member : score) {
+            boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                 continue;
             }
-            map.put(member.member, member.score);
-            memberMap.remove(member.member);
+            map.put(member.getMember(), member.getScore());
+            memberMap.remove(member.getMember());
         }
         if (!map.isEmpty()) {
             refresh();
@@ -233,49 +233,18 @@ public class ZSet {
 
     public Map<BytesKey, Double> zremrangeByLex(ZSetLex minLex, ZSetLex maxLex) {
         Map<BytesKey, Double> map = new HashMap<>();
-        for (Member member : rank) {
-            boolean pass = ZSetLexUtil.checkLex(member.member.getKey(), minLex, maxLex);
+        for (ZSetTuple member : rank) {
+            boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
             if (!pass) {
                 continue;
             }
-            map.put(member.member, member.score);
-            memberMap.remove(member.member);
+            map.put(member.getMember(), member.getScore());
+            memberMap.remove(member.getMember());
         }
         if (!map.isEmpty()) {
             refresh();
         }
         return map;
-    }
-
-    public static class Member {
-        private final BytesKey member;
-        private final double score;
-
-        public Member(BytesKey member, double score) {
-            this.member = member;
-            this.score = score;
-        }
-
-        public BytesKey getMember() {
-            return member;
-        }
-
-        public double getScore() {
-            return score;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Member member = (Member) o;
-            return Objects.equals(this.member, member.member);
-        }
-
-        @Override
-        public int hashCode() {
-            return member.hashCode();
-        }
     }
 
 }

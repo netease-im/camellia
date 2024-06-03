@@ -54,11 +54,11 @@ public class ZAddCommander extends Commander {
     protected Reply execute(Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        Map<BytesKey, byte[]> memberMap = new HashMap<>();
+        Map<BytesKey, Double> memberMap = new HashMap<>();
         for (int i=2; i<objects.length; i+=2) {
             byte[] score = objects[i];
             byte[] member = objects[i+1];
-            memberMap.put(new BytesKey(member), score);
+            memberMap.put(new BytesKey(member), Utils.bytesToDouble(score));
         }
         int memberSize = memberMap.size();
 
@@ -111,15 +111,15 @@ public class ZAddCommander extends Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zaddVersion0(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, byte[]> memberMap) {
+    private Reply zaddVersion0(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap) {
         if (first) {
             List<KeyValue> list = new ArrayList<>(memberSize*2);
-            for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+            for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = BytesUtils.toBytes(Utils.bytesToDouble(entry.getValue()));
+                Double score = entry.getValue();
                 byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, score);
-                KeyValue keyValue1 = new KeyValue(subKey1, score);
+                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, BytesUtils.toBytes(score));
+                KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                 KeyValue keyValue2 = new KeyValue(subKey2, new byte[0]);
                 list.add(keyValue1);
                 list.add(keyValue2);
@@ -130,12 +130,12 @@ public class ZAddCommander extends Commander {
             byte[][] existsKeys = new byte[memberSize][];
             int j=0;
             List<KeyValue> list = new ArrayList<>(memberSize * 2);
-            for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+            for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = BytesUtils.toBytes(Utils.bytesToDouble(entry.getValue()));
+                Double score = entry.getValue();
                 byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, score);
-                KeyValue keyValue1 = new KeyValue(subKey1, score);
+                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, BytesUtils.toBytes(score));
+                KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                 KeyValue keyValue2 = new KeyValue(subKey2, new byte[0]);
                 list.add(keyValue1);
                 list.add(keyValue2);
@@ -168,14 +168,14 @@ public class ZAddCommander extends Commander {
         }
     }
 
-    private Reply zaddVersion1(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, byte[]> memberMap) {
+    private Reply zaddVersion1(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap) {
         if (first) {
             List<KeyValue> list = new ArrayList<>(memberSize);
-            for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+            for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = entry.getValue();
+                Double score = entry.getValue();
                 byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                KeyValue keyValue1 = new KeyValue(subKey1, score);
+                KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                 list.add(keyValue1);
             }
             kvClient.batchPut(list);
@@ -184,8 +184,8 @@ public class ZAddCommander extends Commander {
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] args = new byte[memberSize * 2][];
             int i = 0;
-            for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
-                args[i] = entry.getValue();
+            for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
+                args[i] = Utils.doubleToBytes(entry.getValue());
                 args[i+1] = entry.getKey().getKey();
                 i+=2;
             }
@@ -209,11 +209,11 @@ public class ZAddCommander extends Commander {
             if (add < 0) {
                 byte[][] existsKeys = new byte[memberSize][];
                 int j = 0;
-                for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+                for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
-                    byte[] score = entry.getValue();
+                    Double score = entry.getValue();
                     byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                    KeyValue keyValue1 = new KeyValue(subKey1, score);
+                    KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                     list.add(keyValue1);
                     existsKeys[j] = subKey1;
                     j++;
@@ -222,11 +222,11 @@ public class ZAddCommander extends Commander {
                 int existsCount = Utils.count(exists);
                 add = memberSize - existsCount;
             } else {
-                for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+                for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
-                    byte[] score = entry.getValue();
+                    Double score = entry.getValue();
                     byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                    KeyValue keyValue1 = new KeyValue(subKey1, score);
+                    KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                     list.add(keyValue1);
                 }
             }
@@ -236,14 +236,14 @@ public class ZAddCommander extends Commander {
         }
     }
 
-    private Reply zaddVersion2(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, byte[]> memberMap) {
+    private Reply zaddVersion2(KeyMeta keyMeta, byte[] key, boolean first, int memberSize, Map<BytesKey, Double> memberMap) {
         List<KeyValue> list = new ArrayList<>(memberSize*2);
         if (first) {
-            for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+            for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = entry.getValue();
+                Double score = entry.getValue();
                 byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                KeyValue keyValue1 = new KeyValue(subKey1, score);
+                KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                 list.add(keyValue1);
                 Index index = Index.fromRaw(member);
                 if (index.isIndex()) {
@@ -258,11 +258,11 @@ public class ZAddCommander extends Commander {
             List<Command> cmdList = new ArrayList<>();
             byte[][] zsetIndexCmd = new byte[memberSize*2][];
             int i=0;
-            for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+            for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = entry.getValue();
+                Double score = entry.getValue();
                 byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                KeyValue keyValue1 = new KeyValue(subKey1, score);
+                KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                 list.add(keyValue1);
                 Index index = Index.fromRaw(member);
                 if (index.isIndex()) {
@@ -272,7 +272,7 @@ public class ZAddCommander extends Commander {
                     byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                     cmdList.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
                 }
-                zsetIndexCmd[i] = score;
+                zsetIndexCmd[i] = Utils.doubleToBytes(score);
                 zsetIndexCmd[i+1] = index.getRef();
                 i+=2;
             }
@@ -296,7 +296,7 @@ public class ZAddCommander extends Commander {
             if (add < 0) {
                 byte[][] existsKeys = new byte[memberSize][];
                 int j = 0;
-                for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+                for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
                     byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                     existsKeys[j] = subKey1;
@@ -312,14 +312,14 @@ public class ZAddCommander extends Commander {
         }
     }
 
-    private Reply zaddVersion3(KeyMeta keyMeta, byte[] key, int memberSize, Map<BytesKey, byte[]> memberMap) {
+    private Reply zaddVersion3(KeyMeta keyMeta, byte[] key, int memberSize, Map<BytesKey, Double> memberMap) {
         byte[][] rewriteCmd = new byte[memberSize*2+2][];
         rewriteCmd[0] = RedisCommand.ZADD.raw();
         rewriteCmd[1] = keyDesign.cacheKey(keyMeta, key);
         int i=2;
         List<KeyValue> list = new ArrayList<>(memberSize);
         List<Command> memberIndexCacheWriteCommands = new ArrayList<>();
-        for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
+        for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
             byte[] member = entry.getKey().getKey();
             Index index = Index.fromRaw(member);
             if (index.isIndex()) {
@@ -328,7 +328,7 @@ public class ZAddCommander extends Commander {
                 byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                 memberIndexCacheWriteCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
             }
-            rewriteCmd[i] = entry.getValue();
+            rewriteCmd[i] = Utils.doubleToBytes(entry.getValue());
             rewriteCmd[i+1] = index.getRef();
             i+=2;
         }
