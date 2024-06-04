@@ -359,10 +359,10 @@ public class StatsJsonConverter {
             JSONObject kvWriteBufferStatsJson = new JSONObject();
             kvWriteBufferStatsJson.put("namespace", kvWriteBufferStats.getNamespace());
             kvWriteBufferStatsJson.put("type", kvWriteBufferStats.getType());
-            kvWriteBufferStatsJson.put("writeBufferCacheHit", kvWriteBufferStats.getWriteBufferCacheHit());
-            kvWriteBufferStatsJson.put("syncWrite", kvWriteBufferStats.getSyncWrite());
-            kvWriteBufferStatsJson.put("asyncWrite", kvWriteBufferStats.getAsyncWrite());
-            kvWriteBufferStatsJson.put("asyncWriteDone", kvWriteBufferStats.getAsyncWriteDone());
+            kvWriteBufferStatsJson.put("cache", kvWriteBufferStats.getCache());
+            kvWriteBufferStatsJson.put("overflow", kvWriteBufferStats.getOverflow());
+            kvWriteBufferStatsJson.put("start", kvWriteBufferStats.getStart());
+            kvWriteBufferStatsJson.put("done", kvWriteBufferStats.getDone());
             kvWriteBufferStatsJson.put("pending", kvWriteBufferStats.getPending());
             kvWriteBufferStatsJsonArray.add(kvWriteBufferStatsJson);
         }

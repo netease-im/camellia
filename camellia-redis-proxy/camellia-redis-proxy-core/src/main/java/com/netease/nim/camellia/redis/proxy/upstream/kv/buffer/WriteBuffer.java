@@ -73,7 +73,7 @@ public class WriteBuffer<T> {
             if (writeBufferValues != null) {
                 WriteBufferValue<T> value = writeBufferValues.peekLast();
                 if (value != null) {
-                    KvWriterBufferMonitor.writeBufferCacheHit(namespace, name);
+                    KvWriterBufferMonitor.cache(namespace, name);
                     return value;
                 } else {
                     writeBuffer.remove(bytesKey);
@@ -95,10 +95,10 @@ public class WriteBuffer<T> {
         try {
             Deque<WriteBufferValue<T>> deque = checkDeque(bytesKey);
             if (deque == null) {
-                KvWriterBufferMonitor.syncWrite(namespace, name);
+                KvWriterBufferMonitor.overflow(namespace, name);
                 return NoOpResult.INSTANCE;
             }
-            KvWriterBufferMonitor.asyncWrite(namespace, name);
+            KvWriterBufferMonitor.start(namespace, name);
             deque.add(new WriteBufferValue<>(value));
             writeBufferSize.increment();
             return new KvWriteDelayResult(() -> {
@@ -111,7 +111,7 @@ public class WriteBuffer<T> {
                     }
                 } finally {
                     lock.unlock();
-                    KvWriterBufferMonitor.asyncWriteDone(namespace, name);
+                    KvWriterBufferMonitor.done(namespace, name);
                 }
             });
         } finally {

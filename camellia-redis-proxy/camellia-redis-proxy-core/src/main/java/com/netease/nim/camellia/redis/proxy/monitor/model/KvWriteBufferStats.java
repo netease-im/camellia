@@ -6,10 +6,10 @@ package com.netease.nim.camellia.redis.proxy.monitor.model;
 public class KvWriteBufferStats {
     private String namespace;
     private String type;
-    private long writeBufferCacheHit;
-    private long syncWrite;
-    private long asyncWrite;
-    private long asyncWriteDone;
+    private long cache;
+    private long overflow;
+    private long start;
+    private long done;
     private long pending;
 
     public String getNamespace() {
@@ -28,36 +28,36 @@ public class KvWriteBufferStats {
         this.type = type;
     }
 
-    public long getWriteBufferCacheHit() {
-        return writeBufferCacheHit;
+    public long getCache() {
+        return cache;
     }
 
-    public void setWriteBufferCacheHit(long writeBufferCacheHit) {
-        this.writeBufferCacheHit = writeBufferCacheHit;
+    public void setCache(long cache) {
+        this.cache = cache;
     }
 
-    public long getSyncWrite() {
-        return syncWrite;
+    public long getOverflow() {
+        return overflow;
     }
 
-    public void setSyncWrite(long syncWrite) {
-        this.syncWrite = syncWrite;
+    public void setOverflow(long overflow) {
+        this.overflow = overflow;
     }
 
-    public long getAsyncWrite() {
-        return asyncWrite;
+    public long getStart() {
+        return start;
     }
 
-    public void setAsyncWrite(long asyncWrite) {
-        this.asyncWrite = asyncWrite;
+    public void setStart(long start) {
+        this.start = start;
     }
 
-    public long getAsyncWriteDone() {
-        return asyncWriteDone;
+    public long getDone() {
+        return done;
     }
 
-    public void setAsyncWriteDone(long asyncWriteDone) {
-        this.asyncWriteDone = asyncWriteDone;
+    public void setDone(long done) {
+        this.done = done;
     }
 
     public long getPending() {

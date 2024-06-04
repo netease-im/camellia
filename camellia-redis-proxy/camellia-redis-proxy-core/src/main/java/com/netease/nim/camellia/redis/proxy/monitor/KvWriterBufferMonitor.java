@@ -17,10 +17,10 @@ public class KvWriterBufferMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(KvWriterBufferMonitor.class);
 
-    private static final ConcurrentHashMap<String, LongAdder> writeBufferCacheHit = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> syncWrite = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> asyncWrite = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> asyncWriteDone = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> cache = new ConcurrentHashMap<>();//命中缓存
+    private static final ConcurrentHashMap<String, LongAdder> overflow = new ConcurrentHashMap<>();//buffer溢出
+    private static final ConcurrentHashMap<String, LongAdder> start = new ConcurrentHashMap<>();//开始一个任务
+    private static final ConcurrentHashMap<String, LongAdder> done = new ConcurrentHashMap<>();//任务完成
 
     private static final ConcurrentHashMap<String, WriteBuffer<?>> writeBufferMap = new ConcurrentHashMap<>();
 
@@ -28,47 +28,47 @@ public class KvWriterBufferMonitor {
         writeBufferMap.put(namespace + "|" + type, writeBuffer);
     }
 
-    public static void writeBufferCacheHit(String namespace, String type) {
-        CamelliaMapUtils.computeIfAbsent(writeBufferCacheHit, namespace + "|" + type, k -> new LongAdder()).increment();
+    public static void cache(String namespace, String type) {
+        CamelliaMapUtils.computeIfAbsent(cache, namespace + "|" + type, k -> new LongAdder()).increment();
     }
 
-    public static void syncWrite(String namespace, String type) {
-        CamelliaMapUtils.computeIfAbsent(syncWrite, namespace + "|" + type, k -> new LongAdder()).increment();
+    public static void overflow(String namespace, String type) {
+        CamelliaMapUtils.computeIfAbsent(overflow, namespace + "|" + type, k -> new LongAdder()).increment();
     }
 
-    public static void asyncWrite(String namespace, String type) {
-        CamelliaMapUtils.computeIfAbsent(asyncWrite, namespace + "|" + type, k -> new LongAdder()).increment();
+    public static void start(String namespace, String type) {
+        CamelliaMapUtils.computeIfAbsent(start, namespace + "|" + type, k -> new LongAdder()).increment();
     }
 
-    public static void asyncWriteDone(String namespace, String type) {
-        CamelliaMapUtils.computeIfAbsent(asyncWriteDone, namespace + "|" + type, k -> new LongAdder()).increment();
+    public static void done(String namespace, String type) {
+        CamelliaMapUtils.computeIfAbsent(done, namespace + "|" + type, k -> new LongAdder()).increment();
     }
 
     public static List<KvWriteBufferStats> collect() {
         try {
             Set<String> set = new HashSet<>();
-            set.addAll(writeBufferCacheHit.keySet());
-            set.addAll(syncWrite.keySet());
-            set.addAll(asyncWrite.keySet());
-            set.addAll(asyncWriteDone.keySet());
+            set.addAll(cache.keySet());
+            set.addAll(overflow.keySet());
+            set.addAll(start.keySet());
+            set.addAll(done.keySet());
             set.addAll(writeBufferMap.keySet());
             List<KvWriteBufferStats> list = new ArrayList<>();
             for (String string : set) {
                 int i = string.lastIndexOf("|");
                 String namespace = string.substring(0, i);
                 String type = string.substring(i+1);
-                LongAdder c1 = writeBufferCacheHit.get(string);
-                LongAdder c2 = syncWrite.get(string);
-                LongAdder c3 = asyncWrite.get(string);
-                LongAdder c4 = asyncWriteDone.get(string);
+                LongAdder c1 = cache.get(string);
+                LongAdder c2 = overflow.get(string);
+                LongAdder c3 = start.get(string);
+                LongAdder c4 = done.get(string);
                 WriteBuffer<?> writeBuffer = writeBufferMap.get(string);
                 KvWriteBufferStats stats = new KvWriteBufferStats();
                 stats.setNamespace(namespace);
                 stats.setType(type);
-                stats.setWriteBufferCacheHit(c1 == null ? 0 : c1.sumThenReset());
-                stats.setSyncWrite(c2 == null ? 0 : c2.sumThenReset());
-                stats.setAsyncWrite(c3 == null ? 0 : c3.sumThenReset());
-                stats.setAsyncWriteDone(c4 == null ? 0 : c4.sumThenReset());
+                stats.setCache(c1 == null ? 0 : c1.sumThenReset());
+                stats.setOverflow(c2 == null ? 0 : c2.sumThenReset());
+                stats.setStart(c3 == null ? 0 : c3.sumThenReset());
+                stats.setDone(c4 == null ? 0 : c4.sumThenReset());
                 stats.setPending(writeBuffer == null ? 0 : writeBuffer.pending());
                 list.add(stats);
             }

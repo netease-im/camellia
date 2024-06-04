@@ -153,9 +153,9 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("====kv.write.buffer.stats====");
             List<KvWriteBufferStats> kvWriteBufferStatsList = stats.getKvWriteBufferStatsList();
             for (KvWriteBufferStats kvWriteBufferStats : kvWriteBufferStatsList) {
-                logger.info("namespace={},type={},writeBufferCacheHit={},syncWrite={},asyncWrite={},asyncWriteDone={},pending={}",
-                        kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getWriteBufferCacheHit(),
-                        kvWriteBufferStats.getSyncWrite(), kvWriteBufferStats.getAsyncWrite(), kvWriteBufferStats.getAsyncWriteDone(), kvWriteBufferStats.getPending());
+                logger.info("namespace={},type={},cache={},overflow={},start={},done={},pending={}",
+                        kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getCache(),
+                        kvWriteBufferStats.getOverflow(), kvWriteBufferStats.getStart(), kvWriteBufferStats.getDone(), kvWriteBufferStats.getPending());
             }
 
             logger.info("<<<<<<<END<<<<<<<");
