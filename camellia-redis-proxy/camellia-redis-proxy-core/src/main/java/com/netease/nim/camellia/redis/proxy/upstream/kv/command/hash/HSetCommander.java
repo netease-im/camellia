@@ -285,13 +285,7 @@ public class HSetCommander extends Commander {
         if (!result.isKvWriteDelayEnable()) {
             kvClient.batchPut(list);
         } else {
-            asyncWriteExecutor.submit(cacheKey, () -> {
-                try {
-                    kvClient.batchPut(list);
-                } finally {
-                    result.kvWriteDone();
-                }
-            });
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
         }
     }
 

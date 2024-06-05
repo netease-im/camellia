@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
@@ -168,6 +169,9 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             redisExpireMillis = keyMeta.getExpireTime() - System.currentTimeMillis();
             redisExpireMillis = Math.min(redisExpireMillis, cacheConfig.metaCacheMillis());
         }
+        if (redisExpireMillis <= 0) {
+            redisExpireMillis = 1;
+        }
         return redisExpireMillis;
     }
 
@@ -192,13 +196,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         if (!result.isKvWriteDelayEnable()) {
             put(metaKey, keyMeta);
         } else {
-            asyncWriteExecutor.submit(key, () -> {
-                try {
-                    put(metaKey, keyMeta);
-                } finally {
-                    result.kvWriteDone();
-                }
-            });
+            submitAsyncWriteTask(key, result, () -> put(metaKey, keyMeta));
         }
     }
 
@@ -227,13 +225,9 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             delayCacheKeyMap.remove(new BytesKey(key));
         }
         if (result.isKvWriteDelayEnable()) {
-            asyncWriteExecutor.submit(key, () -> {
-                try {
-                    kvClient.delete(metaKey);
-                    KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
-                } finally {
-                    result.kvWriteDone();
-                }
+            submitAsyncWriteTask(key, result, () -> {
+                kvClient.delete(metaKey);
+                KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
             });
         } else {
             kvClient.delete(metaKey);
@@ -317,5 +311,20 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     private Reply sync(CompletableFuture<Reply> future) {
         return redisTemplate.sync(future, cacheConfig.keyMetaTimeoutMillis());
+    }
+
+    private void submitAsyncWriteTask(byte[] key, Result result, Runnable runnable) {
+        try {
+            asyncWriteExecutor.submit(key, () -> {
+                try {
+                    runnable.run();
+                } finally {
+                    result.kvWriteDone();
+                }
+            });
+        } catch (Exception e) {
+            result.kvWriteDone();
+            throw e;
+        }
     }
 }

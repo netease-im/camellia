@@ -238,13 +238,7 @@ public class HDelCommander extends Commander {
         if (!result.isKvWriteDelayEnable()) {
             kvClient.batchDelete(subKeys);
         } else {
-            asyncWriteExecutor.submit(cacheKey, () -> {
-                try {
-                    kvClient.batchDelete(subKeys);
-                } finally {
-                    result.kvWriteDone();
-                }
-            });
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(subKeys));
         }
     }
 

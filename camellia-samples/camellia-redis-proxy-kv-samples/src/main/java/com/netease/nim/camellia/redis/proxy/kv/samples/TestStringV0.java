@@ -62,11 +62,11 @@ public class TestStringV0 {
                 assertEquals(set, "OK");
             }
             {
-                String set = template.setex(key, 1, "v1");
+                String set = template.setex(key, 3, "v1");
                 assertEquals(set, "OK");
                 String string1 = template.get(key);
                 assertEquals(string1, "v1");
-                Thread.sleep(1050);
+                Thread.sleep(3050);
                 String string2 = template.get(key);
                 assertEquals(string2, null);
             }
