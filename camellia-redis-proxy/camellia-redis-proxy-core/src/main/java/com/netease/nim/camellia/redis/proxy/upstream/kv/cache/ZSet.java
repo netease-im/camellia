@@ -20,6 +20,11 @@ public class ZSet {
         refresh();
     }
 
+    public ZSet duplicate() {
+        Map<BytesKey, Double> map = new HashMap<>(memberMap);
+        return new ZSet(map);
+    }
+
     private void refresh() {
         List<ZSetTuple> list = new ArrayList<>(memberMap.size());
         for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {

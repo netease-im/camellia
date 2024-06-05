@@ -6,7 +6,9 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
@@ -36,6 +38,7 @@ public abstract class Commander {
     protected final KvGcExecutor gcExecutor;
     protected final CamelliaHashedExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
     protected final WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer;
+    protected final WriteBuffer<ZSet> zsetWriteBuffer;
 
     public Commander(CommanderConfig commanderConfig) {
         this.kvClient = commanderConfig.getKvClient();
@@ -47,6 +50,7 @@ public abstract class Commander {
         this.storeRedisTemplate = commanderConfig.getStoreRedisTemplate();
         this.gcExecutor = commanderConfig.getGcExecutor();
         this.hashWriteBuffer = commanderConfig.getHashWriteBuffer();
+        this.zsetWriteBuffer = commanderConfig.getZsetWriteBuffer();
     }
 
     public abstract RedisCommand redisCommand();
@@ -77,5 +81,20 @@ public abstract class Commander {
             }
         }
         return null;
+    }
+
+    protected final void submitAsyncWriteTask(byte[] cacheKey, Result result, Runnable runnable) {
+        try {
+            asyncWriteExecutor.submit(cacheKey, () -> {
+                try {
+                    runnable.run();
+                } finally {
+                    result.kvWriteDone();
+                }
+            });
+        } catch (Exception e) {
+            result.kvWriteDone();
+            throw e;
+        }
     }
 }

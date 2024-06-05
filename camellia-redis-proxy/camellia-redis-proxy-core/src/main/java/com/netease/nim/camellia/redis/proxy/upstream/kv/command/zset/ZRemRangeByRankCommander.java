@@ -4,6 +4,9 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -66,19 +69,37 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         int stop = (int) Utils.bytesToNum(objects[3]);
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-
         Map<BytesKey, Double> localCacheResult = null;
+        Result result = null;
+
+        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            ZSet zSet = bufferValue.getValue();
+            if (zSet != null) {
+                localCacheResult = zSet.zremrangeByRank(start, stop);
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                if (localCacheResult != null && localCacheResult.isEmpty()) {
+                    return IntegerReply.REPLY_0;
+                }
+                result = zsetWriteBuffer.put(cacheKey, zSet);
+            }
+        }
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            localCacheResult = zSetLRUCache.zremrangeByRank(cacheKey, start, stop);
-            if (localCacheResult != null) {
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            }
-            if (localCacheResult != null && localCacheResult.isEmpty()) {
-                return IntegerReply.REPLY_0;
+            if (localCacheResult == null) {
+                localCacheResult = zSetLRUCache.zremrangeByRank(cacheKey, start, stop);
+                if (localCacheResult != null) {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
+                if (localCacheResult != null && localCacheResult.isEmpty()) {
+                    return IntegerReply.REPLY_0;
+                }
+            } else {
+                zSetLRUCache.zremrangeByRank(cacheKey, start, stop);
             }
 
             if (hotKey && localCacheResult == null) {
@@ -88,34 +109,41 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                     zSetLRUCache.putZSet(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zremrangeByRank(start, stop);
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             }
         }
 
+        if (result == null) {
+            result = NoOpResult.INSTANCE;
+        }
+
+        if (localCacheResult != null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByRankVersion0(keyMeta, key, start, stop, localCacheResult);
+            return zremrangeByRankVersion0(keyMeta, key, cacheKey, start, stop, localCacheResult, result);
         }
 
         if (encodeVersion == EncodeVersion.version_3) {
-            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand());
+            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand(), localCacheResult, result);
         }
 
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, cacheKey, args, script);
+            return zremrangeVersion1(keyMeta, key, cacheKey, args, script, localCacheResult, result);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zremrangeVersion2(keyMeta, key, cacheKey, args, script);
+            return zremrangeVersion2(keyMeta, key, cacheKey, args, script, localCacheResult, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByRankVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, Map<BytesKey, Double> localCacheResult) {
+    private Reply zremrangeByRankVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, Map<BytesKey, Double> localCacheResult, Result result) {
         int size = BytesUtils.toInt(keyMeta.getExtra());
         ZSetRank rank = new ZSetRank(start, stop, size);
         if (rank.isEmptyRank()) {
@@ -132,9 +160,16 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                 deleteStoreKeys[i+1] = keyDesign.zsetMemberSubKey2(keyMeta, key, entry.getKey().getKey(), BytesUtils.toBytes(entry.getValue()));
                 i+=2;
             }
-            kvClient.batchDelete(deleteStoreKeys);
+
+            if (result.isKvWriteDelayEnable()) {
+                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys));
+            } else {
+                kvClient.batchDelete(deleteStoreKeys);
+            }
+
             size = size - localCacheResult.size();
             updateKeyMeta(keyMeta, key, size);
+
             return IntegerReply.parse(localCacheResult.size());
         }
 

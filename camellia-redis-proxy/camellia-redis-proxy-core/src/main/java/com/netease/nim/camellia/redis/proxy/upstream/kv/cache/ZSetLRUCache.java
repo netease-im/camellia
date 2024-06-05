@@ -56,9 +56,14 @@ public class ZSetLRUCache {
         return hotKeyCalculator.isHotKey(key);
     }
 
-    public void zaddAll(byte[] cacheKey, Map<BytesKey, Double> map) {
+    public ZSet get(byte[] cacheKey) {
+        return localCache.get(new BytesKey(cacheKey));
+    }
+
+    public ZSet zaddAll(byte[] cacheKey, Map<BytesKey, Double> map) {
         ZSet zSet = new ZSet(new HashMap<>(map));
         localCache.put(new BytesKey(cacheKey), zSet);
+        return zSet;
     }
 
     public void putZSet(byte[] cacheKey, ZSet zSet) {

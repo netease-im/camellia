@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -87,6 +88,16 @@ public class ZRangeByLexCommander extends ZRange0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
+        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            ZSet zSet = bufferValue.getValue();
+            if (zSet != null) {
+                List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, false);
+            }
+        }
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
@@ -104,7 +115,9 @@ public class ZRangeByLexCommander extends ZRange0Commander {
                     zSetLRUCache.putZSet(cacheKey, zSet);
                     //
                     list = zSet.zrangeByLex(minLex, maxLex, limit);
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
                     return ZSetTupleUtils.toReply(list, false);
                 }
             }

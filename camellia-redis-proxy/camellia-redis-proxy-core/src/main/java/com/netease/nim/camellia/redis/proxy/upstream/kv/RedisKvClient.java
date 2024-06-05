@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.KvExecutors;
@@ -220,9 +221,10 @@ public class RedisKvClient implements IUpstreamClient {
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, storeRedisTemplate, keyDesign, gcExecutor, cacheConfig);
 
         WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer = WriteBuffer.newWriteBuffer(namespace, "hash");
+        WriteBuffer<ZSet> zsetWriteBuffer = WriteBuffer.newWriteBuffer(namespace, "zset");
 
         CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyDesign, cacheConfig, kvConfig,
-                keyMetaServer, cacheRedisTemplate, storeRedisTemplate, gcExecutor, hashWriteBuffer);
+                keyMetaServer, cacheRedisTemplate, storeRedisTemplate, gcExecutor, hashWriteBuffer, zsetWriteBuffer);
 
         return new Commanders(commanderConfig);
     }

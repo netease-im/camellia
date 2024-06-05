@@ -6,6 +6,8 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -46,16 +48,24 @@ public class ZCardCommander extends Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            ZSet zSet = bufferValue.getValue();
+            if (zSet != null) {
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return IntegerReply.parse(zSet.zcard());
+            }
+        }
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            int zcard = cacheConfig.getZSetLRUCache().zcard(cacheKey);
+            if (zcard >= 0) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return IntegerReply.parse(zcard);
+            }
+        }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_3) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            if (cacheConfig.isZSetLocalCacheEnable()) {
-                int zcard = cacheConfig.getZSetLRUCache().zcard(cacheKey);
-                if (zcard >= 0) {
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                    return IntegerReply.parse(zcard);
-                }
-            }
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return sync(storeRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCARD.raw(), cacheKey})));
         } else {

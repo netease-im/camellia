@@ -6,6 +6,8 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
@@ -17,6 +19,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * ZSCORE key member
@@ -63,6 +66,20 @@ public class ZScoreCommander extends Commander {
         byte[] member = objects[2];
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            ZSet zSet = bufferValue.getValue();
+            if (zSet != null) {
+                Double zscore = zSet.zscore(new BytesKey(member));
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                if (zscore == null) {
+                    return BulkReply.NIL_REPLY;
+                } else {
+                    return new BulkReply(Utils.doubleToBytes(zscore));
+                }
+            }
+        }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
             Double zscore = cacheConfig.getZSetLRUCache().zscore(cacheKey, new BytesKey(member));

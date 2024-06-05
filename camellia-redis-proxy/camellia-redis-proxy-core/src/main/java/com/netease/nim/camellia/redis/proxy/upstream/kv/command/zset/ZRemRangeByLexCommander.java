@@ -7,6 +7,9 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -90,19 +93,37 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         }
 
         Map<BytesKey, Double> localCacheResult = null;
+        Result result = null;
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            ZSet zSet = bufferValue.getValue();
+            if (zSet != null) {
+                localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                if (localCacheResult != null && localCacheResult.isEmpty()) {
+                    return IntegerReply.REPLY_0;
+                }
+                result = zsetWriteBuffer.put(cacheKey, zSet);
+            }
+        }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            localCacheResult = zSetLRUCache.zremrangeByLex(cacheKey, minLex, maxLex);
-            if (localCacheResult != null) {
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            }
-            if (localCacheResult != null && localCacheResult.isEmpty()) {
-                return IntegerReply.REPLY_0;
+            if (localCacheResult == null) {
+                localCacheResult = zSetLRUCache.zremrangeByLex(cacheKey, minLex, maxLex);
+                if (localCacheResult != null) {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
+                if (localCacheResult != null && localCacheResult.isEmpty()) {
+                    return IntegerReply.REPLY_0;
+                }
+            } else {
+                zSetLRUCache.zremrangeByLex(cacheKey, minLex, maxLex);
             }
 
             if (hotKey && localCacheResult == null) {
@@ -117,22 +138,30 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
             }
         }
 
+        if (result == null) {
+            result = NoOpResult.INSTANCE;
+        }
+
+        if (localCacheResult != null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
-            return zremrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, localCacheResult, cacheKey);
+            return zremrangeByLexVersion0OrVersion2(keyMeta, key, cacheKey, minLex, maxLex, localCacheResult, result);
         }
 
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, cacheKey, args, script);
+            return zremrangeVersion1(keyMeta, key, cacheKey, args, script, localCacheResult, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex,
-                                                   Map<BytesKey, Double> localCacheResult, byte[] cacheKey) {
+    private Reply zremrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex,
+                                                   Map<BytesKey, Double> localCacheResult, Result result) {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         Map<BytesKey, Double> toRemoveMembers = localCacheResult;
@@ -153,7 +182,11 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 deleteStoreKeys[i+1] = keyDesign.zsetMemberSubKey2(keyMeta, key, entry.getKey().getKey(), BytesUtils.toBytes(entry.getValue()));
                 i+=2;
             }
-            kvClient.batchDelete(deleteStoreKeys);
+            if (result.isKvWriteDelayEnable()) {
+                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys));
+            } else {
+                kvClient.batchDelete(deleteStoreKeys);
+            }
         } else if (encodeVersion == EncodeVersion.version_2) {
             List<byte[]> deleteStoreKeys = new ArrayList<>(toRemoveSize*2);
 
@@ -184,7 +217,11 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
 
             List<CompletableFuture<Reply>> futures = cacheRedisTemplate.sendCommand(commands);
 
-            kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0]));
+            if (result.isKvWriteDelayEnable()) {
+                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0])));
+            } else {
+                kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0]));
+            }
 
             List<Reply> replyList = sync(futures);
             for (Reply reply : replyList) {
@@ -193,9 +230,11 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 }
             }
         }
+
         int size = BytesUtils.toInt(keyMeta.getExtra());
         size = size - toRemoveSize;
         updateKeyMeta(keyMeta, key, size);
+
         return IntegerReply.parse(toRemoveSize);
     }
 

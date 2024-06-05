@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
@@ -26,10 +27,12 @@ public class CommanderConfig {
     private final RedisTemplate storeRedisTemplate;
     private final KvGcExecutor gcExecutor;
     private final WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer;
+    private final WriteBuffer<ZSet> zsetWriteBuffer;
 
     public CommanderConfig(KVClient kvClient, KeyDesign keyDesign, CacheConfig cacheConfig,
                            KvConfig kvConfig, KeyMetaServer keyMetaServer,
-                           RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor, WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer) {
+                           RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor,
+                           WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer, WriteBuffer<ZSet> zsetWriteBuffer) {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.cacheConfig = cacheConfig;
@@ -39,6 +42,7 @@ public class CommanderConfig {
         this.storeRedisTemplate = storeRedisTemplate;
         this.gcExecutor = gcExecutor;
         this.hashWriteBuffer = hashWriteBuffer;
+        this.zsetWriteBuffer = zsetWriteBuffer;
     }
 
     public KVClient getKvClient() {
@@ -75,6 +79,10 @@ public class CommanderConfig {
 
     public WriteBuffer<Map<BytesKey, byte[]>> getHashWriteBuffer() {
         return hashWriteBuffer;
+    }
+
+    public WriteBuffer<ZSet> getZsetWriteBuffer() {
+        return zsetWriteBuffer;
     }
 }
 

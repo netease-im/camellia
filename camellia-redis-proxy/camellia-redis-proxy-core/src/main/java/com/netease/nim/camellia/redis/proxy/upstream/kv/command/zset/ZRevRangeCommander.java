@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -71,6 +72,17 @@ public class ZRevRangeCommander extends ZRange0Commander {
         int stop = (int) Utils.bytesToNum(objects[3]);
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            ZSet zSet = bufferValue.getValue();
+            if (zSet != null) {
+                List<ZSetTuple> list = zSet.zrevrange(start, stop);
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, withScores);
+            }
+        }
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
@@ -89,7 +101,9 @@ public class ZRevRangeCommander extends ZRange0Commander {
                     zSetLRUCache.putZSet(cacheKey, zSet);
                     //
                     list = zSet.zrevrange(start, stop);
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
                     return ZSetTupleUtils.toReply(list, withScores);
                 }
             }
@@ -98,10 +112,12 @@ public class ZRevRangeCommander extends ZRange0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zrevrangeVersion0(keyMeta, key, start, stop, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_3) {
+            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zrangeVersion3(keyMeta, key, cacheKey, objects, withScores);
         }
 
