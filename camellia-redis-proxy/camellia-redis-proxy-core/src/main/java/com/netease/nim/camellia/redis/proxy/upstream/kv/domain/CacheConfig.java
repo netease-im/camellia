@@ -28,6 +28,10 @@ public class CacheConfig {
         this.namespace = namespace;
         this.metaCacheEnable = metaCacheEnable;
         initCacheConfig();
+        logger.info("namespace = {}, metaCacheEnable = {}", namespace, metaCacheEnable);
+        logger.info("namespace = {}, metaLocalCacheEnable = {}", namespace, metaLocalCacheEnable);
+        logger.info("namespace = {}, hashLocalCacheEnable = {}", namespace, hashLocalCacheEnable);
+        logger.info("namespace = {}, zsetLocalCacheEnable = {}", namespace, zsetLocalCacheEnable);
         this.hashLRUCache = new HashLRUCache(namespace);
         this.keyMetaLRUCache = new KeyMetaLRUCache(namespace);
         this.zSetLRUCache = new ZSetLRUCache(namespace);

@@ -33,6 +33,7 @@ public class WriteBuffer<T> {
         this.enable = RedisKvConf.getBoolean(namespace, "kv.write.buffer." + name + ".enable", true);
         this.rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
+        logger.info("write buffer, namespace = {}, name = {}, enable = {}", namespace, name, enable);
     }
 
     public static <T> WriteBuffer<T> newWriteBuffer(String namespace, String name) {
