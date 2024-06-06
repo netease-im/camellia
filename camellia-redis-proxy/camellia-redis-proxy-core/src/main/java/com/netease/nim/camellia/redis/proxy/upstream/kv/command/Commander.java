@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
@@ -37,7 +38,7 @@ public abstract class Commander {
     protected final RedisTemplate storeRedisTemplate;
     protected final KvGcExecutor gcExecutor;
     protected final CamelliaHashedExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
-    protected final WriteBuffer<Map<BytesKey, byte[]>> hashWriteBuffer;
+    protected final WriteBuffer<Hash> hashWriteBuffer;
     protected final WriteBuffer<ZSet> zsetWriteBuffer;
 
     public Commander(CommanderConfig commanderConfig) {

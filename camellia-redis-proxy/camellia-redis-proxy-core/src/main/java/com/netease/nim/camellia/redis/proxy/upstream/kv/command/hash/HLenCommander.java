@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -82,16 +83,17 @@ public class HLenCommander extends Commander {
 
     private Reply getSizeFromCache(KeyMeta keyMeta, byte[] key) {
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-        WriteBufferValue<Map<BytesKey, byte[]>> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        WriteBufferValue<Hash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
+            Hash hash = writeBufferValue.getValue();
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return IntegerReply.parse(writeBufferValue.getValue().size());
+            return IntegerReply.parse(hash.hlen());
         }
         if (cacheConfig.isHashLocalCacheEnable()) {
-            long hlen = cacheConfig.getHashLRUCache().hlen(cacheKey);
-            if (hlen >= 0) {
+            Hash hash = cacheConfig.getHashLRUCache().get(cacheKey);
+            if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return IntegerReply.parse(hlen);
+                return IntegerReply.parse(hash.hlen());
             }
         }
         return null;

@@ -19,8 +19,8 @@ public class HashLRUCache {
     private static final Logger logger = LoggerFactory.getLogger(HashLRUCache.class);
 
     private final String namespace;
-    private ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> localCache;
-    private ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> localCacheForWrite;
+    private ConcurrentLinkedHashMap<BytesKey, Hash> localCache;
+    private ConcurrentLinkedHashMap<BytesKey, Hash> localCacheForWrite;
     private int capacity;
 
     public HashLRUCache(String namespace) {
@@ -34,7 +34,7 @@ public class HashLRUCache {
         int capacity = RedisKvConf.getInt(namespace, "kv.hash.lru.cache.capacity", 500000);
         if (this.capacity != capacity) {
             if (this.localCache == null) {
-                this.localCache = new ConcurrentLinkedHashMap.Builder<BytesKey, Map<BytesKey, byte[]>>()
+                this.localCache = new ConcurrentLinkedHashMap.Builder<BytesKey, Hash>()
                         .initialCapacity(capacity)
                         .maximumWeightedCapacity(capacity)
                         .build();
@@ -42,7 +42,7 @@ public class HashLRUCache {
                 this.localCache.setCapacity(capacity);
             }
             if (this.localCacheForWrite == null) {
-                this.localCacheForWrite = new ConcurrentLinkedHashMap.Builder<BytesKey, Map<BytesKey, byte[]>>()
+                this.localCacheForWrite = new ConcurrentLinkedHashMap.Builder<BytesKey, Hash>()
                         .initialCapacity(capacity)
                         .maximumWeightedCapacity(capacity)
                         .build();
@@ -54,133 +54,71 @@ public class HashLRUCache {
         this.capacity = capacity;
     }
 
-    public void putAllForRead(byte[] key, Map<BytesKey, byte[]> map) {
-        localCache.put(new BytesKey(key), map);
+    public void putAllForRead(byte[] cacheKey, Hash hash) {
+        localCache.put(new BytesKey(cacheKey), hash);
     }
 
-    public void putAllForWrite(byte[] key, Map<BytesKey, byte[]> map) {
-        localCacheForWrite.put(new BytesKey(key), map);
+    public void putAllForWrite(byte[] cacheKey, Hash hash) {
+        localCacheForWrite.put(new BytesKey(cacheKey), hash);
     }
 
-    public Map<BytesKey, byte[]> hgetAll(byte[] key) {
-        BytesKey bytesKey = new BytesKey(key);
-        Map<BytesKey, byte[]> map = localCache.get(bytesKey);
-        if (map == null) {
-            map = localCacheForWrite.get(bytesKey);
-            if (map != null) {
-                localCache.put(bytesKey, map);
+    public Hash get(byte[] cacheKey) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Hash hash = localCache.get(bytesKey);
+        if (hash == null) {
+            hash = localCacheForWrite.get(bytesKey);
+            if (hash != null) {
+                localCache.put(bytesKey, hash);
                 localCacheForWrite.remove(bytesKey);
             }
         }
-        return map;
+        return hash;
     }
 
-    public LRUCacheWriteResult hset(byte[] key, Map<BytesKey, byte[]> fieldMap) {
-        LRUCacheWriteResult result1 = hset0(localCacheForWrite, key, fieldMap);
-        LRUCacheWriteResult result2 = hset0(localCache, key, fieldMap);
+    public Map<BytesKey, byte[]> hset(byte[] cacheKey, Map<BytesKey, byte[]> fieldMap) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Hash hash1 = localCacheForWrite.get(bytesKey);
+        Map<BytesKey, byte[]> result1 = null;
+        if (hash1 != null) {
+            result1 = hash1.hset(fieldMap);
+        }
+        Hash hash2 = localCache.get(bytesKey);
+        Map<BytesKey, byte[]> result2 = null;
+        if (hash2 != null) {
+            result2 = hash2.hset(fieldMap);
+        }
         if (result1 != null) {
             return result1;
         }
         return result2;
     }
 
-    public LRUCacheWriteResult hdel(byte[] key, Set<BytesKey> fields) {
-        LRUCacheWriteResult result1 = hdel0(localCache, key, fields);
-        LRUCacheWriteResult result2 = hdel0(localCacheForWrite, key, fields);
+    public Map<BytesKey, byte[]> hdel(byte[] cacheKey, Set<BytesKey> fields) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Hash hash1 = localCacheForWrite.get(bytesKey);
+        Map<BytesKey, byte[]> result1 = null;
+        if (hash1 != null) {
+            result1 = hash1.hdel(fields);
+        }
+        Hash hash2 = localCache.get(bytesKey);
+        Map<BytesKey, byte[]> result2 = null;
+        if (hash2 != null) {
+            result2 = hash2.hdel(fields);
+        }
         if (result1 != null) {
             return result1;
         }
         return result2;
     }
 
-    public long hlen(byte[] key) {
-        long len = hlen0(localCache, key);
-        if (len < 0) {
-            len = hlen0(localCacheForWrite, key);
-        }
-        return len;
-    }
-
-    public ValueWrapper hget(byte[] key, byte[] field) {
-        ValueWrapper valueWrapper = hget0(localCache, key, field);
-        if (valueWrapper != null) {
-            return valueWrapper;
-        }
-        return hget0(localCacheForWrite, key, field);
-    }
-
-    public void del(byte[] key) {
-        BytesKey bytesKey = new BytesKey(key);
+    public void del(byte[] cacheKey) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
         localCache.remove(bytesKey);
         localCacheForWrite.remove(bytesKey);
-    }
-
-    public static class LRUCacheWriteResult {
-        private final int influencedFields;
-        private final Map<BytesKey, byte[]> cache;
-
-        public LRUCacheWriteResult(int influencedFields, Map<BytesKey, byte[]> cache) {
-            this.influencedFields = influencedFields;
-            this.cache = cache;
-        }
-
-        public int getInfluencedFields() {
-            return influencedFields;
-        }
-
-        public Map<BytesKey, byte[]> getCache() {
-            return cache;
-        }
     }
 
     public void clear() {
         localCache.clear();
         localCacheForWrite.clear();
-    }
-
-    private LRUCacheWriteResult hset0(ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> cache, byte[] key, Map<BytesKey, byte[]> fieldMap) {
-        Map<BytesKey, byte[]> map = cache.get(new BytesKey(key));
-        if (map == null) {
-            return null;
-        }
-        int count = 0;
-        for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
-            byte[] put = map.put(entry.getKey(), entry.getValue());
-            if (put != null) {
-                count ++;
-            }
-        }
-        return new LRUCacheWriteResult(count, map);
-    }
-
-    private ValueWrapper hget0(ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> cache, byte[] key, byte[] field) {
-        Map<BytesKey, byte[]> map = cache.get(new BytesKey(key));
-        if (map == null) {
-            return null;
-        }
-        return new ValueWrapper(map.get(new BytesKey(field)));
-    }
-
-    private long hlen0(ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> cache, byte[] key) {
-        Map<BytesKey, byte[]> map = cache.get(new BytesKey(key));
-        if (map == null) {
-            return -1;
-        }
-        return map.size();
-    }
-
-    private LRUCacheWriteResult hdel0(ConcurrentLinkedHashMap<BytesKey, Map<BytesKey, byte[]>> cache, byte[] key, Set<BytesKey> fields) {
-        Map<BytesKey, byte[]> map = cache.get(new BytesKey(key));
-        if (map == null) {
-            return null;
-        }
-        int count = 0;
-        for (BytesKey field : fields) {
-            byte[] remove = map.remove(field);
-            if (remove != null) {
-                count ++;
-            }
-        }
-        return new LRUCacheWriteResult(count, map);
     }
 }

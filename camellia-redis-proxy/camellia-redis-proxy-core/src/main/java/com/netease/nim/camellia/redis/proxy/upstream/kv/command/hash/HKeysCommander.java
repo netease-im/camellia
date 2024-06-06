@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -61,17 +62,18 @@ public class HKeysCommander extends Hash0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        WriteBufferValue<Map<BytesKey, byte[]>> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        WriteBufferValue<Hash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
+            Hash hash = writeBufferValue.getValue();
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return toReply(writeBufferValue.getValue());
+            return toReply(hash.hgetAll());
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Map<BytesKey, byte[]> map = cacheConfig.getHashLRUCache().hgetAll(cacheKey);
-            if (map != null) {
+            Hash hash = cacheConfig.getHashLRUCache().get(cacheKey);
+            if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return toReply(map);
+                return toReply(hash.hgetAll());
             }
         }
 
@@ -81,7 +83,7 @@ public class HKeysCommander extends Hash0Commander {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().putAllForRead(cacheKey, map);
+                cacheConfig.getHashLRUCache().putAllForRead(cacheKey, new Hash(map));
             }
             return toReply(map);
         }
@@ -96,7 +98,7 @@ public class HKeysCommander extends Hash0Commander {
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
-            cacheConfig.getHashLRUCache().putAllForRead(cacheKey, map);
+            cacheConfig.getHashLRUCache().putAllForRead(cacheKey, new Hash(map));
         }
 
         ErrorReply errorReply = buildCache(cacheKey, map);

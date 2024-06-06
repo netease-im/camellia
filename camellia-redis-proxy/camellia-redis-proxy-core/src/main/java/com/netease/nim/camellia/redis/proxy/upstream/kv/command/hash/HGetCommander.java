@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
@@ -20,7 +21,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 /**
  * HGET key field
@@ -77,19 +77,19 @@ public class HGetCommander extends Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        WriteBufferValue<Map<BytesKey, byte[]>> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        WriteBufferValue<Hash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
-            byte[] bytes = writeBufferValue.getValue().get(new BytesKey(field));
+            byte[] bytes = writeBufferValue.getValue().hget(new BytesKey(field));
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             return new BulkReply(bytes);
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-            ValueWrapper valueWrapper = hashLRUCache.hget(cacheKey, field);
-            if (valueWrapper != null) {
+            Hash hash = hashLRUCache.get(cacheKey);
+            if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return new BulkReply(valueWrapper.getValue());
+                return new BulkReply(hash.hget(new BytesKey(field)));
             }
         }
 
