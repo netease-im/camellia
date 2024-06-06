@@ -9,7 +9,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -78,14 +77,12 @@ public class ZRemCommander extends ZSet0Commander {
         WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             ZSet zSet = bufferValue.getValue();
-            if (zSet != null) {
-                localCacheResult = zSet.zrem(members);
-                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-                if (localCacheResult.isEmpty()) {
-                    return IntegerReply.REPLY_0;
-                }
-                result = zsetWriteBuffer.put(cacheKey, zSet);
+            localCacheResult = zSet.zrem(members);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (localCacheResult.isEmpty()) {
+                return IntegerReply.REPLY_0;
             }
+            result = zsetWriteBuffer.put(cacheKey, zSet);
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
@@ -106,10 +103,17 @@ public class ZRemCommander extends ZSet0Commander {
                 ZSet zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zrem(members);
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
+            }
+
+            if (result == null) {
+                ZSet zSet = zSetLRUCache.getForWrite(cacheKey);
+                if (zSet != null) {
+                    result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }
             }
         }

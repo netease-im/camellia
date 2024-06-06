@@ -91,11 +91,9 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             ZSet zSet = bufferValue.getValue();
-            if (zSet != null) {
-                List<ZSetTuple> list = zSet.zrevrangeByLex(minLex, maxLex, limit);
-                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return ZSetTupleUtils.toReply(list, false);
-            }
+            List<ZSetTuple> list = zSet.zrevrangeByLex(minLex, maxLex, limit);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return ZSetTupleUtils.toReply(list, false);
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
@@ -103,19 +101,21 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            List<ZSetTuple> list = zSetLRUCache.zrevrangeByLex(cacheKey, minLex, maxLex, limit);
-            if (list != null) {
+            ZSet zSet = zSetLRUCache.getForRead(cacheKey);
+
+            if (zSet != null) {
+                List<ZSetTuple> list = zSet.zrevrangeByLex(minLex, maxLex, limit);
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return ZSetTupleUtils.toReply(list, false);
             }
 
             if (hotKey) {
-                ZSet zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(cacheKey, zSet);
                     //
-                    list = zSet.zrevrangeByLex(minLex, maxLex, limit);
+                    List<ZSetTuple> list = zSet.zrevrangeByLex(minLex, maxLex, limit);
 
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 

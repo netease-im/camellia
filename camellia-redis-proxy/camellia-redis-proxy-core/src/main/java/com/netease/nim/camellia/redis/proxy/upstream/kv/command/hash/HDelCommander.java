@@ -109,7 +109,7 @@ public class HDelCommander extends Commander {
                 return IntegerReply.REPLY_0;
             }
             if (deleteMaps != null && result == null) {
-                Hash hash = hashLRUCache.get(cacheKey);
+                Hash hash = hashLRUCache.getForWrite(cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                     if (hash.isEmpty()) {

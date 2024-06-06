@@ -14,9 +14,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
-
-import java.util.Map;
 
 /**
  * HLEN key
@@ -90,7 +87,7 @@ public class HLenCommander extends Commander {
             return IntegerReply.parse(hash.hlen());
         }
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Hash hash = cacheConfig.getHashLRUCache().get(cacheKey);
+            Hash hash = cacheConfig.getHashLRUCache().getForRead(cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(hash.hlen());

@@ -136,7 +136,7 @@ public class HSetCommander extends Commander {
             }
 
             if (result == null) {
-                Hash hash = hashLRUCache.get(cacheKey);
+                Hash hash = hashLRUCache.getForWrite(cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                 }

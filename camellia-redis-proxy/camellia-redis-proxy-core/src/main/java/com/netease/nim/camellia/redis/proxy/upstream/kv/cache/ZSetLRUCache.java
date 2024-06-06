@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +26,7 @@ public class ZSetLRUCache {
 
     private int capacity;
     private ConcurrentLinkedHashMap<BytesKey, ZSet> localCache;
+    private ConcurrentLinkedHashMap<BytesKey, ZSet> localCacheForWrite;
 
     public ZSetLRUCache(String namespace) {
         this.namespace = namespace;
@@ -47,7 +47,15 @@ public class ZSetLRUCache {
             } else {
                 this.localCache.setCapacity(capacity);
             }
-            logger.info("zset lru cache build, capacity = {}", capacity);
+            if (this.localCacheForWrite == null) {
+                this.localCacheForWrite = new ConcurrentLinkedHashMap.Builder<BytesKey, ZSet>()
+                        .initialCapacity(capacity)
+                        .maximumWeightedCapacity(capacity)
+                        .build();
+            } else {
+                this.localCacheForWrite.setCapacity(capacity);
+            }
+            logger.info("zset lru cache build, namespace = {}, capacity = {}", namespace, capacity);
         }
         this.capacity = capacity;
     }
@@ -56,90 +64,51 @@ public class ZSetLRUCache {
         return hotKeyCalculator.isHotKey(key);
     }
 
-    public ZSet get(byte[] cacheKey) {
-        return localCache.get(new BytesKey(cacheKey));
+    public void putZSetForWrite(byte[] cacheKey, ZSet zSet) {
+        localCacheForWrite.put(new BytesKey(cacheKey), zSet);
     }
 
-    public ZSet zaddAll(byte[] cacheKey, Map<BytesKey, Double> map) {
-        ZSet zSet = new ZSet(new HashMap<>(map));
+    public void putZSetForRead(byte[] cacheKey, ZSet zSet) {
         localCache.put(new BytesKey(cacheKey), zSet);
+    }
+
+    public ZSet getForRead(byte[] cacheKey) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        ZSet zSet = localCache.get(bytesKey);
+        if (zSet == null) {
+            zSet = localCacheForWrite.get(bytesKey);
+            if (zSet != null) {
+                localCache.put(bytesKey, zSet);
+                localCacheForWrite.remove(bytesKey);
+            }
+        }
         return zSet;
     }
 
-    public void putZSet(byte[] cacheKey, ZSet zSet) {
-        localCache.put(new BytesKey(cacheKey), zSet);
+    public ZSet getForWrite(byte[] cacheKey) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        ZSet zSet = localCache.get(bytesKey);
+        if (zSet == null) {
+            zSet = localCacheForWrite.get(bytesKey);
+        }
+        return zSet;
     }
 
     public Map<BytesKey, Double> zadd(byte[] cacheKey, Map<BytesKey, Double> map) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        ZSet zSet1 = localCache.get(new BytesKey(cacheKey));
+        Map<BytesKey, Double> existsMap1 = null;
+        if (zSet1 != null) {
+            existsMap1 = zSet1.zadd(map);
         }
-        return zSet.zadd(map);
-    }
-
-    public List<ZSetTuple> zrange(byte[] cacheKey, int start, int stop) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        ZSet zSet2 = localCacheForWrite.get(new BytesKey(cacheKey));
+        Map<BytesKey, Double> existsMap2 = null;
+        if (zSet2 != null) {
+            existsMap2 = zSet2.zadd(map);
         }
-        return zSet.zrange(start, stop);
-    }
-
-    public List<ZSetTuple> zrevrange(byte[] cacheKey, int start, int stop) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        if (existsMap1 != null) {
+            return existsMap1;
         }
-        return zSet.zrevrange(start, stop);
-    }
-
-    public List<ZSetTuple> zrangebyscore(byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
-        }
-        return zSet.zrangebyscore(minScore, maxScore, limit);
-    }
-
-    public List<ZSetTuple> zrevrangeByScore(byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
-        }
-        return zSet.zrevrangeByScore(minScore, maxScore, limit);
-    }
-
-    public List<ZSetTuple> zrangeByLex(byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
-        }
-        return zSet.zrangeByLex(minLex, maxLex, limit);
-    }
-
-    public List<ZSetTuple> zrevrangeByLex(byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
-        }
-        return zSet.zrevrangeByLex(minLex, maxLex, limit);
-    }
-
-    public Double zscore(byte[] cacheKey, BytesKey member) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
-        }
-        return zSet.zscore(member);
-    }
-
-    public int zcard(byte[] cacheKey) {
-        ZSet zSet = localCache.get(new BytesKey(cacheKey));
-        if (zSet == null) {
-            return -1;
-        }
-        return zSet.zcard();
+        return existsMap2;
     }
 
     public Map<BytesKey, Double> zrem(byte[] cacheKey, Collection<BytesKey> members) {

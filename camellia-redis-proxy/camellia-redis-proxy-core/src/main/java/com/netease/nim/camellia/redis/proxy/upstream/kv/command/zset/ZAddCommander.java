@@ -95,54 +95,56 @@ public class ZAddCommander extends ZSet0Commander {
 
         ZSet zSet = null;
         Map<BytesKey, Double> existsMap = null;
+
+        Result result = null;
+
+        if (first) {
+            zSet = new ZSet(new HashMap<>(memberMap));
+            zsetWriteBuffer.put(cacheKey, zSet);
+        } else {
+            WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+            if (bufferValue != null) {
+                zSet = bufferValue.getValue();
+                existsMap = zSet.zadd(memberMap);
+                result = zsetWriteBuffer.put(cacheKey, zSet);
+            }
+        }
+
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (first) {
-                zSet = zSetLRUCache.zaddAll(cacheKey, memberMap);
+                zSet = new ZSet(new HashMap<>(memberMap));
+                zSetLRUCache.putZSetForWrite(cacheKey, zSet);
             } else {
-                existsMap = zSetLRUCache.zadd(cacheKey, memberMap);
-                if (existsMap == null) {
+                Map<BytesKey, Double> map = zSetLRUCache.zadd(cacheKey, memberMap);
+                if (map == null) {
                     if (hotKey) {
                         zSet = loadLRUCache(keyMeta, key);
                         if (zSet != null) {
                             //
-                            zSetLRUCache.putZSet(cacheKey, zSet);
+                            zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                             //
-                            existsMap = zSet.zadd(memberMap);
+                            map = zSet.zadd(memberMap);
                         }
                     }
                 }
+                if (existsMap == null && map != null) {
+                    existsMap = map;
+                }
             }
-            if (zSet == null) {
-                zSet = zSetLRUCache.get(cacheKey);
-            }
-        }
-
-        Result result = null;
-
-        if (zSet != null) {
-            result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
-        } else {
-            if (first) {
-                zSet = new ZSet(memberMap);
-                result = zsetWriteBuffer.put(cacheKey, zSet);
-            } else {
-                WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
-                if (bufferValue != null) {
-                    zSet = bufferValue.getValue();
-                    if (zSet != null) {
-                        Map<BytesKey, Double> map = zSet.zadd(memberMap);
-                        if (existsMap == null && map != null) {
-                            existsMap = map;
-                        }
-                        result = zsetWriteBuffer.put(cacheKey, zSet);
-                    }
+            if (result == null) {
+                if (zSet == null) {
+                    zSet = zSetLRUCache.getForWrite(cacheKey);
+                }
+                if (zSet != null) {
+                    result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }
             }
         }
+
         if (result == null) {
             result = NoOpResult.INSTANCE;
         }

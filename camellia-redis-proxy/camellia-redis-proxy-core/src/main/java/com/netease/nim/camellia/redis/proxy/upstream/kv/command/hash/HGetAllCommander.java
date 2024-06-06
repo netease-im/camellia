@@ -72,7 +72,7 @@ public class HGetAllCommander extends Hash0Commander {
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Hash hash = cacheConfig.getHashLRUCache().get(cacheKey);
+            Hash hash = cacheConfig.getHashLRUCache().getForRead(cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(hash.hgetAll());

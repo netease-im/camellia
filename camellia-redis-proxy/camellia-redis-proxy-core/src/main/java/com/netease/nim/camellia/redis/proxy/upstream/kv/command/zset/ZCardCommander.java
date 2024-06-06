@@ -52,18 +52,17 @@ public class ZCardCommander extends Commander {
         WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             ZSet zSet = bufferValue.getValue();
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return IntegerReply.parse(zSet.zcard());
+        }
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(cacheKey);
             if (zSet != null) {
-                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(zSet.zcard());
             }
         }
-        if (cacheConfig.isZSetLocalCacheEnable()) {
-            int zcard = cacheConfig.getZSetLRUCache().zcard(cacheKey);
-            if (zcard >= 0) {
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return IntegerReply.parse(zcard);
-            }
-        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_3) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());

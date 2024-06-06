@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -70,22 +71,25 @@ public class ZScoreCommander extends Commander {
         WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             ZSet zSet = bufferValue.getValue();
+            Double zscore = zSet.zscore(new BytesKey(member));
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (zscore == null) {
+                return BulkReply.NIL_REPLY;
+            } else {
+                return new BulkReply(Utils.doubleToBytes(zscore));
+            }
+        }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(cacheKey);
             if (zSet != null) {
                 Double zscore = zSet.zscore(new BytesKey(member));
-                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 if (zscore == null) {
                     return BulkReply.NIL_REPLY;
                 } else {
                     return new BulkReply(Utils.doubleToBytes(zscore));
                 }
-            }
-        }
-
-        if (cacheConfig.isZSetLocalCacheEnable()) {
-            Double zscore = cacheConfig.getZSetLRUCache().zscore(cacheKey, new BytesKey(member));
-            if (zscore != null) {
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return new BulkReply(Utils.doubleToBytes(zscore));
             }
         }
 

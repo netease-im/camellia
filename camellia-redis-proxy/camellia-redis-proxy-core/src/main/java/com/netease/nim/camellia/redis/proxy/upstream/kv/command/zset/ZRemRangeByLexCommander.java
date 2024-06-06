@@ -99,14 +99,12 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             ZSet zSet = bufferValue.getValue();
-            if (zSet != null) {
-                localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
-                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-                if (localCacheResult != null && localCacheResult.isEmpty()) {
-                    return IntegerReply.REPLY_0;
-                }
-                result = zsetWriteBuffer.put(cacheKey, zSet);
+            localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (localCacheResult != null && localCacheResult.isEmpty()) {
+                return IntegerReply.REPLY_0;
             }
+            result = zsetWriteBuffer.put(cacheKey, zSet);
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
@@ -130,10 +128,16 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 ZSet zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSet(cacheKey, zSet);
+                    zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
+            }
+            if (result == null) {
+                ZSet zSet = zSetLRUCache.getForWrite(cacheKey);
+                if (zSet != null) {
+                    result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }
             }
         }

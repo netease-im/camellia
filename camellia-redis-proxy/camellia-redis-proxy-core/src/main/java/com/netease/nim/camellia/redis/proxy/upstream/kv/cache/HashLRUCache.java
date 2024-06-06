@@ -49,7 +49,7 @@ public class HashLRUCache {
             } else {
                 this.localCacheForWrite.setCapacity(capacity);
             }
-            logger.info("hash lru cache build, capacity = {}", capacity);
+            logger.info("hash lru cache build, namespace = {}, capacity = {}", namespace, capacity);
         }
         this.capacity = capacity;
     }
@@ -62,7 +62,7 @@ public class HashLRUCache {
         localCacheForWrite.put(new BytesKey(cacheKey), hash);
     }
 
-    public Hash get(byte[] cacheKey) {
+    public Hash getForRead(byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         Hash hash = localCache.get(bytesKey);
         if (hash == null) {
@@ -71,6 +71,15 @@ public class HashLRUCache {
                 localCache.put(bytesKey, hash);
                 localCacheForWrite.remove(bytesKey);
             }
+        }
+        return hash;
+    }
+
+    public Hash getForWrite(byte[] cacheKey) {
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Hash hash = localCache.get(bytesKey);
+        if (hash == null) {
+            hash = localCacheForWrite.get(bytesKey);
         }
         return hash;
     }
