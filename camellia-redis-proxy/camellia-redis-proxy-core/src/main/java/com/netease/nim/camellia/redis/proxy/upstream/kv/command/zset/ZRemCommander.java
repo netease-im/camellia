@@ -106,7 +106,10 @@ public class ZRemCommander extends ZSet0Commander {
                     zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zrem(members);
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                    if (localCacheResult != null && localCacheResult.isEmpty()) {
+                        return IntegerReply.REPLY_0;
+                    }
                 }
             }
 

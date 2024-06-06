@@ -150,13 +150,13 @@ public class HDelCommander extends Commander {
                         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                     }
                 }
-                batchDeleteSubKeys(cacheKey, result, subKeys);
+                batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, false);
                 return IntegerReply.parse(delCount);
             } else {
-                if (deleteAll || checkHLenZero(key, keyMeta)) {
+                if (deleteAll) {
                     keyMetaServer.deleteKeyMeta(key);
                 }
-                batchDeleteSubKeys(cacheKey, result, subKeys);
+                batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, !deleteAll);
                 return IntegerReply.parse(fieldSize);
             }
         }
@@ -212,7 +212,7 @@ public class HDelCommander extends Commander {
                 }
             }
 
-            batchDeleteSubKeys(cacheKey, result, subKeys);
+            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, false);
 
             for (Reply reply1 : replyList) {
                 if (reply1 instanceof ErrorReply) {
@@ -222,11 +222,10 @@ public class HDelCommander extends Commander {
 
             return IntegerReply.parse(delCount);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
-            if (deleteAll || checkHLenZero(key, keyMeta)) {
+            if (deleteAll) {
                 keyMetaServer.deleteKeyMeta(key);
             }
-
-            batchDeleteSubKeys(cacheKey, result, subKeys);
+            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, !deleteAll);
 
             for (Reply reply1 : replyList) {
                 if (reply1 instanceof ErrorReply) {
@@ -240,11 +239,23 @@ public class HDelCommander extends Commander {
         }
     }
 
-    private void batchDeleteSubKeys(byte[] cacheKey, Result result, byte[][] subKeys) {
+    private void batchDeleteSubKeys(byte[] key, KeyMeta keyMeta, byte[] cacheKey, Result result, byte[][] subKeys, boolean checkHLen) {
         if (!result.isKvWriteDelayEnable()) {
             kvClient.batchDelete(subKeys);
+            if (checkHLen) {
+                if (checkHLenZero(key, keyMeta)) {
+                    keyMetaServer.deleteKeyMeta(key);
+                }
+            }
         } else {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(subKeys));
+            submitAsyncWriteTask(cacheKey, result, () -> {
+                kvClient.batchDelete(subKeys);
+                if (checkHLen) {
+                    if (checkHLenZero(key, keyMeta)) {
+                        keyMetaServer.deleteKeyMeta(key);
+                    }
+                }
+            });
         }
     }
 

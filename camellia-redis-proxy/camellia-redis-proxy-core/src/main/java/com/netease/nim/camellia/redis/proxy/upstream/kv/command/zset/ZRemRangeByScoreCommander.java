@@ -118,6 +118,9 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
                     zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
+                    if (localCacheResult != null && localCacheResult.isEmpty()) {
+                        return IntegerReply.REPLY_0;
+                    }
                 }
             }
 

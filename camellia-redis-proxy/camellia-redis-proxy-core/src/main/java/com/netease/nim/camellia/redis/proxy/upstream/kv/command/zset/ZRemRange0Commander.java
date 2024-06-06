@@ -46,6 +46,9 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
                 kvClient.batchDelete(delKeys);
             }
 
+            int count = BytesUtils.toInt(keyMeta.getExtra()) - localCacheResult.size();
+            updateKeyMeta(keyMeta, key, count);
+
             Reply reply = sync(future);
             if (reply instanceof ErrorReply) {
                 return reply;
@@ -132,6 +135,9 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             } else {
                 kvClient.batchDelete(delStoreKeys.toArray(new byte[0][0]));
             }
+
+            int count = BytesUtils.toInt(keyMeta.getExtra()) - localCacheResult.size();
+            updateKeyMeta(keyMeta, key, count);
 
             List<Reply> replyList = sync(futures);
             for (Reply reply : replyList) {

@@ -131,7 +131,10 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                     zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                    if (localCacheResult != null && localCacheResult.isEmpty()) {
+                        return IntegerReply.REPLY_0;
+                    }
                 }
             }
             if (result == null) {

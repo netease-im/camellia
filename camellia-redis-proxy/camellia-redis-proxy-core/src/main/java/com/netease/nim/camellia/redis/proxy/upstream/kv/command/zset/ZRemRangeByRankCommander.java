@@ -107,6 +107,9 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                     zSetLRUCache.putZSetForWrite(cacheKey, zSet);
                     //
                     localCacheResult = zSet.zremrangeByRank(start, stop);
+                    if (localCacheResult != null && localCacheResult.isEmpty()) {
+                        return IntegerReply.REPLY_0;
+                    }
                 }
             }
 
