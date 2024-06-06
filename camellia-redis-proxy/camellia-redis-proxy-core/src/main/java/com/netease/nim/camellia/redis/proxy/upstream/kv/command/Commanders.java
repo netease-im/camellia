@@ -44,6 +44,7 @@ public class Commanders {
         initCommander(new SetExCommander(commanderConfig));
         initCommander(new SetCommander(commanderConfig));
         initCommander(new SetNxCommander(commanderConfig));
+        initCommander(new StrLenCommander(commanderConfig));
 
         //hash
         initCommander(new HSetCommander(commanderConfig));
@@ -55,6 +56,9 @@ public class Commanders {
         initCommander(new HMGetCommander(commanderConfig));
         initCommander(new HKeysCommander(commanderConfig));
         initCommander(new HValsCommander(commanderConfig));
+        initCommander(new HExistsCommander(commanderConfig));
+        initCommander(new HSetNxCommander(commanderConfig));
+        initCommander(new HStrLenCommander(commanderConfig));
 
         //zset
         initCommander(new ZAddCommander(commanderConfig));
@@ -70,6 +74,11 @@ public class Commanders {
         initCommander(new ZRemRangeByLexCommander(commanderConfig));
         initCommander(new ZRemCommander(commanderConfig));
         initCommander(new ZScoreCommander(commanderConfig));
+        initCommander(new ZCountCommander(commanderConfig));
+        initCommander(new ZLexCountCommander(commanderConfig));
+        initCommander(new ZRankCommander(commanderConfig));
+        initCommander(new ZRevRankCommander(commanderConfig));
+        initCommander(new ZMScoreCommander(commanderConfig));
 
     }
 
