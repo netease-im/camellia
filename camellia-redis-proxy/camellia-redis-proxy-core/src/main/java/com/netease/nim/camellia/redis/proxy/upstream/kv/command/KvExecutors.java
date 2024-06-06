@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -24,8 +24,8 @@ public class KvExecutors {
 
     private static volatile KvExecutors INSTANCE;
 
-    private final CamelliaHashedExecutor commandExecutor;
-    private final CamelliaHashedExecutor asyncWriteExecutor;
+    private final MpscHashedExecutor commandExecutor;
+    private final MpscHashedExecutor asyncWriteExecutor;
 
     private KvExecutors() {
         EventLoopGroup eventLoopGroup;
@@ -45,12 +45,12 @@ public class KvExecutors {
 
         int threads1 = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
         int queueSize1 = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
-        commandExecutor = new CamelliaHashedExecutor("kv-command-executor", threads1, queueSize1, new CamelliaHashedExecutor.AbortPolicy(), workThreadInitCallback);
+        commandExecutor = new MpscHashedExecutor("kv-command-executor", threads1, queueSize1, new MpscHashedExecutor.AbortPolicy(), workThreadInitCallback);
         logger.info("KvCommandExecutor init success, nettyWorkThreads = {}, threads = {}, queueSize = {}", nettyWorkThreads, threads1, queueSize1);
 
         int threads2 = ProxyDynamicConf.getInt("kv.async.write.executor.threads", SysUtils.getCpuNum() * 4);
         int queueSize2 = ProxyDynamicConf.getInt("kv.async.write.executor.queue.size", 1000000);
-        asyncWriteExecutor = new CamelliaHashedExecutor("kv-async-write-executor", threads2, queueSize2, new CamelliaHashedExecutor.AbortPolicy());
+        asyncWriteExecutor = new MpscHashedExecutor("kv-async-write-executor", threads2, queueSize2, new MpscHashedExecutor.AbortPolicy());
         logger.info("KvAsyncWriteExecutor init success, threads = {}, queueSize = {}", threads2, queueSize2);
     }
 
@@ -65,11 +65,11 @@ public class KvExecutors {
         return INSTANCE;
     }
 
-    public CamelliaHashedExecutor getCommandExecutor() {
+    public MpscHashedExecutor getCommandExecutor() {
         return commandExecutor;
     }
 
-    public CamelliaHashedExecutor getAsyncWriteExecutor() {
+    public MpscHashedExecutor getAsyncWriteExecutor() {
         return asyncWriteExecutor;
     }
 }

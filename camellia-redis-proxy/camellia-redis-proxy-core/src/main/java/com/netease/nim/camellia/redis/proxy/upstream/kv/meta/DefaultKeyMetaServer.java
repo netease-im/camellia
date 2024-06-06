@@ -16,9 +16,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +29,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     private final KeyMetaLRUCache keyMetaLRUCache;
     private final WriteBuffer<KeyMeta> writeBuffer;
-    private final CamelliaHashedExecutor asyncWriteExecutor;
+    private final MpscHashedExecutor asyncWriteExecutor;
     private final ConcurrentLinkedHashMap<BytesKey, Long> delayCacheKeyMap;
     private final KVClient kvClient;
     private final RedisTemplate redisTemplate;

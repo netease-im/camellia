@@ -20,9 +20,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class KvGcExecutor {
     private final KVClient kvClient;
     private final KeyDesign keyDesign;
     private final KvConfig kvConfig;
-    private final CamelliaHashedExecutor deleteExecutor;
+    private final MpscHashedExecutor deleteExecutor;
     private final ThreadPoolExecutor submitExecutor;
     private final ScheduledThreadPoolExecutor scheduleExecutor;
     private RedisTemplate redisTemplate;
@@ -52,8 +52,8 @@ public class KvGcExecutor {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.kvConfig = kvConfig;
-        this.deleteExecutor = new CamelliaHashedExecutor("camellia-kv-gc", kvConfig.gcExecutorPoolSize(),
-                kvConfig.gcExecutorQueueSize(), new CamelliaHashedExecutor.CallerRunsPolicy());
+        this.deleteExecutor = new MpscHashedExecutor("camellia-kv-gc", kvConfig.gcExecutorPoolSize(),
+                kvConfig.gcExecutorQueueSize(), new MpscHashedExecutor.CallerRunsPolicy());
         this.submitExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(100000), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
         this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));

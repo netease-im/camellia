@@ -16,12 +16,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -37,7 +35,7 @@ public abstract class Commander {
     protected final RedisTemplate cacheRedisTemplate;
     protected final RedisTemplate storeRedisTemplate;
     protected final KvGcExecutor gcExecutor;
-    protected final CamelliaHashedExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
+    protected final MpscHashedExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
     protected final WriteBuffer<Hash> hashWriteBuffer;
     protected final WriteBuffer<ZSet> zsetWriteBuffer;
 

@@ -32,17 +32,15 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -52,7 +50,7 @@ public class RedisKvClient implements IUpstreamClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisKvClient.class);
 
-    private CamelliaHashedExecutor executor;
+    private MpscHashedExecutor executor;
     private final Resource resource;
     private final String namespace;
     private Commanders commanders;
