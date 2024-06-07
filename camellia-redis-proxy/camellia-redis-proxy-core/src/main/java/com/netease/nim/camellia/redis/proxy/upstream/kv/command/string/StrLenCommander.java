@@ -3,9 +3,13 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.string;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
  * STRLEN key
@@ -31,6 +35,19 @@ public class StrLenCommander extends Commander {
 
     @Override
     protected Reply execute(Command command) {
-        return ErrorReply.NOT_SUPPORT;
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        if (keyMeta == null) {
+            return IntegerReply.REPLY_0;
+        }
+        if (keyMeta.getKeyType() != KeyType.string) {
+            return ErrorReply.WRONG_TYPE;
+        }
+        byte[] extra = keyMeta.getExtra();
+        if (extra == null) {
+            return IntegerReply.REPLY_0;
+        }
+        return IntegerReply.parse(Utils.bytesToString(extra).length());
     }
 }
