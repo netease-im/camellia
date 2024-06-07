@@ -173,6 +173,15 @@ public class TestStringV0 {
                 Long ttl = template.pttl(key);
                 assertEquals(ttl > 0, true);
             }
+            template.del(key);
+            {
+                Long strlen = template.strlen(key);
+                assertEquals(strlen, 0L);
+                String setex = template.setex(key, 10, "abc");
+                assertEquals(setex, "OK");
+                Long strlen1 = template.strlen(key);
+                assertEquals(strlen1, 3);
+            }
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
