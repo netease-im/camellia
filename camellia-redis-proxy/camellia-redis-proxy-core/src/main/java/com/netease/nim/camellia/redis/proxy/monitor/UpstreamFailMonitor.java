@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.UpstreamFailStats;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -10,6 +11,7 @@ import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +60,11 @@ public class UpstreamFailMonitor {
                 if (failedCommand == null) {
                     break;
                 }
-                statsLogger.error("command failed, resource = {}, command = {}, keys = {}, error = {}",
-                        PasswordMaskUtils.maskResource(failedCommand.resource), failedCommand.command.getName(), failedCommand.command.getKeysStr(), failedCommand.error);
+                ChannelInfo channelInfo = failedCommand.command.getChannelInfo();
+                SocketAddress clientAddr = channelInfo.getClientSocketAddress();
+                statsLogger.error("command failed, resource = {}, command = {}, keys = {}, error = {}, client.addr = {}",
+                        PasswordMaskUtils.maskResource(failedCommand.resource), failedCommand.command.getName(),
+                        failedCommand.command.getKeysStr(), failedCommand.error, clientAddr);
             }
         } catch (Exception e) {
             logger.error("failed command schedule error", e);
