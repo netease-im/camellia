@@ -20,7 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.MpscHashedExecutor;
+import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -42,7 +42,7 @@ public class KvGcExecutor {
     private final KVClient kvClient;
     private final KeyDesign keyDesign;
     private final KvConfig kvConfig;
-    private final MpscHashedExecutor deleteExecutor;
+    private final MpscSlotHashExecutor deleteExecutor;
     private final ThreadPoolExecutor submitExecutor;
     private final ScheduledThreadPoolExecutor scheduleExecutor;
     private RedisTemplate redisTemplate;
@@ -52,10 +52,10 @@ public class KvGcExecutor {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.kvConfig = kvConfig;
-        this.deleteExecutor = new MpscHashedExecutor("camellia-kv-gc", kvConfig.gcExecutorPoolSize(),
-                kvConfig.gcExecutorQueueSize(), new MpscHashedExecutor.CallerRunsPolicy());
+        this.deleteExecutor = new MpscSlotHashExecutor("camellia-kv-gc", kvConfig.gcExecutorPoolSize(),
+                kvConfig.gcExecutorQueueSize(), new MpscSlotHashExecutor.CallerRunsPolicy());
         this.submitExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(100000), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
+                new LinkedBlockingQueue<>(1024*128), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
         this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
 
         boolean gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);

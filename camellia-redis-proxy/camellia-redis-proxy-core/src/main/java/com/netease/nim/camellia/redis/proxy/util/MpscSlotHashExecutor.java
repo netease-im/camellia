@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by caojiajun on 2024/6/6
  */
-public class MpscHashedExecutor implements CamelliaExecutor {
+public class MpscSlotHashExecutor implements CamelliaExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHashedExecutor.class);
     private static final RejectedExecutionHandler defaultRejectedPolicy = new AbortPolicy();
@@ -31,15 +31,15 @@ public class MpscHashedExecutor implements CamelliaExecutor {
     private final List<WorkThread> workThreads;
     private final RejectedExecutionHandler rejectedExecutionHandler;
 
-    public MpscHashedExecutor(String name, int poolSize, int queueSize) {
+    public MpscSlotHashExecutor(String name, int poolSize, int queueSize) {
         this(name, poolSize, queueSize, defaultRejectedPolicy, null);
     }
 
-    public MpscHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
+    public MpscSlotHashExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
         this(name, poolSize, queueSize, rejectedExecutionHandler, null);
     }
 
-    public MpscHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler, Runnable workThreadInitCallback) {
+    public MpscSlotHashExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler, Runnable workThreadInitCallback) {
         this.name = CamelliaExecutorMonitor.genExecutorName(name);
         this.workThreads = new ArrayList<>(poolSize);
         for (int i=0; i<poolSize; i++) {
@@ -54,31 +54,31 @@ public class MpscHashedExecutor implements CamelliaExecutor {
 
     /**
      * 根据hashKey计算index
-     * @param hashKey hashKey
+     * @param key key
      * @return index
      */
-    public int hashIndex(String hashKey) {
-        return hashIndex(hashKey.getBytes(StandardCharsets.UTF_8));
+    public int hashIndex(String key) {
+        return hashIndex(key.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
      * 根据hashKey计算index
-     * @param hashKey hashKey
+     * @param key key
      * @return index
      */
-    public int hashIndex(byte[] hashKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(hashKey);
+    public int hashIndex(byte[] key) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
         return MathUtil.mod(poolSizeIs2Power, slot, slot);
     }
 
     /**
      * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param hashKey hashKey
+     * @param key key
      * @param runnable 无返回结果的任务
      * @return 任务结果
      */
-    public Future<Void> submit(byte[] hashKey, Runnable runnable) {
-        int index = hashIndex(hashKey);
+    public Future<Void> submit(byte[] key, Runnable runnable) {
+        int index = hashIndex(key);
         FutureTask<Void> task = new FutureTask<>(runnable, null);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
@@ -89,22 +89,22 @@ public class MpscHashedExecutor implements CamelliaExecutor {
 
     /**
      * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param hashKey hashKey
+     * @param key key
      * @param runnable 无返回结果的任务
      * @return 任务结果
      */
-    public Future<Void> submit(String hashKey, Runnable runnable) {
-        return submit(hashKey.getBytes(StandardCharsets.UTF_8), runnable);
+    public Future<Void> submit(String key, Runnable runnable) {
+        return submit(key.getBytes(StandardCharsets.UTF_8), runnable);
     }
 
     /**
      * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param hashKey hashKey
+     * @param key key
      * @param callable 有返回结果的任务
      * @return 任务结果
      */
-    public <T> Future<T> submit(byte[] hashKey, Callable<T> callable) {
-        int index = hashIndex(hashKey);
+    public <T> Future<T> submit(byte[] key, Callable<T> callable) {
+        int index = hashIndex(key);
         FutureTask<T> task = new FutureTask<>(callable);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
@@ -115,12 +115,12 @@ public class MpscHashedExecutor implements CamelliaExecutor {
 
     /**
      * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param hashKey hashKey
+     * @param key key
      * @param callable 有返回结果的任务
      * @return 任务结果
      */
-    public <T> Future<T> submit(String hashKey, Callable<T> callable) {
-        return submit(hashKey.getBytes(StandardCharsets.UTF_8), callable);
+    public <T> Future<T> submit(String key, Callable<T> callable) {
+        return submit(key.getBytes(StandardCharsets.UTF_8), callable);
     }
 
     @Override
@@ -165,26 +165,26 @@ public class MpscHashedExecutor implements CamelliaExecutor {
     }
 
     public static interface RejectedExecutionHandler {
-        void rejectedExecution(Runnable runnable, MpscHashedExecutor executor);
+        void rejectedExecution(Runnable runnable, MpscSlotHashExecutor executor);
     }
 
     public static class AbortPolicy implements RejectedExecutionHandler {
         @Override
-        public void rejectedExecution(Runnable runnable, MpscHashedExecutor executor) {
+        public void rejectedExecution(Runnable runnable, MpscSlotHashExecutor executor) {
             throw new RejectedExecutionException("Task " + runnable.toString() + " rejected from " + executor.getName());
         }
     }
 
     public static class DiscardPolicy implements RejectedExecutionHandler {
         @Override
-        public void rejectedExecution(Runnable runnable, MpscHashedExecutor executor) {
+        public void rejectedExecution(Runnable runnable, MpscSlotHashExecutor executor) {
             logger.warn("Task " + runnable.toString() + " is discard from " + executor.getName());
         }
     }
 
     public static class CallerRunsPolicy implements RejectedExecutionHandler {
         @Override
-        public void rejectedExecution(Runnable runnable, MpscHashedExecutor executor) {
+        public void rejectedExecution(Runnable runnable, MpscSlotHashExecutor executor) {
             runnable.run();
         }
     }
@@ -194,7 +194,7 @@ public class MpscHashedExecutor implements CamelliaExecutor {
         private final BlockingQueue<FutureTask<?>> queue;
         private final Runnable initCallback;
 
-        public WorkThread(MpscHashedExecutor executor, int queueSize, Runnable initCallback) {
+        public WorkThread(MpscSlotHashExecutor executor, int queueSize, Runnable initCallback) {
             this.queue = new MpscBlockingConsumerArrayQueue<>(queueSize);
             setName("mpsc-hashed-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
             this.initCallback = initCallback;

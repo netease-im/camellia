@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
-import com.netease.nim.camellia.redis.proxy.util.MpscHashedExecutor;
+import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -24,8 +24,8 @@ public class KvExecutors {
 
     private static volatile KvExecutors INSTANCE;
 
-    private final MpscHashedExecutor commandExecutor;
-    private final MpscHashedExecutor asyncWriteExecutor;
+    private final MpscSlotHashExecutor commandExecutor;
+    private final MpscSlotHashExecutor asyncWriteExecutor;
 
     private KvExecutors() {
         EventLoopGroup eventLoopGroup;
@@ -44,13 +44,13 @@ public class KvExecutors {
         Runnable workThreadInitCallback = () -> RedisConnectionHub.getInstance().updateEventLoop(eventLoopGroup.next());
 
         int threads1 = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
-        int queueSize1 = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
-        commandExecutor = new MpscHashedExecutor("kv-command-executor", threads1, queueSize1, new MpscHashedExecutor.AbortPolicy(), workThreadInitCallback);
+        int queueSize1 = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 1024*128);
+        commandExecutor = new MpscSlotHashExecutor("kv-command-executor", threads1, queueSize1, new MpscSlotHashExecutor.AbortPolicy(), workThreadInitCallback);
         logger.info("KvCommandExecutor init success, nettyWorkThreads = {}, threads = {}, queueSize = {}", nettyWorkThreads, threads1, queueSize1);
 
         int threads2 = ProxyDynamicConf.getInt("kv.async.write.executor.threads", SysUtils.getCpuNum() * 4);
-        int queueSize2 = ProxyDynamicConf.getInt("kv.async.write.executor.queue.size", 1000000);
-        asyncWriteExecutor = new MpscHashedExecutor("kv-async-write-executor", threads2, queueSize2, new MpscHashedExecutor.AbortPolicy());
+        int queueSize2 = ProxyDynamicConf.getInt("kv.async.write.executor.queue.size", 1024*1024);
+        asyncWriteExecutor = new MpscSlotHashExecutor("kv-async-write-executor", threads2, queueSize2, new MpscSlotHashExecutor.AbortPolicy());
         logger.info("KvAsyncWriteExecutor init success, threads = {}, queueSize = {}", threads2, queueSize2);
     }
 
@@ -65,11 +65,11 @@ public class KvExecutors {
         return INSTANCE;
     }
 
-    public MpscHashedExecutor getCommandExecutor() {
+    public MpscSlotHashExecutor getCommandExecutor() {
         return commandExecutor;
     }
 
-    public MpscHashedExecutor getAsyncWriteExecutor() {
+    public MpscSlotHashExecutor getAsyncWriteExecutor() {
         return asyncWriteExecutor;
     }
 }

@@ -18,7 +18,7 @@ public class KvConfig {
     }
 
     public int gcExecutorQueueSize() {
-        return RedisKvConf.getInt(namespace, "kv.gc.executor.queue.size", 100000);
+        return RedisKvConf.getInt(namespace, "kv.gc.executor.queue.size", 1024*128);
     }
 
     public long gcBatchSleepMs() {

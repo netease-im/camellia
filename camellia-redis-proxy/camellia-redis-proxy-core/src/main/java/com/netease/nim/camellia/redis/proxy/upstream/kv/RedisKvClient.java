@@ -32,7 +32,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
-import com.netease.nim.camellia.redis.proxy.util.MpscHashedExecutor;
+import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -50,7 +50,7 @@ public class RedisKvClient implements IUpstreamClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisKvClient.class);
 
-    private MpscHashedExecutor executor;
+    private MpscSlotHashExecutor executor;
     private final Resource resource;
     private final String namespace;
     private Commanders commanders;
