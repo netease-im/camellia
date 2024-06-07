@@ -16,7 +16,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
-import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
+import com.netease.nim.camellia.redis.proxy.util.MpscHashedExecutor;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.List;

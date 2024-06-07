@@ -1,8 +1,9 @@
-package com.netease.nim.camellia.redis.proxy.upstream.utils;
+package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.tools.executor.CamelliaExecutor;
 import com.netease.nim.camellia.tools.executor.CamelliaExecutorMonitor;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
+import com.netease.nim.camellia.tools.utils.MathUtil;
 import io.netty.util.concurrent.FastThreadLocalThread;
 import org.jctools.queues.MpscBlockingConsumerArrayQueue;
 import org.slf4j.Logger;
@@ -23,8 +24,9 @@ public class MpscHashedExecutor implements CamelliaExecutor {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHashedExecutor.class);
     private static final RejectedExecutionHandler defaultRejectedPolicy = new AbortPolicy();
 
-
     private final String name;
+    private final int poolSize;
+    private final boolean poolSizeIs2Power;
     private final AtomicLong workerIdGen = new AtomicLong(1);
     private final List<WorkThread> workThreads;
     private final RejectedExecutionHandler rejectedExecutionHandler;
@@ -45,6 +47,8 @@ public class MpscHashedExecutor implements CamelliaExecutor {
             workThread.start();
             this.workThreads.add(workThread);
         }
+        this.poolSize = poolSize;
+        this.poolSizeIs2Power = MathUtil.is2Power(poolSize);
         this.rejectedExecutionHandler = rejectedExecutionHandler;
     }
 
@@ -63,7 +67,8 @@ public class MpscHashedExecutor implements CamelliaExecutor {
      * @return index
      */
     public int hashIndex(byte[] hashKey) {
-        return Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        int slot = RedisClusterCRC16Utils.getSlot(hashKey);
+        return MathUtil.mod(poolSizeIs2Power, slot, slot);
     }
 
     /**
@@ -73,7 +78,7 @@ public class MpscHashedExecutor implements CamelliaExecutor {
      * @return 任务结果
      */
     public Future<Void> submit(byte[] hashKey, Runnable runnable) {
-        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        int index = hashIndex(hashKey);
         FutureTask<Void> task = new FutureTask<>(runnable, null);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
@@ -99,7 +104,7 @@ public class MpscHashedExecutor implements CamelliaExecutor {
      * @return 任务结果
      */
     public <T> Future<T> submit(byte[] hashKey, Callable<T> callable) {
-        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        int index = hashIndex(hashKey);
         FutureTask<T> task = new FutureTask<>(callable);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
@@ -124,7 +129,7 @@ public class MpscHashedExecutor implements CamelliaExecutor {
     }
 
     public int getPoolSize() {
-        return workThreads.size();
+        return poolSize;
     }
 
     /**

@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
-import com.netease.nim.camellia.redis.proxy.upstream.utils.MpscHashedExecutor;
+import com.netease.nim.camellia.redis.proxy.util.MpscHashedExecutor;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
