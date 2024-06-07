@@ -50,6 +50,7 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
         this.poolSize = poolSize;
         this.poolSizeIs2Power = MathUtil.is2Power(poolSize);
         this.rejectedExecutionHandler = rejectedExecutionHandler;
+        logger.info("MpscSlotHashExecutor start success, name = {}, poolSize = {}, queueSize = {}", name, poolSize, queueSize);
     }
 
     /**
@@ -193,10 +194,12 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
 
         private final BlockingQueue<FutureTask<?>> queue;
         private final Runnable initCallback;
+        private final MpscSlotHashExecutor executor;
 
         public WorkThread(MpscSlotHashExecutor executor, int queueSize, Runnable initCallback) {
+            this.executor = executor;
             this.queue = new MpscBlockingConsumerArrayQueue<>(queueSize);
-            setName("mpsc-hashed-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
+            setName("mpsc-slot-hash-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
             this.initCallback = initCallback;
         }
 
@@ -220,7 +223,7 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
                         task.run();
                     }
                 } catch (Exception e) {
-                    logger.error("error", e);
+                    logger.error("MpscSlotHashExecutor execute task error, name = {}", executor.name, e);
                 }
             }
         }
