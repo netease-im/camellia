@@ -69,7 +69,7 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
      */
     public int hashIndex(byte[] key) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        return MathUtil.mod(poolSizeIs2Power, slot, slot);
+        return MathUtil.mod(poolSizeIs2Power, slot, poolSize);
     }
 
     /**

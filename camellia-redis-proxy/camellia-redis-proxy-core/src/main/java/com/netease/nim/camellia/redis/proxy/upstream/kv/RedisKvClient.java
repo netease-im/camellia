@@ -32,6 +32,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -191,6 +192,7 @@ public class RedisKvClient implements IUpstreamClient {
                 }
             });
         } catch (Exception e) {
+            ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
             future.complete(ErrorReply.TOO_BUSY);
         }
     }
