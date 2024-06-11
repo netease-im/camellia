@@ -104,6 +104,9 @@ public class ZSet {
     public int zcount(ZSetScore minScore, ZSetScore maxScore) {
         int count = 0;
         for (ZSetTuple member : score) {
+            if (member.getScore() > maxScore.getScore()) {
+                break;
+            }
             boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                 continue;
@@ -129,6 +132,9 @@ public class ZSet {
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (ZSetTuple member : score) {
+            if (member.getScore() > maxScore.getScore()) {
+                break;
+            }
             boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                continue;
@@ -149,6 +155,9 @@ public class ZSet {
         int count = 0;
         for (int i=this.score.size() - 1; i>=0; i--) {
             ZSetTuple member = this.score.get(i);
+            if (member.getScore() < minScore.getScore()) {
+                break;
+            }
             boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                 continue;
@@ -253,6 +262,9 @@ public class ZSet {
     public Map<BytesKey, Double> zremrangeByScore(ZSetScore minScore, ZSetScore maxScore) {
         Map<BytesKey, Double> map = new HashMap<>();
         for (ZSetTuple member : score) {
+            if (member.getScore() > maxScore.getScore()) {
+                break;
+            }
             boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
             if (!pass) {
                 continue;
