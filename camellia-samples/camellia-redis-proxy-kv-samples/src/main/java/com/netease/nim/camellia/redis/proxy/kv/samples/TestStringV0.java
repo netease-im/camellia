@@ -177,10 +177,10 @@ public class TestStringV0 {
             {
                 Long strlen = template.strlen(key);
                 assertEquals(strlen, 0L);
-                String setex = template.setex(key, 10, "abc");
+                String setex = template.setex(key, 100,"abc");
                 assertEquals(setex, "OK");
                 Long strlen1 = template.strlen(key);
-                assertEquals(strlen1, 3);
+                assertEquals(strlen1, 3L);
             }
         } catch (Exception e) {
             System.out.println("error");
