@@ -284,6 +284,24 @@ public class TestZSetV0V1V2 {
                 Long zcount1 = template.zcount(key, 2, 5);
                 assertEquals(zcount1, 2L);
             }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("a", 1.0);
+                map1.put("b", 2.0);
+                map1.put("c", 3.0);
+                map1.put("d", 4.0);
+                map1.put("e", 5.0);
+                map1.put("f", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+                Long zcount = template.zlexcount(key, "(a", "[d");
+                assertEquals(zcount, 3L);
+                template.zremrangeByScore(key, 1, 3);
+                Long zcount1 = template.zlexcount(key, "-", "(e");
+                assertEquals(zcount1, 1L);
+            }
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

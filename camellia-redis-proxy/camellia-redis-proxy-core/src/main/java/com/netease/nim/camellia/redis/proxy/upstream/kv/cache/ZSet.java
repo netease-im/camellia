@@ -113,6 +113,18 @@ public class ZSet {
         return count;
     }
 
+    public int zlexcount(ZSetLex minLex, ZSetLex maxLex) {
+        int count = 0;
+        for (ZSetTuple member : rank) {
+            boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
+            if (!pass) {
+                continue;
+            }
+            count ++;
+        }
+        return count;
+    }
+
     public List<ZSetTuple> zrangebyscore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
