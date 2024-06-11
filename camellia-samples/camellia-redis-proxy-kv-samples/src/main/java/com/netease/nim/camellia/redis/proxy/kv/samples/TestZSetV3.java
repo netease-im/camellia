@@ -201,6 +201,23 @@ public class TestZSetV3 {
                 assertEquals(iterator2.next(), "v5");
                 assertEquals(iterator2.next(), "v6");
             }
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("v1", 1.0);
+                map1.put("v2", 2.0);
+                map1.put("v3", 3.0);
+                map1.put("v4", 4.0);
+                map1.put("v5", 5.0);
+                map1.put("v6", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+                Long zcount = template.zcount(key, 1, 3);
+                assertEquals(zcount, 3L);
+                template.zremrangeByScore(key, 1, 3);
+                Long zcount1 = template.zcount(key, 2, 5);
+                assertEquals(zcount1, 2L);
+            }
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

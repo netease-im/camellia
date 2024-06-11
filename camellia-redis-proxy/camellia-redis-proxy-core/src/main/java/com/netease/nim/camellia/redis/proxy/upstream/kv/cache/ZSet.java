@@ -101,6 +101,18 @@ public class ZSet {
         return result;
     }
 
+    public int zcount(ZSetScore minScore, ZSetScore maxScore) {
+        int count = 0;
+        for (ZSetTuple member : score) {
+            boolean pass = ZSetScoreUtils.checkScore(member.getScore(), minScore, maxScore);
+            if (!pass) {
+                continue;
+            }
+            count ++;
+        }
+        return count;
+    }
+
     public List<ZSetTuple> zrangebyscore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
