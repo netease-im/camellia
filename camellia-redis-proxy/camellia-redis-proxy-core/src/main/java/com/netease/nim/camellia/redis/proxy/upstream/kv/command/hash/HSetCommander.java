@@ -125,9 +125,9 @@ public class HSetCommander extends Commander {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
             Map<BytesKey, byte[]> existsMap = null;
             if (first) {
-                hashLRUCache.putAllForWrite(cacheKey, new Hash(new HashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(key, cacheKey, new Hash(new HashMap<>(fieldMap)));
             } else {
-                existsMap = hashLRUCache.hset(cacheKey, fieldMap);
+                existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
             }
 
             if (existsMap != null && existsCount < 0) {
@@ -136,7 +136,7 @@ public class HSetCommander extends Commander {
             }
 
             if (result == null) {
-                Hash hash = hashLRUCache.getForWrite(cacheKey);
+                Hash hash = hashLRUCache.getForWrite(key, cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                 }

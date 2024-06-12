@@ -56,7 +56,7 @@ public class ZCardCommander extends Commander {
             return IntegerReply.parse(zSet.zcard());
         }
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(cacheKey);
+            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
             if (zSet != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(zSet.zcard());

@@ -85,7 +85,7 @@ public class HGetCommander extends Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-            Hash hash = hashLRUCache.getForRead(cacheKey);
+            Hash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new BulkReply(hash.hget(new BytesKey(field)));

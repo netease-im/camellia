@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +19,9 @@ public class HashLRUCache {
     private static final Logger logger = LoggerFactory.getLogger(HashLRUCache.class);
 
     private final String namespace;
-    private ConcurrentLinkedHashMap<BytesKey, Hash> localCache;
-    private ConcurrentLinkedHashMap<BytesKey, Hash> localCacheForWrite;
+    private SlotLRUCache<Hash> localCache;
+    private SlotLRUCache<Hash> localCacheForWrite;
+
     private int capacity;
 
     public HashLRUCache(String namespace) {
@@ -31,21 +32,15 @@ public class HashLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.hash.lru.cache.capacity", 500000);
+        int capacity = RedisKvConf.getInt(namespace, "kv.hash.lru.cache.capacity", 256);
         if (this.capacity != capacity) {
             if (this.localCache == null) {
-                this.localCache = new ConcurrentLinkedHashMap.Builder<BytesKey, Hash>()
-                        .initialCapacity(capacity)
-                        .maximumWeightedCapacity(capacity)
-                        .build();
+                this.localCache = new SlotLRUCache<>(capacity);
             } else {
                 this.localCache.setCapacity(capacity);
             }
             if (this.localCacheForWrite == null) {
-                this.localCacheForWrite = new ConcurrentLinkedHashMap.Builder<BytesKey, Hash>()
-                        .initialCapacity(capacity)
-                        .maximumWeightedCapacity(capacity)
-                        .build();
+                this.localCacheForWrite = new SlotLRUCache<>(capacity);
             } else {
                 this.localCacheForWrite.setCapacity(capacity);
             }
@@ -54,44 +49,49 @@ public class HashLRUCache {
         this.capacity = capacity;
     }
 
-    public void putAllForRead(byte[] cacheKey, Hash hash) {
-        localCache.put(new BytesKey(cacheKey), hash);
+    public void putAllForRead(byte[] key, byte[] cacheKey, Hash hash) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        localCache.put(slot, new BytesKey(cacheKey), hash);
     }
 
-    public void putAllForWrite(byte[] cacheKey, Hash hash) {
-        localCacheForWrite.put(new BytesKey(cacheKey), hash);
+    public void putAllForWrite(byte[] key, byte[] cacheKey, Hash hash) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        localCacheForWrite.put(slot, new BytesKey(cacheKey), hash);
     }
 
-    public Hash getForRead(byte[] cacheKey) {
+    public Hash getForRead(byte[] key, byte[] cacheKey) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        Hash hash = localCache.get(bytesKey);
+        Hash hash = localCache.get(slot, bytesKey);
         if (hash == null) {
-            hash = localCacheForWrite.get(bytesKey);
+            hash = localCacheForWrite.get(slot, bytesKey);
             if (hash != null) {
-                localCache.put(bytesKey, hash);
-                localCacheForWrite.remove(bytesKey);
+                localCache.put(slot, bytesKey, hash);
+                localCacheForWrite.remove(slot, bytesKey);
             }
         }
         return hash;
     }
 
-    public Hash getForWrite(byte[] cacheKey) {
+    public Hash getForWrite(byte[] key, byte[] cacheKey) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        Hash hash = localCache.get(bytesKey);
+        Hash hash = localCache.get(slot, bytesKey);
         if (hash == null) {
-            hash = localCacheForWrite.get(bytesKey);
+            hash = localCacheForWrite.get(slot, bytesKey);
         }
         return hash;
     }
 
-    public Map<BytesKey, byte[]> hset(byte[] cacheKey, Map<BytesKey, byte[]> fieldMap) {
+    public Map<BytesKey, byte[]> hset(byte[] key, byte[] cacheKey, Map<BytesKey, byte[]> fieldMap) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        Hash hash1 = localCacheForWrite.get(bytesKey);
+        Hash hash1 = localCacheForWrite.get(slot, bytesKey);
         Map<BytesKey, byte[]> result1 = null;
         if (hash1 != null) {
             result1 = hash1.hset(fieldMap);
         }
-        Hash hash2 = localCache.get(bytesKey);
+        Hash hash2 = localCache.get(slot, bytesKey);
         Map<BytesKey, byte[]> result2 = null;
         if (hash2 != null) {
             result2 = hash2.hset(fieldMap);
@@ -102,14 +102,15 @@ public class HashLRUCache {
         return result2;
     }
 
-    public Map<BytesKey, byte[]> hdel(byte[] cacheKey, Set<BytesKey> fields) {
+    public Map<BytesKey, byte[]> hdel(byte[] key, byte[] cacheKey, Set<BytesKey> fields) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        Hash hash1 = localCacheForWrite.get(bytesKey);
+        Hash hash1 = localCacheForWrite.get(slot, bytesKey);
         Map<BytesKey, byte[]> result1 = null;
         if (hash1 != null) {
             result1 = hash1.hdel(fields);
         }
-        Hash hash2 = localCache.get(bytesKey);
+        Hash hash2 = localCache.get(slot, bytesKey);
         Map<BytesKey, byte[]> result2 = null;
         if (hash2 != null) {
             result2 = hash2.hdel(fields);
@@ -120,10 +121,11 @@ public class HashLRUCache {
         return result2;
     }
 
-    public void del(byte[] cacheKey) {
+    public void del(byte[] key, byte[] cacheKey) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        localCache.remove(bytesKey);
-        localCacheForWrite.remove(bytesKey);
+        localCache.remove(slot, bytesKey);
+        localCacheForWrite.remove(slot, bytesKey);
     }
 
     public void clear() {

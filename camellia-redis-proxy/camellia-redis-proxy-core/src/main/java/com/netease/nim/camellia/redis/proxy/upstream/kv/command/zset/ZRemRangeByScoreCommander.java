@@ -100,7 +100,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (localCacheResult == null) {
-                localCacheResult = zSetLRUCache.zremrangeByScore(cacheKey, minScore, maxScore);
+                localCacheResult = zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
                 if (localCacheResult != null) {
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
@@ -108,14 +108,14 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
                     return IntegerReply.REPLY_0;
                 }
             } else {
-                zSetLRUCache.zremrangeByScore(cacheKey, minScore, maxScore);
+                zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
             }
 
             if (hotKey && localCacheResult == null) {
                 ZSet zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForWrite(cacheKey, zSet);
+                    zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                     //
                     localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
                     if (localCacheResult != null && localCacheResult.isEmpty()) {
@@ -125,7 +125,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             }
 
             if (result == null) {
-                ZSet zSet = zSetLRUCache.getForWrite(cacheKey);
+                ZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }

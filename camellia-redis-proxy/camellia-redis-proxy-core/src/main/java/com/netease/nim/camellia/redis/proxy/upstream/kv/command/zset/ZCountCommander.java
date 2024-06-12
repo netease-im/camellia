@@ -3,7 +3,9 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
-import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
@@ -15,13 +17,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.ScriptReplyUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * ZCOUNT key min max
@@ -91,7 +89,7 @@ public class ZCountCommander extends ZSet0Commander {
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            ZSet zSet = zSetLRUCache.getForRead(cacheKey);
+            ZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
 
             if (zSet != null) {
                 int zcount = zSet.zcount(minScore, maxScore);
@@ -103,7 +101,7 @@ public class ZCountCommander extends ZSet0Commander {
                 zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForRead(cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     //
                     int zcount = zSet.zcount(minScore, maxScore);
 

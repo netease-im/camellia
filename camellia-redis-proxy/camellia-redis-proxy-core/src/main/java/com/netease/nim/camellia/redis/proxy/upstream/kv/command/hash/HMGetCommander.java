@@ -86,7 +86,7 @@ public class HMGetCommander extends Commander {
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Hash hash = cacheConfig.getHashLRUCache().getForRead(cacheKey);
+            Hash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply2(fields, hash.hgetAll());

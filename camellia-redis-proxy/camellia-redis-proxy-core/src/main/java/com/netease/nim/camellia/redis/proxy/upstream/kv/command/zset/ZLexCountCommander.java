@@ -97,7 +97,7 @@ public class ZLexCountCommander extends ZSet0Commander {
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            ZSet zSet = zSetLRUCache.getForRead(cacheKey);
+            ZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
 
             if (zSet != null) {
                 int zcount = zSet.zlexcount(minLex, maxLex);
@@ -109,7 +109,7 @@ public class ZLexCountCommander extends ZSet0Commander {
                 zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForRead(cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     //
                     int zcount = zSet.zlexcount(minLex, maxLex);
 

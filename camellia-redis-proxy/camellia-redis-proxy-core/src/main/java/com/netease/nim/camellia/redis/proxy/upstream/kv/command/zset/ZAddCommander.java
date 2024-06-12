@@ -117,15 +117,15 @@ public class ZAddCommander extends ZSet0Commander {
 
             if (first) {
                 zSet = new ZSet(new HashMap<>(memberMap));
-                zSetLRUCache.putZSetForWrite(cacheKey, zSet);
+                zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
             } else {
-                Map<BytesKey, Double> map = zSetLRUCache.zadd(cacheKey, memberMap);
+                Map<BytesKey, Double> map = zSetLRUCache.zadd(key, cacheKey, memberMap);
                 if (map == null) {
                     if (hotKey) {
                         zSet = loadLRUCache(keyMeta, key);
                         if (zSet != null) {
                             //
-                            zSetLRUCache.putZSetForWrite(cacheKey, zSet);
+                            zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                             //
                             map = zSet.zadd(memberMap);
                         }
@@ -137,7 +137,7 @@ public class ZAddCommander extends ZSet0Commander {
             }
             if (result == null) {
                 if (zSet == null) {
-                    zSet = zSetLRUCache.getForWrite(cacheKey);
+                    zSet = zSetLRUCache.getForWrite(key, cacheKey);
                 }
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());

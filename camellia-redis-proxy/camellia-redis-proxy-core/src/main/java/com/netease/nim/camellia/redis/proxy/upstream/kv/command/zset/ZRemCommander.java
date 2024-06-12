@@ -91,19 +91,19 @@ public class ZRemCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (localCacheResult == null) {
-                localCacheResult = zSetLRUCache.zrem(cacheKey, members);
+                localCacheResult = zSetLRUCache.zrem(key, cacheKey, members);
                 if (localCacheResult != null) {
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             } else {
-                zSetLRUCache.zrem(cacheKey, members);
+                zSetLRUCache.zrem(key, cacheKey, members);
             }
 
             if (hotKey && localCacheResult == null) {
                 ZSet zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForWrite(cacheKey, zSet);
+                    zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                     //
                     localCacheResult = zSet.zrem(members);
 
@@ -114,7 +114,7 @@ public class ZRemCommander extends ZSet0Commander {
             }
 
             if (result == null) {
-                ZSet zSet = zSetLRUCache.getForWrite(cacheKey);
+                ZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }

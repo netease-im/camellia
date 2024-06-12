@@ -81,7 +81,7 @@ public class ZScoreCommander extends Commander {
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(cacheKey);
+            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
             if (zSet != null) {
                 Double zscore = zSet.zscore(new BytesKey(member));
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());

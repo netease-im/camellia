@@ -72,7 +72,7 @@ public class HGetAllCommander extends Hash0Commander {
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Hash hash = cacheConfig.getHashLRUCache().getForRead(cacheKey);
+            Hash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(hash.hgetAll());
@@ -84,7 +84,7 @@ public class HGetAllCommander extends Hash0Commander {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().putAllForRead(cacheKey, new Hash(map));
+                cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new Hash(map));
             }
             return toReply(map);
         }
@@ -94,7 +94,7 @@ public class HGetAllCommander extends Hash0Commander {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (cacheConfig.isHashLocalCacheEnable()) {
                 if (reply instanceof MultiBulkReply) {
-                    cacheConfig.getHashLRUCache().putAllForRead(cacheKey, new Hash(toMap((MultiBulkReply) reply)));
+                    cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new Hash(toMap((MultiBulkReply) reply)));
                 }
             }
             return reply;
@@ -103,7 +103,7 @@ public class HGetAllCommander extends Hash0Commander {
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
-            cacheConfig.getHashLRUCache().putAllForRead(cacheKey, new Hash(map));
+            cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new Hash(map));
         }
 
         ErrorReply errorReply = buildCache(cacheKey, map);

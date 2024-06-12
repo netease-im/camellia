@@ -87,7 +87,7 @@ public class HLenCommander extends Commander {
             return IntegerReply.parse(hash.hlen());
         }
         if (cacheConfig.isHashLocalCacheEnable()) {
-            Hash hash = cacheConfig.getHashLRUCache().getForRead(cacheKey);
+            Hash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(hash.hlen());

@@ -93,7 +93,7 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            ZSet zSet = zSetLRUCache.getForRead(cacheKey);
+            ZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
 
             if (zSet != null) {
                 List<ZSetTuple> list = zSet.zrangebyscore(minScore, maxScore, limit);
@@ -105,7 +105,7 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
                 zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForRead(cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     //
                     List<ZSetTuple> list = zSet.zrangebyscore(minScore, maxScore, limit);
 
