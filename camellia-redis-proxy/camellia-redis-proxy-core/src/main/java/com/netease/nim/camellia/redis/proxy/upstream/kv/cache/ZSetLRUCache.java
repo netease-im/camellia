@@ -36,7 +36,7 @@ public class ZSetLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.zset.lru.cache.capacity", 256);
+        int capacity = RedisKvConf.getInt(namespace, "kv.zset.lru.cache.capacity", 100_0000);
         if (this.capacity != capacity) {
             if (this.localCache == null) {
                 this.localCache = new SlotLRUCache<>(capacity);

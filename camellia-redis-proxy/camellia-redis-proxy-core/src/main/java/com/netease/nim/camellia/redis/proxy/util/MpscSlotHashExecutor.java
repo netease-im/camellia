@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.tools.executor.CamelliaExecutor;
 import com.netease.nim.camellia.tools.executor.CamelliaExecutorMonitor;
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.utils.MathUtil;
 import io.netty.util.concurrent.FastThreadLocalThread;
 import org.jctools.queues.MpscBlockingConsumerArrayQueue;
@@ -21,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MpscSlotHashExecutor implements CamelliaExecutor {
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaHashedExecutor.class);
+    private static final Logger logger = LoggerFactory.getLogger(MpscSlotHashExecutor.class);
     private static final RejectedExecutionHandler defaultRejectedPolicy = new AbortPolicy();
 
     private final String name;
