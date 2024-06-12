@@ -130,7 +130,7 @@ redis里的zset是一个有序集合，并且可以根据score、rank、lex等�
 * sub-value为null
 
 
-* 存在第二个sub-key的原因是为了根据score进行正序和逆序的scan，表现为zrangebyscore、zrevrangebyscore、zremrangebyscore等命令
+存在第二个sub-key的原因是为了根据score进行正序和逆序的scan，表现为zrangebyscore、zrevrangebyscore、zremrangebyscore等命令
 
 
 ### 5、其他数据结构
