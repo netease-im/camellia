@@ -1,7 +1,8 @@
 
 ## camellia-redis-proxy-kv
 
-基于camellia-redis-proxy的可插拔架构设计，支持对接外部kv存储，模拟redis协议
+基于camellia-redis-proxy的可插拔架构设计，支持对接外部kv存储，模拟redis协议    
+可以参考：[article](article.md)  
 
 ## 基本架构
 
@@ -130,9 +131,9 @@ kv.cache.hgetall.cache.millis=30000
 
 #### sub-key
 
-|                         key                          |    value    |
-|:----------------------------------------------------:|:-----------:|
-| s# + namespace + key.len + key + key-version + field | field-value |
+|                                 key                                  |    value    |
+|:--------------------------------------------------------------------:|:-----------:|
+| s# + namespace + md5(key)[0-8] + key.len + key + key-version + field | field-value |
 
 * encode-version固定为1，key-type固定为2
 * 因为不在key-meta中记录field-count，纯覆盖写，写入快，但是导致了hlen慢
