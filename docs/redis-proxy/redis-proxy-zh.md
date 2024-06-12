@@ -7,6 +7,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持代理到redis-standalone、redis-sentinel、redis-cluster
 * 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
 * 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端
+* 支持使用hbase/obkv/tikv等作为底层存储，构建一个类redis的系统，具体见：[kv](./kv/kv.md)
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持的命令列表，具体见：[supported_commands](supported_commands.md)
 * 支持自定义分片
@@ -36,7 +37,6 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 高可用，可以基于lb组成集群，也可以基于注册中心组成集群，也可以伪装成redis-cluster组成集群，也可以伪装成redis-sentinel组成集群
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
-* 支持使用hbase/obkv/tikv等作为底层存储，构建一个类redis的系统，具体见：[kv](./kv/kv.md)
 
 ## 快速开始一
 1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.2.27），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
