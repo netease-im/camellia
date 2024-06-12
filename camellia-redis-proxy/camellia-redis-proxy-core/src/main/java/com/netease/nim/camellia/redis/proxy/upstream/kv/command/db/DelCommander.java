@@ -55,7 +55,7 @@ public class DelCommander extends Commander {
                 cacheRedisTemplate.sendDel(cacheKey);
             }
             if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().del(cacheKey);
+                cacheConfig.getHashLRUCache().del(key, cacheKey);
             }
         }
         return IntegerReply.parse(ret);
