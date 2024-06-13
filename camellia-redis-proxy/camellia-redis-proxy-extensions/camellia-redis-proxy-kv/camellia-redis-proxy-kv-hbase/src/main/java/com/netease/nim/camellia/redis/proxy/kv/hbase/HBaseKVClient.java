@@ -1,25 +1,37 @@
 package com.netease.nim.camellia.redis.proxy.kv.hbase;
 
+import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.api.CamelliaApi;
+import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.hbase.CamelliaHBaseEnv;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
+import com.netease.nim.camellia.hbase.conf.CamelliaHBaseConf;
+import com.netease.nim.camellia.hbase.connection.CamelliaHBaseConnectionFactory;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import org.apache.hadoop.hbase.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by caojiajun on 2024/4/8
  */
 public class HBaseKVClient implements KVClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(HBaseKVClient.class);
 
     private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
     private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
@@ -28,10 +40,48 @@ public class HBaseKVClient implements KVClient {
     private final CamelliaHBaseTemplate template;
 
     public HBaseKVClient() {
-        String string = ProxyDynamicConf.getString("kv.store.hbase.url", null);
-        HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(string));
-        template = new CamelliaHBaseTemplate(hBaseResource);
+        //config
+        String conf = ProxyDynamicConf.getString("kv.store.hbase.conf", null);
+        CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
+        if (conf != null) {
+            JSONObject json = JSONObject.parseObject(conf);
+            for (Map.Entry<String, Object> entry : json.entrySet()) {
+                camelliaHBaseConf.addConf(entry.getKey(), entry.getValue().toString());
+            }
+        }
+        CamelliaHBaseEnv hBaseEnv = new CamelliaHBaseEnv.Builder()
+                .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
+                .build();
+
+        //client
+        String configType = ProxyDynamicConf.getString("kv.store.hbase.config.type", "local");
+        if (configType.equalsIgnoreCase("local")) {
+            String string = ProxyDynamicConf.getString("kv.store.hbase.url", null);
+            HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(string));
+            template = new CamelliaHBaseTemplate(hBaseEnv, hBaseResource);
+            logger.info("hbase template init success, resource = {}", string);
+        } else if (configType.equalsIgnoreCase("remote")) {
+            String dashboardUrl = ProxyDynamicConf.getString("kv.store.hbase.camellia.dashboard.url", null);
+            if (dashboardUrl == null) {
+                throw new KvException("illegal dashboardUrl");
+            }
+            boolean monitorEnable = ProxyDynamicConf.getBoolean("kv.store.hbase.camellia.dashboard.monitor.enable", true);
+            long checkIntervalMillis = ProxyDynamicConf.getLong("kv.store.hbase.camellia.dashboard.check.interval.millis", 3000L);
+            long bid = ProxyDynamicConf.getLong("kv.store.hbase.bid", -1);
+            String bgroup = ProxyDynamicConf.getString("kv.store.hbase.bgroup", "default");
+            if (bid <= 0) {
+                throw new KvException("illegal bid");
+            }
+            CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
+            template = new CamelliaHBaseTemplate(hBaseEnv, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
+            logger.info("hbase template init success, dashboardUrl = {}, bid = {}, bgroup = {}", dashboardUrl, bid, bgroup);
+        } else {
+            throw new KvException("init hbase template error");
+        }
+
+        //table
         tableName = ProxyDynamicConf.getString("kv.store.hbase.table.name", "camellia_kv");
+        logger.info("HBaseKVClient init success, table = {}", tableName);
     }
 
     @Override
