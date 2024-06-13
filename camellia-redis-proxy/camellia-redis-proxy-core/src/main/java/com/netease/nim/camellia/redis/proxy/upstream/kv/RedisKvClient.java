@@ -259,7 +259,7 @@ public class RedisKvClient implements IUpstreamClient {
             if (bid <= 0) {
                 throw new KvException("illegal bid");
             }
-            RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
+            RedisProxyEnv env = GlobalRedisProxyEnv.getRedisProxyEnv();
             CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
             UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
             RedisTemplate redisTemplate = new RedisTemplate(template);
