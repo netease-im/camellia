@@ -19,10 +19,16 @@ public class KvGcMonitor {
     private static final ConcurrentHashMap<String, LongAdder> map2 = new ConcurrentHashMap<>();
 
     public static void deleteMetaKeys(String namespace, long deleteMetaKeys) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         CamelliaMapUtils.computeIfAbsent(map1, namespace, k -> new LongAdder()).add(deleteMetaKeys);
     }
 
     public static void deleteSubKeys(String namespace, long deleteSubKeys) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         CamelliaMapUtils.computeIfAbsent(map2, namespace, k -> new LongAdder()).add(deleteSubKeys);
     }
 

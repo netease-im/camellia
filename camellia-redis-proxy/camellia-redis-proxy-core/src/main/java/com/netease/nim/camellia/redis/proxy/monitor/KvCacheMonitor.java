@@ -22,32 +22,50 @@ public class KvCacheMonitor {
     private static final ConcurrentHashMap<String, Counter> map = new ConcurrentHashMap<>();
 
     public static void writeBuffer(String namespace, String operation) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.writeBuffer.increment();
     }
 
     public static void localCache(String namespace, String operation) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.localCache.increment();
     }
 
     public static void redisCache(String namespace, String operation) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.redisCache.increment();
     }
 
     public static void redisCache(String namespace, String operation, long add) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         if (add <= 0) return;
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.redisCache.add(add);
     }
 
     public static void kvStore(String namespace, String operation) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.kvStore.increment();
     }
 
     public static void kvStore(String namespace, String operation, long add) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
         if (add <= 0) return;
         Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
         counter.kvStore.add(add);
