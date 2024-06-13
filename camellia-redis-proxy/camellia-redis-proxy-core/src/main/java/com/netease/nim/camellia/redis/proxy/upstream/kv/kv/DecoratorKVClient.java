@@ -15,7 +15,7 @@ public class DecoratorKVClient implements KVClient {
 
     public DecoratorKVClient(KVClient kvClient) {
         this.kvClient = kvClient;
-        this.name = kvClient.getClass().getName();
+        this.name = kvClient.getClass().getSimpleName();
     }
 
     @Override
