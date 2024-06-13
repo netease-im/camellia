@@ -203,6 +203,7 @@ public class TestHashV0V2 {
                 assertEquals(hvals.contains("v1"), true);
                 assertEquals(hvals.contains("v1"), true);
             }
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

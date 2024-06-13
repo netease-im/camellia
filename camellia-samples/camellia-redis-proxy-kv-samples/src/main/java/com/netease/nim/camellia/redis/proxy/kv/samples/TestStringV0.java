@@ -182,6 +182,7 @@ public class TestStringV0 {
                 Long strlen1 = template.strlen(key);
                 assertEquals(strlen1, 3L);
             }
+            template.del(key, key1, key2, key3);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

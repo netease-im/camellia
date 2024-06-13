@@ -302,6 +302,7 @@ public class TestZSetV0V1V2 {
                 Long zcount1 = template.zlexcount(key, "-", "(e");
                 assertEquals(zcount1, 1L);
             }
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

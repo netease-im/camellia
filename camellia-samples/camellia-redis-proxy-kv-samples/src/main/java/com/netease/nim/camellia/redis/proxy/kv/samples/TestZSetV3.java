@@ -218,6 +218,7 @@ public class TestZSetV3 {
                 Long zcount1 = template.zcount(key, 2, 5);
                 assertEquals(zcount1, 2L);
             }
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
