@@ -39,6 +39,8 @@ public class HBaseKVClient implements KVClient {
     private final String tableName;
     private final CamelliaHBaseTemplate template;
 
+    private Durability durability = Durability.USE_DEFAULT;
+
     public HBaseKVClient() {
         //config
         String conf = ProxyDynamicConf.getString("kv.store.hbase.conf", null);
@@ -82,6 +84,29 @@ public class HBaseKVClient implements KVClient {
         //table
         tableName = ProxyDynamicConf.getString("kv.store.hbase.table.name", "camellia_kv");
         logger.info("HBaseKVClient init success, table = {}", tableName);
+
+        reloadConfig();
+        ProxyDynamicConf.registerCallback(this::reloadConfig);
+    }
+
+    private void reloadConfig() {
+        String string = ProxyDynamicConf.getString("kv.store.hbase.durability", "");
+        Durability durability = this.durability;
+        if (string.equalsIgnoreCase(Durability.USE_DEFAULT.name())) {
+            durability = Durability.USE_DEFAULT;
+        } else if (string.equalsIgnoreCase(Durability.FSYNC_WAL.name())) {
+            durability = Durability.FSYNC_WAL;
+        } else if (string.equalsIgnoreCase(Durability.SYNC_WAL.name())) {
+            durability = Durability.SYNC_WAL;
+        } else if (string.equalsIgnoreCase(Durability.ASYNC_WAL.name())) {
+            durability = Durability.ASYNC_WAL;
+        } else if (string.equalsIgnoreCase(Durability.SKIP_WAL.name())) {
+            durability = Durability.SKIP_WAL;
+        }
+        if (!durability.equals(this.durability)) {
+            logger.info("kv store hbase durability update, {}->{}", this.durability, durability);
+            this.durability = durability;
+        }
     }
 
     @Override
@@ -98,6 +123,7 @@ public class HBaseKVClient implements KVClient {
     public void put(byte[] key, byte[] value) {
         Put put = new Put(key);
         put.addColumn(cf, column, value);
+        put.setDurability(durability);
         template.put(tableName, put);
     }
 
@@ -107,6 +133,7 @@ public class HBaseKVClient implements KVClient {
         for (KeyValue keyValue : list) {
             Put put = new Put(keyValue.getKey());
             put.addColumn(cf, column, keyValue.getValue());
+            put.setDurability(durability);
             putList.add(put);
         }
         template.put(tableName, putList);
@@ -162,6 +189,7 @@ public class HBaseKVClient implements KVClient {
     @Override
     public void delete(byte[] key) {
         Delete delete = new Delete(key);
+        delete.setDurability(durability);
         template.delete(tableName, delete);
     }
 
@@ -169,7 +197,9 @@ public class HBaseKVClient implements KVClient {
     public void batchDelete(byte[]... keys) {
         List<Delete> list = new ArrayList<>(keys.length);
         for (byte[] key : keys) {
-            list.add(new Delete(key));
+            Delete delete = new Delete(key);
+            delete.setDurability(durability);
+            list.add(delete);
         }
         template.delete(tableName, list);
     }
@@ -181,7 +211,9 @@ public class HBaseKVClient implements KVClient {
 
     @Override
     public void checkAndDelete(byte[] key, byte[] value) {
-        template.checkAndDelete(tableName, key, cf, column, value, new Delete(key));
+        Delete delete = new Delete(key);
+        delete.setDurability(durability);
+        template.checkAndDelete(tableName, key, cf, column, value, delete);
     }
 
     @Override
