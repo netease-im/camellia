@@ -158,6 +158,16 @@ public class LoggingMonitorCallback implements MonitorCallback {
                         kvWriteBufferStats.getOverflow(), kvWriteBufferStats.getStart(), kvWriteBufferStats.getDone(), kvWriteBufferStats.getPending());
             }
 
+            logger.info("====kv.storage.stats====");
+            List<KvStorageSpendStats> kvStorageSpendStatsList = stats.getKvStorageSpendStatsList();
+            for (KvStorageSpendStats kvStorageSpendStats : kvStorageSpendStatsList) {
+                logger.info("name={},method={},count={},avgSpendMs={},maxSpendMs={},spendMsP50={},spendMsP75={},spendMsP90={},spendMsP95={},spendMsP99={},spendMsP999={}",
+                        kvStorageSpendStats.getName(), kvStorageSpendStats.getMethod(),
+                        kvStorageSpendStats.getCount(), kvStorageSpendStats.getAvgSpendMs(), kvStorageSpendStats.getMaxSpendMs(), kvStorageSpendStats.getSpendMsP50(),
+                        kvStorageSpendStats.getSpendMsP75(), kvStorageSpendStats.getSpendMsP90(), kvStorageSpendStats.getSpendMsP95(),
+                        kvStorageSpendStats.getSpendMsP99(), kvStorageSpendStats.getSpendMsP999());
+            }
+
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

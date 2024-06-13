@@ -29,6 +29,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.DecoratorKVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
@@ -205,6 +206,7 @@ public class RedisKvClient implements IUpstreamClient {
 
     private Commanders initCommanders() {
         KVClient kvClient = initKVClient();
+        kvClient = new DecoratorKVClient(kvClient);
 
         KeyDesign keyDesign = new KeyDesign(namespace.getBytes(StandardCharsets.UTF_8));
         KvConfig kvConfig = new KvConfig(namespace);

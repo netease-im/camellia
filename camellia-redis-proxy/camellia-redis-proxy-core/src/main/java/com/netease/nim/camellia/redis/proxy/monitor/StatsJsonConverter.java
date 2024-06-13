@@ -368,6 +368,25 @@ public class StatsJsonConverter {
         }
         monitorJson.put("kvWriteBufferStats", kvWriteBufferStatsJsonArray);
 
+        List<KvStorageSpendStats> kvStorageSpendStatsList = stats.getKvStorageSpendStatsList();
+        JSONArray kvStorageSpendStatsJsonArray = new JSONArray();
+        for (KvStorageSpendStats spendStats : kvStorageSpendStatsList) {
+            JSONObject json = new JSONObject();
+            json.put("name", spendStats.getName());
+            json.put("method", spendStats.getMethod());
+            json.put("count", spendStats.getCount());
+            json.put("avgSpendMs", spendStats.getAvgSpendMs());
+            json.put("maxSpendMs", spendStats.getMaxSpendMs());
+            json.put("spendMsP50", spendStats.getSpendMsP50());
+            json.put("spendMsP75", spendStats.getSpendMsP75());
+            json.put("spendMsP90", spendStats.getSpendMsP90());
+            json.put("spendMsP95", spendStats.getSpendMsP95());
+            json.put("spendMsP99", spendStats.getSpendMsP99());
+            json.put("spendMsP999", spendStats.getSpendMsP999());
+            kvStorageSpendStatsJsonArray.add(json);
+        }
+        monitorJson.put("kvStorageSpendStats", kvStorageSpendStatsJsonArray);
+
         return monitorJson.toJSONString();
     }
 }
