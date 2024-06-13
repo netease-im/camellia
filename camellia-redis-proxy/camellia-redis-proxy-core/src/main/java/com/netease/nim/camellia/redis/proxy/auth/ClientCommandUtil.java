@@ -58,6 +58,11 @@ public class ClientCommandUtil {
                     return StatusReply.OK;
                 }
             }
+            if (objects.length >= 2) {
+                ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, arg = " + Utils.bytesToString(objects[1]));
+            } else {
+                ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error");
+            }
             return ErrorReply.SYNTAX_ERROR;
         } catch (Exception e) {
             ErrorLogCollector.collect(ClientCommandUtil.class, "invokeClientCommand error", e);
