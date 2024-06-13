@@ -24,16 +24,16 @@ import java.util.List;
  *
  * Created by caojiajun on 2024/4/16
  */
-public class OBKVClient implements KVClient {
+public class OBKVHBaseClient implements KVClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(OBKVClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(OBKVHBaseClient.class);
 
     private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
     private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
 
     private final OHTableClient tableClient;
 
-    public OBKVClient() {
+    public OBKVHBaseClient() {
         try {
             String fullUserName = ProxyDynamicConf.getString("kv.obkv.full.user.name", null);
             String paramUrl = ProxyDynamicConf.getString("kv.obkv.param.url", null);
