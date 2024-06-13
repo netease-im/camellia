@@ -27,6 +27,7 @@ import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -83,8 +84,13 @@ public class KvGcExecutor {
                 if (!gcScheduleEnable) {
                     return;
                 }
-                int gcScheduleIntervalSeconds = ProxyDynamicConf.getInt("kv.gc.schedule.interval.seconds", 24 * 3600);
-                if (System.currentTimeMillis() - lastGcTime < gcScheduleIntervalSeconds*1000L) {
+
+                if (!checkInScheduleTime()) {
+                    return;
+                }
+
+                int gcScheduleIntervalMinute = ProxyDynamicConf.getInt("kv.gc.schedule.interval.minute", 24 * 60);
+                if (System.currentTimeMillis() - lastGcTime < gcScheduleIntervalMinute*60*1000L) {
                     return;
                 }
                 boolean scanMetaKeysSuccess = true;
@@ -251,6 +257,48 @@ public class KvGcExecutor {
         }
         cacheMap.put(cacheKey, keyStatus);
         return keyStatus;
+    }
+
+    private boolean checkInScheduleTime() {
+        int startHour = 0;
+        int startMinute = 1;
+
+        int endHour = 5;
+        int endMinute = 0;
+
+        try {
+            String string = ProxyDynamicConf.getString("kv.gc.schedule.time.range", "01:00-05:00");
+            String[] strings = string.split("-");
+            String[] split1 = strings[0].split(":");
+            startHour = Integer.parseInt(split1[0]);
+            startMinute = Integer.parseInt(split1[1]);
+            String[] split2 = strings[1].split(":");
+            endHour = Integer.parseInt(split2[0]);
+            endMinute = Integer.parseInt(split2[1]);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
+        SimpleDateFormat hourFormat = new SimpleDateFormat("HH");
+        SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
+        Date now = new Date();
+
+        int hour = Integer.parseInt(hourFormat.format(now));
+        int minute = Integer.parseInt(minuteFormat.format(now));
+
+        if (hour < startHour) {
+            return false;
+        }
+        if (hour == startHour && minute < startMinute) {
+            return false;
+        }
+        if (hour > endHour) {
+            return false;
+        }
+        if (hour == endHour && minute > endMinute) {
+            return false;
+        }
+        return true;
     }
 
     private static class CacheKey {
