@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvExecutorMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
@@ -240,7 +241,10 @@ public class RedisKvClient implements IUpstreamClient {
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
             RedisProxyEnv env = GlobalRedisProxyEnv.getRedisProxyEnv();
             UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, resourceTable);
-            return new RedisTemplate(template);
+            RedisTemplate redisTemplate = new RedisTemplate(template);
+            logger.info("redis template init success, namespace = {}, key = {}, resource = {}",
+                    namespace, key, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)));
+            return redisTemplate;
         } else if (type.equalsIgnoreCase("remote")) {
             String dashboardUrl = RedisKvConf.getString(namespace, key + ".camellia.dashboard.url", null);
             if (dashboardUrl == null) {
@@ -256,7 +260,10 @@ public class RedisKvClient implements IUpstreamClient {
             RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
             CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
             UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
-            return new RedisTemplate(template);
+            RedisTemplate redisTemplate = new RedisTemplate(template);
+            logger.info("redis template init success, namespace = {}, key = {}, dashboardUrl = {}, bid = {}, bgroup = {}",
+                    namespace, key, dashboardUrl, bid, bgroup);
+            return redisTemplate;
         } else {
             throw new KvException("init redis template error");
         }
