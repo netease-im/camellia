@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -206,6 +207,13 @@ public class RedisKvClient implements IUpstreamClient {
 
     private Commanders initCommanders() {
         KVClient kvClient = initKVClient();
+        try {
+            //get for check and warm
+            kvClient.get(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            logger.error("kv client get error", e);
+            throw new KvException(e);
+        }
         kvClient = new DecoratorKVClient(kvClient);
 
         KeyDesign keyDesign = new KeyDesign(namespace.getBytes(StandardCharsets.UTF_8));
