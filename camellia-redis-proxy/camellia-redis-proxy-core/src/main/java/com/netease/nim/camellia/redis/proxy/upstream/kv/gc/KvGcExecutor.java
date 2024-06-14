@@ -85,7 +85,7 @@ public class KvGcExecutor {
                     return;
                 }
 
-                if (!checkInScheduleTime()) {
+                if (!checkInScheduleGcTime()) {
                     return;
                 }
 
@@ -94,11 +94,10 @@ public class KvGcExecutor {
                     return;
                 }
                 boolean scanMetaKeysSuccess = true;
-                boolean scanSubKeysSuccess;
                 if (!kvClient.supportTTL()) {
                     scanMetaKeysSuccess = scanMetaKeys();
                 }
-                scanSubKeysSuccess = scanSubKeys();
+                boolean scanSubKeysSuccess = scanSubKeys();
                 if (scanMetaKeysSuccess && scanSubKeysSuccess) {
                     lastGcTime = System.currentTimeMillis();
                 }
@@ -125,17 +124,23 @@ public class KvGcExecutor {
         }
     }
 
+    private byte[] metaKeyScanStartKey = null;
+
     private boolean scanMetaKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan meta keys start");
         long deleteMetaKeys = 0;
         try {
             byte[] metaPrefix = keyDesign.getMetaPrefix();
-            byte[] startKey = metaPrefix;
+            byte[] startKey = metaKeyScanStartKey;
+            if (startKey == null) {
+                startKey = metaPrefix;
+            }
             int limit = kvConfig.scanBatch();
             while (true) {
                 List<KeyValue> scan = kvClient.scanByPrefix(startKey, metaPrefix, limit, Sort.ASC, false);
                 if (scan.isEmpty()) {
+                    metaKeyScanStartKey = null;
                     break;
                 }
                 for (KeyValue keyValue : scan) {
@@ -170,17 +175,28 @@ public class KvGcExecutor {
                     }
                 }
                 if (scan.size() < limit) {
+                    metaKeyScanStartKey = null;
+                    break;
+                }
+                if (!checkInScheduleGcTime()) {
+                    metaKeyScanStartKey = startKey;
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
             }
-            logger.info("scan meta keys end, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+            if (checkInScheduleGcTime()) {
+                logger.info("scan meta keys end, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+            } else {
+                logger.info("scan meta keys end for not in schedule gc time, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+            }
             return true;
         } catch (Throwable e) {
             logger.error("scan meta keys error, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys, e);
             return false;
         }
     }
+
+    private final byte[][] subKeyScanStartKey = new byte[3][];
 
     private boolean scanSubKeys() {
         long startTime = System.currentTimeMillis();
@@ -195,12 +211,17 @@ public class KvGcExecutor {
             prefixList.add(keyDesign.getSubKeyPrefix());
             prefixList.add(keyDesign.getSubKeyPrefix2());
             prefixList.add(keyDesign.getSubIndexKeyPrefix());
-            for (byte[] prefix : prefixList) {
+            for (int i=0; i<prefixList.size(); i++) {
+                byte[] prefix = subKeyScanStartKey[i];
+                if (prefix == null) {
+                    prefix = prefixList.get(i);
+                }
                 byte[] startKey = prefix;
                 int limit = kvConfig.scanBatch();
                 while (true) {
                     List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
                     if (scan.isEmpty()) {
+                        subKeyScanStartKey[i] = null;
                         break;
                     }
                     List<byte[]> toDeleteKeys = new ArrayList<>();
@@ -219,13 +240,22 @@ public class KvGcExecutor {
                         KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
                     }
                     if (scan.size() < limit) {
+                        subKeyScanStartKey[i] = null;
+                        break;
+                    }
+                    if (!checkInScheduleGcTime()) {
+                        subKeyScanStartKey[i] = startKey;
                         break;
                     }
                     TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                 }
             }
             cacheMap.clear();
-            logger.info("scan sub keys end, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+            if (checkInScheduleGcTime()) {
+                logger.info("scan sub keys end, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+            } else {
+                logger.info("scan sub keys end for not in schedule gc time, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+            }
             return true;
         } catch (Throwable e) {
             logger.error("scan sub keys error, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
@@ -259,7 +289,10 @@ public class KvGcExecutor {
         return keyStatus;
     }
 
-    private boolean checkInScheduleTime() {
+    private static final ThreadLocal<SimpleDateFormat> hourFormatThreadLocal = ThreadLocal.withInitial(() -> new SimpleDateFormat("HH"));
+    private static final ThreadLocal<SimpleDateFormat> minuteFormatThreadLocal = ThreadLocal.withInitial(() -> new SimpleDateFormat("mm"));
+
+    private boolean checkInScheduleGcTime() {
         int startHour = 0;
         int startMinute = 1;
 
@@ -279,12 +312,10 @@ public class KvGcExecutor {
             logger.error(e.getMessage(), e);
         }
 
-        SimpleDateFormat hourFormat = new SimpleDateFormat("HH");
-        SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
         Date now = new Date();
 
-        int hour = Integer.parseInt(hourFormat.format(now));
-        int minute = Integer.parseInt(minuteFormat.format(now));
+        int hour = Integer.parseInt(hourFormatThreadLocal.get().format(now));
+        int minute = Integer.parseInt(minuteFormatThreadLocal.get().format(now));
 
         if (hour < startHour) {
             return false;
