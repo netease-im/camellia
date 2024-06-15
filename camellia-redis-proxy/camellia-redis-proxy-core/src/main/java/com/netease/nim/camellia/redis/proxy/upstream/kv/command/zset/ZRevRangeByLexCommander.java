@@ -126,6 +126,9 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
 
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (!kvClient.supportReverseScan()) {
+                return zrevrangeByLexVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minLex, maxLex, limit);
+            }
             return zrevrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);
         }
 
@@ -137,6 +140,24 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         }
 
         return ErrorReply.INTERNAL_ERROR;
+    }
+
+    private Reply zrevrangeByLexVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+        ZSet zSet = loadLRUCache(keyMeta, key);
+        if (zSet == null) {
+            return ErrorReply.NOT_SUPPORT;
+        }
+        //
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+        }
+        //
+        List<ZSetTuple> list = zSet.zrevrangeByLex(minLex, maxLex, limit);
+
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+        return ZSetTupleUtils.toReply(list, false);
     }
 
     private Reply zrevrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {

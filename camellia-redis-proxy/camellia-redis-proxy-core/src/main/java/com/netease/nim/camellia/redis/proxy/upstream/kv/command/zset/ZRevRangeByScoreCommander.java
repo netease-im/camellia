@@ -119,6 +119,9 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (!kvClient.supportReverseScan()) {
+                return zrevrangeByScoreVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minScore, maxScore, limit, withScores);
+            }
             return zrevrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
         }
 
@@ -138,6 +141,24 @@ public class ZRevRangeByScoreCommander extends ZRange0Commander {
         }
 
         return ErrorReply.INTERNAL_ERROR;
+    }
+
+    private Reply zrevrangeByScoreVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
+        ZSet zSet = loadLRUCache(keyMeta, key);
+        if (zSet == null) {
+            return ErrorReply.NOT_SUPPORT;
+        }
+        //
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+        }
+        //
+        List<ZSetTuple> list = zSet.zrevrangeByScore(minScore, maxScore, limit);
+
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+        return ZSetTupleUtils.toReply(list, withScores);
     }
 
     private Reply zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {

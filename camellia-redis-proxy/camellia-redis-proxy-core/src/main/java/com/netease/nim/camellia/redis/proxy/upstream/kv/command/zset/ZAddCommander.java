@@ -71,11 +71,6 @@ public class ZAddCommander extends ZSet0Commander {
         EncodeVersion encodeVersion;
         if (keyMeta == null) {
             encodeVersion = keyDesign.zsetKeyMetaVersion();
-            if (encodeVersion == EncodeVersion.version_0) {
-                if (!kvClient.supportReverseScan()) {
-                    return ErrorReply.KV_STORAGE_NOT_SUPPORTED_ENCODE;
-                }
-            }
             if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
                 byte[] extra = BytesUtils.toBytes(memberSize);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.zset, System.currentTimeMillis(), -1, extra);

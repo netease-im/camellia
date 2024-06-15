@@ -113,6 +113,9 @@ public class ZRevRangeCommander extends ZRange0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (!kvClient.supportReverseScan()) {
+                return zrevrangeVersion0NotSupportReverseScan(keyMeta, key, cacheKey, start, stop, withScores);
+            }
             return zrevrangeVersion0(keyMeta, key, start, stop, withScores);
         }
 
@@ -132,6 +135,24 @@ public class ZRevRangeCommander extends ZRange0Commander {
         }
 
         return ErrorReply.INTERNAL_ERROR;
+    }
+
+    private Reply zrevrangeVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, boolean withScores) {
+        ZSet zSet = loadLRUCache(keyMeta, key);
+        if (zSet == null) {
+            return ErrorReply.NOT_SUPPORT;
+        }
+        //
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+        }
+        //
+        List<ZSetTuple> list = zSet.zrevrange(start, stop);
+
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+        return ZSetTupleUtils.toReply(list, withScores);
     }
 
     private Reply zrevrangeVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
