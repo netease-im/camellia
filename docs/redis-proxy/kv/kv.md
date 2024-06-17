@@ -77,15 +77,16 @@ kv.key.meta.cache.millis=600000
 * 只有key-meta，没有sub-key
 * 没有专门的缓存结构，依赖于key-meta本身的缓存
 
-| command |                                                                                                                                              info |
-|:-------:|--------------------------------------------------------------------------------------------------------------------------------------------------:|
-|  setex  |                                                                                                                         `SETEX key seconds value` |
-| psetex  |                                                                                                                   `PSETEX key milliseconds value` | 
-|   set   |              `SET key value [NX \| XX] [GET] [EX seconds \| PX milliseconds \| EXAT unix-time-seconds \| PXAT unix-time-milliseconds \| KEEPTTL]` |
-|   get   |                                                                                                                                         `GET key` |
-|  mget   |                                                                                                                              `MGET key [key ...]` |
-|  mset   |                                                                                                                  `MSET key value [key value ...]` |
-|  setnx  |                                                                                                                                 `SETNX key value` |
+| command |                                                                                                                                 info |
+|:-------:|-------------------------------------------------------------------------------------------------------------------------------------:|
+|  setex  |                                                                                                            `SETEX key seconds value` |
+| psetex  |                                                                                                      `PSETEX key milliseconds value` | 
+|   set   | `SET key value [NX \| XX] [GET] [EX seconds \| PX milliseconds \| EXAT unix-time-seconds \| PXAT unix-time-milliseconds \| KEEPTTL]` |
+|   get   |                                                                                                                            `GET key` |
+|  mget   |                                                                                                                 `MGET key [key ...]` |
+|  mset   |                                                                                                     `MSET key value [key value ...]` |
+|  setnx  |                                                                                                                    `SETNX key value` |
+| strlen  |                                                                                                                         `STRLEN key` |
 
 ## hash数据结构
 
@@ -179,6 +180,9 @@ kv.cache.hgetall.cache.millis=30000
 |  hlen   |                                `HLEN key` |
 |  hkeys  |                               `HKEYS key` |
 |  hvals  |                               `HVALS key` |
+| hexists |                       `HEXISTS key field` |
+| hsetnx  |                  `HSETNX key field value` |
+| hstrlen |                       `HSTRLEN key field` |
 
 
 ## zset数据结构
@@ -342,6 +346,11 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 |  zremrangebylex  |                                     `ZREMRANGEBYLEX key min max` |
 |       zrem       |                                   `ZREM key member [member ...]` |
 |      zscore      |                                              `ZSCORE key member` |
+|      zcount      |                                             `ZCOUNT key min max` |
+|    zlexcount     |                                          `ZLEXCOUNT key min max` |
+|      zrank       |                                   `ZRANK key member [WITHSCORE]` |
+|     zrevrank     |                                `ZREVRANK key member [WITHSCORE]` |
+|     zmscore      |                                `ZMSCORE key member [member ...]` |
 
 ## list数据结构
 
