@@ -107,8 +107,8 @@ public class ZRevRankCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_2) {
             byte[][] args = new byte[objects.length - 2][];
             System.arraycopy(objects, 2, args, 0, args.length);
-            Index index = Index.fromRaw(args[2]);
-            args[2] = index.getRef();
+            Index index = Index.fromRaw(args[0]);
+            args[0] = index.getRef();
             Reply reply = checkCache(script, cacheKey, args);
             if (reply != null) {
                 KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
