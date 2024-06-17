@@ -203,6 +203,32 @@ public class TestHashV0V2 {
                 assertEquals(hvals.contains("v1"), true);
                 assertEquals(hvals.contains("v1"), true);
             }
+
+            template.del(key);
+            {
+                Long hset1 = template.hset(key, "f1", "v1");
+                assertEquals(hset1, 1L);
+
+                Long hset2 = template.hset(key, "f2", "v2");
+                assertEquals(hset2, 1L);
+
+                Boolean f1 = template.hexists(key, "f1");
+                assertEquals(f1, true);
+
+                Boolean f3 = template.hexists(key, "f3");
+                assertEquals(f3, false);
+
+                template.hdel(key, "f1");
+
+                Boolean f11 = template.hexists(key, "f1");
+                assertEquals(f11, false);
+
+                template.del(key);
+
+                Boolean f2 = template.hexists(key, "f2");
+                assertEquals(f2, false);
+            }
+
             template.del(key);
         } catch (Exception e) {
             System.out.println("error");

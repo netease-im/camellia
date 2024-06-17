@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.Collection;
@@ -44,6 +45,22 @@ public class Hash {
 
     public byte[] hget(BytesKey key) {
         return map.get(key);
+    }
+
+    public int hstrlen(BytesKey key) {
+        byte[] bytes = map.get(key);
+        if (bytes == null) {
+            return 0;
+        }
+        return Utils.bytesToString(bytes).length();
+    }
+
+    public int hexists(BytesKey key) {
+        byte[] bytes = map.get(key);
+        if (bytes == null) {
+            return 0;
+        }
+        return 1;
     }
 
     public int hlen() {

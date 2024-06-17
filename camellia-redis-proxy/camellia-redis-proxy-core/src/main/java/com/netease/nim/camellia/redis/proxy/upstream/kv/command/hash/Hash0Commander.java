@@ -80,6 +80,10 @@ public abstract class Hash0Commander extends Commander {
         return null;
     }
 
+    protected byte[] hgetCacheMillis() {
+        return Utils.stringToBytes(String.valueOf(cacheConfig.hgetCacheMillis()));
+    }
+
     protected final byte[] hgetallCacheMillis() {
         return Utils.stringToBytes(String.valueOf(cacheConfig.hgetallCacheMillis()));
     }
