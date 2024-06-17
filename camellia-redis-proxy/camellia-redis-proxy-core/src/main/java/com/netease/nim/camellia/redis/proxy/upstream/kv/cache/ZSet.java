@@ -234,6 +234,14 @@ public class ZSet {
         return map;
     }
 
+    public List<Double> zmscore(List<BytesKey> members) {
+        List<Double> scores = new ArrayList<>(members.size());
+        for (BytesKey member : members) {
+            scores.add(memberMap.get(member));
+        }
+        return scores;
+    }
+
     public Map<BytesKey, Double> zremrangeByRank(int start, int stop) {
         ZSetRank rank = new ZSetRank(start, stop, memberMap.size());
         if (rank.isEmptyRank()) {

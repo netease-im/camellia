@@ -218,6 +218,30 @@ public class TestZSetV3 {
                 Long zcount1 = template.zcount(key, 2, 5);
                 assertEquals(zcount1, 2L);
             }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("a", 1.0);
+                map1.put("b", 2.0);
+                map1.put("c", 3.0);
+                map1.put("d", 4.0);
+                map1.put("e", 5.0);
+                map1.put("f", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+                Double zscore = template.zscore(key, "g");
+                assertEquals(zscore, null);
+
+                List<Double> list = template.zmscore(key, "a", "b", "c", "h", "d");
+                assertEquals(list.size(), 5);
+                assertEquals(list.get(0), 1.0);
+                assertEquals(list.get(1), 2.0);
+                assertEquals(list.get(2), 3.0);
+                assertEquals(list.get(3), null);
+                assertEquals(list.get(4), 4.0);
+            }
+
             template.del(key);
         } catch (Exception e) {
             System.out.println("error");
