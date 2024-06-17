@@ -32,6 +32,10 @@ public class Hash {
         return existsMap;
     }
 
+    public byte[] hset(BytesKey field, byte[] value) {
+        return map.put(field, value);
+    }
+
     public Map<BytesKey, byte[]> hdel(Collection<BytesKey> fields) {
         Map<BytesKey, byte[]> deleteMap = new HashMap<>();
         for (BytesKey field : fields) {

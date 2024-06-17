@@ -225,6 +225,30 @@ public class TestHashV1V3 {
             }
 
             template.del(key);
+            {
+
+                Long hsetnx = template.hsetnx(key, "f1", "v1");
+                assertEquals(hsetnx, 1L);
+
+                Long hsetnx1 = template.hsetnx(key, "f1", "v1");
+                assertEquals(hsetnx1, 0L);
+
+                Long hset1 = template.hset(key, "f1", "v1");
+                assertEquals(hset1, 1L);
+
+                Long hset2 = template.hset(key, "f2", "v2");
+                assertEquals(hset2, 1L);
+
+                Long hlen = template.hlen(key);
+                assertEquals(hlen, 2L);
+
+                template.hdel(key, "f1");
+
+                Long hsetnx2 = template.hsetnx(key, "f1", "v1");
+                assertEquals(hsetnx2, 1L);
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
