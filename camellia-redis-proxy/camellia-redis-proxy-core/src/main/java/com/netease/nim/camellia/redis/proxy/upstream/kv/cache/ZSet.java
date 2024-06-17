@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
+import com.netease.nim.camellia.tools.utils.Pair;
 
 import java.util.*;
 
@@ -215,6 +216,35 @@ public class ZSet {
     public Double zscore(BytesKey member) {
         return memberMap.get(member);
     }
+
+    public Pair<Integer, ZSetTuple> zrank(BytesKey member) {
+        Double v = memberMap.get(member);
+        if (v == null) {
+            return null;
+        }
+        for (int i=0; i<rank.size(); i++) {
+            ZSetTuple tuple = rank.get(i);
+            if (tuple.getMember().equals(member)) {
+                return new Pair<>(i, tuple);
+            }
+        }
+        return null;
+    }
+
+    public Pair<Integer, ZSetTuple> zrevrank(BytesKey member) {
+        Double v = memberMap.get(member);
+        if (v == null) {
+            return null;
+        }
+        for (int i=rank.size()-1; i>=0; i--) {
+            ZSetTuple tuple = rank.get(i);
+            if (tuple.getMember().equals(member)) {
+                return new Pair<>(rank.size() - 1 - i, tuple);
+            }
+        }
+        return null;
+    }
+
 
     public int zcard() {
         return memberMap.size();

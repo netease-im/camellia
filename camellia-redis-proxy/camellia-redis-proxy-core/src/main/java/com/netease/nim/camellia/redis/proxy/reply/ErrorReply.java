@@ -42,7 +42,6 @@ public class ErrorReply implements Reply {
     public static final ErrorReply INTERNAL_ERROR = new ErrorReply("ERR internal error");
     public static final ErrorReply WRONG_TYPE = new ErrorReply("WRONGTYPE Operation against a key holding the wrong kind of value");
     public static final ErrorReply CLUSTER_MODE_SLOT_INFO_LOADING = new ErrorReply("ERR proxy cluster mode slot info loading");
-    public static final ErrorReply KV_STORAGE_NOT_SUPPORTED_ENCODE = new ErrorReply("ERR proxy kv storage not supported encode");
     public static final ErrorReply COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION = new ErrorReply("ERR command not support in current kv encode version");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
