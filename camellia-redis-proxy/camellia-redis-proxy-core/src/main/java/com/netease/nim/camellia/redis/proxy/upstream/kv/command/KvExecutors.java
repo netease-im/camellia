@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.KvExecutorMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -52,6 +53,9 @@ public class KvExecutors {
         int queueSize2 = ProxyDynamicConf.getInt("kv.async.write.executor.queue.size", 1024*1024);
         asyncWriteExecutor = new MpscSlotHashExecutor("kv-async-write-executor", threads2, queueSize2, new MpscSlotHashExecutor.AbortPolicy());
         logger.info("KvAsyncWriteExecutor init success, threads = {}, queueSize = {}", threads2, queueSize2);
+
+        KvExecutorMonitor.register("command", commandExecutor);
+        KvExecutorMonitor.register("async-write", asyncWriteExecutor);
     }
 
     public static KvExecutors getInstance() {

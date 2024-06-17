@@ -13,6 +13,10 @@ public class KvConfig {
         this.namespace = namespace;
     }
 
+    public String getNamespace() {
+        return namespace;
+    }
+
     public int gcExecutorPoolSize() {
         return RedisKvConf.getInt(namespace, "kv.gc.executor.pool.size", 2);
     }

@@ -4,6 +4,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.KvExecutorMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.KvGcMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
@@ -71,10 +72,7 @@ public class KvGcExecutor {
                 this.redisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(env, resourceTable));
             }
         }
-    }
-
-    public int pending() {
-        return deleteExecutor.getQueueSize();
+        KvExecutorMonitor.register("gc-" + kvConfig.getNamespace(), deleteExecutor);
     }
 
     public void start() {
