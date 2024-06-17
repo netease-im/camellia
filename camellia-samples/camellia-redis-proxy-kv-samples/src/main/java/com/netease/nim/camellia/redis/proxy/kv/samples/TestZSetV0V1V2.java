@@ -327,6 +327,41 @@ public class TestZSetV0V1V2 {
             }
 
             template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("a", 1.0);
+                map1.put("b", 2.0);
+                map1.put("c", 3.0);
+                map1.put("d", 4.0);
+                map1.put("e", 5.0);
+                map1.put("f", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+
+                {
+                    Long a = template.zrank(key, "a");
+                    assertEquals(a, 0L);
+
+                    Long c = template.zrank(key, "c");
+                    assertEquals(c, 2L);
+
+                    Long g = template.zrank(key, "g");
+                    assertEquals(g, null);
+                }
+
+                {
+                    Long a = template.zrevrank(key, "a");
+                    assertEquals(a, 5L);
+
+                    Long c = template.zrevrank(key, "c");
+                    assertEquals(c, 3L);
+
+                    Long g = template.zrevrank(key, "g");
+                    assertEquals(g, null);
+                }
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
