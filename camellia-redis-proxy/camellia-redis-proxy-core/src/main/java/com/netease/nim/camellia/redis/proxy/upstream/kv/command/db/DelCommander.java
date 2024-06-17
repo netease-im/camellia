@@ -57,6 +57,9 @@ public class DelCommander extends Commander {
             if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
                 cacheConfig.getHashLRUCache().del(key, cacheKey);
             }
+            if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {
+                cacheConfig.getZSetLRUCache().del(key, cacheKey);
+            }
         }
         return IntegerReply.parse(ret);
     }

@@ -93,56 +93,85 @@ public class ZSetLRUCache {
 
     public Map<BytesKey, Double> zadd(byte[] key, byte[] cacheKey, Map<BytesKey, Double> map) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        ZSet zSet1 = localCache.get(slot, new BytesKey(cacheKey));
-        Map<BytesKey, Double> existsMap1 = null;
-        if (zSet1 != null) {
-            existsMap1 = zSet1.zadd(map);
+        ZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
+        Map<BytesKey, Double> result = null;
+        if (zSet != null) {
+            result = zSet.zadd(map);
         }
-        ZSet zSet2 = localCacheForWrite.get(slot, new BytesKey(cacheKey));
-        Map<BytesKey, Double> existsMap2 = null;
-        if (zSet2 != null) {
-            existsMap2 = zSet2.zadd(map);
+        zSet = localCacheForWrite.get(slot, new BytesKey(cacheKey));
+        if (zSet != null) {
+            result = zSet.zadd(map);
         }
-        if (existsMap1 != null) {
-            return existsMap1;
-        }
-        return existsMap2;
+        return result;
     }
 
     public Map<BytesKey, Double> zrem(byte[] key, byte[] cacheKey, Collection<BytesKey> members) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        ZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        Map<BytesKey, Double> result = null;
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        ZSet zSet = localCache.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zrem(members);
         }
-        return zSet.zrem(members);
+        zSet = localCacheForWrite.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zrem(members);
+        }
+        return result;
     }
 
     public Map<BytesKey, Double> zremrangeByRank(byte[] key, byte[] cacheKey, int start, int stop) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        ZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Map<BytesKey, Double> result = null;
+        ZSet zSet = localCache.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zremrangeByRank(start, stop);
         }
-        return zSet.zremrangeByRank(start, stop);
+        zSet = localCacheForWrite.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zremrangeByRank(start, stop);
+        }
+        return result;
     }
 
     public Map<BytesKey, Double> zremrangeByScore(byte[] key, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        ZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Map<BytesKey, Double> result = null;
+
+        ZSet zSet = localCache.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zremrangeByScore(minScore, maxScore);
         }
-        return zSet.zremrangeByScore(minScore, maxScore);
+        zSet = localCacheForWrite.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zremrangeByScore(minScore, maxScore);
+        }
+        return result;
     }
 
     public Map<BytesKey, Double> zremrangeByLex(byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        ZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
-        if (zSet == null) {
-            return null;
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        Map<BytesKey, Double> result = null;
+
+        ZSet zSet = localCache.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zremrangeByLex(minLex, maxLex);
         }
-        return zSet.zremrangeByLex(minLex, maxLex);
+        zSet = localCacheForWrite.get(slot, bytesKey);
+        if (zSet != null) {
+            result = zSet.zremrangeByLex(minLex, maxLex);
+        }
+        return result;
+    }
+
+    public void del(byte[] key, byte[] cacheKey) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        localCache.remove(slot, bytesKey);
+        localCacheForWrite.remove(slot, bytesKey);
     }
 
     public void clear() {
