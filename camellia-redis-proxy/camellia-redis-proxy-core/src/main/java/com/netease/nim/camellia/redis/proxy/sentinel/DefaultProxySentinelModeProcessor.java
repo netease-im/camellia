@@ -60,16 +60,13 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
     private synchronized void init() {
         if (init) return;
         //current node
-        ProxyNode currentNode = new ProxyNode();
         String host = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host", null);
         if (host == null) {
             InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
             if (inetAddress == null) {
                 throw new IllegalStateException("not found non loopback address");
             }
-            currentNode.setHost(inetAddress.getHostAddress());
-        } else {
-            currentNode.setHost(host);
+            host = inetAddress.getHostAddress();
         }
         this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
         this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
@@ -78,9 +75,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         if (port == 0 || cport == 0) {
             throw new IllegalStateException("redis proxy not start");
         }
-        currentNode.setPort(port);
-        currentNode.setCport(cport);
-        this.currentNode = currentNode;
+        this.currentNode = new ProxyNode(host, port, cport);
         //online nodes
         boolean success = reloadNodes();
         if (!success) {

@@ -51,10 +51,6 @@ public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery
                 currentNodeHost = inetAddress.getHostAddress();
             }
         }
-        ProxyNode currentNode = new ProxyNode();
-        currentNode.setHost(currentNodeHost);
-        currentNode.setPort(GlobalRedisProxyEnv.getPort());
-        currentNode.setCport(GlobalRedisProxyEnv.getCport());
-        return currentNode;
+        return new ProxyNode(currentNodeHost, GlobalRedisProxyEnv.getPort(), GlobalRedisProxyEnv.getCport());
     }
 }

@@ -7,32 +7,26 @@ import java.util.Objects;
  * Created by caojiajun on 2022/9/29
  */
 public class ProxyNode implements Comparable<ProxyNode> {
-    private String host;
-    private int port;
-    private int cport;
+    private final String host;
+    private final int port;
+    private final int cport;
+
+    public ProxyNode(String host, int port, int cport) {
+        this.host = host;
+        this.port = port;
+        this.cport = cport;
+    }
 
     public String getHost() {
         return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
     }
 
     public int getPort() {
         return port;
     }
 
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     public int getCport() {
         return cport;
-    }
-
-    public void setCport(int cport) {
-        this.cport = cport;
     }
 
     @Override
@@ -55,13 +49,12 @@ public class ProxyNode implements Comparable<ProxyNode> {
 
     public static ProxyNode parseString(String str) {
         try {
-            ProxyNode node = new ProxyNode();
             String[] split1 = str.split(":");
-            node.setHost(split1[0]);
+            String host = split1[0];
             String[] split2 = split1[1].split("@");
-            node.setPort(Integer.parseInt(split2[0]));
-            node.setCport(Integer.parseInt(split2[1]));
-            return node;
+            int port = Integer.parseInt(split2[0]);
+            int cport = Integer.parseInt(split2[1]);
+            return new ProxyNode(host, port, cport);
         } catch (Exception e) {
             return null;
         }

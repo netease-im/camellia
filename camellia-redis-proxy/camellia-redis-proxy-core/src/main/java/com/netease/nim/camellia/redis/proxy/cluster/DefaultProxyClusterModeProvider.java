@@ -1,23 +1,27 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
-import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
-import com.netease.nim.camellia.tools.utils.SysUtils;
+import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.InetUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +51,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     private final ConcurrentHashSet<ProxyNode> initNodes = new ConcurrentHashSet<>();
 
-    private final List<ProxyNodeChangeListener> listenerList = new ArrayList<>();
+    private final CopyOnWriteArrayList<ProxyNodeChangeListener> listenerList = new CopyOnWriteArrayList<>();
 
     private final ConcurrentHashSet<ProxyNode> onlineNodes = new ConcurrentHashSet<>();
     private final ConcurrentHashSet<ProxyNode> pendingNodes = new ConcurrentHashSet<>();
@@ -68,6 +72,48 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         //定时校验心跳超时的节点列表，并移除
         schedule.scheduleAtFixedRate(this::checkOnlineNodes, 0, intervalSeconds, TimeUnit.SECONDS);
         init = true;
+    }
+
+    @Override
+    public ProxyClusterSlotMap load() {
+        List<ProxyNode> nodes = new ArrayList<>(this.onlineNodes);
+        Collections.sort(nodes);
+        return ProxyClusterSlotMapUtils.uniformDistribution(current(), nodes);
+    }
+
+    @Override
+    public void addNodeChangeListener(ProxyNodeChangeListener listener) {
+        listenerList.add(listener);
+    }
+
+    @Override
+    public Reply proxyHeartbeat(Command command) {
+        byte[][] objects = command.getObjects();
+        if (objects.length >= 4) {
+            ProxyNode node = ProxyNode.parseString(Utils.bytesToString(objects[2]));
+            if (node == null) {
+                return ErrorReply.argNumWrong(RedisCommand.CLUSTER);
+            }
+            ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue((int) Utils.bytesToNum(objects[3]));
+            if (status == null) {
+                return ErrorReply.argNumWrong(RedisCommand.CLUSTER);
+            }
+            if (status == ClusterModeStatus.Status.ONLINE || status == ClusterModeStatus.Status.PENDING) {
+                heartbeatMap.put(node, System.currentTimeMillis());
+            }
+            if (status == ClusterModeStatus.Status.OFFLINE) {
+                triggerNodeRemove(node);
+            }
+            if (status == ClusterModeStatus.Status.ONLINE) {
+                triggerNodeAdd(node);
+            }
+            if (status == ClusterModeStatus.Status.PENDING) {
+                pendingNodes.add(node);
+            }
+            return new BulkReply(Utils.stringToBytes(heartbeatResp()));
+        } else {
+            return ErrorReply.argNumWrong(RedisCommand.CLUSTER);
+        }
     }
 
     private void initConf() {
@@ -217,57 +263,36 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         failCount.incrementAndGet();
     }
 
-    @Override
-    public List<ProxyNode> discovery() {
-        return new ArrayList<>(onlineNodes);
-    }
 
-    @Override
-    public ProxyNode current() {
+
+    private ProxyNode current() {
         if (current != null) return current;
         String host = ProxyDynamicConf.getString("proxy.cluster.mode.current.node.host", null);
         if (host != null) {
-            ProxyNode current = new ProxyNode();
-            current.setHost(host);
             int port = GlobalRedisProxyEnv.getPort();
             int cport = GlobalRedisProxyEnv.getCport();
             if (port == 0 || cport == 0) {
                 throw new IllegalStateException("redis proxy not start");
             }
-            current.setPort(port);
-            current.setCport(cport);
-            this.current = current;
+            this.current = new ProxyNode(host, port, cport);
         } else {
-            this.current = ProxyClusterModeProvider.super.current();
+            this.current = currentNode0();
         }
-        logger.info("current proxy node = {}", current.toString());
+        logger.info("current proxy node = {}", current);
         return current;
     }
 
-    @Override
-    public void addNodeChangeListener(ProxyNodeChangeListener listener) {
-        synchronized (listenerList) {
-            listenerList.add(listener);
+    private ProxyNode currentNode0() {
+        InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+        if (inetAddress == null) {
+            throw new IllegalStateException("not found non loopback address");
         }
-    }
-
-    @Override
-    public Reply proxyHeartbeat(ProxyHeartbeatRequest request) {
-        ProxyNode node = request.getNode();
-        ClusterModeStatus.Status status = request.getStatus();
-        if (status == ClusterModeStatus.Status.ONLINE || status == ClusterModeStatus.Status.PENDING) {
-            heartbeatMap.put(node, System.currentTimeMillis());
+        int port = GlobalRedisProxyEnv.getPort();
+        int cport = GlobalRedisProxyEnv.getCport();
+        if (port == 0 || cport == 0) {
+            throw new IllegalStateException("redis proxy not start");
         }
-        if (status == ClusterModeStatus.Status.OFFLINE) {
-            triggerNodeRemove(node);
-        }
-        if (status == ClusterModeStatus.Status.ONLINE) {
-            triggerNodeAdd(node);
-        }
-        if (status == ClusterModeStatus.Status.PENDING) {
-            pendingNodes.add(node);
-        }
-        return new BulkReply(Utils.stringToBytes(heartbeatResp()));
+        return new ProxyNode(inetAddress.getHostAddress(), port, cport);
     }
 
     private String heartbeatResp() {
@@ -287,7 +312,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             onlineNodes.remove(node);
             for (ProxyNodeChangeListener listener : listenerList) {
                 try {
-                    listener.removeNode(node);
+                    listener.change();
                 } catch (Exception e) {
                     logger.error("removeNode callback error, node = {}", node, e);
                 }
@@ -301,7 +326,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             logger.info("onlineNodes add = {}", node);
             for (ProxyNodeChangeListener listener : listenerList) {
                 try {
-                    listener.addNode(node);
+                    listener.change();
                 } catch (Exception e) {
                     logger.error("addNode callback error, node = {}", node, e);
                 }

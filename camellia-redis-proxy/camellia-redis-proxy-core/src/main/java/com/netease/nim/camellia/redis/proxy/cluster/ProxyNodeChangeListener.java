@@ -5,7 +5,6 @@ package com.netease.nim.camellia.redis.proxy.cluster;
  */
 public interface ProxyNodeChangeListener {
 
-    void addNode(ProxyNode node);
+    void change();
 
-    void removeNode(ProxyNode node);
 }
