@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
@@ -8,6 +9,7 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,9 +28,17 @@ public class HashLRUCache {
 
     public HashLRUCache(String namespace) {
         this.namespace = namespace;
+        //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
-        ClusterModeStatus.registerClusterModeSlotRefreshCallback(localCache::clear);
+        //
+        ClusterModeStatus.registerClusterSlotMapChangeCallback((oldSlotMap, newSlotMap) -> {
+            List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
+            for (Integer removedSlot : removedSlots) {
+                localCache.clear(removedSlot);
+                localCacheForWrite.clear(removedSlot);
+            }
+        });
     }
 
     private void rebuild() {

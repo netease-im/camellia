@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by caojiajun on 2022/9/30
@@ -50,20 +50,36 @@ public class ClusterModeStatus {
         ClusterModeStatus.status = status;
     }
 
-    private static final Set<Runnable> callbackSet = new HashSet<>();
+    private static final Set<ClusterSlotMapChangeCallback> callbackSet = new HashSet<>();
+    private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public static synchronized void registerClusterModeSlotRefreshCallback(Runnable callback) {
-        callbackSet.add(callback);
+    public static void registerClusterSlotMapChangeCallback(ClusterSlotMapChangeCallback callback) {
+        lock.writeLock().lock();
+        try {
+            callbackSet.add(callback);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
-    public static synchronized void invokeClusterModeSlotRefreshCallback() {
-        for (Runnable runnable : callbackSet) {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                logger.error("cluster mode slot refresh callback error", e);
+    public static void invokeClusterModeSlotMapChangeCallback(ProxyClusterSlotMap oldSlotMap, ProxyClusterSlotMap newSlotMap) {
+        lock.readLock().lock();
+        try {
+            for (ClusterSlotMapChangeCallback callback : callbackSet) {
+                try {
+                    callback.change(oldSlotMap, newSlotMap);
+                } catch (Exception e) {
+                    logger.error("cluster mode slot refresh callback error", e);
+                }
             }
+        } finally {
+            lock.readLock().unlock();
         }
+    }
+
+    public static interface ClusterSlotMapChangeCallback {
+
+        void change(ProxyClusterSlotMap oldSlotMap, ProxyClusterSlotMap newSlotMap);
     }
 
 }

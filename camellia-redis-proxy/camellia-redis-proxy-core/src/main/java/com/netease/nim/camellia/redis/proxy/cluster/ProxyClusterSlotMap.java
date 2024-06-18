@@ -70,7 +70,7 @@ public class ProxyClusterSlotMap {
         return slotArray[slot].equals(currentNode);
     }
 
-    public Map<ProxyNode, List<Integer>> nodeSlotMap() {
+    public Map<ProxyNode, List<Integer>> getNodeSlotMap() {
         Map<ProxyNode, List<Integer>> map = new HashMap<>();
         for (int i=0; i<slotArray.length; i++) {
             ProxyNode proxyNode = slotArray[i];
@@ -111,7 +111,7 @@ public class ProxyClusterSlotMap {
 
     public Reply clusterNodesReply() {
         StringBuilder builder = new StringBuilder();
-        Map<ProxyNode, List<Integer>> map = nodeSlotMap();
+        Map<ProxyNode, List<Integer>> map = getNodeSlotMap();
         int i=1;
         for (Map.Entry<ProxyNode, List<Integer>> entry : map.entrySet()) {
             ProxyNode proxyNode = entry.getKey();
@@ -146,7 +146,7 @@ public class ProxyClusterSlotMap {
 
     public Reply clusterSlots() {
         List<MultiBulkReply> replies = new ArrayList<>();
-        Map<ProxyNode, List<Integer>> map = nodeSlotMap();
+        Map<ProxyNode, List<Integer>> map = getNodeSlotMap();
         for (Map.Entry<ProxyNode, List<Integer>> entry : map.entrySet()) {
             ProxyNode proxyNode = entry.getKey();
             List<Integer> slots = entry.getValue();
@@ -166,7 +166,7 @@ public class ProxyClusterSlotMap {
 
     @Override
     public String toString() {
-        Map<ProxyNode, List<Integer>> map = nodeSlotMap();
+        Map<ProxyNode, List<Integer>> map = getNodeSlotMap();
         JSONObject data = new JSONObject(true);
         data.put("currentNode", currentNode.toString());
         JSONObject json = new JSONObject(true);

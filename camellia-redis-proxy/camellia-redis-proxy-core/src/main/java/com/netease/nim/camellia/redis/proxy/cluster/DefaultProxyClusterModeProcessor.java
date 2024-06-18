@@ -85,19 +85,24 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             if (refreshing.compareAndSet(false, true)) {
                 try {
                     ProxyClusterSlotMap clusterSlotMap = this.provider.load();
+                    if (clusterSlotMap == null) {
+                        logger.error("cluster slot map load null");
+                        return;
+                    }
                     if (clusterSlotMap.equals(this.clusterSlotMap)) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("onlineNodes not modify, skip refresh");
+                            logger.debug("cluster slot map not modify, skip refresh");
                         }
                         return;
                     }
-                    this.clusterSlotMap = clusterSlotMap;
                     clusterInfo = clusterSlotMap.clusterInfo();
                     clusterSlots = clusterSlotMap.clusterSlots();
                     clusterNodes = clusterSlotMap.clusterNodesReply();
-                    logger.info("refresh proxy cluster mode nodes success, onlineNodes = {}, currentNodeOnline = {}",
+                    ProxyClusterSlotMap oldSlotMap = this.clusterSlotMap;
+                    this.clusterSlotMap = clusterSlotMap;
+                    logger.info("refresh proxy cluster mode slot map success, onlineNodes = {}, currentNodeOnline = {}",
                             clusterSlotMap.getOnlineNodes(), clusterSlotMap.isCurrentNodeOnline());
-                    ClusterModeStatus.invokeClusterModeSlotRefreshCallback();
+                    ClusterModeStatus.invokeClusterModeSlotMapChangeCallback(oldSlotMap, clusterSlotMap);
                 } finally {
                     refreshing.compareAndSet(true, false);
                 }

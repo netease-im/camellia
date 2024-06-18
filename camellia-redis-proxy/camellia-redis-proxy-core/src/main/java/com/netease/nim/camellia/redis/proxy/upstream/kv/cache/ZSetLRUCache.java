@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,9 +32,17 @@ public class ZSetLRUCache {
     public ZSetLRUCache(String namespace) {
         this.namespace = namespace;
         this.hotKeyCalculator = new HotKeyCalculator(namespace, KeyType.zset);
+        //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
-        ClusterModeStatus.registerClusterModeSlotRefreshCallback(localCache::clear);
+        //
+        ClusterModeStatus.registerClusterSlotMapChangeCallback((oldSlotMap, newSlotMap) -> {
+            List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
+            for (Integer removedSlot : removedSlots) {
+                localCache.clear(removedSlot);
+                localCacheForWrite.clear(removedSlot);
+            }
+        });
     }
 
     private void rebuild() {
