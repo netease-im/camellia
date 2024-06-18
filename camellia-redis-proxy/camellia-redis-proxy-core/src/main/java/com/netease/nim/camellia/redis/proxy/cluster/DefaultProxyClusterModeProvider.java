@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2022/9/30
@@ -45,6 +46,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(executorSize, executorSize,
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
 
+    private final ReentrantLock lock = new ReentrantLock();
     private boolean init = false;
 
     private ProxyNode current;
@@ -62,16 +64,21 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private final ConcurrentHashMap<ProxyNode, AtomicBoolean> heartbeatLock = new ConcurrentHashMap<>();
 
     @Override
-    public synchronized void init() {
-        if (init) return;
-        //初始化
-        initConf();
-        //定时给所有节点发送心跳
-        int intervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.interval.seconds", 5);
-        schedule.scheduleAtFixedRate(this::sendHeartbeat, 0, intervalSeconds, TimeUnit.SECONDS);
-        //定时校验心跳超时的节点列表，并移除
-        schedule.scheduleAtFixedRate(this::checkOnlineNodes, 0, intervalSeconds, TimeUnit.SECONDS);
-        init = true;
+    public void init() {
+        lock.lock();
+        try {
+            if (init) return;
+            //初始化
+            initConf();
+            //定时给所有节点发送心跳
+            int intervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.interval.seconds", 5);
+            schedule.scheduleAtFixedRate(this::sendHeartbeat, 0, intervalSeconds, TimeUnit.SECONDS);
+            //定时校验心跳超时的节点列表，并移除
+            schedule.scheduleAtFixedRate(this::checkOnlineNodes, 0, intervalSeconds, TimeUnit.SECONDS);
+            init = true;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
