@@ -19,7 +19,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
 import io.netty.incubator.channel.uring.IOUringSocketChannel;
 
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -129,7 +128,7 @@ public class Utils {
         return new IllegalArgumentException("wrong number of arguments");
     }
 
-    public static long bytesToNum(byte[] bytes) {
+    public static int bytesToNum(byte[] bytes) {
         int length = bytes.length;
         if (length == 0) {
             throw new IllegalArgumentException("value is not an integer or out of range");

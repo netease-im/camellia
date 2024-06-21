@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTls
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.DefaultUpstreamAddrConverter;
 import com.netease.nim.camellia.tools.utils.SysUtils;
-import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;

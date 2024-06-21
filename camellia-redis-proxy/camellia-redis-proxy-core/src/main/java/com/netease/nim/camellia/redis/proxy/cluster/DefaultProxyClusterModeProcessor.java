@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 
+import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -39,7 +40,8 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(executorSize, executorSize,
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-receiver"), new ThreadPoolExecutor.AbortPolicy());
 
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock initLock = new ReentrantLock();
+    private final ReentrantLock refreshLock = new ReentrantLock();
 
     private final ProxyClusterModeProvider provider;
 
@@ -61,16 +63,21 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
         GlobalRedisProxyEnv.addAfterStartCallback(this::init);
     }
 
-    private synchronized void init() {
-        if (init) return;
-        provider.init();
-        refresh();
-        provider.addNodeChangeListener(this::refresh);
-        reloadConf();
-        ProxyDynamicConf.registerCallback(this::reloadConf);
-        int seconds = ProxyDynamicConf.getInt("proxy.cluster.mode.refresh.nodes.interval.seconds", 60);
-        ExecutorUtils.scheduleAtFixedRate(this::refresh, seconds, seconds, TimeUnit.SECONDS);
-        init = true;
+    private void init() {
+        initLock.lock();
+        try {
+            if (init) return;
+            provider.init();
+            refresh();
+            provider.addNodeChangeListener(this::refresh);
+            reloadConf();
+            ProxyDynamicConf.registerCallback(this::reloadConf);
+            int seconds = ProxyDynamicConf.getInt("proxy.cluster.mode.refresh.nodes.interval.seconds", 60);
+            ExecutorUtils.scheduleAtFixedRate(this::refresh, seconds, seconds, TimeUnit.SECONDS);
+            init = true;
+        } finally {
+            initLock.unlock();
+        }
     }
 
     private void reloadConf() {
@@ -80,7 +87,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     }
 
     private void refresh() {
-        lock.lock();
+        refreshLock.lock();
         try {
             if (refreshing.compareAndSet(false, true)) {
                 try {
@@ -110,7 +117,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
         } catch (Exception e) {
             logger.error("refresh proxy cluster mode nodes error", e);
         } finally {
-            lock.unlock();
+            refreshLock.unlock();
         }
     }
 
@@ -131,7 +138,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                 }
                 for (byte[] key : keys) {
                     int slot = RedisClusterCRC16Utils.getSlot(key);
-                    if (!clusterSlotMap.isInCurrentNodeSlot(slot)) {
+                    if (!clusterSlotMap.isSlotInCurrentNode(slot)) {
                         ProxyNode node = clusterSlotMap.getBySlot(slot);
                         return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
                     }
@@ -152,7 +159,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             if (keys.isEmpty()) return null;
             byte[] key = keys.get(0);
             int slot = RedisClusterCRC16Utils.getSlot(key);
-            if (!clusterSlotMap.isInCurrentNodeSlot(slot)) {
+            if (!clusterSlotMap.isSlotInCurrentNode(slot)) {
                 ProxyNode node = clusterSlotMap.getBySlot(slot);
                 channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
                 return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());

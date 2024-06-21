@@ -18,12 +18,17 @@ import java.util.*;
  */
 public class ProxyClusterSlotMap {
 
+    private final String md5;
     private final ProxyNode currentNode;
     private final ProxyNode[] slotArray;
     private boolean currentNodeOnline;
     private final List<ProxyNode> onlineNodes;
+    private final Set<ProxyNode> onlineNodeSet;
 
     public ProxyClusterSlotMap(ProxyNode currentNode, ProxyNode[] slotArray) {
+        if (currentNode == null) {
+            throw new IllegalArgumentException("current node is null");
+        }
         this.currentNode = currentNode;
         this.slotArray = slotArray;
         if (slotArray.length != RedisClusterCRC16Utils.SLOT_SIZE) {
@@ -40,7 +45,9 @@ public class ProxyClusterSlotMap {
             set.add(proxyNode);
         }
         this.onlineNodes = new ArrayList<>(set);
+        this.onlineNodeSet = new HashSet<>(set);
         Collections.sort(onlineNodes);
+        this.md5 = MD5Util.md5(toString());
     }
 
     public boolean isCurrentNodeOnline() {
@@ -51,7 +58,7 @@ public class ProxyClusterSlotMap {
         return onlineNodes.isEmpty();
     }
 
-    public final List<ProxyNode> getOnlineNodes() {
+    public List<ProxyNode> getOnlineNodes() {
         return new ArrayList<>(onlineNodes);
     }
 
@@ -63,11 +70,15 @@ public class ProxyClusterSlotMap {
         return slotArray[slot];
     }
 
-    public boolean isInCurrentNodeSlot(int slot) {
+    public boolean isSlotInCurrentNode(int slot) {
         if (!currentNodeOnline) {
             return false;
         }
         return slotArray[slot].equals(currentNode);
+    }
+
+    public boolean contains(ProxyNode proxyNode) {
+        return onlineNodeSet.contains(proxyNode);
     }
 
     public Map<ProxyNode, List<Integer>> getNodeSlotMap() {
@@ -78,6 +89,10 @@ public class ProxyClusterSlotMap {
             slots.add(i);
         }
         return map;
+    }
+
+    public String getMd5() {
+        return md5;
     }
 
     public Reply clusterInfo() {

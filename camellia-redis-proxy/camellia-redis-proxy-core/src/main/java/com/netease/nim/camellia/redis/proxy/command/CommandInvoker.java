@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProvider;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
