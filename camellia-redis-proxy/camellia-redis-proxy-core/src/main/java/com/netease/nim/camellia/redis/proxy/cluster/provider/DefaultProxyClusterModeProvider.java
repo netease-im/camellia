@@ -75,7 +75,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
             if (node == null) {
                 return ErrorReply.argNumWrong(RedisCommand.CLUSTER);
             }
-            ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue(Utils.bytesToNum(objects[3]));
+            ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue((int)Utils.bytesToNum(objects[3]));
             if (status == null) {
                 return ErrorReply.argNumWrong(RedisCommand.CLUSTER);
             }

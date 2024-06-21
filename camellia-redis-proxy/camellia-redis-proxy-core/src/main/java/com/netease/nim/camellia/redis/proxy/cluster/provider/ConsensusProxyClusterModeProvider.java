@@ -59,7 +59,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
     public Reply proxyHeartbeat(Command command) {
         byte[][] objects = command.getObjects();
         ProxyNode source = ProxyNode.parseString(Utils.bytesToString(objects[2]));
-        ClusterModeCmd cmd = ClusterModeCmd.getByValue(Utils.bytesToNum(objects[3]));
+        ClusterModeCmd cmd = ClusterModeCmd.getByValue((int)Utils.bytesToNum(objects[3]));
         JSONObject data = JSONObject.parseObject(Utils.bytesToString(objects[4]));
 
         if (slaveCmd.contains(cmd)) {

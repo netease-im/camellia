@@ -128,7 +128,7 @@ public class Utils {
         return new IllegalArgumentException("wrong number of arguments");
     }
 
-    public static int bytesToNum(byte[] bytes) {
+    public static long bytesToNum(byte[] bytes) {
         int length = bytes.length;
         if (length == 0) {
             throw new IllegalArgumentException("value is not an integer or out of range");
