@@ -229,26 +229,6 @@ public class CommandsTransponder {
                         hasCommandsSkip = true;
                         continue;
                     }
-
-                    //kv command
-                    if (redisCommand == RedisCommand.KV) {
-                        CompletableFuture<Reply> future = KvCommandInvoker.invoke(command);
-                        future.thenAccept(task::replyCompleted);
-                        hasCommandsSkip = true;
-                        continue;
-                    }
-
-                    if (redisCommand == RedisCommand.TIME) {
-                        long nowMillis = System.currentTimeMillis();
-                        Reply[] replies = new Reply[2];
-                        long seconds = nowMillis / 1000;
-                        long millis = nowMillis - seconds * 1000L;
-                        replies[0] = new BulkReply(Utils.stringToBytes(String.valueOf(seconds)));
-                        replies[1] = new BulkReply(Utils.stringToBytes(String.valueOf(millis * 1000)));
-                        task.replyCompleted(new MultiBulkReply(replies));
-                        hasCommandsSkip = true;
-                        continue;
-                    }
                 }
 
                 //如果需要密码，但是没有auth，则返回NO_AUTH
@@ -373,6 +353,26 @@ public class CommandsTransponder {
                         } else {
                             task.replyCompleted(ErrorReply.NOT_SUPPORT);
                         }
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    //kv command
+                    if (redisCommand == RedisCommand.KV) {
+                        CompletableFuture<Reply> future = KvCommandInvoker.invoke(command);
+                        future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    if (redisCommand == RedisCommand.TIME) {
+                        long nowMillis = System.currentTimeMillis();
+                        Reply[] replies = new Reply[2];
+                        long seconds = nowMillis / 1000;
+                        long millis = nowMillis - seconds * 1000L;
+                        replies[0] = new BulkReply(Utils.stringToBytes(String.valueOf(seconds)));
+                        replies[1] = new BulkReply(Utils.stringToBytes(String.valueOf(millis * 1000)));
+                        task.replyCompleted(new MultiBulkReply(replies));
                         hasCommandsSkip = true;
                         continue;
                     }
