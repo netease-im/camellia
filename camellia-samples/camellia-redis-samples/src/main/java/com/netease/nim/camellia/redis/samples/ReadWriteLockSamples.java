@@ -26,12 +26,16 @@ public class ReadWriteLockSamples {
             CamelliaRedisReadWriteLock lock4 = CamelliaRedisReadWriteLock.newLock(template, string, 100, 3000);
             System.out.println("case1");
             assertEquals(lock1.readLock(), true);
+            assertEquals(lock1.isReadLockOk(), true);
+            assertEquals(lock1.isWriteLockOk(), false);
             assertEquals(lock2.readLock(), true);
             assertEquals(lock3.writeLock(), false);
+            assertEquals(lock3.isWriteLockOk(), false);
             assertEquals(lock1.release(), true);
             assertEquals(lock3.writeLock(), false);
             assertEquals(lock2.release(), true);
             assertEquals(lock3.writeLock(), true);
+            assertEquals(lock3.isWriteLockOk(), true);
             assertEquals(lock4.readLock(), false);
         }
 
