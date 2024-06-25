@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
@@ -16,9 +17,6 @@ import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -236,6 +234,18 @@ public class CommandsTransponder {
                     if (redisCommand == RedisCommand.KV) {
                         CompletableFuture<Reply> future = KvCommandInvoker.invoke(command);
                         future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    if (redisCommand == RedisCommand.TIME) {
+                        long nowMillis = System.currentTimeMillis();
+                        Reply[] replies = new Reply[2];
+                        long seconds = nowMillis / 1000;
+                        long millis = nowMillis - seconds * 1000L;
+                        replies[0] = new BulkReply(Utils.stringToBytes(String.valueOf(seconds)));
+                        replies[1] = new BulkReply(Utils.stringToBytes(String.valueOf(millis * 1000)));
+                        task.replyCompleted(new MultiBulkReply(replies));
                         hasCommandsSkip = true;
                         continue;
                     }
