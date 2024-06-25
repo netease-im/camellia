@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2024/5/22
@@ -27,15 +28,10 @@ public class CamelliaRedisReadWriteLock {
     private final long acquireTimeoutMillis;//获取锁的等待时间
     private final long expireTimeoutMillis;//锁的过期时间
     private final long tryLockIntervalMillis;//两次尝试获取锁时的间隔
+    private long expireTimestamp = -1;//锁的过期时间戳
     private int status = UN_LOCK;
 
-    private final byte[] readLockScript = ("local arg = redis.call('exists', KEYS[2], KEYS[3]);\n" +
-            "if tonumber(arg) >= 1 then\n" +
-            "    return 1;\n" +
-            "end\n" +
-            "redis.call('hset', KEYS[1], ARGV[1], ARGV[2]);\n" +
-            "redis.call('pexpireat', KEYS[1], ARGV[2]);\n" +
-            "return 2;").getBytes(StandardCharsets.UTF_8);
+    private final ReentrantLock lock = new ReentrantLock();
 
     private CamelliaRedisReadWriteLock(CamelliaRedisTemplate template, byte[] lockKey, byte[] lockId,
                                       long acquireTimeoutMillis, long expireTimeoutMillis, long tryLockIntervalMillis) {
@@ -74,18 +70,84 @@ public class CamelliaRedisReadWriteLock {
     }
 
     /**
+     * 读锁是否获取到了
+     * @return 成功/失败
+     */
+    public boolean isReadLockOk() {
+        lock.lock();
+        try {
+            if (status == READ_LOCK) {
+                if (System.currentTimeMillis() < this.expireTimestamp) {
+                    return true;
+                }
+                clearExpiredKeys();
+                boolean lockOk = template.hget(readKey, lockId) != null;
+                if (!lockOk) {
+                    status = UN_LOCK;
+                    expireTimestamp = -1;
+                }
+                return lockOk;
+            }
+            return false;
+        } catch (Exception e) {
+            logger.error("isReadLockOk error, lockKey = {}", new String(lockKey, StandardCharsets.UTF_8), e);
+            return false;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 写锁是否获取到了
+     * @return 成功/失败
+     */
+    public boolean isWriteLockOk() {
+        lock.lock();
+        try {
+            if (status == WRITE_LOCK) {
+                if (System.currentTimeMillis() < this.expireTimestamp) {
+                    return true;
+                }
+                clearExpiredKeys();
+                byte[] bytes = template.get(writeStatusKey);
+                boolean lockOk = bytes != null && Arrays.equals(bytes, lockId);
+                if (!lockOk) {
+                    status = UN_LOCK;
+                    expireTimestamp = -1;
+                }
+                return lockOk;
+            }
+            return false;
+        } catch (Exception e) {
+            logger.error("isWriteLockOk error, lockKey = {}", new String(lockKey, StandardCharsets.UTF_8), e);
+            return false;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private final byte[] readLockScript = ("local arg = redis.call('exists', KEYS[2], KEYS[3]);\n" +
+            "if tonumber(arg) >= 1 then\n" +
+            "    return 1;\n" +
+            "end\n" +
+            "redis.call('hset', KEYS[1], ARGV[1], ARGV[2]);\n" +
+            "redis.call('pexpireat', KEYS[1], ARGV[2]);\n" +
+            "return 2;").getBytes(StandardCharsets.UTF_8);
+
+    /**
      * 获取读锁
      * @return 成功/失败
      */
-    public synchronized boolean readLock() {
+    public boolean readLock() {
         long start = System.currentTimeMillis();
+        if (isReadLockOk()) {
+            return true;
+        }
+        if (isWriteLockOk()) {
+            return true;
+        }
+        lock.lock();
         try {
-            if (status == READ_LOCK) {
-                return true;
-            }
-            if (status == WRITE_LOCK) {
-                return true;
-            }
             while (true) {
                 clearExpiredKeys();
                 long lockExpireTimestamp = System.currentTimeMillis() + expireTimeoutMillis;
@@ -94,6 +156,7 @@ public class CamelliaRedisReadWriteLock {
                 boolean success = String.valueOf(eval).equals("2");
                 if (success) {
                     status = READ_LOCK;
+                    expireTimestamp = lockExpireTimestamp;
                     return true;
                 }
                 if (System.currentTimeMillis() - start > acquireTimeoutMillis) {
@@ -104,6 +167,8 @@ public class CamelliaRedisReadWriteLock {
         } catch (Exception e) {
             logger.error("READ lock error, lockKey = {}", new String(lockKey, StandardCharsets.UTF_8), e);
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -121,15 +186,16 @@ public class CamelliaRedisReadWriteLock {
      * 获取写锁
      * @return 成功/失败
      */
-    public synchronized boolean writeLock() {
+    public boolean writeLock() {
         long start = System.currentTimeMillis();
+        if (isWriteLockOk()) {
+            return true;
+        }
+        if (isReadLockOk()) {
+            release();
+        }
+        lock.lock();
         try {
-            if (status == WRITE_LOCK) {
-                return true;
-            }
-            if (status == READ_LOCK) {
-                release();
-            }
             while (true) {
                 clearExpiredKeys();
                 long lockExpireTimestamp = System.currentTimeMillis() + expireTimeoutMillis;
@@ -138,6 +204,7 @@ public class CamelliaRedisReadWriteLock {
                 boolean success = String.valueOf(eval).equals("2");
                 if (success) {
                     status = WRITE_LOCK;
+                    expireTimestamp = lockExpireTimestamp;
                     return true;
                 }
                 if (System.currentTimeMillis() - start > acquireTimeoutMillis) {
@@ -148,6 +215,8 @@ public class CamelliaRedisReadWriteLock {
         } catch (Exception e) {
             logger.error("WRITE lock error, lockKey = {}", new String(lockKey, StandardCharsets.UTF_8), e);
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -157,7 +226,8 @@ public class CamelliaRedisReadWriteLock {
      * 释放锁
      * @return 成功/失败
      */
-    public synchronized boolean release() {
+    public boolean release() {
+        lock.lock();
         try {
             clearExpiredKeys();
             if (status == READ_LOCK) {
@@ -180,6 +250,25 @@ public class CamelliaRedisReadWriteLock {
                 logger.error("release WRITE lock error, lockKey = {}", new String(lockKey, StandardCharsets.UTF_8), e);
             }
             return false;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 清空锁相关的key，会释放不是自己获取到的锁
+     * @return 成功/失败
+     */
+    public boolean clear() {
+        lock.lock();
+        try {
+            template.del(readKey, writePendingKey, writeStatusKey);
+            return true;
+        } catch (Exception e) {
+            logger.error("clear lock error, lockKey = {}", new String(lockKey, StandardCharsets.UTF_8), e);
+            return false;
+        } finally {
+            lock.unlock();
         }
     }
 
