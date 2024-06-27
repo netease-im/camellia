@@ -3,10 +3,12 @@ package com.netease.nim.camellia.redis.proxy.config.nacos;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoaderUtil;
 import com.netease.nim.camellia.tools.utils.ConfigContentType;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
+import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,11 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         //conf
         Map<String, String> map = new HashMap<>(initConf);
         map.putAll(conf);
+        //dynamic specific conf
+        Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf, contentType);
+        if (pair.getSecond() != null) {
+            map.putAll(pair.getSecond());
+        }
         return map;
     }
 

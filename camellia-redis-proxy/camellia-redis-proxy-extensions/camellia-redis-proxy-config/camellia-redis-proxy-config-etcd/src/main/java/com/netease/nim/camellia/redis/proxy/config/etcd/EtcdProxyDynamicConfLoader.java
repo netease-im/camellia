@@ -1,10 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.config.etcd;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoaderUtil;
 import com.netease.nim.camellia.tools.utils.ConfigContentType;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.Pair;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.ClientBuilder;
@@ -27,6 +29,7 @@ import java.util.concurrent.Executors;
 public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(EtcdProxyDynamicConfLoader.class);
+
     private static final ExecutorService reloadExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(EtcdProxyDynamicConfLoader.class));
 
     private Map<String, String> initConf = new HashMap<>();
@@ -42,6 +45,11 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         //conf
         Map<String, String> map = new HashMap<>(initConf);
         map.putAll(conf);
+        //dynamic specific conf
+        Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf, contentType);
+        if (pair.getSecond() != null) {
+            map.putAll(pair.getSecond());
+        }
         return map;
     }
 
