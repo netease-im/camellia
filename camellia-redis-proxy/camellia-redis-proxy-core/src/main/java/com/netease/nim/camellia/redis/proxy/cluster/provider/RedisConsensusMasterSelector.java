@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.cluster.provider;
 
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMap;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
@@ -109,6 +110,8 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
         return ProxyDynamicConf.getInt("redis.consensus.master.selector.heartbeat.expire.seconds", 15);
     }
 
+    private static final byte[] SCRIPT = SafeEncoder.encode("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end");
+
     private void heartbeat() {
         try {
             byte[][] args1 = new byte[][] {RedisCommand.SET.raw(), Utils.stringToBytes(masterKey), Utils.stringToBytes(currentNode.toString()),
@@ -133,7 +136,8 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
                     return;
                 }
                 if (masterNode.equals(this.masterNode)) {
-                    byte[][] args3 = new byte[][] {RedisCommand.EXPIRE.raw(), Utils.stringToBytes(masterKey), Utils.stringToBytes(String.valueOf(masterHeartbeatExpireSeconds()))};
+                    byte[][] args3 = new byte[][] {RedisCommand.EVAL.raw(), SCRIPT, Utils.stringToBytes("1"), Utils.stringToBytes(masterKey),
+                            Utils.stringToBytes(masterNode.toString()), Utils.stringToBytes(String.valueOf(masterHeartbeatExpireSeconds() * 1000L))};
                     Command command3 = new Command(args3);
                     Reply reply1 = sendCommand(command3, timeoutMillis);
                     if (reply1 instanceof ErrorReply) {
@@ -193,4 +197,5 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
         client.sendCommand(-1, Collections.singletonList(command), Collections.singletonList(future));
         return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
     }
+
 }
