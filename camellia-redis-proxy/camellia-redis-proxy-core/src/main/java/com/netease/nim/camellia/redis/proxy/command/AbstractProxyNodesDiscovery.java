@@ -2,12 +2,8 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
-import com.netease.nim.camellia.tools.utils.InetUtils;
 
-import java.net.InetAddress;
 import java.util.List;
 
 /**
@@ -42,15 +38,6 @@ public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery
         if (proxySentinelModeProcessor != null) {
             return proxySentinelModeProcessor.getCurrentNode();
         }
-        String currentNodeHost = ProxyDynamicConf.getString("proxy.node.current.host", null);
-        if (currentNodeHost == null) {
-            InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
-            if (inetAddress == null) {
-                currentNodeHost = "127.0.0.1";
-            } else {
-                currentNodeHost = inetAddress.getHostAddress();
-            }
-        }
-        return new ProxyNode(currentNodeHost, GlobalRedisProxyEnv.getPort(), GlobalRedisProxyEnv.getCport());
+        return ProxyCurrentNodeInfo.current();
     }
 }

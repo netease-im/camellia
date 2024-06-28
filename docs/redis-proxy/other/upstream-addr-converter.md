@@ -83,7 +83,7 @@ private static class Config {
 备注：如果originalHost为特殊的@CurrentHost@字符串，则会检查originalHost会使用本机ip去匹配  
 本机ip默认自动获取，如果要手动指定，则可以配置：    
 ```properties
-current.proxy.host=10.189.31.13
+proxy.node.current.host=10.189.31.13
 ```
 
 返回：  

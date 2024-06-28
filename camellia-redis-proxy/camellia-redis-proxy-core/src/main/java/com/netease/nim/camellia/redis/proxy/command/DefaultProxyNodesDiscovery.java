@@ -25,7 +25,7 @@ public class DefaultProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
         }
         String string = ProxyDynamicConf.getString("proxy.nodes", "");
         List<ProxyNode> list = new ArrayList<>();
-        if (string != null && string.trim().length() > 0) {
+        if (string != null && !string.trim().isEmpty()) {
             string = string.trim();
             String[] split = string.split(",");
             for (String str : split) {

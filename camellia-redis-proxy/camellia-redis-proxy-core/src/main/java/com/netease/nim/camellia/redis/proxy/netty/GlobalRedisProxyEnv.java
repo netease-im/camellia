@@ -148,6 +148,7 @@ public class GlobalRedisProxyEnv {
     public static void setPort(int port) {
         GlobalRedisProxyEnv.port = port;
     }
+
     public static void setTlsPort(int tlsPort) {
         GlobalRedisProxyEnv.tlsPort = tlsPort;
     }

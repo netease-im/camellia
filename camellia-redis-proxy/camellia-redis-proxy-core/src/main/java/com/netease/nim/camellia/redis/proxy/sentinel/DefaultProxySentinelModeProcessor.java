@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.sentinel;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.ProxyCurrentNodeInfo;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -15,13 +16,11 @@ import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
-import com.netease.nim.camellia.tools.utils.InetUtils;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -50,6 +49,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
     private String sentinelUserName;
     private String sentinelPassword;
     private final ConcurrentHashMap<String, Connection> connectionMap = new ConcurrentHashMap<>();
+    private final ReentrantLock initLock = new ReentrantLock();
     private final ReentrantLock lock = new ReentrantLock();
     private boolean init = false;
 
@@ -57,54 +57,54 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         GlobalRedisProxyEnv.addAfterStartCallback(this::init);
     }
 
-    private synchronized void init() {
-        if (init) return;
-        //current node
-        String host = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host", null);
-        if (host == null) {
-            String ignoredInterfaces = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host.ignored.interfaces", null);
-            String preferredNetworks = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host.preferred.interfaces", null);
-            InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress(ignoredInterfaces, preferredNetworks);
-            if (inetAddress == null) {
-                throw new IllegalStateException("not found non loopback address");
-            }
-            host = inetAddress.getHostAddress();
-        }
-        this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
-        this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
-        int port = GlobalRedisProxyEnv.getPort();
-        int cport = GlobalRedisProxyEnv.getCport();
-        if (port == 0 || cport == 0) {
-            throw new IllegalStateException("redis proxy not start");
-        }
-        this.currentNode = new ProxyNode(host, port, cport);
-        //online nodes
-        boolean success = reloadNodes();
-        if (!success) {
-            throw new IllegalArgumentException("illegal 'proxy.sentinel.mode.nodes' in ProxyDynamicConf");
-        }
-        List<ProxyNode> onlineNodes = new ArrayList<>();
-        for (ProxyNode node : allNodes) {
-            if (node.equals(currentNode)) {
-                if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
-                    onlineNodes.add(currentNode);
-                }
+    private void init() {
+        initLock.lock();
+        try {
+            if (init) return;
+            //current node
+            String host = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host", null);
+            ProxyNode proxyNode;
+            if (host != null) {
+                proxyNode = new ProxyNode(host, GlobalRedisProxyEnv.getPort(), GlobalRedisProxyEnv.getCport());
             } else {
-                boolean online = heartbeat(node);
-                if (online) {
-                    onlineNodes.add(node);
+                proxyNode = ProxyCurrentNodeInfo.current();
+            }
+            if (proxyNode.getPort() == 0 || proxyNode.getCport() == 0) {
+                throw new IllegalStateException("redis proxy not start");
+            }
+            this.currentNode = proxyNode;
+            this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
+            this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
+            //online nodes
+            boolean success = reloadNodes();
+            if (!success) {
+                throw new IllegalArgumentException("illegal 'proxy.sentinel.mode.nodes' in ProxyDynamicConf");
+            }
+            List<ProxyNode> onlineNodes = new ArrayList<>();
+            for (ProxyNode node : allNodes) {
+                if (node.equals(currentNode)) {
+                    if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
+                        onlineNodes.add(currentNode);
+                    }
+                } else {
+                    boolean online = heartbeat(node);
+                    if (online) {
+                        onlineNodes.add(node);
+                    }
                 }
             }
+            Collections.sort(onlineNodes);
+            this.onlineNodes = onlineNodes;
+            this.masterName = ProxyDynamicConf.getString("proxy.sentinel.mode.master.name", "camellia_sentinel");
+            logger.info("sentinel mode init success, masterName = {}, currentNode = {}, onlineNodes = {}, allNodes = {}",
+                    this.masterName, this.currentNode, this.onlineNodes, this.allNodes);
+            int intervalSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.interval.seconds", 5);
+            scheduler.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+            logger.info("sentinel mode heartbeat schedule start success, intervalSeconds = {}", intervalSeconds);
+            init = true;
+        } finally {
+            initLock.unlock();
         }
-        Collections.sort(onlineNodes);
-        this.onlineNodes = onlineNodes;
-        this.masterName = ProxyDynamicConf.getString("proxy.sentinel.mode.master.name", "camellia_sentinel");
-        logger.info("sentinel mode init success, masterName = {}, currentNode = {}, onlineNodes = {}, allNodes = {}",
-                this.masterName, this.currentNode, this.onlineNodes, this.allNodes);
-        int intervalSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.interval.seconds", 5);
-        scheduler.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
-        logger.info("sentinel mode heartbeat schedule start success, intervalSeconds = {}", intervalSeconds);
-        init = true;
     }
 
     /**

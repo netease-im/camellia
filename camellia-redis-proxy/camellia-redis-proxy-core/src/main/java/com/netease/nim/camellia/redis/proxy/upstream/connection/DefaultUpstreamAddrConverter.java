@@ -1,10 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import com.alibaba.fastjson.JSONArray;
+import com.netease.nim.camellia.redis.proxy.command.ProxyCurrentNodeInfo;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.tools.utils.InetUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.epoll.EpollDomainSocketChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -20,7 +20,6 @@ import io.netty.incubator.channel.uring.IOUringSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,14 +124,10 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
             } else {
                 configList = new ArrayList<>();
             }
-            String currentHost = ProxyDynamicConf.getString("current.proxy.host", null);
-            if (currentHost == null) {
-                InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
-                if (inetAddress != null) {
-                    currentHost = inetAddress.getHostAddress();
-                }
+            this.currentHost = ProxyDynamicConf.getString("current.proxy.host", null);
+            if (this.currentHost == null) {
+                this.currentHost = ProxyCurrentNodeInfo.current().getHost();
             }
-            this.currentHost = currentHost;
         } catch (Exception e) {
             logger.error("reload upstream addr converter config error", e);
         }
