@@ -25,6 +25,14 @@ public class InetUtils {
     public static List<String> preferredNetworks = new ArrayList<>();
 
     public static InetAddress findFirstNonLoopbackAddress() {
+        return findFirstNonLoopbackAddress(ignoredInterfaces, preferredNetworks);
+    }
+
+    public static InetAddress findFirstNonLoopbackAddress(String ignoredInterfaces, String preferredNetworks) {
+        return findFirstNonLoopbackAddress(strToList(ignoredInterfaces), strToList(preferredNetworks));
+    }
+
+    public static InetAddress findFirstNonLoopbackAddress(List<String> ignoredInterfaces, List<String> preferredNetworks) {
         InetAddress result = null;
         try {
             int lowest = Integer.MAX_VALUE;
@@ -38,12 +46,12 @@ public class InetUtils {
                         continue;
                     }
 
-                    if (!ignoreInterface(ifc.getDisplayName())) {
+                    if (!ignoreInterface(ignoredInterfaces, ifc.getDisplayName())) {
                         for (Enumeration<InetAddress> addrs = ifc.getInetAddresses(); addrs.hasMoreElements();) {
                             InetAddress address = addrs.nextElement();
                             if (address instanceof Inet4Address
                                     && !address.isLoopbackAddress()
-                                    && !ignoreAddress(address)) {
+                                    && !ignoreAddress(preferredNetworks, address)) {
                                 result = address;
                             }
                         }
@@ -67,24 +75,41 @@ public class InetUtils {
         return null;
     }
 
-    private static boolean ignoreInterface(String interfaceName) {
+    private static boolean ignoreInterface(List<String> ignoredInterfaces, String interfaceName) {
         for (String regex : ignoredInterfaces) {
             if (interfaceName.matches(regex)) {
-                logger.trace("Ignoring interface: " + interfaceName);
+                logger.trace("Ignoring interface: {}", interfaceName);
                 return true;
             }
         }
         return false;
     }
 
-    private static boolean ignoreAddress(InetAddress address) {
+    private static boolean ignoreAddress(List<String> preferredNetworks, InetAddress address) {
         for (String regex : preferredNetworks) {
             if (!address.getHostAddress().matches(regex) && !address.getHostAddress().startsWith(regex)) {
-                logger.trace("Ignoring address: " + address.getHostAddress());
+                logger.trace("Ignoring address: {}", address.getHostAddress());
                 return true;
             }
         }
         return false;
     }
 
+    private static List<String> strToList(String str) {
+        List<String> list = new ArrayList<>();
+        if (str != null) {
+            String[] split = str.split(",");
+            for (String string : split) {
+                if (string == null) {
+                    continue;
+                }
+                string = string.trim();
+                if (string.isEmpty()) {
+                    continue;
+                }
+                list.add(string);
+            }
+        }
+        return list;
+    }
 }

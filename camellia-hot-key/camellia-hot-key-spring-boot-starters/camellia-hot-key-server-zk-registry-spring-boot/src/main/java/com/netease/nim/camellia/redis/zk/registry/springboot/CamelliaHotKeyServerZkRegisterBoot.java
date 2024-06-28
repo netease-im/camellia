@@ -32,33 +32,22 @@ public class CamelliaHotKeyServerZkRegisterBoot {
         HotKeyServerAddr addr;
         try {
             String host = properties.getHost();
-            if (host != null && host.length() > 0) {
-                addr = new HotKeyServerAddr(host, port);
-            } else {
+            if (host == null || host.isEmpty()) {
                 boolean preferredHostName = properties.isPreferredHostName();
                 if (preferredHostName) {
                     host = InetAddress.getLocalHost().getHostName();
-                    addr = new HotKeyServerAddr(host, port);
                 } else {
                     String ignoredInterfaces = properties.getIgnoredInterfaces();
-                    if (ignoredInterfaces != null) {
-                        String[] interfaces = ignoredInterfaces.split(",");
-                        Collections.addAll(InetUtils.ignoredInterfaces, interfaces);
-                    }
                     String preferredNetworks = properties.getPreferredNetworks();
-                    if (preferredNetworks != null) {
-                        String[] networks = preferredNetworks.split(",");
-                        Collections.addAll(InetUtils.preferredNetworks, networks);
-                    }
-                    InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+                    InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress(ignoredInterfaces, preferredNetworks);
                     if (inetAddress != null) {
                         host = inetAddress.getHostAddress();
                     } else {
                         host = InetAddress.getLocalHost().getHostAddress();
                     }
-                    addr = new HotKeyServerAddr(host, port);
                 }
             }
+            addr = new HotKeyServerAddr(host, port);
         } catch (UnknownHostException e) {
             throw new ZkRegistryException(e);
         }

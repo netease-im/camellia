@@ -62,7 +62,9 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         //current node
         String host = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host", null);
         if (host == null) {
-            InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+            String ignoredInterfaces = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host.ignored.interfaces", null);
+            String preferredNetworks = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host.preferred.interfaces", null);
+            InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress(ignoredInterfaces, preferredNetworks);
             if (inetAddress == null) {
                 throw new IllegalStateException("not found non loopback address");
             }

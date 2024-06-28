@@ -37,7 +37,7 @@ public class CamelliaRedisProxyZkRegisterBoot {
             proxy.setPort(port);
             proxy.setTlsPort(tlsPort);
             String host = properties.getHost();
-            if (host != null && host.length() > 0) {
+            if (host != null && !host.isEmpty()) {
                 proxy.setHost(host);
             } else {
                 boolean preferredHostName = properties.isPreferredHostName();
@@ -45,16 +45,8 @@ public class CamelliaRedisProxyZkRegisterBoot {
                     proxy.setHost(InetAddress.getLocalHost().getHostName());
                 } else {
                     String ignoredInterfaces = properties.getIgnoredInterfaces();
-                    if (ignoredInterfaces != null) {
-                        String[] interfaces = ignoredInterfaces.split(",");
-                        Collections.addAll(InetUtils.ignoredInterfaces, interfaces);
-                    }
                     String preferredNetworks = properties.getPreferredNetworks();
-                    if (preferredNetworks != null) {
-                        String[] networks = preferredNetworks.split(",");
-                        Collections.addAll(InetUtils.preferredNetworks, networks);
-                    }
-                    InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+                    InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress(ignoredInterfaces, preferredNetworks);
                     if (inetAddress != null) {
                         proxy.setHost(inetAddress.getHostAddress());
                     } else {
