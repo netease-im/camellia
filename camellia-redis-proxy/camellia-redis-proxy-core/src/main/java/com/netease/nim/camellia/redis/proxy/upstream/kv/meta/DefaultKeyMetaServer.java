@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.KvExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
@@ -70,14 +71,20 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         }
 
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            KeyMeta keyMeta = keyMetaLRUCache.get(key);
-            if (keyMeta != null && keyMeta.isExpire()) {
-                keyMetaLRUCache.remove(key);
-                keyMeta = null;
-            }
-            if (keyMeta != null) {
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), "getKeyMeta");
-                return keyMeta;
+            ValueWrapper<KeyMeta> valueWrapper = keyMetaLRUCache.get(key);
+            if (valueWrapper != null) {
+                KeyMeta keyMeta = valueWrapper.get();
+                if (keyMeta == null) {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), "getKeyMeta");
+                    return null;
+                }
+                if (!keyMeta.isExpire()) {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), "getKeyMeta");
+                    return keyMeta;
+                } else {
+                    deleteKeyMeta(key);
+                    return null;
+                }
             }
         }
 
@@ -87,12 +94,14 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "getKeyMeta");
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
+                keyMetaLRUCache.setNull(key);
                 return null;
             }
             KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
             if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
                 KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
+                keyMetaLRUCache.setNull(key);
                 return null;
             }
             if (cacheConfig.isMetaLocalCacheEnable()) {
@@ -131,6 +140,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
             KeyValue keyValue = kvClient.get(metaKey);
             if (keyValue == null || keyValue.getValue() == null) {
+                keyMetaLRUCache.setNull(key);
                 return null;
             }
             keyMeta = KeyMeta.fromBytes(keyValue.getValue());
@@ -140,6 +150,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 if (keyMeta != null) {
                     gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
                 }
+                keyMetaLRUCache.setNull(key);
                 return null;
             }
 
@@ -252,10 +263,20 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         }
 
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            KeyMeta keyMeta = keyMetaLRUCache.get(key);
-            if (keyMeta != null) {
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), "existsKeyMeta");
-                return !keyMeta.isExpire();
+            ValueWrapper<KeyMeta> valueWrapper = keyMetaLRUCache.get(key);
+            if (valueWrapper != null) {
+                KeyMeta keyMeta = valueWrapper.get();
+                if (keyMeta == null) {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), "existsKeyMeta");
+                    return false;
+                }
+                if (!keyMeta.isExpire()) {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), "existsKeyMeta");
+                    return true;
+                } else {
+                    deleteKeyMeta(key);
+                    return false;
+                }
             }
         }
 

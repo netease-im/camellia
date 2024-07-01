@@ -22,6 +22,7 @@ public class KeyMetaLRUCache {
     private final String namespace;
     private int capacity;
     private SlotLRUCache<KeyMeta> localCache;
+    private SlotLRUCache<Boolean> emptyCache;
 
     public KeyMetaLRUCache(String namespace) {
         this.namespace = namespace;
@@ -45,27 +46,54 @@ public class KeyMetaLRUCache {
             } else {
                 this.localCache.setCapacity(capacity);
             }
+            if (emptyCache == null) {
+                this.emptyCache = new SlotLRUCache<>(capacity);
+            } else {
+                this.emptyCache.setCapacity(capacity);
+            }
             logger.info("key meta lru cache build, capacity = {}", capacity);
         }
         this.capacity = capacity;
     }
 
-    public KeyMeta get(byte[] key) {
+    public ValueWrapper<KeyMeta> get(byte[] key) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        return localCache.get(slot, new BytesKey(key));
+        BytesKey bytesKey = new BytesKey(key);
+        KeyMeta keyMeta = localCache.get(slot, bytesKey);
+        if (keyMeta != null) {
+            return () -> keyMeta;
+        }
+        Boolean bool = emptyCache.get(slot, bytesKey);
+        if (bool != null) {
+            return () -> null;
+        }
+        return null;
     }
 
     public void remove(byte[] key) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        localCache.remove(slot, new BytesKey(key));
+        BytesKey bytesKey = new BytesKey(key);
+        localCache.remove(slot, bytesKey);
+        emptyCache.put(slot, bytesKey, Boolean.TRUE);
     }
 
     public void put(byte[] key, KeyMeta keyMeta) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        localCache.put(slot, new BytesKey(key), keyMeta);
+        BytesKey bytesKey = new BytesKey(key);
+        localCache.put(slot, bytesKey, keyMeta);
+        emptyCache.remove(slot, bytesKey);
+    }
+
+    public void setNull(byte[] key) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        BytesKey bytesKey = new BytesKey(key);
+        localCache.remove(slot, bytesKey);
+        emptyCache.put(slot, bytesKey, Boolean.TRUE);
     }
 
     public void clear() {
         localCache.clear();
+        emptyCache.clear();
     }
+
 }
