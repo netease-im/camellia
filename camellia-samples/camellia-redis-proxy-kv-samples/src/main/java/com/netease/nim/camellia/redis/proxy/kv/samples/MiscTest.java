@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
+import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import redis.clients.jedis.JedisPoolConfig;
 
 /**
@@ -13,10 +14,12 @@ import redis.clients.jedis.JedisPoolConfig;
 public class MiscTest {
 
     public static void main(String[] args) {
-        String url = "redis://pass123@127.0.0.1:6381";
+//        String url = "redis://pass123@127.0.0.1:6381";
+        String url = "redis-cluster://7aab8fcd9@10.189.31.11:6382,10.189.31.13:6382";
 //        String url = "redis://@127.0.0.1:6379";
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
                 .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000000))
+                .jedisClusterFactory(new JedisClusterFactory.DefaultJedisClusterFactory(new JedisPoolConfig(), 6000000, 6000000, 5))
                 .build();
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, ResourceTableUtil.simpleTable(new Resource(url)));
 

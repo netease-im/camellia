@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
@@ -21,6 +22,8 @@ public class HashLRUCache {
     private static final Logger logger = LoggerFactory.getLogger(HashLRUCache.class);
 
     private final String namespace;
+    private final HotKeyCalculator hotKeyCalculator;
+
     private SlotLRUCache<Hash> localCache;
     private SlotLRUCache<Hash> localCacheForWrite;
 
@@ -28,6 +31,7 @@ public class HashLRUCache {
 
     public HashLRUCache(String namespace) {
         this.namespace = namespace;
+        this.hotKeyCalculator = new HotKeyCalculator(namespace, KeyType.hash);
         //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
@@ -57,6 +61,10 @@ public class HashLRUCache {
             logger.info("hash lru cache build, namespace = {}, capacity = {}", namespace, capacity);
         }
         this.capacity = capacity;
+    }
+
+    public boolean isHotKey(byte[] key) {
+        return hotKeyCalculator.isHotKey(key);
     }
 
     public void putAllForRead(byte[] key, byte[] cacheKey, Hash hash) {

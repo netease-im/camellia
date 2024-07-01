@@ -31,7 +31,7 @@ import java.util.Map;
  * <p>
  * Created by caojiajun on 2024/4/7
  */
-public class HSetCommander extends Commander {
+public class HSetCommander extends Hash0Commander {
 
     private static final byte[] script = ("local ret1 = '1';\n" +
             "local ret2 = '1';\n" +
@@ -123,16 +123,27 @@ public class HSetCommander extends Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
+            boolean hotKey = hashLRUCache.isHotKey(key);
+
             Map<BytesKey, byte[]> existsMap = null;
             if (first) {
                 hashLRUCache.putAllForWrite(key, cacheKey, new Hash(new HashMap<>(fieldMap)));
             } else {
                 existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
+                if (existsMap == null) {
+                    if (hotKey) {
+                        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+                        hashLRUCache.putAllForWrite(key, cacheKey, new Hash(map));
+                        existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
+                    }
+                } else {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             }
 
             if (existsMap != null && existsCount < 0) {
                 existsCount = existsMap.size();
-                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
 
             if (result == null) {

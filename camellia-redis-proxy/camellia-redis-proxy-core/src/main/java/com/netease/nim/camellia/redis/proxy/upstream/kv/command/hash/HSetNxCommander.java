@@ -20,6 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * HSETNX key field value
@@ -121,14 +122,35 @@ public class HSetNxCommander extends Hash0Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
+            boolean hotKey = hashLRUCache.isHotKey(key);
+
+            boolean loadFromKv = false;
             Hash hash = hashLRUCache.getForWrite(key, cacheKey);
+            if (hash == null) {
+                if (hotKey) {
+                    Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+                    loadFromKv = true;
+                    hash = new Hash(map);
+                    hashLRUCache.putAllForWrite(key, cacheKey, hash);
+                }
+            }
             if (hash != null) {
                 byte[] hget = hash.hget(filedKey);
                 if (hget != null) {
-                    KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    if (!loadFromKv) {
+                        KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    }
                     return IntegerReply.REPLY_0;
                 } else {
+                    hash.hset(filedKey, value);
                     cacheCheck = cache_hit_not_exists;
+                }
+            }
+            if (result == null) {
+                hash = hashLRUCache.getForWrite(key, cacheKey);
+                if (hash != null) {
+                    result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                 }
             }
         }
