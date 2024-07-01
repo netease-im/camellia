@@ -22,7 +22,7 @@ public class KeyMetaLRUCache {
     private final String namespace;
     private int capacity;
     private SlotLRUCache<KeyMeta> localCache;
-    private SlotLRUCache<Boolean> emptyCache;
+    private SlotLRUCache<Boolean> nullCache;
 
     public KeyMetaLRUCache(String namespace) {
         this.namespace = namespace;
@@ -34,6 +34,7 @@ public class KeyMetaLRUCache {
             List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
             for (Integer removedSlot : removedSlots) {
                 localCache.clear(removedSlot);
+                nullCache.clear(removedSlot);
             }
         });
     }
@@ -46,10 +47,10 @@ public class KeyMetaLRUCache {
             } else {
                 this.localCache.setCapacity(capacity);
             }
-            if (emptyCache == null) {
-                this.emptyCache = new SlotLRUCache<>(capacity);
+            if (nullCache == null) {
+                this.nullCache = new SlotLRUCache<>(capacity);
             } else {
-                this.emptyCache.setCapacity(capacity);
+                this.nullCache.setCapacity(capacity);
             }
             logger.info("key meta lru cache build, capacity = {}", capacity);
         }
@@ -63,7 +64,7 @@ public class KeyMetaLRUCache {
         if (keyMeta != null) {
             return () -> keyMeta;
         }
-        Boolean bool = emptyCache.get(slot, bytesKey);
+        Boolean bool = nullCache.get(slot, bytesKey);
         if (bool != null) {
             return () -> null;
         }
@@ -74,26 +75,26 @@ public class KeyMetaLRUCache {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(key);
         localCache.remove(slot, bytesKey);
-        emptyCache.put(slot, bytesKey, Boolean.TRUE);
+        nullCache.put(slot, bytesKey, Boolean.TRUE);
     }
 
     public void put(byte[] key, KeyMeta keyMeta) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(key);
         localCache.put(slot, bytesKey, keyMeta);
-        emptyCache.remove(slot, bytesKey);
+        nullCache.remove(slot, bytesKey);
     }
 
     public void setNull(byte[] key) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(key);
         localCache.remove(slot, bytesKey);
-        emptyCache.put(slot, bytesKey, Boolean.TRUE);
+        nullCache.put(slot, bytesKey, Boolean.TRUE);
     }
 
     public void clear() {
         localCache.clear();
-        emptyCache.clear();
+        nullCache.clear();
     }
 
 }
