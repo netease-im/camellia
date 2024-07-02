@@ -124,7 +124,7 @@ public class ProxyClusterSlotMap {
         return new BulkReply(Utils.stringToBytes(str));
     }
 
-    public Reply clusterNodesReply() {
+    public Reply clusterNodes() {
         StringBuilder builder = new StringBuilder();
         Map<ProxyNode, List<Integer>> map = getNodeSlotMap();
         int i=1;
@@ -147,7 +147,7 @@ public class ProxyClusterSlotMap {
                 if (Objects.equals(pair.getFirst(), pair.getSecond())) {
                     builder.append(pair.getFirst());
                 } else {
-                    builder.append(pair.getFirst()).append("-").append(pair.getFirst());
+                    builder.append(pair.getFirst()).append("-").append(pair.getSecond());
                 }
                 builder.append(" ");
             }

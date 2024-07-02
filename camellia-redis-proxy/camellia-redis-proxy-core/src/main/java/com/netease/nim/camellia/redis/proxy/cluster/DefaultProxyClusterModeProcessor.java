@@ -104,7 +104,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                     }
                     clusterInfo = clusterSlotMap.clusterInfo();
                     clusterSlots = clusterSlotMap.clusterSlots();
-                    clusterNodes = clusterSlotMap.clusterNodesReply();
+                    clusterNodes = clusterSlotMap.clusterNodes();
                     ProxyClusterSlotMap oldSlotMap = this.clusterSlotMap;
                     this.clusterSlotMap = clusterSlotMap;
                     logger.info("refresh proxy cluster mode slot map success, onlineNodes = {}, currentNodeOnline = {}",

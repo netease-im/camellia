@@ -189,8 +189,12 @@ public class RedisKvClient implements IUpstreamClient {
             executor.submit(key, () -> {
                 try {
                     Reply reply = commanders.execute(command);
+                    if (reply == null) {
+                        ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
+                    }
                     future.complete(reply);
                 } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
                     future.complete(ErrorReply.NOT_AVAILABLE);
                 }
             });

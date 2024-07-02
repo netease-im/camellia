@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
@@ -96,12 +97,14 @@ public class ZAddCommander extends ZSet0Commander {
         if (first) {
             zSet = new ZSet(new HashMap<>(memberMap));
             zsetWriteBuffer.put(cacheKey, zSet);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
         } else {
             WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
             if (bufferValue != null) {
                 zSet = bufferValue.getValue();
                 existsMap = zSet.zadd(memberMap);
                 result = zsetWriteBuffer.put(cacheKey, zSet);
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
         }
 
@@ -125,6 +128,8 @@ public class ZAddCommander extends ZSet0Commander {
                             map = zSet.zadd(memberMap);
                         }
                     }
+                } else {
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
                 if (existsMap == null && map != null) {
                     existsMap = map;
@@ -142,6 +147,10 @@ public class ZAddCommander extends ZSet0Commander {
 
         if (result == null) {
             result = NoOpResult.INSTANCE;
+        }
+
+        if (existsMap == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         if (encodeVersion == EncodeVersion.version_0) {

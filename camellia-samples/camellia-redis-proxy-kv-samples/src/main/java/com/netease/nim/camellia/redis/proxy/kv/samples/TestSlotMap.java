@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.kv.samples;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMap;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
 
 import java.util.Arrays;
 
@@ -22,5 +23,8 @@ public class TestSlotMap {
         ProxyClusterSlotMap proxyClusterSlotMap2 = ProxyClusterSlotMap.parseString(proxyClusterSlotMap.toString());
 
         System.out.println(proxyClusterSlotMap2.equals(proxyClusterSlotMap));
+
+        Reply reply = proxyClusterSlotMap.clusterNodes();
+        System.out.println(reply);
     }
 }
