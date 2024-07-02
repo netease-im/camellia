@@ -42,6 +42,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
 
     private final ReentrantLock initLock = new ReentrantLock();
     private final ReentrantLock refreshLock = new ReentrantLock();
+    private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     private final ProxyClusterModeProvider provider;
 
@@ -50,8 +51,6 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     private Reply clusterInfo;
     private Reply clusterSlots;
     private Reply clusterNodes;
-
-    private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     private boolean clusterModeCommandMoveEnable;
     private int clusterModeCommandMoveIntervalSeconds;
@@ -137,6 +136,9 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                 List<byte[]> keys = command.getKeys();
                 if (keys.isEmpty()) {
                     return null;
+                }
+                if (clusterSlotMap == null) {
+                    return ErrorReply.NOT_AVAILABLE;
                 }
                 for (byte[] key : keys) {
                     int slot = RedisClusterCRC16Utils.getSlot(key);

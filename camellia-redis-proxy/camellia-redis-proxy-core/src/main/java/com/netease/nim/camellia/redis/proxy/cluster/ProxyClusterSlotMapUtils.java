@@ -11,6 +11,9 @@ import java.util.*;
 public class ProxyClusterSlotMapUtils {
 
     public static ProxyClusterSlotMap uniformDistribution(ProxyNode currentNode, List<ProxyNode> onlineNodes) {
+        if (onlineNodes.isEmpty()) {
+            return null;
+        }
         ProxyNode[] slotArray = new ProxyNode[RedisClusterCRC16Utils.SLOT_SIZE];
         List<ProxyNode> nodes = new ArrayList<>(onlineNodes);
         Collections.sort(nodes);

@@ -127,8 +127,8 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
         }
         //如果所有心跳目标对象都有回包了，则把proxy设置为在线状态
         if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.PENDING) {
-            triggerNodeAdd(current());
             ClusterModeStatus.setStatus(ClusterModeStatus.Status.ONLINE);
+            triggerNodeAdd(current());
             logger.info("proxy cluster mode status upgrade {} -> {}", ClusterModeStatus.Status.PENDING, ClusterModeStatus.Status.ONLINE);
         }
     }
