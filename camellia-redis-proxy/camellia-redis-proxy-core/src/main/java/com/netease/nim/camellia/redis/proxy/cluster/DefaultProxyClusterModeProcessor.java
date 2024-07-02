@@ -109,6 +109,8 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                     this.clusterSlotMap = clusterSlotMap;
                     logger.info("refresh proxy cluster mode slot map success, onlineNodes = {}, currentNodeOnline = {}",
                             clusterSlotMap.getOnlineNodes(), clusterSlotMap.isCurrentNodeOnline());
+                    logger.info("cluster info refresh, cluster_info: \r\n{}", clusterInfo);
+                    logger.info("cluster nodes refresh, cluster_nodes: \r\n{}", clusterNodes);
                     ClusterModeStatus.invokeClusterModeSlotMapChangeCallback(oldSlotMap, clusterSlotMap);
                 } finally {
                     refreshing.compareAndSet(true, false);
