@@ -379,13 +379,11 @@ public class CommandsTransponder {
                 }
 
                 if (clusterModeProcessor != null) {
-                    if (commands.size() == 1) {//pipeline过来的命令就不move了
-                        Reply moveReply = clusterModeProcessor.isCommandMove(command);
-                        if (moveReply != null) {
-                            task.replyCompleted(moveReply);
-                            hasCommandsSkip = true;
-                            continue;
-                        }
+                    Reply moveReply = clusterModeProcessor.isCommandMove(command);
+                    if (moveReply != null) {
+                        task.replyCompleted(moveReply);
+                        hasCommandsSkip = true;
+                        continue;
                     }
                 }
 
