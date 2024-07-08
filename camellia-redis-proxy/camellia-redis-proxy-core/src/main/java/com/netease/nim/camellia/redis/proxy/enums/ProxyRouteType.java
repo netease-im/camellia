@@ -15,6 +15,7 @@ public enum ProxyRouteType {
     REDIS_SENTINEL,//代理到redis-sentinel
     REDIS_CLUSTER,//代理到redis-cluster
     COMPLEX,//复杂路由规则，如读写分离、双写、分片等等
+    SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL,//单读上游，且读节点是redis-standalone或者redis-sentinel
     ;
 
     public static ProxyRouteType fromResourceTable(ResourceTable resourceTable) {
@@ -22,6 +23,16 @@ public enum ProxyRouteType {
         ResourceTable.Type type = resourceTable.getType();
         if (type != ResourceTable.Type.SIMPLE) return COMPLEX;
         Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
+        Set<Resource> readResources = ResourceUtil.getAllReadResources(resourceTable);
+        if (readResources.size() == 1) {
+            Resource readResource = readResources.iterator().next();
+            String url = readResource.getUrl();
+            if (url.startsWith(RedisType.Redis.getPrefix())) {
+                return SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL;
+            } else if (url.startsWith(RedisType.RedisSentinel.getPrefix())) {
+                return SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL;
+            }
+        }
         if (resources.size() != 1) {
             return COMPLEX;
         }

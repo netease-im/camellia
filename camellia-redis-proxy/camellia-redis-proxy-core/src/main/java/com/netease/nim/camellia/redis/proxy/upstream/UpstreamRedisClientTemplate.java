@@ -391,7 +391,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_3) {
-                if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL) {
+                if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL
+                        && proxyRouteType != ProxyRouteType.SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
                     futureList.add(future);

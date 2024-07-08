@@ -104,7 +104,7 @@ FT.SYNUPDATE,FT.TAGVALS,
 ```
 
 * Partially Supported 3   
-  only support while have singleton-upstream(no custom sharding) (redis-standalone or redis-sentinel)
+  only support while have singleton-read-upstream(no custom sharding) (redis-standalone or redis-sentinel)
 ```
 ##DataBase
 KEYS,RANDOMKEY,

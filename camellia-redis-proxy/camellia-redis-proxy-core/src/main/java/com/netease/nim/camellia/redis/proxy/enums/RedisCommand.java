@@ -369,7 +369,7 @@ public enum RedisCommand {
 
     /**
      * Partially Support-3
-     * only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel]
+     * only support while have singleton-read-upstream(no custom sharding) [redis-standalone or redis-sentinel]
      */
     KEYS(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
