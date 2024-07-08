@@ -42,7 +42,7 @@ public class CacheConfig {
         boolean metaLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.mete.local.cache.enable", true);
         if ((this.metaLocalCacheEnable && !metaLocalCacheEnable) || (!this.metaLocalCacheEnable && metaLocalCacheEnable)) {
             this.metaLocalCacheEnable = metaLocalCacheEnable;
-            if (!metaLocalCacheEnable) {
+            if (!metaLocalCacheEnable && keyMetaLRUCache != null) {
                 keyMetaLRUCache.clear();
             }
             logger.info("kv.key.mete.local.cache.enable = {}", metaLocalCacheEnable);
@@ -50,7 +50,7 @@ public class CacheConfig {
         boolean hashLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.hash.local.cache.enable", true);
         if ((this.hashLocalCacheEnable && !hashLocalCacheEnable) || (!this.hashLocalCacheEnable && hashLocalCacheEnable)) {
             this.hashLocalCacheEnable = hashLocalCacheEnable;
-            if (!hashLocalCacheEnable) {
+            if (!hashLocalCacheEnable && hashLRUCache != null) {
                 hashLRUCache.clear();
             }
             logger.info("kv.hash.local.cache.enable = {}", hashLocalCacheEnable);
@@ -58,7 +58,7 @@ public class CacheConfig {
         boolean zsetLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.zset.local.cache.enable", true);
         if ((this.zsetLocalCacheEnable && !zsetLocalCacheEnable) || (!this.zsetLocalCacheEnable && zsetLocalCacheEnable)) {
             this.zsetLocalCacheEnable = zsetLocalCacheEnable;
-            if (!zsetLocalCacheEnable) {
+            if (!zsetLocalCacheEnable && zSetLRUCache != null) {
                 zSetLRUCache.clear();
             }
             logger.info("kv.zset.local.cache.enable = {}", zsetLocalCacheEnable);
