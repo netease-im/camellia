@@ -787,7 +787,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     }
 
     private boolean isPassThroughCommand(List<Command> commands) {
-        if (proxyRouteType == ProxyRouteType.COMPLEX) return false;
+        if (proxyRouteType == ProxyRouteType.COMPLEX || proxyRouteType == ProxyRouteType.SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL) return false;
         for (Command command : commands) {
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1

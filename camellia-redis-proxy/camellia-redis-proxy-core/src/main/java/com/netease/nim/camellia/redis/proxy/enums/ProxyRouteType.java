@@ -23,6 +23,17 @@ public enum ProxyRouteType {
         ResourceTable.Type type = resourceTable.getType();
         if (type != ResourceTable.Type.SIMPLE) return COMPLEX;
         Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
+        if (resources.size() == 1) {
+            Resource resource = resources.iterator().next();
+            String url = resource.getUrl();
+            if (url.startsWith(RedisType.Redis.getPrefix())) {
+                return REDIS_STANDALONE;
+            } else if (url.startsWith(RedisType.RedisSentinel.getPrefix())) {
+                return REDIS_SENTINEL;
+            } else if (url.startsWith(RedisType.RedisCluster.getPrefix())) {
+                return REDIS_CLUSTER;
+            }
+        }
         Set<Resource> readResources = ResourceUtil.getAllReadResources(resourceTable);
         if (readResources.size() == 1) {
             Resource readResource = readResources.iterator().next();
@@ -31,19 +42,6 @@ public enum ProxyRouteType {
                 return SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL;
             } else if (url.startsWith(RedisType.RedisSentinel.getPrefix())) {
                 return SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL;
-            }
-        }
-        if (resources.size() != 1) {
-            return COMPLEX;
-        }
-        for (Resource resource : resources) {
-            String url = resource.getUrl();
-            if (url.startsWith(RedisType.Redis.getPrefix())) {
-                return REDIS_STANDALONE;
-            } else if (url.startsWith(RedisType.RedisSentinel.getPrefix())) {
-                return REDIS_SENTINEL;
-            } else if (url.startsWith(RedisType.RedisCluster.getPrefix())) {
-                return REDIS_CLUSTER;
             }
         }
         return COMPLEX;
