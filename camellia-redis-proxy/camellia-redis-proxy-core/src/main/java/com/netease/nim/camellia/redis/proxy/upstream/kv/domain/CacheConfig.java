@@ -39,13 +39,13 @@ public class CacheConfig {
     }
 
     private void initCacheConfig() {
-        boolean metaLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.mete.local.cache.enable", true);
+        boolean metaLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.meta.local.cache.enable", true);
         if ((this.metaLocalCacheEnable && !metaLocalCacheEnable) || (!this.metaLocalCacheEnable && metaLocalCacheEnable)) {
             this.metaLocalCacheEnable = metaLocalCacheEnable;
             if (!metaLocalCacheEnable && keyMetaLRUCache != null) {
                 keyMetaLRUCache.clear();
             }
-            logger.info("kv.key.mete.local.cache.enable = {}", metaLocalCacheEnable);
+            logger.info("kv.key.meta.local.cache.enable = {}", metaLocalCacheEnable);
         }
         boolean hashLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.hash.local.cache.enable", true);
         if ((this.hashLocalCacheEnable && !hashLocalCacheEnable) || (!this.hashLocalCacheEnable && hashLocalCacheEnable)) {
