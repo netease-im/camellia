@@ -289,24 +289,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     command.getChannelInfo().setTransactionTag(false);
                     continue;
                 }
-                List<Resource> allReadResources = resourceSelector.getAllReadResources();
                 List<Resource> allWriteResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
-                if (allReadResources.size() > 1) {
-                    CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
-                    futureList.add(future);
-                    command.getChannelInfo().clearInTransactionCommands();
-                    command.getChannelInfo().setTransactionTag(false);
-                    continue;
-                }
-                if (!allReadResources.get(0).getUrl().equals(allWriteResources.get(0).getUrl())) {
-                    CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
-                    futureList.add(future);
-                    command.getChannelInfo().clearInTransactionCommands();
-                    command.getChannelInfo().setTransactionTag(false);
-                    continue;
-                }
                 command.getChannelInfo().setTransactionTag(true);
                 if (redisCommand == RedisCommand.DISCARD || redisCommand == RedisCommand.EXEC) {
                     command.getChannelInfo().setTransactionTag(false);
@@ -317,7 +300,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         command.getChannelInfo().setTransactionTag(false);
                     }
                 }
-                String url = allReadResources.get(0).getUrl();
+                String url = allWriteResources.get(0).getUrl();
                 IUpstreamClient client = factory.get(url);
                 if (!commandFlusher.isEmpty()) {
                     commandFlusher.flush();
