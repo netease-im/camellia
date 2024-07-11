@@ -520,17 +520,20 @@ public class CommandsTransponder {
                 for (int i = 0; i < tasks.size(); i++) {
                     CommandTask task = tasks.get(i);
                     CompletableFuture<Reply> completableFuture = futureList.get(i);
-                    completableFuture.thenAccept((reply -> {
-                        task.replyCompleted(reply);
-                        if (task.isRedirect()) {
-                            task.setRedirect(false);
-                            task.setSkipPlugins(true);
-
-                            long bidRedirect = task.getBidRedirect();
-                            String bgroupRedirect = task.getBgroupRedirect();
-                            flush(bidRedirect, bgroupRedirect, db, Collections.singletonList(task), Collections.singletonList(task.getCommand()));
+                    completableFuture.thenAccept(reply -> {
+                        RouteRewriteResult routeRewriteResult = task.replyCompleted(reply, false, true);
+                        if (routeRewriteResult != null) {
+                            long redirectBid = routeRewriteResult.getBid();
+                            String redirectBgroup = routeRewriteResult.getBgroup();
+                            if (redirectBid < 0 || redirectBgroup == null || redirectBgroup.isEmpty()) {
+                                redirectBid = bid;
+                                redirectBgroup = bgroup;
+                            }
+                            List<CommandTask> commandTaskList = Collections.singletonList(task);
+                            List<Command> commandList = Collections.singletonList(task.getCommand());
+                            flush(redirectBid, redirectBgroup, db, commandTaskList, commandList);
                         }
-                    }));
+                    });
                 }
             }
         } catch (Exception e) {

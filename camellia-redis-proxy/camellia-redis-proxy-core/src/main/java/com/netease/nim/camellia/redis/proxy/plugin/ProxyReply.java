@@ -14,6 +14,7 @@ public class ProxyReply {
     private final CommandContext commandContext;
     private final Reply reply;
     private final boolean fromPlugin;
+    private final boolean supportRedirect;
 
     public ProxyReply(Command command, Reply reply, boolean fromPlugin) {
         this.command = command;
@@ -21,6 +22,16 @@ public class ProxyReply {
         this.redisCommand = command.getRedisCommand();
         this.reply = reply;
         this.fromPlugin = fromPlugin;
+        this.supportRedirect = false;
+    }
+
+    public ProxyReply(Command command, Reply reply, boolean fromPlugin, boolean supportRedirect) {
+        this.command = command;
+        this.commandContext = command.getCommandContext();
+        this.redisCommand = command.getRedisCommand();
+        this.reply = reply;
+        this.fromPlugin = fromPlugin;
+        this.supportRedirect = supportRedirect;
     }
 
     public ProxyReply(CommandContext commandContext, RedisCommand redisCommand, Reply reply, boolean fromPlugin) {
@@ -29,10 +40,15 @@ public class ProxyReply {
         this.redisCommand = redisCommand;
         this.reply = reply;
         this.fromPlugin = fromPlugin;
+        this.supportRedirect = false;
     }
 
     public boolean isFromPlugin() {
         return fromPlugin;
+    }
+
+    public boolean isSupportRedirect() {
+        return supportRedirect;
     }
 
     public CommandContext getCommandContext() {
