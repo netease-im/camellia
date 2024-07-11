@@ -520,7 +520,17 @@ public class CommandsTransponder {
                 for (int i = 0; i < tasks.size(); i++) {
                     CommandTask task = tasks.get(i);
                     CompletableFuture<Reply> completableFuture = futureList.get(i);
-                    completableFuture.thenAccept(task::replyCompleted);
+                    completableFuture.thenAccept((reply -> {
+                        task.replyCompleted(reply);
+                        if (task.isRedirect()) {
+                            task.setRedirect(false);
+                            task.setSkipPlugins(true);
+
+                            long bidRedirect = task.getBidRedirect();
+                            String bgroupRedirect = task.getBgroupRedirect();
+                            flush(bidRedirect, bgroupRedirect, db, Collections.singletonList(task), Collections.singletonList(task.getCommand()));
+                        }
+                    }));
                 }
             }
         } catch (Exception e) {
