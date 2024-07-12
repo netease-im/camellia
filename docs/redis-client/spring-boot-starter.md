@@ -154,8 +154,6 @@ camellia-redis:
   type: custom
   custom:
     resource-table-updater-class-name: com.netease.nim.camellia.redis.samples.CustomRedisTemplateResourceTableUpdater
-  local:
-    resource: redis://@127.0.0.1:6379
   redis-conf:
     jedis:
       timeout: 2000
