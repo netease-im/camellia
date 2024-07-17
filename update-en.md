@@ -4,15 +4,15 @@
 # 1.2.28（2024/07/xx）
 ### add
 * camellia-redis-proxy, support use distribution kv store as upstream, such as hbase、tikv、obkv
+* camellia-redis-proxy, support time command
+* camellia-redis-proxy，nacos/etcd config loader support local specific conf file enhancement
+* camellia-redis-proxy，support keys and randomkey command in read-write-seperate route config
+* camellia-redis-proxy，support transation commands in read-write-seperate route config, will route to write upstream
 * camellia-core, support failed write task queue for custom handler
 * camellia-mq-isolation, optimize performance and auto isolation policy
 * camellia-config, support 64k config value
 * camellia-feign, support custom retry policy
-* camellia-redis-proxy, support time command
 * camellia-redis-toolkit, provide CamelliaRedisReadWriteLock
-* camellia-redis-proxy，nacos/etcd config loader support local specific conf file enhancement
-* camellia-redis-proxy，support keys and randomkey command in read-write-seperate route config
-* camellia-redis-proxy，support transation commands in read-write-seperate route config, will route to write upstream
 * camellia-tools, CamelliaHashedExecutor support set init callback for work thread
 * support prometheus metrics prefix, include redis-proxy、hot-key、id-gen、delay-queue
 
