@@ -23,7 +23,7 @@
 * camellia-redis-proxy, optimize error log
 * camellia-redis-proxy，optimize lazy init logic
 * camellia-redis-proxy，refactor cluster-mode and sentinel-mode code
-* camellia-redis-toolkit，use ReentrantLock replace synchronized
+* camellia-redis-toolkit，CamelliaRedisLock use ReentrantLock replace synchronized
 * optimize health api，include id-gen、delay-queue、mq-isolation模块
 * optimize console server init logic when use spring-boot-starter, include redis-proxy and hot-key
 * refactor InetUtils#findFirstNonLoopbackAddress

@@ -23,7 +23,7 @@
 * camellia-redis-proxy，优化了日志打印，方便排查问题
 * camellia-redis-proxy，优化了延迟加载的功能
 * camellia-redis-proxy，重构和优化了伪cluster模式和伪sentinel模式的代码结构
-* camellia-redis-toolkit，使用ReentrantLock替换了synchronized
+* camellia-redis-toolkit，CamelliaRedisLock使用ReentrantLock替换了synchronized
 * 优化了健康检查api，包括id-gen、delay-queue、mq-isolation模块
 * 优化了使用spring-boot-starter启动时console-server的启动流程，包括redis-proxy和hot-key
 * 重构了InetUtils#findFirstNonLoopbackAddress方法，从而能适应更一般的配置场景
