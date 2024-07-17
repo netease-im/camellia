@@ -61,7 +61,7 @@ public class SlotLRUCache<V> {
 
     public void setCapacity(int capacity) {
         for (ConcurrentLinkedHashMap<BytesKey, V> subMap : array) {
-            subMap.setCapacity(capacity);
+            subMap.setCapacity(capacity / segmentSize);
         }
     }
 }
