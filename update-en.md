@@ -1,5 +1,38 @@
 [中文版](update-zh.md)
 
+
+# 1.2.28（2024/07/xx）
+### add
+* camellia-redis-proxy, support use distribution kv store as upstream, such as hbase、tikv、obkv
+* camellia-core, support failed write task queue for custom handler
+* camellia-mq-isolation, optimize performance and auto isolation policy
+* camellia-config, support 64k config value
+* camellia-feign, support custom retry policy
+* camellia-redis-proxy, support time command
+* camellia-redis-toolkit, provide CamelliaRedisReadWriteLock
+* camellia-redis-proxy，nacos/etcd config loader support local specific conf file enhancement
+* camellia-redis-proxy，support keys and randomkey command in read-write-seperate route config
+* camellia-redis-proxy，support transation commands in read-write-seperate route config, will route to write upstream
+* camellia-tools, CamelliaHashedExecutor support set init callback for work thread
+* support prometheus metrics prefix, include redis-proxy、hot-key、id-gen、delay-queue
+
+### update
+* upgrade netty version to 4.1.108.Final
+* upgrade netty-incubator-transport-native-io_uring version to 0.0.25.Final
+* upgrade netty-incubator-codec-native-quic version to 0.0.62.Final
+* camellia-redis-proxy, optimize error log
+* camellia-redis-proxy，optimize lazy init logic
+* camellia-redis-proxy，refactor cluster-mode and sentinel-mode code
+* camellia-redis-toolkit，use ReentrantLock replace synchronized
+* optimize health api，include id-gen、delay-queue、mq-isolation模块
+* optimize console server init logic when use spring-boot-starter, include redis-proxy and hot-key
+* refactor InetUtils#findFirstNonLoopbackAddress
+* support use unify config to current node info
+
+### fix
+* camellia-cache, fix spring-boot3
+
+
 # 1.2.27（2024/03/13）
 ### add
 * camellia-redis-proxy support `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` command

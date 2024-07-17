@@ -1,6 +1,38 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.28（2024/07/xx）
+### 新增
+* camellia-redis-proxy，支持使用**分布式kv存储模拟redis协议**，如hbase、tikv、obkv等
+* camellia-core，支持对失败方法设置失败队列方便上层进行自定义处理
+* camellia-mq-isolation，优化了相关功能，包括性能和自动隔离机制等
+* camellia-config，支持64k的配置项
+* camellia-feign，支持自定义的重试策略
+* camellia-redis-proxy，新增了time命令的支持
+* camellia-redis-toolkit，新增CamelliaRedisReadWriteLock工具类
+* camellia-redis-proxy，使用nacos和etcd作为配置中心时，支持使用本地配置文件来设置节点级别的特殊配置
+* camellia-redis-proxy，支持在读写分离配置下使用keys命令和randomkey命令，只需要write地址是redis-standalone或者redis-sentinel
+* camellia-redis-proxy，支持在读写分离配置下使用transaction系列命令，所有请求会发给write地址
+* camellia-tools，CamelliaHashedExecutor支持配置初始化的callback用于工作线程初始化时执行自定义逻辑
+* 支持配置prometheus指标的前缀，包括redis-proxy、hot-key、id-gen、delay-queue
+
+### 更新
+* 升级netty的版本到4.1.108.Final
+* 升级netty-incubator-transport-native-io_uring的版本到0.0.25.Final
+* 升级netty-incubator-codec-native-quic的版本到0.0.62.Final
+* camellia-redis-proxy，优化了日志打印，方便排查问题
+* camellia-redis-proxy，优化了延迟加载的功能
+* camellia-redis-proxy，重构和优化了伪cluster模式和伪sentinel模式的代码结构
+* camellia-redis-toolkit，使用ReentrantLock替换了synchronized
+* 优化了健康检查api，包括id-gen、delay-queue、mq-isolation模块
+* 优化了使用spring-boot-starter启动时console-server的启动流程，包括redis-proxy和hot-key
+* 重构了InetUtils#findFirstNonLoopbackAddress方法，从而能适应更一般的配置场景
+* 支持使用统一的配置去标识本机ip，包括伪cluster模式、伪sentinel模式、proxy命令、upstream地址替换等场景
+
+### fix
+* camellia-cache，修复使用spring-boot3时不生效的问题
+
+
 # 1.2.27（2024/03/13）
 ### 新增
 * camellia-redis-proxy新增 `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` 命令支持
