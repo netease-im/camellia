@@ -8,6 +8,7 @@
 * camellia-redis-proxy，使用nacos和etcd作为配置中心时，支持使用本地配置文件来设置节点级别的特殊配置
 * camellia-redis-proxy，支持在读写分离配置下使用keys命令和randomkey命令，只需要write地址是redis-standalone或者redis-sentinel
 * camellia-redis-proxy，支持在读写分离配置下使用transaction系列命令，所有请求会发给write地址
+* camellia-redis-proxy，支持plugin在reply阶段执行命令重定向
 * camellia-core，支持对失败方法设置失败队列方便上层进行自定义处理
 * camellia-mq-isolation，优化了相关功能，包括性能和自动隔离机制等
 * camellia-config，支持64k的配置项

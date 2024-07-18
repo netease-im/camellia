@@ -8,6 +8,7 @@
 * camellia-redis-proxy，nacos/etcd config loader support local specific conf file enhancement
 * camellia-redis-proxy，support keys and randomkey command in read-write-seperate route config
 * camellia-redis-proxy，support transation commands in read-write-seperate route config, will route to write upstream
+* camellia-redis-proxy，plugin support command redirect in reply stage
 * camellia-core, support failed write task queue for custom handler
 * camellia-mq-isolation, optimize performance and auto isolation policy
 * camellia-config, support 64k config value
