@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisKvResource;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeConfig;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -72,8 +73,7 @@ public class RedisKvClient implements IUpstreamClient {
                 logger.error("proxy cluster mode not enabled, kv client possible concurrency issues");
                 throw new KvException("proxy cluster mode not enabled, kv client possible concurrency issues");
             } else {
-                boolean clusterModeCommandMoveAlways = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.always", false);
-                if (!clusterModeCommandMoveAlways) {
+                if (!ClusterModeConfig.clusterModeCommandMoveAlways()) {
                     logger.error("proxy cluster mode command move always not enabled, kv client possible concurrency issues");
                     throw new KvException("proxy cluster mode command move always not enabled, kv client possible concurrency issues");
                 }

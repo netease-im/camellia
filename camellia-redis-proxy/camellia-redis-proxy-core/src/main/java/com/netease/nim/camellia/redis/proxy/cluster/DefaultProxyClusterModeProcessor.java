@@ -71,7 +71,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             provider.addNodeChangeListener(this::refresh);
             reloadConf();
             ProxyDynamicConf.registerCallback(this::reloadConf);
-            int seconds = ProxyDynamicConf.getInt("proxy.cluster.mode.refresh.nodes.interval.seconds", 60);
+            int seconds = ClusterModeConfig.clusterModeRefreshNodesIntervalSeconds();
             ExecutorUtils.scheduleAtFixedRate(this::refresh, seconds, seconds, TimeUnit.SECONDS);
             init = true;
         } finally {
@@ -80,9 +80,9 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     }
 
     private void reloadConf() {
-        clusterModeCommandMoveEnable = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.enable", true);
-        clusterModeCommandMoveIntervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.command.move.interval.seconds", 30);
-        clusterModeCommandMoveAlways = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.always", false);
+        clusterModeCommandMoveEnable = ClusterModeConfig.clusterModeCommandMoveEnable();
+        clusterModeCommandMoveIntervalSeconds = ClusterModeConfig.clusterModeCommandMoveIntervalSeconds();
+        clusterModeCommandMoveAlways = ClusterModeConfig.clusterModeCommandMoveAlways();
     }
 
     private void refresh() {
