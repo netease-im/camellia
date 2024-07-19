@@ -50,7 +50,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
             //初始化
             initConf();
             //定时给所有节点发送心跳
-            int intervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.interval.seconds", 5);
+            int intervalSeconds = ClusterModeConfig.clusterModeHeartbeatIntervalSeconds();
             schedule.scheduleAtFixedRate(this::sendHeartbeat, 0, intervalSeconds, TimeUnit.SECONDS);
             //定时校验心跳超时的节点列表，并移除
             schedule.scheduleAtFixedRate(this::checkOnlineNodes, 0, intervalSeconds, TimeUnit.SECONDS);

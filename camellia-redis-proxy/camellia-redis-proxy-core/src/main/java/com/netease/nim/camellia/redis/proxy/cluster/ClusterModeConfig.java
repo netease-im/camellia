@@ -7,6 +7,10 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
  */
 public class ClusterModeConfig {
 
+    public static int clusterModeHeartbeatIntervalSeconds() {
+        return ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.interval.seconds", 5);
+    }
+
     public static int clusterModeRefreshNodesIntervalSeconds() {
         return ProxyDynamicConf.getInt("proxy.cluster.mode.refresh.nodes.interval.seconds", 60);
     }

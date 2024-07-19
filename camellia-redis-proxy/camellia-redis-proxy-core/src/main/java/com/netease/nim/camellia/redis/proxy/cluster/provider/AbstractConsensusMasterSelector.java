@@ -1,11 +1,16 @@
 package com.netease.nim.camellia.redis.proxy.cluster.provider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by caojiajun on 2024/6/28
  */
 public abstract class AbstractConsensusMasterSelector implements ConsensusMasterSelector {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractConsensusMasterSelector.class);
 
     private final CopyOnWriteArrayList<ConsensusMasterChangeListener> masterChangeListenerList = new CopyOnWriteArrayList<>();
 
@@ -17,7 +22,11 @@ public abstract class AbstractConsensusMasterSelector implements ConsensusMaster
 
     protected final void notifyMasterChange() {
         for (ConsensusMasterChangeListener listener : masterChangeListenerList) {
-            listener.change();
+            try {
+                listener.change();
+            } catch (Exception e) {
+                logger.error("master change listener error", e);
+            }
         }
     }
 }
