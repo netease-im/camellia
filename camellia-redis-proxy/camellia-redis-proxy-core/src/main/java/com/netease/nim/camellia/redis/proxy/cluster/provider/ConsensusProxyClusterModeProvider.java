@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.cluster.*;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMap;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
@@ -15,13 +16,14 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2024/6/18
@@ -30,16 +32,19 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
 
     private static final Logger logger = LoggerFactory.getLogger(ConsensusProxyClusterModeProvider.class);
 
+    private final ReentrantLock lock = new ReentrantLock();
     private ConsensusMasterSelector masterSelector;
     private ProxyNode master;
     private ProxyClusterSlotMap slotMap;
 
     private final ConcurrentHashSet<ProxyNode> nodes = new ConcurrentHashSet<>();
+    private final ConcurrentHashSet<ProxyNode> pendingNodes = new ConcurrentHashSet<>();
 
     @Override
     public void init() {
         //init nodes
-        initNodes();
+        nodes.addAll(initNodes());
+        nodes.add(current());
         //init master selector
         masterSelector = new RedisConsensusMasterSelector(current());
         //get master
@@ -78,22 +83,23 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             newSlotMap = checkAndUpdateSlotMap(oldSlotMap);
             logger.info("check slot map from master selector storage, slot-map = {}", oldSlotMap);
         }
-        notifySlotMapChange(oldSlotMap, newSlotMap);
+        updateSlotMap(oldSlotMap, newSlotMap, "initMaster");
     }
 
     private void initSlave() {
         logger.info("current node is slave");
+        ProxyClusterSlotMap newSlotMap;
         while (true) {
-            slotMap = getSlotMapFromMaster();
-            if (slotMap == null) {
-                logger.warn("get slot map from master null, waiting");
+            try {
+                newSlotMap = getSlotMapFromMaster();
+            } catch (Exception e) {
+                logger.error("getSlotMapFromMaster error", e);
                 sleep10ms();
                 continue;
             }
-            logger.info("get slot map from master, slot-map = {}", slotMap);
-            nodeChangeNotify();
             break;
         }
+        updateSlotMap(this.slotMap, newSlotMap, "initSlave");
     }
 
     private void sleep10ms() {
@@ -126,30 +132,42 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
     }
 
     private ProxyClusterSlotMap getSlotMapFromMaster() {
-        if (master.equals(current())) {
-            return masterSelector.getSlotMap();
-        }
-        Reply reply = sendCmd(master, ClusterModeCmd.send_get_slot_map_from_master, "{}");
-        if (reply instanceof BulkReply) {
-            String data = Utils.bytesToString(((BulkReply) reply).getRaw());
-            return ProxyClusterSlotMap.parseString(data);
+        Reply reply;
+        try {
+            if (master.equals(current())) {
+                return ProxyClusterSlotMapUtils.localSlotMap(current(), masterSelector.getSlotMap());
+            }
+            reply = sendCmd(master, ClusterModeCmd.send_get_slot_map_from_master, "{}");
+            if (reply instanceof BulkReply) {
+                String data = Utils.bytesToString(((BulkReply) reply).getRaw());
+                return ProxyClusterSlotMapUtils.localSlotMap(current(), ProxyClusterSlotMap.parseString(data));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new CamelliaRedisException("getSlotMapFromMaster error", e);
         }
         throw new CamelliaRedisException("error " + reply);
     }
 
-    private void notifySlotMapChange(ProxyClusterSlotMap oldSlotMap, ProxyClusterSlotMap newSlotMap) {
-        this.slotMap = newSlotMap;
-        this.masterSelector.saveSlotMap(slotMap);
-        //todo
-        nodeChangeNotify();
-    }
-
     private ProxyClusterSlotMap initSlotMap() {
-        return null;
+        List<ProxyNode> onlineNodes = new ArrayList<>();
+        for (ProxyNode node : nodes) {
+            if (checkNode(node)) {
+                onlineNodes.add(node);
+            }
+        }
+        return ProxyClusterSlotMapUtils.uniformDistribution(current(), onlineNodes);
     }
 
     private ProxyClusterSlotMap checkAndUpdateSlotMap(ProxyClusterSlotMap slotMap) {
-        return null;
+        List<ProxyNode> currentOnlineNodes = slotMap.getOnlineNodes();
+        List<ProxyNode> onlineNodes = new ArrayList<>();
+        for (ProxyNode node : currentOnlineNodes) {
+            if (checkNode(node)) {
+                onlineNodes.add(node);
+            }
+        }
+        return ProxyClusterSlotMapUtils.uniformDistribution(current(), onlineNodes);
     }
 
     private boolean currentNodeMaster() {
@@ -159,8 +177,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
     private static final Set<ClusterModeCmd> slaveCmd = new HashSet<>();
     static {
         slaveCmd.add(ClusterModeCmd.send_heartbeat_to_slave);
-        slaveCmd.add(ClusterModeCmd.send_prepare_to_slave);
-        slaveCmd.add(ClusterModeCmd.send_commit_to_slave);
+        slaveCmd.add(ClusterModeCmd.send_slot_map_to_slave);
     }
 
     @Override
@@ -176,15 +193,10 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 return new ErrorReply("ERR target not slave");
             }
             if (cmd == ClusterModeCmd.send_heartbeat_to_slave) {
-                return receiveMasterHeartbeat(data);
+                return slaveReceiveMasterHeartbeat(source, data);
             }
-            if (cmd == ClusterModeCmd.send_prepare_to_slave) {
-                //todo
-                return StatusReply.OK;
-            }
-            if (cmd == ClusterModeCmd.send_commit_to_slave) {
-                //todo
-                return StatusReply.OK;
+            if (cmd == ClusterModeCmd.send_slot_map_to_slave) {
+                return slaveReceiveNewSlotMap(source, data);
             }
         } else {
             //master要处理的
@@ -192,15 +204,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 return new ErrorReply("ERR target not master");
             }
             if (cmd == ClusterModeCmd.send_heartbeat_to_master) {
-                return receiveSlaveHeartbeat(source, data);
-            }
-            if (cmd == ClusterModeCmd.send_prepare_ok_to_master) {
-                //todo
-                return StatusReply.OK;
-            }
-            if (cmd == ClusterModeCmd.send_commit_ok_to_master) {
-                //todo
-                return StatusReply.OK;
+                return masterReceiveSlaveHeartbeat(source, data);
             }
             if (cmd == ClusterModeCmd.send_get_slot_map_from_master) {
                 String string = slotMap.toString();
@@ -216,18 +220,40 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         return slotMap;
     }
 
-    private Reply receiveMasterHeartbeat(JSONObject data) {
+    //=====slave=====
+
+    private Reply slaveReceiveNewSlotMap(ProxyNode master, JSONObject data) {
+        String string = data.getString("slotMap");
+        String requestId = data.getString("requestId");
+        ProxyClusterSlotMap slotMap = ProxyClusterSlotMap.parseString(string);
+        ProxyClusterSlotMap newSlotMap = ProxyClusterSlotMapUtils.localSlotMap(current(), slotMap);
+        String reason = "master-notify-new-slot-map,master=" + master + ",requestId=" + requestId;
+        updateSlotMap(slotMap, newSlotMap, reason);
+        return StatusReply.OK;
+    }
+
+    private Reply slaveReceiveMasterHeartbeat(ProxyNode source, JSONObject data) {
         String md5 = data.getString("md5");
         if (!slotMap.getMd5().equals(md5)) {
-            slotMap = getSlotMapFromMaster();
+            try {
+                executor.submit(() -> {
+                    ProxyClusterSlotMap newSlotMap = getSlotMapFromMaster();
+                    updateSlotMap(slotMap, newSlotMap, "heartbeat-md5-check,master=" + source);
+                });
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
         JSONObject json = new JSONObject();
         json.put("status", ClusterModeStatus.getStatus().getValue());
         return new BulkReply(Utils.stringToBytes(json.toJSONString()));
     }
 
-    private Reply receiveSlaveHeartbeat(ProxyNode source, JSONObject data) {
+    //=====master=====
+
+    private Reply masterReceiveSlaveHeartbeat(ProxyNode source, JSONObject data) {
         ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue(data.getIntValue("status"));
+        nodes.add(source);
         if (slotMap.contains(source) && status == ClusterModeStatus.Status.ONLINE) {
             return StatusReply.OK;
         }
@@ -235,50 +261,40 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             return StatusReply.OK;
         }
         if (slotMap.contains(source) && status != ClusterModeStatus.Status.ONLINE) {
-            //todo slot-map refresh
+            pendingNodes.add(source);
             return StatusReply.OK;
         }
         if (!slotMap.contains(source) && status == ClusterModeStatus.Status.ONLINE) {
-            //todo slot-map refresh
+            pendingNodes.add(source);
             return StatusReply.OK;
         }
         return ErrorReply.SYNTAX_ERROR;
     }
 
+    //====heartbeat=====
+
+    private final ConcurrentHashMap<ProxyNode, AtomicLong> failedNodes = new ConcurrentHashMap<>();
+
     private void sendHeartbeatToSlave0() {
         try {
             if (!currentNodeMaster()) return;
-            List<ProxyNode> onlineNodes = slotMap.getOnlineNodes();
-            for (ProxyNode node : onlineNodes) {
-                if (node.equals(current())) {
-                    continue;
-                }
-                boolean success = true;
-                boolean online = true;
-                JSONObject data = new JSONObject();
-                data.put("md5", slotMap.getMd5());
-                try {
-                    Reply reply = sendCmd(node, ClusterModeCmd.send_heartbeat_to_slave, data.toString());
-                    if (reply instanceof ErrorReply) {
-                        logger.error("send heartbeat to slave error, slave = {}, error = {}", node, ((ErrorReply) reply).getError());
-                        success = false;
-                    }
-                    if (reply instanceof BulkReply) {
-                        JSONObject json = JSONObject.parseObject(Utils.bytesToString(((BulkReply) reply).getRaw()));
-                        ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue(json.getInteger("status"));
-                        online = status == ClusterModeStatus.Status.ONLINE;
-                    }
-                } catch (Exception e) {
-                    logger.error("send heartbeat to slave error, slave = {}", node, e);
-                    success = false;
-                }
-                if (!success) {
-                    //todo slot-map refresh
-                }
-                if (!online) {
-                    //todo slot-map refresh
+            List<ProxyNode> currentOnlineNodes = slotMap.getOnlineNodes();
+
+            Set<ProxyNode> checkNodes = new HashSet<>();
+            checkNodes.addAll(currentOnlineNodes);
+            checkNodes.addAll(pendingNodes);
+
+            List<ProxyNode> offlineNodes = new ArrayList<>();
+            List<ProxyNode> onlineNodes = new ArrayList<>();
+
+            for (ProxyNode node : checkNodes) {
+                if (!checkNode(node)) {
+                    offlineNodes.add(node);
+                } else {
+                    onlineNodes.add(node);
                 }
             }
+            refreshSlotMap(slotMap, onlineNodes, offlineNodes);
         } catch (Exception e) {
             logger.error("sendHeartbeatToSlave0 error", e);
         }
@@ -303,6 +319,70 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         }
     }
 
+    //=================
+
+    private boolean checkNode(ProxyNode node) {
+        if (node.equals(current())) {
+            return ClusterModeStatus.getStatus() == ClusterModeStatus.Status.ONLINE;
+        }
+        boolean success = true;
+        boolean online = true;
+        JSONObject data = new JSONObject();
+        data.put("md5", slotMap.getMd5());
+        try {
+            Reply reply = sendCmd(node, ClusterModeCmd.send_heartbeat_to_slave, data.toString());
+            if (reply instanceof ErrorReply) {
+                logger.error("send heartbeat to slave error, slave = {}, error = {}", node, ((ErrorReply) reply).getError());
+                success = false;
+            }
+            if (reply instanceof BulkReply) {
+                JSONObject json = JSONObject.parseObject(Utils.bytesToString(((BulkReply) reply).getRaw()));
+                ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue(json.getInteger("status"));
+                online = status == ClusterModeStatus.Status.ONLINE;
+            }
+        } catch (Exception e) {
+            logger.error("send heartbeat to slave error, slave = {}", node, e);
+            success = false;
+        }
+        AtomicLong count = CamelliaMapUtils.computeIfAbsent(failedNodes, node, k -> new AtomicLong());
+        if (!success) {
+            count.incrementAndGet();
+        } else {
+            count.set(0);
+        }
+        if (!online) {
+            return false;
+        }
+        int threshold = ProxyDynamicConf.getInt("consensus.cluster.mode.heartbeat.max.fail.count", 3);
+        return count.get() >= threshold;
+    }
+
+    private void refreshSlotMap(ProxyClusterSlotMap slotMap, List<ProxyNode> onlineNodes, List<ProxyNode> offlineNodes) {
+        ProxyClusterSlotMap newSlotMap = ProxyClusterSlotMapUtils.optimizeBalance(slotMap, current(), onlineNodes, offlineNodes);
+        if (newSlotMap == null) {
+            return;
+        }
+        this.slotMap = newSlotMap;
+        this.masterSelector.saveSlotMap(slotMap);
+
+        String requestId = UUID.randomUUID().toString();
+
+        List<ProxyNode> notifyNodes = new ArrayList<>();
+        notifyNodes.addAll(nodes);
+        notifyNodes.addAll(slotMap.getOnlineNodes());
+        for (ProxyNode node : notifyNodes) {
+            if (node.equals(current())) {
+                continue;
+            }
+            JSONObject data = new JSONObject();
+            data.put("requestId", requestId);
+            data.put("md5", newSlotMap.getMd5());
+            data.put("slotMap", slotMap.toString());
+            logger.info("send_slot_map_to_slave, md5 = {}, requestId = {}", newSlotMap.getMd5(), requestId);
+            sendCmd(node, ClusterModeCmd.send_slot_map_to_slave, data.toString());
+        }
+    }
+
     private Reply sendCmd(ProxyNode target, ClusterModeCmd cmd, String data) {
         try {
             byte[][] args = new byte[][]{RedisCommand.CLUSTER.raw(), RedisKeyword.PROXY_HEARTBEAT.getRaw(), Utils.stringToBytes(current().toString()),
@@ -313,6 +393,28 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         } catch (Exception e) {
             logger.error("send cmd error, target = {}, cmd = {}, data = {}", target, cmd, data, e);
             throw new CamelliaRedisException(e);
+        }
+    }
+
+    private void updateSlotMap(ProxyClusterSlotMap oldSlotMap, ProxyClusterSlotMap newSlotMap, String reason) {
+        lock.lock();
+        try {
+            if (newSlotMap == null) {
+                logger.warn("new slot map null, skip update");
+                return;
+            }
+            if (oldSlotMap != null && oldSlotMap.getMd5().equals(newSlotMap.getMd5())) {
+                return;
+            }
+            this.slotMap = ProxyClusterSlotMapUtils.localSlotMap(current(), newSlotMap);
+            if (currentNodeMaster()) {
+                masterSelector.saveSlotMap(slotMap);
+            }
+            logger.info("slot-map change, reason = {}, old-slot-map = {}\n, new-slot-map = {}\n",
+                    reason, oldSlotMap == null ? null : oldSlotMap.toString(), newSlotMap);
+            nodeChangeNotify();
+        } finally {
+            lock.unlock();
         }
     }
 

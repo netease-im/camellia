@@ -47,7 +47,9 @@ public class ProxyClusterSlotMap {
         this.onlineNodes = new ArrayList<>(set);
         this.onlineNodeSet = new HashSet<>(set);
         Collections.sort(onlineNodes);
-        this.md5 = MD5Util.md5(toString());
+        JSONObject json = toJson();
+        json.remove("currentNode");
+        this.md5 = MD5Util.md5(json.toString());
     }
 
     public boolean isCurrentNodeOnline() {
@@ -75,6 +77,12 @@ public class ProxyClusterSlotMap {
             return false;
         }
         return slotArray[slot].equals(currentNode);
+    }
+
+    public ProxyNode[] getSlotArray() {
+        ProxyNode[] array = new ProxyNode[slotArray.length];
+        System.arraycopy(slotArray, 0, array, 0, array.length);
+        return array;
     }
 
     public boolean contains(ProxyNode proxyNode) {
@@ -179,8 +187,7 @@ public class ProxyClusterSlotMap {
         return new MultiBulkReply(replies.toArray(new MultiBulkReply[0]));
     }
 
-    @Override
-    public String toString() {
+    public JSONObject toJson() {
         Map<ProxyNode, List<Integer>> map = getNodeSlotMap();
         JSONObject data = new JSONObject(true);
         data.put("currentNode", currentNode.toString());
@@ -199,7 +206,12 @@ public class ProxyClusterSlotMap {
             json.put(node.toString(), slot);
         }
         data.put("onlineNodes", json);
-        return data.toString();
+        return data;
+    }
+
+    @Override
+    public String toString() {
+        return toJson().toString();
     }
 
     public static ProxyClusterSlotMap parseString(String str) {

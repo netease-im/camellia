@@ -32,8 +32,8 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
     protected static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(executorSize,
             new CamelliaThreadFactory("proxy-cluster-mode-schedule"));
 
-    protected static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(executorSize, executorSize,
-            0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
+    protected static final ThreadPoolExecutor executor = new ThreadPoolExecutor(executorSize, executorSize,
+            0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("proxy-cluster-mode-executor"), new ThreadPoolExecutor.AbortPolicy());
 
 
     protected final CopyOnWriteArrayList<ProxyNodeChangeListener> listenerList = new CopyOnWriteArrayList<>();

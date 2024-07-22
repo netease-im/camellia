@@ -171,7 +171,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
             for (ProxyNode node : heartbeatNodes) {
                 if (node.equals(current())) continue;//不需要发给自己心跳
                 try {
-                    heartbeatExecutor.submit(() -> heartbeat(node, ClusterModeStatus.getStatus()));
+                    executor.submit(() -> heartbeat(node, ClusterModeStatus.getStatus()));
                 } catch (Exception e) {
                     logger.error("submit heartbeat task error, node = {}", node, e);
                 }

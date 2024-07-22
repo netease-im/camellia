@@ -142,10 +142,11 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                 }
                 for (byte[] key : keys) {
                     int slot = RedisClusterCRC16Utils.getSlot(key);
-                    if (!clusterSlotMap.isSlotInCurrentNode(slot)) {
-                        ProxyNode node = clusterSlotMap.getBySlot(slot);
-                        return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
+                    if (clusterSlotMap.isSlotInCurrentNode(slot)) {
+                        continue;
                     }
+                    ProxyNode node = clusterSlotMap.getBySlot(slot);
+                    return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
                 }
                 return null;
             }
