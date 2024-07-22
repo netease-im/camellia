@@ -62,6 +62,7 @@ public class ProxyClusterSlotMapUtils {
                 AtomicInteger count = CamelliaMapUtils.computeIfAbsent(map, node, k -> new AtomicInteger());
                 if (count.get() >= slotSizePerNode) {
                     slotArray[i] = null;
+                    continue;
                 }
                 slotArray[i] = node;
                 count.incrementAndGet();
@@ -71,20 +72,47 @@ public class ProxyClusterSlotMapUtils {
         }
 
         List<ProxyNode> newNodes = new ArrayList<>(addedNodes);
-        int index = 0;
+        if (!newNodes.isEmpty()) {
+            int index = 0;
 
-        for (int i=0; i<slotArray.length; i++) {
-            ProxyNode node = slotArray[i];
-            if (node == null) {
+            for (int i = 0; i < slotArray.length; i++) {
+                ProxyNode node = slotArray[i];
+                if (node != null) continue;
                 while (true) {
+                    if (newNodes.size() <= index) {
+                        break;
+                    }
                     ProxyNode proxyNode = newNodes.get(index);
                     AtomicInteger count = CamelliaMapUtils.computeIfAbsent(map, proxyNode, k -> new AtomicInteger());
                     if (count.get() >= slotSizePerNode) {
-                        index ++;
+                        index++;
                     } else {
                         slotArray[i] = proxyNode;
+                        count.incrementAndGet();
                         break;
                     }
+                }
+            }
+        }
+
+        List<ProxyNode> allNodes = new ArrayList<>(newOnlineNodes);
+        int index = 0;
+        for (int i = 0; i < slotArray.length; i++) {
+            ProxyNode node = slotArray[i];
+            if (node != null) continue;
+            while (true) {
+                if (allNodes.size() == index) {
+                    slotArray[i] = slotArray[i-1];
+                    break;
+                }
+                ProxyNode proxyNode = allNodes.get(index);
+                AtomicInteger count = CamelliaMapUtils.computeIfAbsent(map, proxyNode, k -> new AtomicInteger());
+                if (count.get() >= slotSizePerNode) {
+                    index++;
+                } else {
+                    slotArray[i] = proxyNode;
+                    count.incrementAndGet();
+                    break;
                 }
             }
         }
