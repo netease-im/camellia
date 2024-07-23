@@ -136,12 +136,14 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
                     return;
                 }
                 if (masterNode.equals(this.masterNode)) {
-                    byte[][] args3 = new byte[][] {RedisCommand.EVAL.raw(), SCRIPT, Utils.stringToBytes("1"), Utils.stringToBytes(masterKey),
-                            Utils.stringToBytes(masterNode.toString()), Utils.stringToBytes(String.valueOf(masterHeartbeatExpireSeconds() * 1000L))};
-                    Command command3 = new Command(args3);
-                    Reply reply1 = sendCommand(command3, timeoutMillis);
-                    if (reply1 instanceof ErrorReply) {
-                        logger.error("delay master key error, reply = {}", reply1);
+                    if (masterNode.equals(currentNode)) {
+                        byte[][] args3 = new byte[][]{RedisCommand.EVAL.raw(), SCRIPT, Utils.stringToBytes("1"), Utils.stringToBytes(masterKey),
+                                Utils.stringToBytes(masterNode.toString()), Utils.stringToBytes(String.valueOf(masterHeartbeatExpireSeconds() * 1000L))};
+                        Command command3 = new Command(args3);
+                        Reply reply1 = sendCommand(command3, timeoutMillis);
+                        if (reply1 instanceof ErrorReply) {
+                            logger.error("delay master key error, reply = {}", reply1);
+                        }
                     }
                     return;
                 }
@@ -163,7 +165,7 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
         try {
             long seconds = ProxyDynamicConf.getLong("redis.consensus.master.selector.slot.map.expire.seconds", 120);
             byte[][] args = new byte[][] {RedisCommand.SETEX.raw(), Utils.stringToBytes(slotMapKey),
-                    Utils.stringToBytes(String.valueOf(seconds)), Utils.stringToBytes(masterKey)};
+                    Utils.stringToBytes(String.valueOf(seconds)), Utils.stringToBytes(slotMap.toString())};
             Command command = new Command(args);
             long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.master.selector.slot.map.flush.timeout.millis", 10000);
             Reply reply = sendCommand(command, timeoutMillis);
