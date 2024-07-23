@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.cluster.provider;
 
 import com.alibaba.fastjson.JSONObject;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.cluster.*;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMap;
@@ -275,7 +276,10 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
 
     //====heartbeat=====
 
-    private final ConcurrentHashMap<ProxyNode, AtomicLong> failedNodes = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedHashMap<ProxyNode, AtomicLong> failedNodes = new ConcurrentLinkedHashMap.Builder<ProxyNode, AtomicLong>()
+            .initialCapacity(1000)
+            .maximumWeightedCapacity(10000)
+            .build();
 
     private void sendHeartbeatToSlave0() {
         try {
@@ -285,6 +289,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             Set<ProxyNode> checkNodes = new HashSet<>();
             checkNodes.addAll(currentOnlineNodes);
             checkNodes.addAll(pendingNodes);
+            pendingNodes.clear();
 
             List<ProxyNode> offlineNodes = new ArrayList<>();
             List<ProxyNode> onlineNodes = new ArrayList<>();
