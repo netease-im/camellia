@@ -441,6 +441,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 if (future == null) {
                     future = new CompletableFuture<>();
                     future.complete(ErrorReply.SYNTAX_ERROR);
+                    ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, "error read write route");
                 }
                 futureList.add(future);
                 continue;

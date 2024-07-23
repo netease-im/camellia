@@ -18,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
@@ -72,6 +73,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             minScore = ZSetScore.fromBytes(objects[2]);
             maxScore = ZSetScore.fromBytes(objects[3]);
         } catch (Exception e) {
+            ErrorLogCollector.collect(ZRemRangeByScoreCommander.class, "zremrangebyscore command syntax error, illegal min/max/limit");
             return ErrorReply.SYNTAX_ERROR;
         }
         if (minScore.getScore() > maxScore.getScore()) {

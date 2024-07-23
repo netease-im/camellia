@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.ScriptReplyUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -76,6 +77,7 @@ public class ZLexCountCommander extends ZSet0Commander {
                 return new ErrorReply("ERR min or max not valid string range item");
             }
         } catch (Exception e) {
+            ErrorLogCollector.collect(ZLexCountCommander.class, "zlexcount command syntax error, illegal min/max lex");
             return ErrorReply.SYNTAX_ERROR;
         }
         if (minLex.isMax() || maxLex.isMin()) {

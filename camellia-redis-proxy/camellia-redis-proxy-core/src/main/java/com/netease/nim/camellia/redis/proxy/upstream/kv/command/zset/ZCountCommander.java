@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.ScriptReplyUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -68,6 +69,7 @@ public class ZCountCommander extends ZSet0Commander {
             minScore = ZSetScore.fromBytes(objects[2]);
             maxScore = ZSetScore.fromBytes(objects[3]);
         } catch (Exception e) {
+            ErrorLogCollector.collect(ZCountCommander.class, "zcount command syntax error, illegal min/max score");
             return ErrorReply.SYNTAX_ERROR;
         }
         if (minScore.getScore() > maxScore.getScore()) {

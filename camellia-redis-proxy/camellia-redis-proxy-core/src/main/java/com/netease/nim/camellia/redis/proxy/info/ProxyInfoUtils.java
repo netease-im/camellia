@@ -105,6 +105,7 @@ public class ProxyInfoUtils {
                 try {
                     Long.parseLong(bid);
                 } catch (NumberFormatException e) {
+                    ErrorLogCollector.collect(ProxyInfoUtils.class, "info command syntax error, illegal bid");
                     return parseResponse(ErrorReply.SYNTAX_ERROR, parseJson);
                 }
                 return UpstreamInfoUtils.upstreamInfo(Long.parseLong(bid), bgroup, GlobalRedisProxyEnv.getClientTemplateFactory(), parseJson);
@@ -226,13 +227,16 @@ public class ProxyInfoUtils {
                             bid = Utils.bytesToNum(objects[2]);
                             bgroup = Utils.bytesToString(objects[3]);
                         } catch (Exception e) {
+                            ErrorLogCollector.collect(ProxyInfoUtils.class, "info command syntax error, illegal bid/bgroup");
                             return ErrorReply.SYNTAX_ERROR;
                         }
                         builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, factory, false)).append("\r\n");
                     } else {
+                        ErrorLogCollector.collect(ProxyInfoUtils.class, "info command syntax error, illegal section");
                         return ErrorReply.SYNTAX_ERROR;
                     }
                 } else {
+                    ErrorLogCollector.collect(ProxyInfoUtils.class, "info command syntax error, illegal arg len");
                     return ErrorReply.SYNTAX_ERROR;
                 }
             }

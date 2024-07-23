@@ -49,6 +49,7 @@ public class ClientCommandUtil {
                 if (setname) {
                     String clienName = Utils.bytesToString(objects[2]);
                     if (channelInfo == null) {
+                        ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, channel info null");
                         return ErrorReply.SYNTAX_ERROR;
                     }
                     boolean success = updateClientName(channelInfo, clienName);

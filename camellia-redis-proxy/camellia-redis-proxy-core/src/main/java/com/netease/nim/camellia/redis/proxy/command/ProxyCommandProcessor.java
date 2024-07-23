@@ -102,6 +102,7 @@ public class ProxyCommandProcessor {
         }
         final byte[][] args = command.getObjects();
         if (args.length <= 1) {
+            ErrorLogCollector.collect(ProxyCommandProcessor.class, "proxy command syntax error, illegal arg len");
             future.complete(ErrorReply.SYNTAX_ERROR);
             return future;
         }
@@ -194,6 +195,7 @@ public class ProxyCommandProcessor {
 
     private Reply config(byte[][] args) {
         if (args.length <= 2) {
+            ErrorLogCollector.collect(ProxyCommandProcessor.class, "proxy command syntax error, illegal arg len");
             return ErrorReply.SYNTAX_ERROR;
         }
         String type = Utils.bytesToString(args[2]);
@@ -233,6 +235,7 @@ public class ProxyCommandProcessor {
             return new MultiBulkReply(new Reply[]{currentReply, othersReply});
         } else if (type.equalsIgnoreCase("write")) {
             if (args.length < 4) {
+                ErrorLogCollector.collect(ProxyCommandProcessor.class, "proxy command syntax error, illegal arg len");
                 return ErrorReply.SYNTAX_ERROR;
             }
             byte[] configContent = args[3];
@@ -267,6 +270,7 @@ public class ProxyCommandProcessor {
             ConfigResp configResp = ProxyDynamicConf.getConfigResp();
             String specialConfigMd5 = configResp.getSpecialConfigMd5();
             if (args.length < 4) {
+                ErrorLogCollector.collect(ProxyCommandProcessor.class, "proxy command syntax error, illegal arg len");
                 return ErrorReply.SYNTAX_ERROR;
             }
             String md5 = Utils.bytesToString(args[3]);
@@ -292,6 +296,7 @@ public class ProxyCommandProcessor {
             return new BulkReply(configContent);
         } else if (type.equalsIgnoreCase("syncFrom")) {
             if (args.length < 4) {
+                ErrorLogCollector.collect(ProxyCommandProcessor.class, "proxy command syntax error, illegal arg len");
                 return ErrorReply.SYNTAX_ERROR;
             }
             String target = Utils.bytesToString(args[3]);
@@ -307,6 +312,7 @@ public class ProxyCommandProcessor {
             }
             return StatusReply.OK;
         } else {
+            ErrorLogCollector.collect(ProxyCommandProcessor.class, "proxy command syntax error, unknown type =" + type);
             return ErrorReply.SYNTAX_ERROR;
         }
     }

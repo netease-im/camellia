@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
@@ -78,12 +79,14 @@ public class SetCommander extends Commander {
         }
 
         if (expireTime > 0 && keepTtl) {
+            ErrorLogCollector.collect(SetCommander.class, "set command syntax error, expireTime > 0 && keepTtl");
             return ErrorReply.SYNTAX_ERROR;
         }
 
         KeyMeta keyMeta = null;
         if (nxxx == nx) {
             if (get) {
+                ErrorLogCollector.collect(SetCommander.class, "set command syntax error, nx && get");
                 return ErrorReply.SYNTAX_ERROR;
             }
             keyMeta = keyMetaServer.getKeyMeta(key);

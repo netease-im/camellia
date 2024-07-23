@@ -20,6 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
@@ -86,6 +87,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 return new ErrorReply("ERR min or max not valid string range item");
             }
         } catch (Exception e) {
+            ErrorLogCollector.collect(ZRemRangeByLexCommander.class, "zremrangebylex command syntax error, illegal min/max lex");
             return ErrorReply.SYNTAX_ERROR;
         }
         if (minLex.isMax() || maxLex.isMin()) {

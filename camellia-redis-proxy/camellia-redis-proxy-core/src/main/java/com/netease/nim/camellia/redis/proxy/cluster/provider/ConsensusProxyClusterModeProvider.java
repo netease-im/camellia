@@ -268,6 +268,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             pendingNodes.add(source);
             return StatusReply.OK;
         }
+        logger.error("illegal slave heartbeat, source = {}, data = {}", source, data);
         return ErrorReply.SYNTAX_ERROR;
     }
 

@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
@@ -65,6 +66,7 @@ public class ZRangeCommander extends ZRange0Commander {
         }
         boolean withScores = ZSetWithScoresUtils.isWithScores(objects, 4);
         if (objects.length == 5 && !withScores) {
+            ErrorLogCollector.collect(ZRangeCommander.class, "zrange command syntax error, illegal withscore arg");
             return ErrorReply.SYNTAX_ERROR;
         }
 
