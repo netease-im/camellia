@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -39,7 +38,6 @@ public class Utils {
     public static final byte[] NEG_ONE_WITH_CRLF = convert(-1, true);
     public static final char CR = '\r';
     public static final char LF = '\n';
-    public static final char ZERO = '0';
     public static Charset utf8Charset = StandardCharsets.UTF_8;
 
     private static final int NUM_MAP_LENGTH = 256;
@@ -172,11 +170,7 @@ public class Utils {
                         Reply reply1 = replies1[i];
                         if (reply1 instanceof IntegerReply) {
                             Long integer = ((IntegerReply) reply1).getInteger();
-                            AtomicLong atomicLong = map.get(i);
-                            if (atomicLong == null) {
-                                atomicLong = new AtomicLong(0);
-                                map.put(i, atomicLong);
-                            }
+                            AtomicLong atomicLong = map.computeIfAbsent(i, k -> new AtomicLong(0));
                             atomicLong.addAndGet(integer);
                         } else {
                             return checkErrorReply(reply);
@@ -260,23 +254,6 @@ public class Utils {
      * @return namespace string
      */
     public static String getNamespaceOrSetDefault(Long bid, String bgroup) {
-        if (bid == null || bgroup == null) {
-            return "default|default";
-        } else {
-            return bid + "|" + bgroup;
-        }
-    }
-
-    /**
-     * Get namespace by splicing bid and bgroup.
-     * <p> eg. bid + "|" + bgroup
-     *
-     * @param identityInfo identityInfo
-     * @return namespace string
-     */
-    public static String getNamespaceOrSetDefault(IdentityInfo identityInfo) {
-        Long bid = identityInfo.getBid();
-        String bgroup = identityInfo.getBgroup();
         if (bid == null || bgroup == null) {
             return "default|default";
         } else {
