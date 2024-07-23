@@ -4,6 +4,7 @@
 # 1.2.28（2024/07/xx）
 ### 新增
 * camellia-redis-proxy，支持使用**分布式kv存储模拟redis协议**，如hbase、tikv、obkv等
+* camellia-redis-proxy，提供了一种新的伪redis-cluster模式，在使用**分布式kv存储模拟redis协议**时建议开启，可以提高扩缩容时的平滑性
 * camellia-redis-proxy，新增了time命令的支持
 * camellia-redis-proxy，使用nacos和etcd作为配置中心时，支持使用本地配置文件来设置节点级别的特殊配置
 * camellia-redis-proxy，支持在读写分离配置下使用keys命令和randomkey命令，只需要write地址是redis-standalone或者redis-sentinel
