@@ -35,8 +35,8 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
 
     private final ReentrantLock lock = new ReentrantLock();
     private ConsensusMasterSelector masterSelector;
-    private ProxyNode master;
-    private ProxyClusterSlotMap slotMap;
+    private volatile ProxyNode master;
+    private volatile ProxyClusterSlotMap slotMap;
 
     private final ConcurrentHashSet<ProxyNode> pendingNodes = new ConcurrentHashSet<>();
 
@@ -56,16 +56,16 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 break;
             }
             logger.warn("master is null, waiting...");
-            sleep10ms();
+            sleep(10);
         }
+        //add master change listener
+        addMasterChangeListener();
         //init
         if (currentNodeMaster()) {
             initMaster();
         } else {
             initSlave();
         }
-        //add master change listener
-        addMasterChangeListener();
         //heartbeat to slave if current node is master
         startHeartbeatToSlave();
         //heartbeat to master if current node is slave
@@ -90,12 +90,14 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
     private void initSlave() {
         logger.info("current node is slave");
         ProxyClusterSlotMap newSlotMap;
+        long sleepMs = 10;
         while (true) {
             try {
                 newSlotMap = getSlotMapFromMaster();
             } catch (Exception e) {
                 logger.error("getSlotMapFromMaster error", e);
-                sleep10ms();
+                sleep(sleepMs);
+                sleepMs = Math.min(sleepMs * 2, 1000);
                 continue;
             }
             break;
@@ -103,9 +105,9 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         updateSlotMap(this.slotMap, newSlotMap, "initSlave");
     }
 
-    private void sleep10ms() {
+    private void sleep(long ms) {
         try {
-            TimeUnit.MILLISECONDS.sleep(10);
+            TimeUnit.MILLISECONDS.sleep(ms);
         } catch (InterruptedException e) {
             logger.error(e.toString(), e);
         }
