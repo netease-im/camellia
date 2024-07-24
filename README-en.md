@@ -12,10 +12,10 @@ Camellia provide easy-to-use server toolkits:
 
 ### server
 
-* [redis-proxy](/docs/redis-proxy/redis-proxy-en.md)
-* [id-generator](/docs/id-gen/id-gen.md)
-* [delay-queue](/docs/delay-queue/delay-queue.md)
-* [hot-key](/docs/hot-key/hot-key.md)
+* [redis-proxy](/docs/camellia-redis-proxy/redis-proxy-en.md)
+* [id-generator](/docs/camellia-id-gen/id-gen.md)
+* [delay-queue](/docs/camellia-delay-queue/delay-queue.md)
+* [hot-key](/docs/camellia-hot-key/hot-key.md)
 
 more:   
 * if you want use java21/spring-boot3 to run these servers，see: [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)  
@@ -25,11 +25,11 @@ more:
 ### sdk
 
 camellia also provide enhanced sdk (based on other open source sdk): 
-* [redis-client](/docs/redis-client/redis-client.md)
-* [hbase-client](/docs/hbase-client/hbase-client.md)
-* [feign-client](/docs/feign/feign.md)
-* [dao-cache](/docs/cache/cache.md)
-* [tools](/docs/tools/tools.md)
+* [redis-client](/docs/camellia-redis-client/redis-client.md)
+* [hbase-client](/docs/camellia-hbase/hbase-client.md)
+* [feign-client](/docs/camellia-feign/feign.md)
+* [dao-cache](/docs/camellia-cache/cache.md)
+* [tools](/docs/camellia-tools/tools.md)
 
 ## Instruction
 
@@ -39,30 +39,30 @@ high performance redis-proxy:
 * support [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) as the upstream(such as migration scenarios)
 * support [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis)  as the upstream
 * support GET/SET/EVAL, support MGET/MSET, support blocking BLPOP, support PUBSUB/TRANSACTION, support STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter, support TAIR_HASH/TAIR_ZSET/TAIR_STRING
-* all supported commands: [supported_commands](docs/redis-proxy/supported_commands.md)
+* all supported commands: [supported_commands](docs/camellia-redis-proxy/supported_commands.md)
 * support sharding/read-write-separate/double-write on proxy  
 * support multi-route-conf   
 * support ssl/tls, both client to proxy and proxy to upstream redis
 * support unix-domain-socket, both client to proxy and proxy to upstream redis
-* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [http](/docs/redis-proxy/other/http.md)
+* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [http](/docs/camellia-redis-proxy/other/http.md)
 * support tps/rt/big-key/hot-key/slow-command monitor  
 * support disguise as redis-cluster/redis-sentinel for high availability
 * support custom command plugin, support hot-key-cache(GET command)，support value converter and so on    
-[QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
+[QUICK START](/docs/camellia-redis-proxy/redis-proxy-en.md)  
 
 ### camellia-id-gen
 provide some id gen algorithm:   
 * snowflake, support setting region tag
 * strict-increment id-gen
 * db-segment id-gen, support setting region tag         
-[QUICK START](/docs/id-gen/id-gen.md)
+[QUICK START](/docs/camellia-id-gen/id-gen.md)
 
 ### camellia-delay-queue
 delay queue base on redis:   
 * independent deployment of delay-queue-server, scale out, support multi-topic, support http-api
 * provide java-sdk, support spring-boot-starter
 * provide monitor data    
-[QUICK START](/docs/delay-queue/delay-queue.md)
+[QUICK START](/docs/camellia-delay-queue/delay-queue.md)
 
 ### camellia-hot-key
 hot key detect and cache:  
@@ -70,7 +70,7 @@ hot key detect and cache:
 * support custom hot-key-config、hot-key-callback、hot-key-topN-callback、hot-key-cache-stats-callback  
 * support custom registry, such as eureka、zk and so on
 * provide monitor data     
-[QUICK START](/docs/hot-key/hot-key.md)
+[QUICK START](/docs/camellia-hot-key/hot-key.md)
 
 
 ## Release-Version

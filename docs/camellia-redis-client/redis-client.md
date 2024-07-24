@@ -91,7 +91,7 @@ public class TestSamples {
 使用spring-boot-starter自动注入CamelliaRedisTemplate实例，参见：[spring-boot-starter](spring-boot-starter.md)
 
 ### 几个工具类
-参见：[tools](/docs/tools/tools.md)
+参见：[tools](/docs/camellia-tools/tools.md)
 
 ### 示例源码
 [示例源码](/camellia-samples/camellia-redis-samples)

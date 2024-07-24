@@ -12,10 +12,10 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 ### 独立部署的中间件服务（server）
 
-* [redis代理](/docs/redis-proxy/redis-proxy-zh.md) 
-* [发号器](/docs/id-gen/id-gen.md)
-* [延迟队列](/docs/delay-queue/delay-queue.md)
-* [热点key探测](/docs/hot-key/hot-key.md)
+* [redis代理](/docs/camellia-redis-proxy/redis-proxy-zh.md) 
+* [发号器](/docs/camellia-id-gen/id-gen.md)
+* [延迟队列](/docs/camellia-delay-queue/delay-queue.md)
+* [热点key探测](/docs/camellia-hot-key/hot-key.md)
 
 更多：   
 * 以上中间件默认使用java8/spring-boot2运行，如果要使用java21/spring-boot3，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
@@ -25,11 +25,11 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 ### 增强的三方库（sdk）
 
 此外，还包括其他众多简单易用的三方库（基于开源版本进行二次增强）：
-* [redis客户端](/docs/redis-client/redis-client.md) 
-* [hbase客户端 ](/docs/hbase-client/hbase-client.md)
-* [微服务feign客户端](/docs/feign/feign.md)
-* [数据库缓存框架](/docs/cache/cache.md)
-* [工具类](/docs/tools/tools.md)
+* [redis客户端](/docs/camellia-redis-client/redis-client.md) 
+* [hbase客户端 ](/docs/camellia-hbase/hbase-client.md)
+* [微服务feign客户端](/docs/camellia-feign/feign.md)
+* [数据库缓存框架](/docs/camellia-cache/cache.md)
+* [工具类](/docs/camellia-tools/tools.md)
 
 ## 功能简介
 
@@ -38,14 +38,14 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持redis-standalone/redis-sentinel/redis-cluster
 * 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
 * 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端
-* 支持使用hbase/obkv/tikv等作为底层存储，构建一个类redis的系统，具体见：[kv](docs/redis-proxy/kv/kv.md)
+* 支持使用hbase/obkv/tikv等作为底层存储，构建一个类redis的系统，具体见：[kv](docs/camellia-redis-proxy/kv/kv.md)
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持SCAN命令，即使后端是redis-cluster或者自定义分片，也可以透明的扫描到所有key
 * 支持SELECT命令，从而可以使用多database
-* 所有支持的命令: [supported_commands](docs/redis-proxy/supported_commands.md)
+* 所有支持的命令: [supported_commands](docs/camellia-redis-proxy/supported_commands.md)
 * 支持SSL/TLS（client到proxy支持，proxy到redis也支持）
 * 支持unix-domain-socket（client到proxy支持，proxy到redis也支持）
-* 支持使用http协议访问proxy，类似于 [webdis](https://github.com/nicolasff/webdis) ，但是接口定义不一样，具体见：[http](/docs/redis-proxy/other/http.md)
+* 支持使用http协议访问proxy，类似于 [webdis](https://github.com/nicolasff/webdis) ，但是接口定义不一样，具体见：[http](/docs/camellia-redis-proxy/other/http.md)
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
 * 支持多租户动态路由，支持自定义的动态路由数据源（内置：本地配置文件、nacos、etcd等，也可以自定义）
@@ -54,7 +54,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）  
 * 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等
 * 支持使用prometheus/grafana来监控proxy集群  
-[快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
+[快速开始](/docs/camellia-redis-proxy/redis-proxy-zh.md)  
 
 ### camellia-id-gen
 提供了多种id生成算法，开箱即用，包括：  
@@ -62,7 +62,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 严格递增的id生成算法（步长支持动态调整）  
 * 趋势递增的id生成算法（支持设置单元标记，支持多单元id同步）    
 * 支持使用prometheus/grafana来监控id-gen-server集群   
-[快速开始](/docs/id-gen/id-gen.md)
+[快速开始](/docs/camellia-id-gen/id-gen.md)
 
 ### camellia-delay-queue
 基于redis实现的延迟队列服务：
@@ -70,7 +70,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 提供了一个java-sdk，并且支持以spring-boot方式快速接入
 * 支持丰富的监控数据     
 * 支持使用prometheus/grafana来监控delay-queue-server集群    
-[快速开始](/docs/delay-queue/delay-queue.md)
+[快速开始](/docs/camellia-delay-queue/delay-queue.md)
 
 ### camellia-hot-key  
 热key探测和缓存服务：  
@@ -80,7 +80,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持自定义注册中心（内置：zk、eureka，也可以自己实现）  
 * 支持丰富的监控数据     
 * 支持使用prometheus/grafana来监控hot-key-server集群   
-[快速开始](/docs/hot-key/hot-key.md)  
+[快速开始](/docs/camellia-hot-key/hot-key.md)  
 
 
 ## RELEASE版本
