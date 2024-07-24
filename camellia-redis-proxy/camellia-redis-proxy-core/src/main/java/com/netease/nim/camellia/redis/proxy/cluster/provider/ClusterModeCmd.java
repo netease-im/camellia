@@ -7,10 +7,10 @@ package com.netease.nim.camellia.redis.proxy.cluster.provider;
  */
 public enum ClusterModeCmd {
 
-    send_get_slot_map_from_master(1),//从master节点获取slot-map
-    send_heartbeat_to_master(2),//slave发送心跳给master
-    send_heartbeat_to_slave(3),//master发送心跳给slave，发送md5给slave，slave返回status
-    send_slot_map_to_slave(4),//master发送新的slot-map给slave
+    send_get_slot_map_from_leader(1),//从leader节点获取slot-map
+    send_heartbeat_to_leader(2),//follower发送心跳给leader
+    send_heartbeat_to_follower(3),//leader发送心跳给slave，发送md5给follower，follower返回status
+    send_slot_map_to_follower(4),//leader发送新的slot-map给follower
 
     ;
 

@@ -6,13 +6,13 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMap;
 /**
  * Created by caojiajun on 2024/6/18
  */
-public interface ConsensusMasterSelector {
+public interface ConsensusLeaderSelector {
 
     /**
      * 获取master
      * @return master
      */
-    ProxyNode getMaster();
+    ProxyNode getLeader();
 
     /**
      * 获取slotMap
@@ -30,6 +30,6 @@ public interface ConsensusMasterSelector {
      * 增加一个master变更的回调
      * @param listener ConsensusMasterChangeListener
      */
-    void addConsensusMasterChangeListener(ConsensusMasterChangeListener listener);
+    void addConsensusLeaderChangeListener(ConsensusLeaderChangeListener listener);
 
 }

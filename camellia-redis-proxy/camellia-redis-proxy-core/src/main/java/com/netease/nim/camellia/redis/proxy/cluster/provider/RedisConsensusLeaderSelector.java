@@ -26,46 +26,46 @@ import java.util.concurrent.*;
 /**
  * Created by caojiajun on 2024/6/28
  */
-public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelector {
+public class RedisConsensusLeaderSelector extends AbstractConsensusLeaderSelector {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisConsensusMasterSelector.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisConsensusLeaderSelector.class);
 
-    private static final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("master-selector-scheduler"));
+    private static final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("leader-selector-scheduler"));
     private static final ScheduledExecutorService slotMapScheduler = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("slot-map-flush-scheduler"));
 
     private final ProxyNode currentNode;
-    private ProxyNode masterNode;
+    private ProxyNode leaderNode;
     private final String redisUrl;
-    private final String masterKey;
+    private final String redisKey;
     private final String slotMapKey;
     private ProxyClusterSlotMap slotMap;
 
-    public RedisConsensusMasterSelector(ProxyNode currentNode) {
+    public RedisConsensusLeaderSelector(ProxyNode currentNode) {
         this.currentNode = currentNode;
-        this.redisUrl = ProxyDynamicConf.getString("redis.consensus.master.selector.redis.url", null);
+        this.redisUrl = ProxyDynamicConf.getString("redis.consensus.leader.selector.redis.url", null);
         if (redisUrl == null) {
-            throw new IllegalArgumentException("'redis.consensus.master.selector.redis.url' is empty");
+            throw new IllegalArgumentException("'redis.consensus.leader.selector.redis.url' is empty");
         }
-        this.masterKey = ProxyDynamicConf.getString("redis.consensus.master.selector.master.key", null);
-        if (masterKey == null) {
-            throw new IllegalArgumentException("'redis.consensus.master.selector.master.key' is empty");
+        this.redisKey = ProxyDynamicConf.getString("redis.consensus.leader.selector.redis.key", null);
+        if (redisKey == null) {
+            throw new IllegalArgumentException("'redis.consensus.leader.selector.redis.key' is empty");
         }
-        this.slotMapKey = masterKey + "#slot_map";
+        this.slotMapKey = redisKey + "#slot_map";
         heartbeat();
-        if (this.masterNode == null) {
+        if (this.leaderNode == null) {
             throw new IllegalStateException("heartbeat error");
         }
-        int heartbeatIntervalSeconds = ProxyDynamicConf.getInt("redis.consensus.master.selector.heartbeat.interval.seconds", 5);
+        int heartbeatIntervalSeconds = ProxyDynamicConf.getInt("redis.consensus.leader.selector.heartbeat.interval.seconds", 5);
         heartbeatScheduler.scheduleAtFixedRate(this::heartbeat, heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
-        int slotMapFlushIntervalSeconds = ProxyDynamicConf.getInt("redis.consensus.master.selector.slot.map.flush.interval.seconds", 30);
+        int slotMapFlushIntervalSeconds = ProxyDynamicConf.getInt("redis.consensus.leader.selector.slot.map.flush.interval.seconds", 30);
         slotMapScheduler.scheduleAtFixedRate(this::flushSlotMapToRedis, slotMapFlushIntervalSeconds, slotMapFlushIntervalSeconds, TimeUnit.SECONDS);
-        logger.info("RedisConsensusMasterSelector init success, currentNode = {}, masterKey = {}, heartbeatIntervalSeconds = {}, slotMapFlushIntervalSeconds = {}, redisUrl = {}",
-                currentNode, masterKey, heartbeatIntervalSeconds, slotMapFlushIntervalSeconds, PasswordMaskUtils.maskResource(redisUrl));
+        logger.info("RedisConsensusMasterSelector init success, currentNode = {}, redisKey = {}, heartbeatIntervalSeconds = {}, slotMapFlushIntervalSeconds = {}, redisUrl = {}",
+                currentNode, redisKey, heartbeatIntervalSeconds, slotMapFlushIntervalSeconds, PasswordMaskUtils.maskResource(redisUrl));
     }
 
     @Override
-    public ProxyNode getMaster() {
-        return masterNode;
+    public ProxyNode getLeader() {
+        return leaderNode;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
             Command command = new Command(args);
             CompletableFuture<Reply> future = new CompletableFuture<>();
             client.sendCommand(-1, Collections.singletonList(command), Collections.singletonList(future));
-            long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.master.selector.slot.map.load.timeout.millis", 5000);
+            long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.leader.selector.slot.map.load.timeout.millis", 5000);
             Reply reply = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
             if (reply instanceof ErrorReply) {
                 logger.error("getSlotMap error, reply = {}", reply);
@@ -98,31 +98,31 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
 
     @Override
     public void saveSlotMap(ProxyClusterSlotMap slotMap) {
-        if (!currentNode.equals(masterNode)) {
-            logger.error("saveSlotMap forbidden, currentNode = {}, masterNode = {}", currentNode, masterNode);
-            throw new IllegalStateException("slave node can't save slot map");
+        if (!currentNode.equals(leaderNode)) {
+            logger.error("saveSlotMap forbidden, currentNode = {}, leaderNode = {}", currentNode, leaderNode);
+            throw new IllegalStateException("follower node can't save slot map");
         }
         this.slotMap = slotMap;
         flushSlotMapToRedis();
     }
 
-    private long masterHeartbeatExpireSeconds() {
-        return ProxyDynamicConf.getInt("redis.consensus.master.selector.heartbeat.expire.seconds", 15);
+    private long leaderHeartbeatExpireSeconds() {
+        return ProxyDynamicConf.getInt("redis.consensus.leader.selector.heartbeat.expire.seconds", 15);
     }
 
     private static final byte[] SCRIPT = SafeEncoder.encode("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end");
 
     private void heartbeat() {
         try {
-            byte[][] args1 = new byte[][] {RedisCommand.SET.raw(), Utils.stringToBytes(masterKey), Utils.stringToBytes(currentNode.toString()),
-                    RedisKeyword.NX.getRaw(), RedisKeyword.EX.getRaw(), Utils.stringToBytes(String.valueOf(masterHeartbeatExpireSeconds()))};
+            byte[][] args1 = new byte[][] {RedisCommand.SET.raw(), Utils.stringToBytes(redisKey), Utils.stringToBytes(currentNode.toString()),
+                    RedisKeyword.NX.getRaw(), RedisKeyword.EX.getRaw(), Utils.stringToBytes(String.valueOf(leaderHeartbeatExpireSeconds()))};
             Command command1 = new Command(args1);
-            byte[][] args2 = new byte[][] {RedisCommand.GET.raw(), Utils.stringToBytes(masterKey)};
+            byte[][] args2 = new byte[][] {RedisCommand.GET.raw(), Utils.stringToBytes(redisKey)};
             Command command2 = new Command(args2);
             List<Command> commands = new ArrayList<>(2);
             commands.add(command1);
             commands.add(command2);
-            long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.master.selector.heartbeat.timeout.millis", 5000);
+            long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.leader.selector.heartbeat.timeout.millis", 5000);
             List<Reply> replies = sendCommands(commands, timeoutMillis);
             Reply reply = replies.get(1);
             if (reply instanceof ErrorReply) {
@@ -130,25 +130,25 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
                 return;
             }
             if (reply instanceof BulkReply) {
-                ProxyNode masterNode = ProxyNode.parseString(Utils.bytesToString(((BulkReply) reply).getRaw()));
-                if (masterNode == null) {
-                    logger.error("heartbeat error, masterNode is null");
+                ProxyNode leaderNode = ProxyNode.parseString(Utils.bytesToString(((BulkReply) reply).getRaw()));
+                if (leaderNode == null) {
+                    logger.error("heartbeat error, leaderNode is null");
                     return;
                 }
-                if (masterNode.equals(this.masterNode)) {
-                    if (masterNode.equals(currentNode)) {
-                        byte[][] args3 = new byte[][]{RedisCommand.EVAL.raw(), SCRIPT, Utils.stringToBytes("1"), Utils.stringToBytes(masterKey),
-                                Utils.stringToBytes(masterNode.toString()), Utils.stringToBytes(String.valueOf(masterHeartbeatExpireSeconds() * 1000L))};
+                if (leaderNode.equals(this.leaderNode)) {
+                    if (leaderNode.equals(currentNode)) {
+                        byte[][] args3 = new byte[][]{RedisCommand.EVAL.raw(), SCRIPT, Utils.stringToBytes("1"), Utils.stringToBytes(redisKey),
+                                Utils.stringToBytes(leaderNode.toString()), Utils.stringToBytes(String.valueOf(leaderHeartbeatExpireSeconds() * 1000L))};
                         Command command3 = new Command(args3);
                         Reply reply1 = sendCommand(command3, timeoutMillis);
                         if (reply1 instanceof ErrorReply) {
-                            logger.error("delay master key error, reply = {}", reply1);
+                            logger.error("delay leader redis key error, reply = {}", reply1);
                         }
                     }
                     return;
                 }
-                logger.info("masterNode changed, masterNode = {} -> {}", this.masterNode, masterNode);
-                this.masterNode = masterNode;
+                logger.info("leaderNode changed, leaderNode = {} -> {}", this.leaderNode, leaderNode);
+                this.leaderNode = leaderNode;
                 notifyMasterChange();
                 return;
             }
@@ -159,15 +159,15 @@ public class RedisConsensusMasterSelector extends AbstractConsensusMasterSelecto
     }
 
     private void flushSlotMapToRedis() {
-        if (!currentNode.equals(masterNode)) {
+        if (!currentNode.equals(leaderNode)) {
             return;
         }
         try {
-            long seconds = ProxyDynamicConf.getLong("redis.consensus.master.selector.slot.map.expire.seconds", 120);
+            long seconds = ProxyDynamicConf.getLong("redis.consensus.leader.selector.slot.map.expire.seconds", 120);
             byte[][] args = new byte[][] {RedisCommand.SETEX.raw(), Utils.stringToBytes(slotMapKey),
                     Utils.stringToBytes(String.valueOf(seconds)), Utils.stringToBytes(slotMap.toString())};
             Command command = new Command(args);
-            long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.master.selector.slot.map.flush.timeout.millis", 10000);
+            long timeoutMillis = ProxyDynamicConf.getLong("redis.consensus.leader.selector.slot.map.flush.timeout.millis", 10000);
             Reply reply = sendCommand(command, timeoutMillis);
             if (reply instanceof ErrorReply) {
                 logger.error("flushSlotMapToRedis error, reply = {}", reply);
