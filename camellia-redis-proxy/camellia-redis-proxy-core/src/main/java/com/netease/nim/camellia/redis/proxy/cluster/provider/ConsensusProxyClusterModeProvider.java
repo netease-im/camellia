@@ -49,8 +49,10 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         current();
         //init leader selector
         String className = ProxyDynamicConf.getString("cluster.mode.consensus.leader.selector.class.name", RedisConsensusLeaderSelector.class.getName());
-        leaderSelector = ConfigInitUtil.initConsensusLeaderSelector(className, current());
+        leaderSelector = ConfigInitUtil.initConsensusLeaderSelector(className);
+        leaderSelector.init(current(), new ArrayList<>(initNodes()));
         //get leader
+        long sleepMs = 10;
         while (true) {
             leader = leaderSelector.getLeader();
             if (leader != null) {
@@ -58,7 +60,8 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 break;
             }
             logger.warn("leader is null, waiting...");
-            sleep(10);
+            sleep(sleepMs);
+            sleepMs = Math.min(sleepMs * 2, 500);
         }
         //add leader change listener
         addLeaderChangeListener();

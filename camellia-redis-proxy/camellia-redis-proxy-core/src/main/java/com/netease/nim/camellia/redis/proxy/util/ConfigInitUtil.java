@@ -4,7 +4,6 @@ import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusLeaderSelector;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector;
 import com.netease.nim.camellia.redis.proxy.command.DefaultProxyNodesDiscovery;
@@ -31,9 +30,9 @@ import java.util.Set;
  */
 public class ConfigInitUtil {
 
-    public static ConsensusLeaderSelector initConsensusLeaderSelector(String className, ProxyNode currentNode) {
+    public static ConsensusLeaderSelector initConsensusLeaderSelector(String className) {
         if (className.equals(RedisConsensusLeaderSelector.class.getName())) {
-            return new RedisConsensusLeaderSelector(currentNode);
+            return new RedisConsensusLeaderSelector();
         } else {
             return (ConsensusLeaderSelector) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }

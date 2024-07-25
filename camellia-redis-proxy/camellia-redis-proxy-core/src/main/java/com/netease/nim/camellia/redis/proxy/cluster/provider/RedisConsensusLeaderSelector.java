@@ -33,14 +33,15 @@ public class RedisConsensusLeaderSelector extends AbstractConsensusLeaderSelecto
     private static final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("leader-selector-scheduler"));
     private static final ScheduledExecutorService slotMapScheduler = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("slot-map-flush-scheduler"));
 
-    private final ProxyNode currentNode;
+    private ProxyNode currentNode;
     private ProxyNode leaderNode;
-    private final String redisUrl;
-    private final String redisKey;
-    private final String slotMapKey;
+    private String redisUrl;
+    private String redisKey;
+    private String slotMapKey;
     private ProxyClusterSlotMap slotMap;
 
-    public RedisConsensusLeaderSelector(ProxyNode currentNode) {
+    @Override
+    public void init(ProxyNode currentNode, List<ProxyNode> initNodes) {
         this.currentNode = currentNode;
         this.redisUrl = ProxyDynamicConf.getString("redis.consensus.leader.selector.redis.url", null);
         if (redisUrl == null) {
