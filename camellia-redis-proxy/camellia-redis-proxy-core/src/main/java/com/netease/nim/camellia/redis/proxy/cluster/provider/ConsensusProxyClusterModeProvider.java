@@ -45,12 +45,12 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
     public void init() {
         ClusterModeStatus.setStatus(ClusterModeStatus.Status.ONLINE);
         //init nodes
-        initNodes();
+        initNodes(false);
         current();
         //init leader selector
         String className = ProxyDynamicConf.getString("cluster.mode.consensus.leader.selector.class.name", RedisConsensusLeaderSelector.class.getName());
         leaderSelector = ConfigInitUtil.initConsensusLeaderSelector(className);
-        leaderSelector.init(current(), new ArrayList<>(initNodes()));
+        leaderSelector.init(current(), new ArrayList<>(initNodes(false)));
         //get leader
         long sleepMs = 10;
         while (true) {
@@ -160,7 +160,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
     private ProxyClusterSlotMap initSlotMap() {
         List<ProxyNode> onlineNodes = new ArrayList<>();
 
-        Set<ProxyNode> checkNodes = new HashSet<>(initNodes());
+        Set<ProxyNode> checkNodes = new HashSet<>(initNodes(false));
         checkNodes.add(current());
         checkNodes.addAll(pendingNodes);
         for (ProxyNode node : checkNodes) {

@@ -98,7 +98,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
     }
 
     private void initConf() {
-        Set<ProxyNode> set = initNodes();
+        Set<ProxyNode> set = initNodes(true);
 
         //把proxy设置为PENDING状态
         ClusterModeStatus.setStatus(ClusterModeStatus.Status.PENDING);
@@ -164,7 +164,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
         try {
             Set<ProxyNode> heartbeatNodes = new HashSet<>(onlineNodes);
             heartbeatNodes.addAll(pendingNodes);
-            heartbeatNodes.addAll(initNodes());
+            heartbeatNodes.addAll(initNodes(true));
             int times = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.fail.times", 3);
             heartbeatTargetNodes.entrySet().removeIf(entry -> entry.getValue().get() > times);//心跳连续三次失败，则剔除出去
             heartbeatNodes.addAll(heartbeatTargetNodes.keySet());

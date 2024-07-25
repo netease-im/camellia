@@ -36,12 +36,11 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("proxy-cluster-mode-executor"), new ThreadPoolExecutor.AbortPolicy());
 
 
-    protected final CopyOnWriteArrayList<SlotMapChangeListener> listenerList = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<SlotMapChangeListener> listenerList = new CopyOnWriteArrayList<>();
 
     private ProxyNode current;
     private Set<ProxyNode> initNodes;
     private final ConcurrentHashMap<ProxyNode, RedisConnectionAddr> addrCache = new ConcurrentHashMap<>();
-
 
     @Override
     public final void addSlotMapChangeListener(SlotMapChangeListener listener) {
@@ -53,7 +52,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
             try {
                 listener.change();
             } catch (Exception e) {
-                logger.error("nodeChangeNotify callback error", e);
+                logger.error("slotMapChangeNotify callback error", e);
             }
         }
     }
@@ -71,26 +70,36 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
         return ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.timeout.seconds", 10);
     }
 
-    protected final Set<ProxyNode> initNodes() {
+    protected final Set<ProxyNode> initNodes(boolean checkEmpty) {
         if (initNodes != null) {
             return new HashSet<>(initNodes);
         }
-        String string = ProxyDynamicConf.getString("proxy.cluster.mode.nodes", null);
-        if (string == null) {
-            throw new IllegalArgumentException("missing 'proxy.cluster.mode.nodes' in ProxyDynamicConf");
-        }
-        String[] split = string.split(",");
-        Set<ProxyNode> initNodes = new HashSet<>();
-        for (String str : split) {
-            ProxyNode node = ProxyNode.parseString(str);
-            if (node == null) continue;
-            initNodes.add(node);
-        }
-        if (initNodes.isEmpty()) {
-            throw new IllegalArgumentException("parse 'proxy.cluster.mode.nodes' error");
+        Set<ProxyNode> initNodes = null;
+        try {
+            String string = ProxyDynamicConf.getString("proxy.cluster.mode.nodes", null);
+            if (string == null) {
+                throw new IllegalArgumentException("missing 'proxy.cluster.mode.nodes' in ProxyDynamicConf");
+            }
+            String[] split = string.split(",");
+            initNodes = new HashSet<>();
+            for (String str : split) {
+                ProxyNode node = ProxyNode.parseString(str);
+                if (node == null) continue;
+                initNodes.add(node);
+            }
+            if (initNodes.isEmpty()) {
+                throw new IllegalArgumentException("parse 'proxy.cluster.mode.nodes' error");
+            }
+        } catch (Exception e) {
+            if (checkEmpty) {
+                throw e;
+            }
+            if (initNodes == null) {
+                initNodes = new HashSet<>();
+            }
         }
         this.initNodes = initNodes;
-        return this.initNodes;
+        return new HashSet<>(this.initNodes);
     }
 
     protected final ProxyNode current() {
