@@ -98,6 +98,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
                 initNodes = new HashSet<>();
             }
         }
+        logger.info("proxy cluster mode, init nodes = {}", initNodes);
         this.initNodes = initNodes;
         return new HashSet<>(this.initNodes);
     }
