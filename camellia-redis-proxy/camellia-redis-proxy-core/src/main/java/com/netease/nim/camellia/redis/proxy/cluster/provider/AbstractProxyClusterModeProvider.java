@@ -36,7 +36,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("proxy-cluster-mode-executor"), new ThreadPoolExecutor.AbortPolicy());
 
 
-    protected final CopyOnWriteArrayList<ProxyNodeChangeListener> listenerList = new CopyOnWriteArrayList<>();
+    protected final CopyOnWriteArrayList<SlotMapChangeListener> listenerList = new CopyOnWriteArrayList<>();
 
     private ProxyNode current;
     private Set<ProxyNode> initNodes;
@@ -44,12 +44,12 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
 
 
     @Override
-    public final void addNodeChangeListener(ProxyNodeChangeListener listener) {
+    public final void addSlotMapChangeListener(SlotMapChangeListener listener) {
         listenerList.add(listener);
     }
 
-    protected final void nodeChangeNotify() {
-        for (ProxyNodeChangeListener listener : listenerList) {
+    protected final void slotMapChangeNotify() {
+        for (SlotMapChangeListener listener : listenerList) {
             try {
                 listener.change();
             } catch (Exception e) {

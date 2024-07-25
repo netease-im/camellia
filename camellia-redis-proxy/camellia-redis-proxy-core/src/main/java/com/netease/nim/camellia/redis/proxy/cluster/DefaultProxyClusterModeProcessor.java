@@ -68,7 +68,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             if (init) return;
             provider.init();
             refresh();
-            provider.addNodeChangeListener(this::refresh);
+            provider.addSlotMapChangeListener(this::refresh);
             reloadConf();
             ProxyDynamicConf.registerCallback(this::reloadConf);
             int seconds = ClusterModeConfig.clusterModeRefreshNodesIntervalSeconds();

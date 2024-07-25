@@ -4,12 +4,16 @@ import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusLeaderSelector;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector;
 import com.netease.nim.camellia.redis.proxy.command.DefaultProxyNodesDiscovery;
 import com.netease.nim.camellia.redis.proxy.command.ProxyCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.command.ProxyNodesDiscovery;
 import com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
@@ -26,6 +30,14 @@ import java.util.Set;
  * Created by caojiajun on 2020/10/22
  */
 public class ConfigInitUtil {
+
+    public static ConsensusLeaderSelector initConsensusLeaderSelector(String className, ProxyNode currentNode) {
+        if (className.equals(RedisConsensusLeaderSelector.class.getName())) {
+            return new RedisConsensusLeaderSelector(currentNode);
+        } else {
+            return (ConsensusLeaderSelector) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+        }
+    }
 
     public static ProxyNodesDiscovery initProxyNodesDiscovery(CamelliaServerProperties serverProperties,
                                                               ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {

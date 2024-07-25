@@ -20,12 +20,12 @@ public abstract class AbstractConsensusLeaderSelector implements ConsensusLeader
         leaderChangeListenerList.add(listener);
     }
 
-    protected final void notifyMasterChange() {
+    protected final void notifyLeaderChange() {
         for (ConsensusLeaderChangeListener listener : leaderChangeListenerList) {
             try {
                 listener.change();
             } catch (Exception e) {
-                logger.error("master change listener error", e);
+                logger.error("leader change listener error", e);
             }
         }
     }

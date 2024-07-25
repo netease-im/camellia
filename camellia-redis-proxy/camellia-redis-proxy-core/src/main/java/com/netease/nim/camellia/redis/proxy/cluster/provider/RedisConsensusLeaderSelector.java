@@ -149,7 +149,7 @@ public class RedisConsensusLeaderSelector extends AbstractConsensusLeaderSelecto
                 }
                 logger.info("leaderNode changed, leaderNode = {} -> {}", this.leaderNode, leaderNode);
                 this.leaderNode = leaderNode;
-                notifyMasterChange();
+                notifyLeaderChange();
                 return;
             }
             logger.warn("heartbeat error, reply = {}", reply);

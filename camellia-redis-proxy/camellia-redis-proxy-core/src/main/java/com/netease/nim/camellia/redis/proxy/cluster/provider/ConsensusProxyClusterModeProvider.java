@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
@@ -47,7 +48,8 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         initNodes();
         current();
         //init leader selector
-        leaderSelector = new RedisConsensusLeaderSelector(current());
+        String className = ProxyDynamicConf.getString("cluster.mode.consensus.leader.selector.class.name", RedisConsensusLeaderSelector.class.getName());
+        leaderSelector = ConfigInitUtil.initConsensusLeaderSelector(className, current());
         //get leader
         while (true) {
             leader = leaderSelector.getLeader();
@@ -427,7 +429,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                     reason, oldSlotMap == null ? null : oldSlotMap.getMd5(), newSlotMap.getMd5(),
                     oldSlotMap == null ? 0 : oldSlotMap.getOnlineNodes().size(), newSlotMap.getOnlineNodes().size(),
                     oldSlotMap == null ? null : oldSlotMap.toString(), newSlotMap);
-            nodeChangeNotify();
+            slotMapChangeNotify();
         } finally {
             lock.unlock();
         }

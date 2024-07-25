@@ -245,7 +245,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
         if (onlineNodes.contains(node)) {
             logger.info("onlineNodes remove = {}", node);
             onlineNodes.remove(node);
-            nodeChangeNotify();
+            slotMapChangeNotify();
         }
     }
 
@@ -253,7 +253,7 @@ public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModePro
         if (!onlineNodes.contains(node)) {
             onlineNodes.add(node);
             logger.info("onlineNodes add = {}", node);
-            nodeChangeNotify();
+            slotMapChangeNotify();
         }
     }
 

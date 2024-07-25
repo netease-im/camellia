@@ -25,9 +25,9 @@ public interface ProxyClusterModeProvider {
 
     /**
      * 增加一个节点变更的回调
-     * @param listener ProxyNodeChangeListener
+     * @param listener SlotMapChangeListener
      */
-    void addNodeChangeListener(ProxyNodeChangeListener listener);
+    void addSlotMapChangeListener(SlotMapChangeListener listener);
 
     /**
      * proxy间的心跳
