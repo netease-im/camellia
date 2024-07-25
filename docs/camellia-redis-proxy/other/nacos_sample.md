@@ -17,21 +17,7 @@
 参考：[nacos](https://github.com/alibaba/nacos)
 
 ### 4、编译camellia-redis-proxy-nacos-bootstrap并打包
-```shell
-git clone https://github.com/netease-im/camellia.git
-git checkout v1.2.27
-cd camellia
-mvn clean package
-cp camellia-redis-proxy/camellia-redis-proxy-nacos-bootstrap/target/camellia-redis-proxy-nacos-bootstrap-1.2.27.jar /yourdict/redis-proxy/camellia-redis-proxy-nacos-bootstrap-1.2.27.jar
-cd /yourdict/redis-proxy
-jar xvf camellia-redis-proxy-nacos-bootstrap-1.2.27.jar
-rm -rf camellia-redis-proxy-nacos-bootstrap-1.2.27.jar
-touch start.sh
-echo "java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher" > start.sh
-chmod +x start.sh
-cd ..
-tar zcvf redis-proxy.tar.gz ./redis-proxy
-```
+参考：[camellia-redis-proxy-bootstrap-all-in-one](camellia-redis-proxy-bootstrap-all-in-one.md)
 
 ### 5、配置nacos
 

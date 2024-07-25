@@ -16,22 +16,8 @@
 ### 3、安装etcd
 参考：[etcd](https://github.com/etcd-io/etcd)
 
-### 4、编译camellia-redis-proxy-etcd-bootstrap并打包
-```shell
-git clone https://github.com/netease-im/camellia.git
-git checkout v1.2.27
-cd camellia
-mvn clean package
-cp camellia-redis-proxy/camellia-redis-proxy-etcd-bootstrap/target/camellia-redis-proxy-etcd-bootstrap-1.2.27.jar /yourdict/redis-proxy/camellia-redis-proxy-etcd-bootstrap-1.2.27.jar
-cd /yourdict/redis-proxy
-jar xvf camellia-redis-proxy-etcd-bootstrap-1.2.27.jar
-rm -rf camellia-redis-proxy-etcd-bootstrap-1.2.27.jar
-touch start.sh
-echo "java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher" > start.sh
-chmod +x start.sh
-cd ..
-tar zcvf redis-proxy.tar.gz ./redis-proxy
-```
+### 4、编译camellia-redis-proxy-bootstrap-all-in-one并打包
+参考：[camellia-redis-proxy-bootstrap-all-in-one](camellia-redis-proxy-bootstrap-all-in-one.md)
 
 ### 5、配置etcd
 
