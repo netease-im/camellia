@@ -14,9 +14,11 @@ camellia-redis-proxy:
   monitor-enable: false
   monitor-interval-seconds: 60
   cluster-mode-enable: true
+  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusProxyClusterModeProvider
   config:
-    "proxy.cluster.mode.nodes": "10.0.0.1:6381@16381,10.0.0.2:6381@16381"
     "proxy.cluster.mode.command.move.always": true
+    "redis.consensus.leader.selector.redis.url": "redis://@127.0.0.1:6379"
+    "redis.consensus.leader.selector.redis.key": "xxxxx" 
   plugins:
     - monitorPlugin
     - bigKeyPlugin
@@ -27,6 +29,7 @@ camellia-redis-proxy:
       type: simple
       resource: redis-kv://d
 ```
+
 
 ```properties
 
