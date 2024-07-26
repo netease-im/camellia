@@ -31,7 +31,7 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379
 ```     
 
-### cluster.mode.consensus.leader.selector.class.name
+#### cluster.mode.consensus.leader.selector.class.name
 
 * 用于选主的实现类，当前支持基于redis的leader-selector（默认）
 * 也可以自己基于zk/etcd/nacos实现，或者proxy集群内部自我实现选举
@@ -43,6 +43,9 @@ camellia-redis-proxy:
 #### redis.consensus.leader.selector.redis.key
 
 * 用于选主的redis-key
+* 不同的集群，需要不一样
+* 同一个集群内的不同节点，要求一样
+* 建议使用一个随机字符串
 
 ### 流程
 
