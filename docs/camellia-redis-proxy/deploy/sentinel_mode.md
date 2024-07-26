@@ -30,10 +30,25 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
 ```     
-随后你需要在camellia-redis-proxy.properties里把所有proxy节点配置上（至少两个），如下：
-```
+
+配置节点发现规则（基于配置文件）
+```properties
+### 此时集群内的节点会通过配置文件彼此发现
+proxy.sentinel.mode.nodes.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeNodesProvider
 #把所有proxy节点配置上，格式为ip:port@cport
 proxy.sentinel.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
+```
+配置节点发现规则（基于redis）
+```properties
+### 此时集群内的节点会通过redis自动彼此发现
+proxy.sentinel.mode.nodes.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.RedisProxySentinelModeNodesProvider
+proxy.sentinel.mode.nodes.provider.redis.url=redis://passwd@127.0.0.1
+proxy.sentinel.mode.nodes.provider.redis.key=xxxx
+```
+
+
+配置sentinel的名字
+```
 #sentinel里模拟的master的名字，默认是camellia_sentinel
 proxy.sentinel.mode.master.name=camellia_sentinel
 ```

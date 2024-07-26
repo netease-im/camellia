@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelUtils;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -52,6 +53,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
     private final ReentrantLock initLock = new ReentrantLock();
     private final ReentrantLock lock = new ReentrantLock();
     private boolean init = false;
+    private ProxySentinelModeNodesProvider provider;
 
     public DefaultProxySentinelModeProcessor() {
         GlobalRedisProxyEnv.addAfterStartCallback(this::init);
@@ -75,6 +77,9 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             this.currentNode = proxyNode;
             this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
             this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
+            String className = ProxyDynamicConf.getString("proxy.sentinel.mode.nodes.provider.class.name", DefaultProxySentinelModeNodesProvider.class.getName());
+            this.provider = ConfigInitUtil.initSentinelModeNodesProvider(className);
+            this.provider.init(currentNode);
             //online nodes
             boolean success = reloadNodes();
             if (!success) {
@@ -96,8 +101,8 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             Collections.sort(onlineNodes);
             this.onlineNodes = onlineNodes;
             this.masterName = ProxyDynamicConf.getString("proxy.sentinel.mode.master.name", "camellia_sentinel");
-            logger.info("sentinel mode init success, masterName = {}, currentNode = {}, onlineNodes = {}, allNodes = {}",
-                    this.masterName, this.currentNode, this.onlineNodes, this.allNodes);
+            logger.info("sentinel mode init success, masterName = {}, currentNode = {}, onlineNodes = {}, allNodes = {}, nodesProvider = {}",
+                    this.masterName, this.currentNode, this.onlineNodes, this.allNodes, className);
             int intervalSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.interval.seconds", 5);
             scheduler.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
             logger.info("sentinel mode heartbeat schedule start success, intervalSeconds = {}", intervalSeconds);
@@ -375,18 +380,8 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
 
     private boolean reloadNodes() {
         try {
-            String string = ProxyDynamicConf.getString("proxy.sentinel.mode.nodes", null);
-            if (string == null) {
-                return false;
-            }
-            String[] split = string.split(",");
-            Set<ProxyNode> nodes = new HashSet<>();
-            for (String str : split) {
-                ProxyNode node = ProxyNode.parseString(str);
-                if (node == null) continue;
-                nodes.add(node);
-            }
-            if (nodes.isEmpty()) {
+            List<ProxyNode> nodes = provider.load();
+            if (nodes == null || nodes.isEmpty()) {
                 return false;
             }
             this.allNodes = new ArrayList<>(nodes);

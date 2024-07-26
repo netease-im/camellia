@@ -4,7 +4,8 @@
 # 1.2.28（2024/07/xx）
 ### add
 * camellia-redis-proxy, support use distribution kv store as upstream, such as hbase、tikv、obkv
-* camellia-redis-proxy，support a new cluster-mode, enabled it when use distribution kv store as upstream
+* camellia-redis-proxy，support a new cluster-mode, suitable for k8s, suitable use distribution kv store as upstream
+* camellia-redis-proxy，support custom ProxySentinelModeNodesProvider, suitable for k8s
 * camellia-redis-proxy, support time command
 * camellia-redis-proxy，nacos/etcd config loader support local specific conf file enhancement
 * camellia-redis-proxy，support keys and randomkey command in read-write-seperate route config

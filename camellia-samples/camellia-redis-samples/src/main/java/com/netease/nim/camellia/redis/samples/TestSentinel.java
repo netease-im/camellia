@@ -11,7 +11,7 @@ public class TestSentinel {
 
 
     public static void main(String[] args) throws InterruptedException {
-        CamelliaRedisTemplate template = new CamelliaRedisTemplate("redis-sentinel://pass123@10.221.145.235:16380,10.221.145.235:16381/camellia_sentinel?sentinelPassword=123");
+        CamelliaRedisTemplate template = new CamelliaRedisTemplate("redis-sentinel://pass123@127.0.0.1:16380,127.0.0.1:16381/camellia_sentinel?sentinelPassword=123");
         while (true) {
             try {
                 String string = UUID.randomUUID().toString();

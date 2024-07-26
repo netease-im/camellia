@@ -14,6 +14,8 @@ import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
+import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeNodesProvider;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeNodesProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
@@ -29,6 +31,14 @@ import java.util.Set;
  * Created by caojiajun on 2020/10/22
  */
 public class ConfigInitUtil {
+
+    public static ProxySentinelModeNodesProvider initSentinelModeNodesProvider(String className) {
+        if (className.equalsIgnoreCase(DefaultProxySentinelModeNodesProvider.class.getName())) {
+            return new DefaultProxySentinelModeNodesProvider();
+        } else {
+            return (ProxySentinelModeNodesProvider) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+        }
+    }
 
     public static ConsensusLeaderSelector initConsensusLeaderSelector(String className) {
         if (className.equals(RedisConsensusLeaderSelector.class.getName())) {
