@@ -1,7 +1,12 @@
 
 ## cluster-mode-1
 
-无中心化的cluster-mode方案，基于节点间的心跳完成节点的互相发现和最终一致
+* 无中心化的cluster-mode方案，基于节点间的心跳完成节点的互相发现和最终一致
+
+### 应用场景
+
+* 期望使用redis-proxy，客户端支持redis-cluster协议
+* 提前知道proxy-ip的情况下，可以在不需要外部组件（如lvs、slb、zk、etcd等）的情况下，让proxy组成高可用集群（即能平滑扩缩容、节点宕机能自动fail-over）
 
 ### 配置：
 

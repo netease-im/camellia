@@ -40,7 +40,7 @@ proxy.sentinel.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
 ```
 配置节点发现规则（基于redis）
 ```properties
-### 此时集群内的节点会通过redis自动彼此发现
+### 此时集群内的节点会通过redis自动彼此发现，优点是可以不需要提前知道节点ip，适用于k8s环境
 proxy.sentinel.mode.nodes.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.RedisProxySentinelModeNodesProvider
 proxy.sentinel.mode.nodes.provider.redis.url=redis://passwd@127.0.0.1
 proxy.sentinel.mode.nodes.provider.redis.key=xxxx

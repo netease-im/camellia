@@ -2,8 +2,14 @@
 ## cluster-mode-2
 
 * 中心化的cluster-mode方案，首先选举一个leader节点，并且由leader节点来完成节点的扩缩容
-* 相比方案一，在扩缩容时，本方案会尽可能的减少slot的变化
-* 相比方案一，可以不需要提前知道节点的ip
+
+### 应用场景
+
+* 期望使用redis-proxy，客户端支持redis-cluster协议
+* 可以让proxy自己组成高可用集群（即能平滑扩缩容、节点宕机能自动fail-over）
+* 相比于cluster-mode-1，可以不需要提前知道节点ip
+* 相比于cluster-mode-1，节点扩缩容时会尽可能减少slot的变化（因此适合proxy后端是kv存储时，提升lru-cache的有效性）
+* 在k8s环境下，客户端可以连接service域名，连接到任意一个节点获取slot信息，随后直连pod，性能上因为不依赖service底层的负载均衡机制，流量更均衡，性能损耗更小
 
 ### 配置
 
