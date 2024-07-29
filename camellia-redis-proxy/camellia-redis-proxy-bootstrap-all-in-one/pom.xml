@@ -37,6 +37,12 @@
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-kv-obkv</artifactId>
 			<version>1.2.28</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jruby</groupId>
+					<artifactId>jruby-complete</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
