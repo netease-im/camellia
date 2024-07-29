@@ -102,6 +102,7 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
      * @param key key
      * @param callable 有返回结果的任务
      * @return 任务结果
+     * @param <T> 返回结果的类型
      */
     public <T> Future<T> submit(byte[] key, Callable<T> callable) {
         int index = hashIndex(key);
@@ -118,6 +119,7 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
      * @param key key
      * @param callable 有返回结果的任务
      * @return 任务结果
+     * @param <T> 返回结果的类型
      */
     public <T> Future<T> submit(String key, Callable<T> callable) {
         return submit(key.getBytes(StandardCharsets.UTF_8), callable);

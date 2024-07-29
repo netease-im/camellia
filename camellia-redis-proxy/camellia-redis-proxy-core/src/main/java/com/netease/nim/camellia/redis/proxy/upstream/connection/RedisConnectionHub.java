@@ -160,6 +160,7 @@ public class RedisConnectionHub {
 
     /**
      * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
+     * @param upstreamClient upstreamClient
      * @param host host
      * @param port port
      * @param userName userName

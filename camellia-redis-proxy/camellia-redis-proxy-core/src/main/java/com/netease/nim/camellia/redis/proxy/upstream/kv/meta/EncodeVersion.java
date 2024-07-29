@@ -15,10 +15,10 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
  * v3 v1结构，且有hgetall+hget缓存
  * <p>
  * zset
- * v0 无缓存，使用纯kv-client实现，kv-client底层有2个sub-key，一个是member->score，一个是score+member->null
- * v1 有缓存，kv-client底层有1个sub-key，是member->score，redis-key有1个，就是zset本身
- * v2 有缓存，kv-client底层有2个sub-key，一个是member->score，一个是index->member，redis-key有2个，一个是zset_with_index，一个是index
- * v3 redis同时做storage和缓存，kv-client底层有1个sub-key，就是index->member，redis-key有2个，storage是zset_with_index，cache是index
+ * v0 无缓存，使用纯kv-client实现，kv-client底层有2个sub-key，一个是member-score，一个是score+member-null
+ * v1 有缓存，kv-client底层有1个sub-key，是member-score，redis-key有1个，就是zset本身
+ * v2 有缓存，kv-client底层有2个sub-key，一个是member-score，一个是index-member，redis-key有2个，一个是zset_with_index，一个是index
+ * v3 redis同时做storage和缓存，kv-client底层有1个sub-key，就是index-member，redis-key有2个，storage是zset_with_index，cache是index
  * <p>
  * Created by caojiajun on 2024/4/11
  */

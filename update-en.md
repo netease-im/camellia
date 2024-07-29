@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.28（2024/07/xx）
+# 1.2.28（2024/07/29）
 ### add
 * camellia-redis-proxy, support use distribution kv store as upstream, such as hbase、tikv、obkv
 * camellia-redis-proxy，support a new cluster-mode, suitable for k8s, suitable use distribution kv store as upstream

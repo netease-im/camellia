@@ -24,12 +24,12 @@ base on spring-cache:
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-cache-spring-boot-starter</artifactId>
-    <version>1.2.27</version>
+    <version>1.2.28</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-spring-boot-starter</artifactId>
-    <version>1.2.27</version>
+    <version>1.2.28</version>
 </dependency>
 ```
 * 使用jedis-3.6.3
@@ -37,7 +37,7 @@ base on spring-cache:
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-cache-spring-boot-starter</artifactId>
-    <version>1.2.27</version>
+    <version>1.2.28</version>
     <exclusions>
         <exclusion>
             <groupId>com.netease.nim</groupId>
@@ -48,7 +48,7 @@ base on spring-cache:
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis3-spring-boot-starter</artifactId>
-    <version>1.2.27</version>
+    <version>1.2.28</version>
 </dependency>
 ```
 

@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.28（2024/07/xx）
+# 1.2.28（2024/07/29）
 ### 新增
 * camellia-redis-proxy，支持使用**分布式kv存储模拟redis协议**，如hbase、tikv、obkv等
 * camellia-redis-proxy，提供了一种新的伪redis-cluster模式，在使用**分布式kv存储模拟redis协议**时建议开启，可以提高扩缩容时的平滑性，此外新模式可以在不事先确定ip的情况下部署伪redis-cluster模式的集群，适合k8s场景

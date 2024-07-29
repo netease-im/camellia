@@ -169,6 +169,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
      * @param hashKey hashKey
      * @param callable 有返回结果的任务
      * @return 任务结果
+     * @param <T> 返回结果的类型
      */
     public <T> Future<T> submit(byte[] hashKey, Callable<T> callable) {
         if (shutdown.get()) {
@@ -189,6 +190,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
      * @param hashKey hashKey
      * @param callable 有返回结果的任务
      * @return 任务结果
+     * @param <T> 返回结果的类型
      */
     public <T> Future<T> submit(String hashKey, Callable<T> callable) {
         return submit(hashKey.getBytes(StandardCharsets.UTF_8), callable);
