@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-id-gen-core</artifactId>
-	<version>1.2.28</version>
+	<version>1.2.29-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-id-gen</artifactId>
-		<version>1.2.28</version>
+		<version>1.2.29-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -21,12 +21,12 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
-			<version>1.2.28</version>
+			<version>1.2.29-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-toolkit</artifactId>
-			<version>1.2.28</version>
+			<version>1.2.29-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
