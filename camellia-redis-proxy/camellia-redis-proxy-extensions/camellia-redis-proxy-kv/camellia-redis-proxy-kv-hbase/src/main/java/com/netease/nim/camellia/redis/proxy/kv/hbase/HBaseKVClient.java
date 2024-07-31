@@ -121,87 +121,127 @@ public class HBaseKVClient implements KVClient {
 
     @Override
     public void put(byte[] key, byte[] value) {
-        Put put = new Put(key);
-        put.addColumn(cf, column, value);
-        put.setDurability(durability);
-        template.put(tableName, put);
+        try {
+            Put put = new Put(key);
+            put.addColumn(cf, column, value);
+            put.setDurability(durability);
+            template.put(tableName, put);
+        } catch (Exception e) {
+            logger.error("put error", e);
+            throw new KvException(e);
+        }
     }
 
     @Override
     public void batchPut(List<KeyValue> list) {
-        List<Put> putList = new ArrayList<>();
-        for (KeyValue keyValue : list) {
-            Put put = new Put(keyValue.getKey());
-            put.addColumn(cf, column, keyValue.getValue());
-            put.setDurability(durability);
-            putList.add(put);
+        try {
+            List<Put> putList = new ArrayList<>();
+            for (KeyValue keyValue : list) {
+                Put put = new Put(keyValue.getKey());
+                put.addColumn(cf, column, keyValue.getValue());
+                put.setDurability(durability);
+                putList.add(put);
+            }
+            template.put(tableName, putList);
+        } catch (Exception e) {
+            logger.error("batchPut error", e);
+            throw new KvException(e);
         }
-        template.put(tableName, putList);
     }
 
     @Override
     public KeyValue get(byte[] key) {
-        Get get = new Get(key);
-        Result result = template.get(tableName, get);
-        if (result == null) {
-            return null;
+        try {
+            Get get = new Get(key);
+            Result result = template.get(tableName, get);
+            if (result == null) {
+                return null;
+            }
+            byte[] value = result.getValue(cf, column);
+            if (value == null) {
+                return null;
+            }
+            return new KeyValue(key, value);
+        } catch (Exception e) {
+            logger.error("get error", e);
+            throw new KvException(e);
         }
-        byte[] value = result.getValue(cf, column);
-        if (value == null) {
-            return null;
-        }
-        return new KeyValue(key, value);
     }
 
     @Override
     public boolean exists(byte[] key) {
-        Get get = new Get(key);
-        return template.exists(tableName, get);
+        try {
+            Get get = new Get(key);
+            return template.exists(tableName, get);
+        } catch (Exception e) {
+            logger.error("exists error", e);
+            throw new KvException(e);
+        }
     }
 
     @Override
     public boolean[] exists(byte[]... keys) {
-        List<Get> getList = new ArrayList<>(keys.length);
-        for (byte[] key : keys) {
-            getList.add(new Get(key));
+        try {
+            List<Get> getList = new ArrayList<>(keys.length);
+            for (byte[] key : keys) {
+                getList.add(new Get(key));
+            }
+            return template.existsAll(tableName, getList);
+        } catch (Exception e) {
+            logger.error("exists error", e);
+            throw new KvException(e);
         }
-        return template.existsAll(tableName, getList);
     }
 
     @Override
     public List<KeyValue> batchGet(byte[]... keys) {
-        List<Get> list = new ArrayList<>(keys.length);
-        for (byte[] key : keys) {
-            Get get = new Get(key);
-            list.add(get);
+        try {
+            List<Get> list = new ArrayList<>(keys.length);
+            for (byte[] key : keys) {
+                Get get = new Get(key);
+                list.add(get);
+            }
+            List<KeyValue> keyValues = new ArrayList<>(list.size());
+            Result[] results = template.get(tableName, list);
+            for (Result result : results) {
+                if (result == null) continue;
+                byte[] key = result.getRow();
+                byte[] value = result.getValue(cf, column);
+                keyValues.add(new KeyValue(key, value));
+            }
+            return keyValues;
+        } catch (Exception e) {
+            logger.error("batchGet error", e);
+            throw new KvException(e);
         }
-        List<KeyValue> keyValues = new ArrayList<>(list.size());
-        Result[] results = template.get(tableName, list);
-        for (Result result : results) {
-            if (result == null) continue;
-            byte[] key = result.getRow();
-            byte[] value = result.getValue(cf, column);
-            keyValues.add(new KeyValue(key, value));
-        }
-        return keyValues;
     }
 
     @Override
     public void delete(byte[] key) {
-        Delete delete = new Delete(key);
-        delete.setDurability(durability);
-        template.delete(tableName, delete);
+        try {
+            Delete delete = new Delete(key);
+            delete.setDurability(durability);
+            template.delete(tableName, delete);
+        } catch (Exception e) {
+            logger.error("delete error", e);
+            throw new KvException(e);
+        }
     }
 
     @Override
     public void batchDelete(byte[]... keys) {
-        List<Delete> list = new ArrayList<>(keys.length);
-        for (byte[] key : keys) {
-            Delete delete = new Delete(key);
-            delete.setDurability(durability);
-            list.add(delete);
+        try {
+            List<Delete> list = new ArrayList<>(keys.length);
+            for (byte[] key : keys) {
+                Delete delete = new Delete(key);
+                delete.setDurability(durability);
+                list.add(delete);
+            }
+            template.delete(tableName, list);
+        } catch (Exception e) {
+            logger.error("batchDelete error", e);
+            throw new KvException(e);
         }
-        template.delete(tableName, list);
     }
 
     @Override
@@ -211,9 +251,14 @@ public class HBaseKVClient implements KVClient {
 
     @Override
     public void checkAndDelete(byte[] key, byte[] value) {
-        Delete delete = new Delete(key);
-        delete.setDurability(durability);
-        template.checkAndDelete(tableName, key, cf, column, value, delete);
+        try {
+            Delete delete = new Delete(key);
+            delete.setDurability(durability);
+            template.checkAndDelete(tableName, key, cf, column, value, delete);
+        } catch (Exception e) {
+            logger.error("checkAndDelete error", e);
+            throw new KvException(e);
+        }
     }
 
     @Override
@@ -223,97 +268,117 @@ public class HBaseKVClient implements KVClient {
 
     @Override
     public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
-        Scan scan = new Scan();
-        scan.setStartRow(startKey);
-        scan.setCaching(limit);
-        scan.setSmall(true);
-        scan.setReversed(sort != Sort.ASC);
-        try (ResultScanner scanner = template.scan(tableName, scan)) {
-            List<KeyValue> list = new ArrayList<>();
-            for (Result result : scanner) {
-                byte[] row = result.getRow();
-                if (!includeStartKey && Arrays.equals(row, startKey)) {
-                    continue;
+        try {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setCaching(limit);
+            scan.setSmall(true);
+            scan.setReversed(sort != Sort.ASC);
+            try (ResultScanner scanner = template.scan(tableName, scan)) {
+                List<KeyValue> list = new ArrayList<>();
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
+                        continue;
+                    }
+                    if (BytesUtils.startWith(row, prefix)) {
+                        byte[] key = result.getRow();
+                        byte[] value = result.getValue(cf, column);
+                        list.add(new KeyValue(key, value));
+                        if (list.size() >= limit) {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
                 }
-                if (BytesUtils.startWith(row, prefix)) {
+                return list;
+            }
+        } catch (Exception e) {
+            logger.error("scanByPrefix error", e);
+            throw new KvException(e);
+        }
+    }
+
+    @Override
+    public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+        try {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setSmall(true);
+            int count=0;
+            try (ResultScanner scanner = template.scan(tableName, scan)) {
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
+                        continue;
+                    }
+                    if (BytesUtils.startWith(row, prefix)) {
+                        count ++;
+                    } else {
+                        break;
+                    }
+                }
+                return count;
+            }
+        } catch (Exception e) {
+            logger.error("countByPrefix error", e);
+            throw new KvException(e);
+        }
+    }
+
+    @Override
+    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey) {
+        try {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setStopRow(endKey);
+            scan.setCaching(limit);
+            scan.setSmall(true);
+            scan.setReversed(sort != Sort.ASC);
+            try (ResultScanner scanner = template.scan(tableName, scan)) {
+                List<KeyValue> list = new ArrayList<>();
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
+                        continue;
+                    }
                     byte[] key = result.getRow();
                     byte[] value = result.getValue(cf, column);
                     list.add(new KeyValue(key, value));
                     if (list.size() >= limit) {
                         break;
                     }
-                } else {
-                    break;
                 }
+                return list;
             }
-            return list;
-        }
-    }
-
-    @Override
-    public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
-        Scan scan = new Scan();
-        scan.setStartRow(startKey);
-        scan.setSmall(true);
-        int count=0;
-        try (ResultScanner scanner = template.scan(tableName, scan)) {
-            for (Result result : scanner) {
-                byte[] row = result.getRow();
-                if (!includeStartKey && Arrays.equals(row, startKey)) {
-                    continue;
-                }
-                if (BytesUtils.startWith(row, prefix)) {
-                    count ++;
-                } else {
-                    break;
-                }
-            }
-            return count;
-        }
-    }
-
-    @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey) {
-        Scan scan = new Scan();
-        scan.setStartRow(startKey);
-        scan.setStopRow(endKey);
-        scan.setCaching(limit);
-        scan.setSmall(true);
-        scan.setReversed(sort != Sort.ASC);
-        try (ResultScanner scanner = template.scan(tableName, scan)) {
-            List<KeyValue> list = new ArrayList<>();
-            for (Result result : scanner) {
-                byte[] row = result.getRow();
-                if (!includeStartKey && Arrays.equals(row, startKey)) {
-                    continue;
-                }
-                byte[] key = result.getRow();
-                byte[] value = result.getValue(cf, column);
-                list.add(new KeyValue(key, value));
-                if (list.size() >= limit) {
-                    break;
-                }
-            }
-            return list;
+        } catch (Exception e) {
+            logger.error("scanByStartEnd error", e);
+            throw new KvException(e);
         }
     }
 
     @Override
     public long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey) {
-        Scan scan = new Scan();
-        scan.setStartRow(startKey);
-        scan.setStopRow(endKey);
-        scan.setSmall(true);
-        int count = 0;
-        try (ResultScanner scanner = template.scan(tableName, scan)) {
-            for (Result result : scanner) {
-                byte[] row = result.getRow();
-                if (!includeStartKey && Arrays.equals(row, startKey)) {
-                    continue;
+        try {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setStopRow(endKey);
+            scan.setSmall(true);
+            int count = 0;
+            try (ResultScanner scanner = template.scan(tableName, scan)) {
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
+                        continue;
+                    }
+                    count ++;
                 }
-                count ++;
+                return count;
             }
-            return count;
+        } catch (Exception e) {
+            logger.error("countByStartEnd error", e);
+            throw new KvException(e);
         }
     }
 }

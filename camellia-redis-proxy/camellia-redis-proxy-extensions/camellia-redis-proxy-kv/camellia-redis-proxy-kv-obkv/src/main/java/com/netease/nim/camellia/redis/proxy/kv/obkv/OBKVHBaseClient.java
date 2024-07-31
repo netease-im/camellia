@@ -207,7 +207,7 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public boolean supportReverseScan() {
-        return false;
+        return true;
     }
 
     @Override
@@ -217,6 +217,7 @@ public class OBKVHBaseClient implements KVClient {
             scan.setStartRow(startKey);
             scan.setCaching(limit);
             scan.setSmall(true);
+            scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
                 for (Result result : scanner) {
@@ -238,7 +239,7 @@ public class OBKVHBaseClient implements KVClient {
                 return list;
             }
         } catch (IOException e) {
-            logger.error("scan error", e);
+            logger.error("scanByPrefix error", e);
             throw new KvException(e);
         }
     }
@@ -265,7 +266,7 @@ public class OBKVHBaseClient implements KVClient {
                 return count;
             }
         } catch (IOException e) {
-            logger.error("count error", e);
+            logger.error("countByPrefix error", e);
             throw new KvException(e);
         }
     }
@@ -278,6 +279,7 @@ public class OBKVHBaseClient implements KVClient {
             scan.setStopRow(endKey);
             scan.setCaching(limit);
             scan.setSmall(true);
+            scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
                 for (Result result : scanner) {
@@ -295,7 +297,7 @@ public class OBKVHBaseClient implements KVClient {
                 return list;
             }
         } catch (IOException e) {
-            logger.error("scan error", e);
+            logger.error("scanByStartEnd error", e);
             throw new KvException(e);
         }
     }
@@ -314,12 +316,12 @@ public class OBKVHBaseClient implements KVClient {
                     if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
                     }
-                    count++;
+                    count ++;
                 }
                 return count;
             }
         } catch (IOException e) {
-            logger.error("count error", e);
+            logger.error("countByStartEnd error", e);
             throw new KvException(e);
         }
     }

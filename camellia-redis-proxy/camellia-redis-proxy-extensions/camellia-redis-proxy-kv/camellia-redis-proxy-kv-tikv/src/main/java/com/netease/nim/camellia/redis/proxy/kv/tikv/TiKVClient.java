@@ -209,7 +209,7 @@ public class TiKVClient implements KVClient {
             }
             return list;
         } catch (Exception e) {
-            logger.error("scan error", e);
+            logger.error("scanByPrefix error", e);
             throw new KvException(e);
         }
     }
@@ -227,7 +227,7 @@ public class TiKVClient implements KVClient {
             }
             return count;
         } catch (Exception e) {
-            logger.error("count error", e);
+            logger.error("countByPrefix error", e);
             throw new KvException(e);
         }
     }
@@ -250,7 +250,7 @@ public class TiKVClient implements KVClient {
             }
             return list;
         } catch (Exception e) {
-            logger.error("scan error", e);
+            logger.error("scanByStartEnd error", e);
             throw new KvException(e);
         }
     }
@@ -269,7 +269,7 @@ public class TiKVClient implements KVClient {
             }
             return count;
         } catch (Exception e) {
-            logger.error("count error", e);
+            logger.error("countByStartEnd error", e);
             throw new KvException(e);
         }
     }
