@@ -2,9 +2,7 @@ package com.netease.nim.camellia.feign.naked;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.RemoteMonitor;
-import com.netease.nim.camellia.core.client.env.Monitor;
-import com.netease.nim.camellia.core.client.env.MultiWriteType;
-import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
+import com.netease.nim.camellia.core.client.env.*;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
@@ -37,11 +35,9 @@ import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
 public class CamelliaNakedClient<R, W> {
@@ -264,134 +260,30 @@ public class CamelliaNakedClient<R, W> {
                     Resource resource = writeResources.get(0);
                     return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
                 }
-                MultiWriteType multiWriteType = feignEnv.getProxyEnv().getMultiWriteType();
-                if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
-                    W result = null;
-                    for (int i = 0; i < writeResources.size(); i++) {
-                        Resource resource = writeResources.get(i);
-                        boolean first = i == 0;
-                        if (first) {
-                            result = invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                        } else {
-                            invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                ProxyEnv proxyEnv = feignEnv.getProxyEnv();
+                //invoker
+                MultiWriteInvoker.Invoker invoker = (resource, index) -> {
+                    //
+                    return CamelliaNakedClient.this.invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                };
+                //fail callback
+                MultiWriteInvoker.FailedCallback failedCallback = (t, resource, index, failedReason) -> {
+                    try {
+                        if (failureListener == null) {
+                            return;
                         }
-                    }
-                    return result;
-                } else if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
-                    ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
-                    List<Future<W>> futureList = new ArrayList<>();
-                    for (Resource resource : writeResources) {
-                        Future<W> future;
-                        try {
-                            future = feignEnv.getProxyEnv().getMultiWriteConcurrentExec()
-                                    .submit(strategy.wrapperCallable(() -> {
-                                        try {
-                                            return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                                        } catch (Exception e) {
-                                            logger.error("multi thread concurrent invoke error, bid = {}, bgroup = {}, resource = {}", bid, bgroup, resource.getUrl(), e);
-                                            throw e;
-                                        }
-                                    }));
-                        } catch (RejectedExecutionException e) {
-                            try {
-                                if (failureListener != null) {
-                                    failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
-                                }
-                            } catch (Exception ex) {
-                                logger.error("onFailure error", ex);
-                            }
-                            throw e;
+                        if (failedReason == FailedReason.DISCARD && t instanceof RejectedExecutionException) {
+                            failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, t));
                         }
-                        futureList.add(future);
+                    } catch (Exception ex) {
+                        logger.error("onFailure error", ex);
                     }
-                    W result = null;
-                    for (int i=0; i<futureList.size(); i++) {
-                        boolean first = i == 0;
-                        if (first) {
-                            result = futureList.get(i).get();
-                        }
-                    }
-                    return result;
-                } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
-                    ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
-                    Future<W> targetFuture = null;
-                    for (int i = 0; i < writeResources.size(); i++) {
-                        Resource resource = writeResources.get(i);
-                        boolean first = i == 0;
-                        Future<W> future = null;
-                        try {
-                            future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
-                                    .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
-                                        try {
-                                            return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                                        } catch (Exception e) {
-                                            logger.error("async multi thread invoke error, bid = {}, bgroup = {}, resource = {}",
-                                                    bid, bgroup, resource.getUrl(), e);
-                                            throw e;
-                                        }
-                                    }));
-                        } catch (Exception e) {
-                            if (e instanceof RejectedExecutionException && failureListener != null) {
-                                try {
-                                    failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
-                                } catch (Exception ex) {
-                                    logger.error("onFailure error", ex);
-                                }
-                            }
-                            if (!first) {
-                                logger.error("submit async multi thread task error, bid = {}, bgroup = {}, resource = {}",
-                                        bid, bgroup, resource.getUrl(), e);
-                            } else {
-                                throw e;
-                            }
-                        }
-                        if (first) {
-                            targetFuture = future;
-                        }
-                    }
-                    if (targetFuture != null) {
-                        return targetFuture.get();
-                    } else {
-                        throw new IllegalStateException("wil not invoke here");
-                    }
-                } else if (multiWriteType == MultiWriteType.MISC_ASYNC_MULTI_THREAD) {
-                    ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
-                    W target = null;
-                    for (int i = 0; i < writeResources.size(); i++) {
-                        Resource resource = writeResources.get(i);
-                        boolean first = i == 0;
-                        if (first) {
-                            target = invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                        } else {
-                            try {
-                                feignEnv.getProxyEnv().getMultiWriteAsyncExec()
-                                        .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
-                                            try {
-                                                return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                                            } catch (Exception e) {
-                                                logger.error("async multi thread invoke error, bid = {}, bgroup = {}, resource = {}",
-                                                        bid, bgroup, resource.getUrl(), e);
-                                                throw e;
-                                            }
-                                        }));
-                            } catch (Exception e) {
-                                logger.error("submit async multi thread task error, bid = {}, bgroup = {}, resource = {}",
-                                        bid, bgroup, resource.getUrl(), e);
-                                if (e instanceof RejectedExecutionException && failureListener != null) {
-                                    try {
-                                        failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
-                                    } catch (Exception ex) {
-                                        logger.error("onFailure error", ex);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return target;
-                }
+                };
+                Object result = MultiWriteInvoker.invoke(proxyEnv, writeResources, invoker, failedCallback);
+                return (W) result;
             }
             throw new CamelliaNakedClientNoRetriableException("unknown operationType");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Throwable ex = ExceptionUtils.onError(e);
             if (fallbackFactory != null) {
                 W fallback = fallbackFactory.getFallback(ex);

@@ -262,16 +262,17 @@ public class FeignCallback<T> implements MethodInterceptor {
                     };
                     //fail callback
                     MultiWriteInvoker.FailedCallback failedCallback = (t, resource, index, failedReason) -> {
-                        if (t instanceof RejectedExecutionException && failedReason == FailedReason.DISCARD) {
-                            try {
-                                if (failureListener != null) {
-                                    CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
-                                            resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, t);
-                                    failureListener.onFailure(failureContext);
-                                }
-                            } catch (Exception ex) {
-                                logger.error("onFailure error", ex);
+                        try {
+                            if (failureListener == null) {
+                                return;
                             }
+                            if (t instanceof RejectedExecutionException && failedReason == FailedReason.DISCARD) {
+                                CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
+                                        resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, t);
+                                failureListener.onFailure(failureContext);
+                            }
+                        } catch (Exception ex) {
+                            logger.error("onFailure error", ex);
                         }
                     };
                     return MultiWriteInvoker.invoke(env, list, invoker, failedCallback);
