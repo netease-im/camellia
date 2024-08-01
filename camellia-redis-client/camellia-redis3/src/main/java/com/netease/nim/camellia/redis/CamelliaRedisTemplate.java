@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis;
 
 import com.netease.nim.camellia.core.api.*;
 import com.netease.nim.camellia.core.client.env.Monitor;
+import com.netease.nim.camellia.core.client.env.MultiWriteInvoker;
 import com.netease.nim.camellia.core.client.env.MultiWriteType;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
@@ -21,6 +22,7 @@ import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.*;
 import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.GeoRadiusParam;
 import redis.clients.jedis.params.SetParams;
@@ -1954,23 +1956,23 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                 }
             }
         }
-
-        T result = null;
-        for (String url : writeResourceMap.keySet()) {
-            ICamelliaRedis redis = CamelliaRedisInitializer.init(new Resource(url), env);
-            //只取第一个key，如果是redis-cluster，需要业务自己保证多个key的情况下是分布在相同的redis-node上的，否则会报错
-            Jedis jedis = redis.getJedis(keys[0]);
-            try {
-                if (result == null) {
-                    result = task.execute(jedis);
-                } else {
-                    task.execute(jedis);
+        ProxyEnv proxyEnv = env.getProxyEnv();
+        List<Resource> writeResources = selector.getWriteResources(keys[0]);
+        try {
+            Object result = MultiWriteInvoker.invoke(proxyEnv, writeResources, resource -> {
+                ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
+                //只取第一个key，如果是redis-cluster，需要业务自己保证多个key的情况下是分布在相同的redis-node上的，否则会报错
+                Jedis jedis = redis.getJedis(keys[0]);
+                try {
+                    return task.execute(jedis);
+                } finally {
+                    CloseUtil.closeQuietly(jedis);
                 }
-            } finally {
-                CloseUtil.closeQuietly(jedis);
-            }
+            });
+            return (T) result;
+        } catch (Exception e) {
+            throw new CamelliaRedisException(ExceptionUtils.onError(e));
         }
-        return result;
     }
 
     private interface WriteInvoker {
@@ -2006,16 +2008,15 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                 }
             }
         }
-        Object result = null;
-        for (Resource resource : writeResources) {
-            ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
-            if (result == null) {
-                result = writeInvoker.invoke(resource, redis);
-            } else {
-                writeInvoker.invoke(resource, redis);
-            }
+        ProxyEnv proxyEnv = env.getProxyEnv();
+        try {
+            return MultiWriteInvoker.invoke(proxyEnv, writeResources, resource -> {
+                ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
+                return writeInvoker.invoke(resource, redis);
+            });
+        } catch (Exception e) {
+            throw new CamelliaRedisException(ExceptionUtils.onError(e));
         }
-        return result;
     }
 
     private static class ApiServiceWrapper implements CamelliaApi {
