@@ -1959,7 +1959,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         ProxyEnv proxyEnv = env.getProxyEnv();
         List<Resource> writeResources = selector.getWriteResources(keys[0]);
         try {
-            Object result = MultiWriteInvoker.invoke(proxyEnv, writeResources, resource -> {
+            Object result = MultiWriteInvoker.invoke(proxyEnv, writeResources, (resource, index) -> {
                 ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
                 //只取第一个key，如果是redis-cluster，需要业务自己保证多个key的情况下是分布在相同的redis-node上的，否则会报错
                 Jedis jedis = redis.getJedis(keys[0]);
@@ -1970,7 +1970,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                 }
             });
             return (T) result;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new CamelliaRedisException(ExceptionUtils.onError(e));
         }
     }
@@ -2010,11 +2010,11 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         }
         ProxyEnv proxyEnv = env.getProxyEnv();
         try {
-            return MultiWriteInvoker.invoke(proxyEnv, writeResources, resource -> {
+            return MultiWriteInvoker.invoke(proxyEnv, writeResources, (resource, index) -> {
                 ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
                 return writeInvoker.invoke(resource, redis);
             });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new CamelliaRedisException(ExceptionUtils.onError(e));
         }
     }

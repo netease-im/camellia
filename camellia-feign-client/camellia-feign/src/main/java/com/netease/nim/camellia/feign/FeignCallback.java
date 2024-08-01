@@ -2,10 +2,7 @@ package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.client.annotation.LoadBalanceKey;
 import com.netease.nim.camellia.core.client.annotation.RetryPolicy;
-import com.netease.nim.camellia.core.client.env.Monitor;
-import com.netease.nim.camellia.core.client.env.MultiWriteType;
-import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
+import com.netease.nim.camellia.core.client.env.*;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
@@ -36,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
@@ -260,140 +255,26 @@ public class FeignCallback<T> implements MethodInterceptor {
                     return invoke(resource, loadBalanceKey, method, objects, true, operationType);
                 } else {
                     ProxyEnv env = feignEnv.getProxyEnv();
-                    MultiWriteType multiWriteType = env.getMultiWriteType();
-                    if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
-                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
-                        List<Future<Object>> futureList = new ArrayList<>();
-                        for (int i=0; i<list.size(); i++) {
-                            Resource resource = list.get(i);
-                            boolean first = i == 0;
-                            Future<Object> future;
+                    //invoker
+                    MultiWriteInvoker.Invoker invoker = (resource, index) -> {
+                        boolean checkFallback = index == 0;
+                        return FeignCallback.this.invoke(resource, loadBalanceKey, method, objects, checkFallback, operationType);
+                    };
+                    //fail callback
+                    MultiWriteInvoker.FailedCallback failedCallback = (t, resource, index, failedReason) -> {
+                        if (t instanceof RejectedExecutionException && failedReason == FailedReason.DISCARD) {
                             try {
-                                future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
-                                    try {
-                                        return invoke(resource, loadBalanceKey, method, objects, first, operationType);
-                                    } catch (Throwable e) {
-                                        logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
-                                                className, method.getName(), resource.getUrl(), e);
-                                        throw new ExecutionException(e);
-                                    }
-                                }));
-                            } catch (RejectedExecutionException e) {
-                                try {
-                                    if (failureListener != null) {
-                                        CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
-                                                resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, e);
-                                        failureListener.onFailure(failureContext);
-                                    }
-                                } catch (Exception ex) {
-                                    logger.error("onFailure error", ex);
+                                if (failureListener != null) {
+                                    CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
+                                            resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, t);
+                                    failureListener.onFailure(failureContext);
                                 }
-                                throw e;
-                            }
-                            futureList.add(future);
-                        }
-                        Object ret = null;
-                        for (int i=0; i<futureList.size(); i++) {
-                            boolean first = i == 0;
-                            Future<Object> future = futureList.get(i);
-                            Object ret1 = future.get();
-                            if (first) {
-                                ret = ret1;
+                            } catch (Exception ex) {
+                                logger.error("onFailure error", ex);
                             }
                         }
-                        return ret;
-                    } else if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
-                        Object ret = null;
-                        for (int i=0; i<list.size(); i++) {
-                            boolean first = i == 0;
-                            Resource resource = list.get(i);
-                            Object ret1 = invoke(resource, loadBalanceKey, method, objects, first, operationType);
-                            if (first) {
-                                ret = ret1;
-                            }
-                        }
-                        return ret;
-                    } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
-                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
-                        Future<Object> targetFuture = null;
-                        for (int i=0; i<list.size(); i++) {
-                            Resource resource = list.get(i);
-                            boolean first = i == 0;
-                            Future<Object> future = null;
-                            try {
-                                future = env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
-                                    try {
-                                        return invoke(resource, loadBalanceKey, method, objects, first, operationType);
-                                    } catch (Throwable e) {
-                                        logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
-                                                className, method.getName(), resource.getUrl(), e);
-                                        throw new ExecutionException(e);
-                                    }
-                                }));
-                            } catch (Exception e) {
-                                if (e instanceof RejectedExecutionException && failureListener != null) {
-                                    try {
-                                        CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
-                                                resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, e);
-                                        failureListener.onFailure(failureContext);
-                                    } catch (Exception ex) {
-                                        logger.error("onFailure error", ex);
-                                    }
-                                }
-                                if (!first) {
-                                    logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
-                                            className, method.getName(), resource.getUrl(), e);
-                                } else {
-                                    throw e;
-                                }
-                            }
-                            if (first) {
-                                targetFuture = future;
-                            }
-                        }
-                        if (targetFuture != null) {
-                            return targetFuture.get();
-                        } else {
-                            throw new IllegalStateException("wil not invoke here");
-                        }
-                    } else if (multiWriteType == MultiWriteType.MISC_ASYNC_MULTI_THREAD) {
-                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
-                        Object target = null;
-                        for (int i=0; i<list.size(); i++) {
-                            Resource resource = list.get(i);
-                            boolean first = i == 0;
-                            if (first) {
-                                target = invoke(resource, loadBalanceKey, method, objects, true, operationType);
-                            } else {
-                                try {
-                                    env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
-                                        try {
-                                            return invoke(resource, loadBalanceKey, method, objects, false, operationType);
-                                        } catch (Throwable e) {
-                                            logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
-                                                    className, method.getName(), resource.getUrl(), e);
-                                            throw new ExecutionException(e);
-                                        }
-                                    }));
-                                } catch (Exception e) {
-                                    logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
-                                            className, method.getName(), resource.getUrl(), e);
-                                    if (e instanceof RejectedExecutionException && failureListener != null) {
-                                        try {
-                                            CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
-                                                    resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, e);
-                                            failureListener.onFailure(failureContext);
-                                        } catch (Exception ex) {
-                                            logger.error("onFailure error", ex);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return target;
-                    } else {
-                        throw new IllegalArgumentException("unknown multiWriteType");
-                    }
+                    };
+                    return MultiWriteInvoker.invoke(env, list, invoker, failedCallback);
                 }
             }
             throw new IllegalStateException("wil not invoke here");
@@ -415,7 +296,5 @@ public class FeignCallback<T> implements MethodInterceptor {
             throw t;
         }
     }
-
-
 
 }

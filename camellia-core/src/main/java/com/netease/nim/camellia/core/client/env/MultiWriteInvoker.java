@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,18 +20,18 @@ public class MultiWriteInvoker {
     private static final Logger logger = LoggerFactory.getLogger(MultiWriteInvoker.class);
 
     public static interface Invoker {
-        Object invoke(Resource resource) throws Exception;
+        Object invoke(Resource resource, int index) throws Throwable;
     }
 
     public static interface FailedCallback {
         void failed(Throwable t, Resource resource, int index, FailedReason failedReason);
     }
 
-    public static Object invoke(ProxyEnv proxyEnv, List<Resource> writeResources, Invoker invoker) throws Exception {
+    public static Object invoke(ProxyEnv proxyEnv, List<Resource> writeResources, Invoker invoker) throws Throwable {
         return invoke(proxyEnv, writeResources, invoker, null);
     }
 
-    public static Object invoke(ProxyEnv proxyEnv, List<Resource> writeResources, Invoker invoker, FailedCallback failedCallback) throws Exception {
+    public static Object invoke(ProxyEnv proxyEnv, List<Resource> writeResources, Invoker invoker, FailedCallback failedCallback) throws Throwable {
         if (writeResources.size() == 1) {
             return invoke0(invoker, writeResources.get(0), failedCallback, 0, null);
         }
@@ -135,14 +136,18 @@ public class MultiWriteInvoker {
 
     private static Object invoke0(Invoker invoker, Resource resource, FailedCallback failedCallback, int index, AtomicBoolean lock) throws Exception {
         try {
-            return invoker.invoke(resource);
-        } catch (Exception e) {
+            return invoker.invoke(resource, index);
+        } catch (Throwable e) {
             onFailedCallback(resource, index, failedCallback, e, FailedReason.EXCEPTION, lock);
-            throw e;
+            if (e instanceof Exception) {
+                throw (Exception) e;
+            } else {
+                throw new ExecutionException(e);
+            }
         }
     }
 
-    private static void onFailedCallback(Resource resource, int index, FailedCallback failedCallback, Exception e, FailedReason failedReason, AtomicBoolean lock) {
+    private static void onFailedCallback(Resource resource, int index, FailedCallback failedCallback, Throwable e, FailedReason failedReason, AtomicBoolean lock) {
         if (failedCallback == null) return;
         if (lock == null) {
             failedCallback.failed(e, resource, index, failedReason);

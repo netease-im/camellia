@@ -109,7 +109,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                         //
                         List<Resource> writeResources = writeOperation.getWriteResources();
                         //
-                        return MultiWriteInvoker.invoke(env, writeResources, resource -> invokeWrite(resource, method, objects), (err, resource, index, failedReason) -> {
+                        return MultiWriteInvoker.invoke(env, writeResources, (resource, index) -> invokeWrite(resource, method, objects), (err, resource, index, failedReason) -> {
                             //failed callback
                             T client = clientMap.get(resource);
                             addFailedWriteTask(type, writeOperation.getType(), failedReason, err, index, resource, client, objects, method);
