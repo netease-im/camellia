@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by caojiajun on 2024/8/1
@@ -18,19 +19,30 @@ public class MultiWriteInvoker {
     private static final Logger logger = LoggerFactory.getLogger(MultiWriteInvoker.class);
 
     public static interface Invoker {
-        Object invoke(Resource resource);
+        Object invoke(Resource resource) throws Exception;
+    }
+
+    public static interface FailedCallback {
+        void failed(Throwable t, Resource resource, int index, FailedReason failedReason);
     }
 
     public static Object invoke(ProxyEnv proxyEnv, List<Resource> writeResources, Invoker invoker) throws Exception {
+        return invoke(proxyEnv, writeResources, invoker, null);
+    }
+
+    public static Object invoke(ProxyEnv proxyEnv, List<Resource> writeResources, Invoker invoker, FailedCallback failedCallback) throws Exception {
+        if (writeResources.size() == 1) {
+            return invoke0(invoker, writeResources.get(0), failedCallback, 0, null);
+        }
         MultiWriteType multiWriteType = proxyEnv.getMultiWriteType();
         if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
             Object result = null;
             for (int i=0; i<writeResources.size(); i++) {
                 Resource resource = writeResources.get(i);
                 if (i == 0) {
-                    result = invoker.invoke(resource);
+                    result = invoke0(invoker, resource, failedCallback, i, null);
                 } else {
-                    invoker.invoke(resource);
+                    invoke0(invoker, resource, failedCallback, i, null);
                 }
             }
             return result;
@@ -38,9 +50,18 @@ public class MultiWriteInvoker {
         if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
             ThreadContextSwitchStrategy strategy = proxyEnv.getThreadContextSwitchStrategy();
             List<Future<Object>> futureList = new ArrayList<>(writeResources.size());
-            for (Resource resource : writeResources) {
-                Future<Object> future = proxyEnv.getMultiWriteConcurrentExec()
-                        .submit(strategy.wrapperCallable(() -> invoker.invoke(resource)));
+            for (int i=0; i<writeResources.size(); i++) {
+                Resource resource = writeResources.get(i);
+                final int index = i;
+                AtomicBoolean lock = new AtomicBoolean(false);
+                Future<Object> future;
+                try {
+                    future = proxyEnv.getMultiWriteConcurrentExec()
+                            .submit(strategy.wrapperCallable(() -> invoke0(invoker, resource, failedCallback, index, lock)));
+                } catch (Exception e) {
+                    onFailedCallback(resource, index, failedCallback, e, FailedReason.DISCARD, lock);
+                    throw e;
+                }
                 futureList.add(future);
             }
             Object result = null;
@@ -59,13 +80,16 @@ public class MultiWriteInvoker {
             boolean first;
             for (int i=0; i<writeResources.size(); i++) {
                 Resource resource = writeResources.get(i);
+                final int index = i;
                 first = i == 0;
                 Future<Object> future = null;
+                AtomicBoolean lock = new AtomicBoolean(false);
                 try {
                     String hashKey = threadHashKey();
                     future = proxyEnv.getMultiWriteAsyncExec().submit(hashKey,
-                            strategy.wrapperCallable(() -> invoker.invoke(resource)));
+                            strategy.wrapperCallable(() -> invoke0(invoker, resource, failedCallback, index, lock)));
                 } catch (Exception e) {
+                    onFailedCallback(resource, index, failedCallback, e, FailedReason.DISCARD, lock);
                     if (first) {
                         throw e;
                     } else {
@@ -89,15 +113,18 @@ public class MultiWriteInvoker {
             Object result = null;
             for (int i=0; i<writeResources.size(); i++) {
                 Resource resource = writeResources.get(i);
+                final int index = i;
                 if (i == 0) {
-                    result = invoker.invoke(resource);
+                    result = invoke0(invoker, resource, failedCallback, index, null);
                     continue;
                 }
+                AtomicBoolean lock = new AtomicBoolean(false);
                 try {
                     String hashKey = threadHashKey();
                     proxyEnv.getMultiWriteAsyncExec().submit(hashKey,
-                            strategy.wrapperCallable(() -> invoker.invoke(resource)));
+                            strategy.wrapperCallable(() -> invoke0(invoker, resource, failedCallback, index, lock)));
                 } catch (Exception e) {
+                    onFailedCallback(resource, index, failedCallback, e, FailedReason.DISCARD, lock);
                     logger.error("submit async multi thread task error", e);
                 }
             }
@@ -105,6 +132,27 @@ public class MultiWriteInvoker {
         }
         throw new IllegalArgumentException("unknown multiWriteType");
     }
+
+    private static Object invoke0(Invoker invoker, Resource resource, FailedCallback failedCallback, int index, AtomicBoolean lock) throws Exception {
+        try {
+            return invoker.invoke(resource);
+        } catch (Exception e) {
+            onFailedCallback(resource, index, failedCallback, e, FailedReason.EXCEPTION, lock);
+            throw e;
+        }
+    }
+
+    private static void onFailedCallback(Resource resource, int index, FailedCallback failedCallback, Exception e, FailedReason failedReason, AtomicBoolean lock) {
+        if (failedCallback == null) return;
+        if (lock == null) {
+            failedCallback.failed(e, resource, index, failedReason);
+        } else {
+            if (lock.compareAndSet(false, true)) {
+                failedCallback.failed(e, resource, index, failedReason);
+            }
+        }
+    }
+
 
     private static String threadHashKey() {
         return String.valueOf(CRC16Utils.getCRC16(String.valueOf(Thread.currentThread().getId()).getBytes(StandardCharsets.UTF_8)));
