@@ -6,7 +6,6 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -22,11 +21,12 @@ import java.nio.charset.StandardCharsets;
  * <p>
  * Created by caojiajun on 2024/8/5
  */
-public class SIsMemberCommander extends Commander {
+public class SIsMemberCommander extends Set0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('sismember', KEYS[1], ARGV[1]);\n" +
+            "  redis.call('pexpire', KEYS[1], ARGV[2]);\n" +
             "  return {'1', ret};\n" +
             "end\n" +
             "return {'2'};").getBytes(StandardCharsets.UTF_8);
@@ -78,7 +78,7 @@ public class SIsMemberCommander extends Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{member}));
+            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{member, smembersCacheMillis()}));
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 if (replies[0] instanceof BulkReply) {

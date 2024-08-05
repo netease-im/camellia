@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.set;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 
 /**
@@ -11,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
  * <p>
  * Created by caojiajun on 2024/8/5
  */
-public class SRandomMemberCommander extends Commander {
+public class SRandomMemberCommander extends Set0Commander {
 
     public SRandomMemberCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);

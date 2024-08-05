@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.HashSet;
@@ -50,5 +51,9 @@ public abstract class Set0Commander extends Commander {
             }
         }
         return set;
+    }
+
+    protected final byte[] smembersCacheMillis() {
+        return Utils.stringToBytes(String.valueOf(cacheConfig.smembersCacheMillis()));
     }
 }

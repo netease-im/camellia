@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -20,7 +19,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
  * <p>
  * Created by caojiajun on 2024/8/5
  */
-public class SCardCommander extends Commander {
+public class SCardCommander extends Set0Commander {
 
     public SCardCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
