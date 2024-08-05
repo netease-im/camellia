@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by caojiajun on 2024/5/21
@@ -97,6 +98,20 @@ public class SetLRUCache {
             set = localCacheForWrite.get(slot, bytesKey);
         }
         return set;
+    }
+
+    public Set<BytesKey> sadd(byte[] key, byte[] cacheKey, Set<BytesKey> memberSet) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        RedisSet set = localCache.get(slot, new BytesKey(cacheKey));
+        Set<BytesKey> result = null;
+        if (set != null) {
+            result = set.sadd(memberSet);
+        }
+        set = localCacheForWrite.get(slot, new BytesKey(cacheKey));
+        if (set != null) {
+            result = set.sadd(memberSet);
+        }
+        return result;
     }
 
     public void del(byte[] key, byte[] cacheKey) {

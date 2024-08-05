@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
@@ -26,11 +27,12 @@ public class CommanderConfig {
     private final KvGcExecutor gcExecutor;
     private final WriteBuffer<RedisHash> hashWriteBuffer;
     private final WriteBuffer<RedisZSet> zsetWriteBuffer;
+    private final WriteBuffer<RedisSet> setWriteBuffer;
 
     public CommanderConfig(KVClient kvClient, KeyDesign keyDesign, CacheConfig cacheConfig,
                            KvConfig kvConfig, KeyMetaServer keyMetaServer,
                            RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor,
-                           WriteBuffer<RedisHash> hashWriteBuffer, WriteBuffer<RedisZSet> zsetWriteBuffer) {
+                           WriteBuffer<RedisHash> hashWriteBuffer, WriteBuffer<RedisZSet> zsetWriteBuffer, WriteBuffer<RedisSet> setWriteBuffer) {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.cacheConfig = cacheConfig;
@@ -41,6 +43,7 @@ public class CommanderConfig {
         this.gcExecutor = gcExecutor;
         this.hashWriteBuffer = hashWriteBuffer;
         this.zsetWriteBuffer = zsetWriteBuffer;
+        this.setWriteBuffer = setWriteBuffer;
     }
 
     public KVClient getKvClient() {
@@ -81,6 +84,10 @@ public class CommanderConfig {
 
     public WriteBuffer<RedisZSet> getZsetWriteBuffer() {
         return zsetWriteBuffer;
+    }
+
+    public WriteBuffer<RedisSet> getSetWriteBuffer() {
+        return setWriteBuffer;
     }
 }
 

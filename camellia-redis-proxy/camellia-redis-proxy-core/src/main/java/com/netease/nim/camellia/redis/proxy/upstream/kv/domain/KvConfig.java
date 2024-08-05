@@ -45,4 +45,8 @@ public class KvConfig {
         return RedisKvConf.getInt(namespace, "kv.zset.max.size", Integer.MAX_VALUE);
     }
 
+    public int setMaxSize() {
+        return RedisKvConf.getInt(namespace, "kv.set.max.size", Integer.MAX_VALUE);
+    }
+
 }

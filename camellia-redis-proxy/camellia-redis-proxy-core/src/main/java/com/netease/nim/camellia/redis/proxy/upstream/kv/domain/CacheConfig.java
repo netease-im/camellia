@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import org.slf4j.Logger;
@@ -20,9 +21,11 @@ public class CacheConfig {
     private boolean metaLocalCacheEnable;
     private boolean hashLocalCacheEnable;
     private boolean zsetLocalCacheEnable;
+    private boolean setLocalCacheEnable;
     private final KeyMetaLRUCache keyMetaLRUCache;
     private final HashLRUCache hashLRUCache;
     private final ZSetLRUCache zSetLRUCache;
+    private final SetLRUCache setLRUCache;
 
     public CacheConfig(String namespace, boolean metaCacheEnable) {
         this.namespace = namespace;
@@ -32,9 +35,11 @@ public class CacheConfig {
         logger.info("namespace = {}, metaLocalCacheEnable = {}", namespace, metaLocalCacheEnable);
         logger.info("namespace = {}, hashLocalCacheEnable = {}", namespace, hashLocalCacheEnable);
         logger.info("namespace = {}, zsetLocalCacheEnable = {}", namespace, zsetLocalCacheEnable);
+        logger.info("namespace = {}, setLocalCacheEnable = {}", namespace, setLocalCacheEnable);
         this.hashLRUCache = new HashLRUCache(namespace);
         this.keyMetaLRUCache = new KeyMetaLRUCache(namespace);
         this.zSetLRUCache = new ZSetLRUCache(namespace);
+        this.setLRUCache = new SetLRUCache(namespace);
         ProxyDynamicConf.registerCallback(this::initCacheConfig);
     }
 
@@ -63,6 +68,14 @@ public class CacheConfig {
             }
             logger.info("kv.zset.local.cache.enable = {}", zsetLocalCacheEnable);
         }
+        boolean setLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.set.local.cache.enable", true);
+        if ((this.setLocalCacheEnable && !setLocalCacheEnable) || (!this.setLocalCacheEnable && setLocalCacheEnable)) {
+            this.setLocalCacheEnable = setLocalCacheEnable;
+            if (!setLocalCacheEnable && setLRUCache != null) {
+                setLRUCache.clear();
+            }
+            logger.info("kv.set.local.cache.enable = {}", setLocalCacheEnable);
+        }
     }
 
     public String getNamespace() {
@@ -85,6 +98,10 @@ public class CacheConfig {
         return zsetLocalCacheEnable;
     }
 
+    public boolean isSetLocalCacheEnable() {
+        return setLocalCacheEnable;
+    }
+
     public KeyMetaLRUCache getKeyMetaLRUCache() {
         return keyMetaLRUCache;
     }
@@ -95,6 +112,10 @@ public class CacheConfig {
 
     public ZSetLRUCache getZSetLRUCache() {
         return zSetLRUCache;
+    }
+
+    public SetLRUCache getSetLRUCache() {
+        return setLRUCache;
     }
 
     public long metaCacheMillis() {

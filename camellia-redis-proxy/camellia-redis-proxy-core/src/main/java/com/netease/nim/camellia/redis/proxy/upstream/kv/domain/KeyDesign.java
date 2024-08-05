@@ -150,6 +150,14 @@ public class KeyDesign {
         return data;
     }
 
+    public byte[] setMemberSubKey(KeyMeta keyMeta, byte[] key, byte[] member) {
+        byte[] data = subKeyPrefix(keyMeta, key);
+        if (member.length > 0) {
+            data = BytesUtils.merge(data, member);
+        }
+        return data;
+    }
+
     public byte[] zsetMemberSubKey1(KeyMeta keyMeta, byte[] key, byte[] member) {
         byte[] data = subKeyPrefix(keyMeta, key);
         if (member.length > 0) {
@@ -198,6 +206,14 @@ public class KeyDesign {
         int fieldSize = subKey.length - prefixSize;
         byte[] field = new byte[fieldSize];
         System.arraycopy(subKey, prefixSize, field, 0, fieldSize);
+        return field;
+    }
+
+    public byte[] decodeSetMemberBySubKey(byte[] subKey, byte[] key) {
+        int prefixSize = prefixLen + 4 + key.length + 8;
+        int memberSize = subKey.length - prefixSize;
+        byte[] field = new byte[memberSize];
+        System.arraycopy(subKey, prefixSize, field, 0, memberSize);
         return field;
     }
 

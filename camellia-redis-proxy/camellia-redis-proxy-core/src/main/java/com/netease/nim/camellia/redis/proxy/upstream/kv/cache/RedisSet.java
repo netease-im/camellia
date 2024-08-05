@@ -15,6 +15,10 @@ public class RedisSet {
         this.set = members;
     }
 
+    public RedisSet duplicate() {
+        return new RedisSet(new HashSet<>(set));
+    }
+
     public Set<BytesKey> sadd(Set<BytesKey> members) {
         Set<BytesKey> existsMember = new HashSet<>();
         for (BytesKey member : members) {

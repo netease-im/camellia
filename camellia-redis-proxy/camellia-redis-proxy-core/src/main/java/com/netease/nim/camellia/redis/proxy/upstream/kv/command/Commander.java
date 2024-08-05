@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
@@ -38,6 +39,7 @@ public abstract class Commander {
     protected final MpscSlotHashExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
     protected final WriteBuffer<RedisHash> hashWriteBuffer;
     protected final WriteBuffer<RedisZSet> zsetWriteBuffer;
+    protected final WriteBuffer<RedisSet> setWriteBuffer;
 
     public Commander(CommanderConfig commanderConfig) {
         this.kvClient = commanderConfig.getKvClient();
@@ -50,6 +52,7 @@ public abstract class Commander {
         this.gcExecutor = commanderConfig.getGcExecutor();
         this.hashWriteBuffer = commanderConfig.getHashWriteBuffer();
         this.zsetWriteBuffer = commanderConfig.getZsetWriteBuffer();
+        this.setWriteBuffer = commanderConfig.getSetWriteBuffer();
     }
 
     public abstract RedisCommand redisCommand();
