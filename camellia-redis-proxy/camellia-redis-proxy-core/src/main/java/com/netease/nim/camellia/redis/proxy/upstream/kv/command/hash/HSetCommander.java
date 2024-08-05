@@ -7,9 +7,8 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -108,12 +107,12 @@ public class HSetCommander extends Hash0Commander {
         Result result = null;
         if (first) {
             existsCount = 0;
-            result = hashWriteBuffer.put(cacheKey, new Hash(new HashMap<>(fieldMap)));
+            result = hashWriteBuffer.put(cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
         } else {
-            WriteBufferValue<Hash> value = hashWriteBuffer.get(cacheKey);
+            WriteBufferValue<RedisHash> value = hashWriteBuffer.get(cacheKey);
             if (value != null) {
-                Hash hash = value.getValue();
+                RedisHash hash = value.getValue();
                 Map<BytesKey, byte[]> existsMap = hash.hset(fieldMap);
                 existsCount = existsMap.size();
                 result = hashWriteBuffer.put(cacheKey, hash);
@@ -128,13 +127,13 @@ public class HSetCommander extends Hash0Commander {
 
             Map<BytesKey, byte[]> existsMap = null;
             if (first) {
-                hashLRUCache.putAllForWrite(key, cacheKey, new Hash(new HashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             } else {
                 existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
                 if (existsMap == null) {
                     if (hotKey) {
                         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-                        hashLRUCache.putAllForWrite(key, cacheKey, new Hash(map));
+                        hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(map));
                         existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
                     }
                 } else {
@@ -147,7 +146,7 @@ public class HSetCommander extends Hash0Commander {
             }
 
             if (result == null) {
-                Hash hash = hashLRUCache.getForWrite(key, cacheKey);
+                RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                 }

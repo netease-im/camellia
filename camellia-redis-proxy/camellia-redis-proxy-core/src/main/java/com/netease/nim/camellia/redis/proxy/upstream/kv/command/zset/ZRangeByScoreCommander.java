@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -82,9 +82,9 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
-            ZSet zSet = bufferValue.getValue();
+            RedisZSet zSet = bufferValue.getValue();
             List<ZSetTuple> list = zSet.zrangebyscore(minScore, maxScore, limit);
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             return ZSetTupleUtils.toReply(list, withScores);
@@ -95,7 +95,7 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
 
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
-            ZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
 
             if (zSet != null) {
                 List<ZSetTuple> list = zSet.zrangebyscore(minScore, maxScore, limit);

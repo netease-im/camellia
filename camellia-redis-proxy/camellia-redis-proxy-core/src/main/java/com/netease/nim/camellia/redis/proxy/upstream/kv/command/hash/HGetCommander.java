@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -76,7 +76,7 @@ public class HGetCommander extends Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        WriteBufferValue<Hash> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             byte[] bytes = writeBufferValue.getValue().hget(new BytesKey(field));
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -85,7 +85,7 @@ public class HGetCommander extends Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-            Hash hash = hashLRUCache.getForRead(key, cacheKey);
+            RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new BulkReply(hash.hget(new BytesKey(field)));

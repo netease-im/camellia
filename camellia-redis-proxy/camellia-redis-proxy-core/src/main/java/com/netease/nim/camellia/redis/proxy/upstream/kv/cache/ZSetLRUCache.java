@@ -26,8 +26,8 @@ public class ZSetLRUCache {
     private final HotKeyCalculator hotKeyCalculator;
 
     private int capacity;
-    private SlotLRUCache<ZSet> localCache;
-    private SlotLRUCache<ZSet> localCacheForWrite;
+    private SlotLRUCache<RedisZSet> localCache;
+    private SlotLRUCache<RedisZSet> localCacheForWrite;
 
     public ZSetLRUCache(String namespace) {
         this.namespace = namespace;
@@ -67,20 +67,20 @@ public class ZSetLRUCache {
         return hotKeyCalculator.isHotKey(key);
     }
 
-    public void putZSetForWrite(byte[] key, byte[] cacheKey, ZSet zSet) {
+    public void putZSetForWrite(byte[] key, byte[] cacheKey, RedisZSet zSet) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         localCacheForWrite.put(slot, new BytesKey(cacheKey), zSet);
     }
 
-    public void putZSetForRead(byte[] key, byte[] cacheKey, ZSet zSet) {
+    public void putZSetForRead(byte[] key, byte[] cacheKey, RedisZSet zSet) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         localCache.put(slot, new BytesKey(cacheKey), zSet);
     }
 
-    public ZSet getForRead(byte[] key, byte[] cacheKey) {
+    public RedisZSet getForRead(byte[] key, byte[] cacheKey) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        ZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slot, bytesKey);
         if (zSet == null) {
             zSet = localCacheForWrite.get(slot, bytesKey);
             if (zSet != null) {
@@ -91,10 +91,10 @@ public class ZSetLRUCache {
         return zSet;
     }
 
-    public ZSet getForWrite(byte[] key, byte[] cacheKey) {
+    public RedisZSet getForWrite(byte[] key, byte[] cacheKey) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
-        ZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slot, bytesKey);
         if (zSet == null) {
             zSet = localCacheForWrite.get(slot, bytesKey);
         }
@@ -103,7 +103,7 @@ public class ZSetLRUCache {
 
     public Map<BytesKey, Double> zadd(byte[] key, byte[] cacheKey, Map<BytesKey, Double> map) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        ZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
+        RedisZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
         Map<BytesKey, Double> result = null;
         if (zSet != null) {
             result = zSet.zadd(map);
@@ -119,7 +119,7 @@ public class ZSetLRUCache {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         Map<BytesKey, Double> result = null;
         BytesKey bytesKey = new BytesKey(cacheKey);
-        ZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slot, bytesKey);
         if (zSet != null) {
             result = zSet.zrem(members);
         }
@@ -134,7 +134,7 @@ public class ZSetLRUCache {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
         Map<BytesKey, Double> result = null;
-        ZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slot, bytesKey);
         if (zSet != null) {
             result = zSet.zremrangeByRank(start, stop);
         }
@@ -150,7 +150,7 @@ public class ZSetLRUCache {
         BytesKey bytesKey = new BytesKey(cacheKey);
         Map<BytesKey, Double> result = null;
 
-        ZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slot, bytesKey);
         if (zSet != null) {
             result = zSet.zremrangeByScore(minScore, maxScore);
         }
@@ -166,7 +166,7 @@ public class ZSetLRUCache {
         BytesKey bytesKey = new BytesKey(cacheKey);
         Map<BytesKey, Double> result = null;
 
-        ZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slot, bytesKey);
         if (zSet != null) {
             result = zSet.zremrangeByLex(minLex, maxLex);
         }

@@ -9,7 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -106,9 +106,9 @@ public class HSetNxCommander extends Hash0Commander {
         int cacheCheck = cache_miss;
 
         Result result = null;
-        WriteBufferValue<Hash> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
-            Hash hash = writeBufferValue.getValue();
+            RedisHash hash = writeBufferValue.getValue();
             byte[] hget = hash.hget(filedKey);
             if (hget != null) {
                 KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -126,12 +126,12 @@ public class HSetNxCommander extends Hash0Commander {
             boolean hotKey = hashLRUCache.isHotKey(key);
 
             boolean loadFromKv = false;
-            Hash hash = hashLRUCache.getForWrite(key, cacheKey);
+            RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
             if (hash == null) {
                 if (hotKey) {
                     Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
                     loadFromKv = true;
-                    hash = new Hash(map);
+                    hash = new RedisHash(map);
                     hashLRUCache.putAllForWrite(key, cacheKey, hash);
                 }
             }

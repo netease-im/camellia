@@ -2,17 +2,14 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
-import com.netease.nim.camellia.tools.utils.BytesKey;
-
-import java.util.Map;
 
 /**
  * Created by caojiajun on 2024/4/8
@@ -27,13 +24,13 @@ public class CommanderConfig {
     private final RedisTemplate cacheRedisTemplate;
     private final RedisTemplate storeRedisTemplate;
     private final KvGcExecutor gcExecutor;
-    private final WriteBuffer<Hash> hashWriteBuffer;
-    private final WriteBuffer<ZSet> zsetWriteBuffer;
+    private final WriteBuffer<RedisHash> hashWriteBuffer;
+    private final WriteBuffer<RedisZSet> zsetWriteBuffer;
 
     public CommanderConfig(KVClient kvClient, KeyDesign keyDesign, CacheConfig cacheConfig,
                            KvConfig kvConfig, KeyMetaServer keyMetaServer,
                            RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor,
-                           WriteBuffer<Hash> hashWriteBuffer, WriteBuffer<ZSet> zsetWriteBuffer) {
+                           WriteBuffer<RedisHash> hashWriteBuffer, WriteBuffer<RedisZSet> zsetWriteBuffer) {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.cacheConfig = cacheConfig;
@@ -78,11 +75,11 @@ public class CommanderConfig {
         return gcExecutor;
     }
 
-    public WriteBuffer<Hash> getHashWriteBuffer() {
+    public WriteBuffer<RedisHash> getHashWriteBuffer() {
         return hashWriteBuffer;
     }
 
-    public WriteBuffer<ZSet> getZsetWriteBuffer() {
+    public WriteBuffer<RedisZSet> getZsetWriteBuffer() {
         return zsetWriteBuffer;
     }
 }

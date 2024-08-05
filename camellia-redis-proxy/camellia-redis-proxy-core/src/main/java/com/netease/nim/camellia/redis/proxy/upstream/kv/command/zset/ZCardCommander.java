@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -49,14 +49,14 @@ public class ZCardCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
-            ZSet zSet = bufferValue.getValue();
+            RedisZSet zSet = bufferValue.getValue();
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             return IntegerReply.parse(zSet.zcard());
         }
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
+            RedisZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
             if (zSet != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(zSet.zcard());

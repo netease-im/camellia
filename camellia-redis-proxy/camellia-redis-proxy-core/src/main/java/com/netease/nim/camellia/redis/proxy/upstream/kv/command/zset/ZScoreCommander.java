@@ -7,8 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
@@ -20,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * ZSCORE key member
@@ -68,9 +66,9 @@ public class ZScoreCommander extends Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
-            ZSet zSet = bufferValue.getValue();
+            RedisZSet zSet = bufferValue.getValue();
             Double zscore = zSet.zscore(new BytesKey(member));
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (zscore == null) {
@@ -81,7 +79,7 @@ public class ZScoreCommander extends Commander {
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
+            RedisZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
             if (zSet != null) {
                 Double zscore = zSet.zscore(new BytesKey(member));
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());

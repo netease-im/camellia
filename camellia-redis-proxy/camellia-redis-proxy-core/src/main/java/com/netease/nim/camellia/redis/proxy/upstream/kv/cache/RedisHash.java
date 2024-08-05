@@ -10,15 +10,15 @@ import java.util.Map;
 /**
  * Created by caojiajun on 2024/6/5
  */
-public class Hash {
+public class RedisHash {
     private final Map<BytesKey, byte[]> map;
 
-    public Hash(Map<BytesKey, byte[]> map) {
+    public RedisHash(Map<BytesKey, byte[]> map) {
         this.map = map;
     }
 
-    public Hash duplicate() {
-        return new Hash(new HashMap<>(map));
+    public RedisHash duplicate() {
+        return new RedisHash(new HashMap<>(map));
     }
 
     public Map<BytesKey, byte[]> hset(Map<BytesKey, byte[]> fieldMap) {

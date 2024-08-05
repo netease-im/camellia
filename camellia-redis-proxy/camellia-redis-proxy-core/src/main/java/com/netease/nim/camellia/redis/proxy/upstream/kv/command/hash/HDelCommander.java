@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.Hash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -77,10 +77,10 @@ public class HDelCommander extends Commander {
 
         Result result = null;
         boolean deleteAll = false;
-        WriteBufferValue<Hash> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-            Hash hash = writeBufferValue.getValue();
+            RedisHash hash = writeBufferValue.getValue();
             Map<BytesKey, byte[]> deleteMaps = hash.hdel(fields);
             delCount = deleteMaps.size();
             if (delCount == 0) {
@@ -109,7 +109,7 @@ public class HDelCommander extends Commander {
                 return IntegerReply.REPLY_0;
             }
             if (deleteMaps != null && result == null) {
-                Hash hash = hashLRUCache.getForWrite(key, cacheKey);
+                RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                     if (hash.isEmpty()) {

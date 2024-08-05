@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -67,16 +67,16 @@ public class ZRankCommander extends ZSet0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
-            ZSet zSet = bufferValue.getValue();
+            RedisZSet zSet = bufferValue.getValue();
             Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             return toReply(zrank, withScores);
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            ZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
+            RedisZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
             if (zSet != null) {
                 Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());

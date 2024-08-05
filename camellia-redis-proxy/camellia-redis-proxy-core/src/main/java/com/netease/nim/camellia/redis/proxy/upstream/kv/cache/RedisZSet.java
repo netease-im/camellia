@@ -10,20 +10,20 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/5/31
  */
-public class ZSet {
+public class RedisZSet {
 
     private final Map<BytesKey, Double> memberMap;
     private List<ZSetTuple> rank = new ArrayList<>();
     private List<ZSetTuple> score = new ArrayList<>();
 
-    public ZSet(Map<BytesKey, Double> memberMap) {
+    public RedisZSet(Map<BytesKey, Double> memberMap) {
         this.memberMap = memberMap;
         refresh();
     }
 
-    public ZSet duplicate() {
+    public RedisZSet duplicate() {
         Map<BytesKey, Double> map = new HashMap<>(memberMap);
-        return new ZSet(map);
+        return new RedisZSet(map);
     }
 
     private void refresh() {

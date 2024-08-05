@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
-
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.db.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.set.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
@@ -80,6 +80,15 @@ public class Commanders {
         initCommander(new ZRevRankCommander(commanderConfig));
         initCommander(new ZMScoreCommander(commanderConfig));
 
+        //set
+        initCommander(new SAddCommander(commanderConfig));
+        initCommander(new SCardCommander(commanderConfig));
+        initCommander(new SIsMemberCommander(commanderConfig));
+        initCommander(new SMembersCommander(commanderConfig));
+        initCommander(new SMIsMemberCommander(commanderConfig));
+        initCommander(new SPopCommander(commanderConfig));
+        initCommander(new SRandomMemberCommander(commanderConfig));
+        initCommander(new SRemCommander(commanderConfig));
     }
 
     private void initCommander(Commander commander) {

@@ -9,7 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -85,9 +85,9 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         Map<BytesKey, Double> localCacheResult = null;
         Result result = null;
 
-        WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
-            ZSet zSet = bufferValue.getValue();
+            RedisZSet zSet = bufferValue.getValue();
             localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (localCacheResult != null && localCacheResult.isEmpty()) {
@@ -114,7 +114,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             }
 
             if (hotKey && localCacheResult == null) {
-                ZSet zSet = loadLRUCache(keyMeta, key);
+                RedisZSet zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     //
                     zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
@@ -127,7 +127,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             }
 
             if (result == null) {
-                ZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
+                RedisZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }

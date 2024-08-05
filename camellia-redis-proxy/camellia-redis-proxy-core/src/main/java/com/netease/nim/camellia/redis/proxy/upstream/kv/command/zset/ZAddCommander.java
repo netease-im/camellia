@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
@@ -89,17 +89,17 @@ public class ZAddCommander extends ZSet0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        ZSet zSet = null;
+        RedisZSet zSet = null;
         Map<BytesKey, Double> existsMap = null;
 
         Result result = null;
 
         if (first) {
-            zSet = new ZSet(new HashMap<>(memberMap));
+            zSet = new RedisZSet(new HashMap<>(memberMap));
             zsetWriteBuffer.put(cacheKey, zSet);
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
         } else {
-            WriteBufferValue<ZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+            WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
             if (bufferValue != null) {
                 zSet = bufferValue.getValue();
                 existsMap = zSet.zadd(memberMap);
@@ -114,7 +114,7 @@ public class ZAddCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (first) {
-                zSet = new ZSet(new HashMap<>(memberMap));
+                zSet = new RedisZSet(new HashMap<>(memberMap));
                 zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
             } else {
                 Map<BytesKey, Double> map = zSetLRUCache.zadd(key, cacheKey, memberMap);
