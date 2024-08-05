@@ -87,7 +87,7 @@ public class Commanders {
         initCommander(new SMembersCommander(commanderConfig));
         initCommander(new SMIsMemberCommander(commanderConfig));
         initCommander(new SPopCommander(commanderConfig));
-        initCommander(new SRandomMemberCommander(commanderConfig));
+        initCommander(new SRandMemberCommander(commanderConfig));
         initCommander(new SRemCommander(commanderConfig));
     }
 

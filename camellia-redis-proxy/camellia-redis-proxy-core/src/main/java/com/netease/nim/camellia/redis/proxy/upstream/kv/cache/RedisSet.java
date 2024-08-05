@@ -54,7 +54,7 @@ public class RedisSet {
         return map;
     }
 
-    public Set<BytesKey> srandommember(int count) {
+    public Set<BytesKey> srandmember(int count) {
         Set<BytesKey> members = new HashSet<>();
         if (set.isEmpty()) {
             return members;
