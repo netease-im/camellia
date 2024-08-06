@@ -228,27 +228,17 @@ public class SAddCommander extends Set0Commander {
                 }
             }
         }
-        writeToKv(keyMeta, key, cacheKey, memberSize, memberSet, result);
+        if (!first) {
+            int add = memberSize - existsMemberSize;
+            updateKeyMeta(keyMeta, key, add);
+        }
+        writeMembers(keyMeta, key, cacheKey, memberSize, memberSet, result);
         return IntegerReply.parse(memberSize - existsMemberSize);
     }
 
     private Reply saddVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Set<BytesKey> memberSet, Result result) {
-        writeToKv(keyMeta, key, cacheKey, memberSize, memberSet, result);
+        writeMembers(keyMeta, key, cacheKey, memberSize, memberSet, result);
         return IntegerReply.parse(memberSize);
     }
 
-    private void writeToKv(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Set<BytesKey> memberSet, Result result) {
-        List<KeyValue> list = new ArrayList<>(memberSize);
-        for (BytesKey bytesKey : memberSet) {
-            byte[] member = bytesKey.getKey();
-            byte[] subKey = keyDesign.setMemberSubKey(keyMeta, key, member);
-            KeyValue keyValue = new KeyValue(subKey, new byte[0]);
-            list.add(keyValue);
-        }
-        if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
-        } else {
-            kvClient.batchPut(list);
-        }
-    }
 }

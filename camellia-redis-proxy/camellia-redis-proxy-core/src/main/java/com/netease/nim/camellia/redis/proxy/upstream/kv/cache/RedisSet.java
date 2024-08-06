@@ -73,8 +73,15 @@ public class RedisSet {
         return members;
     }
 
-    public boolean srem(BytesKey bytesKey) {
-        return set.remove(bytesKey);
+    public int srem(Collection<BytesKey> members) {
+        int count = 0;
+        for (BytesKey member : members) {
+            boolean remove = set.remove(member);
+            if (remove) {
+                count ++;
+            }
+        }
+        return count;
     }
 
     public Set<BytesKey> spop(int count) {

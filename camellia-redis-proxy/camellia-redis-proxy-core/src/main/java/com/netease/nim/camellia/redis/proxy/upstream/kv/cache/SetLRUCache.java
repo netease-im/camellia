@@ -10,6 +10,7 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -102,14 +103,49 @@ public class SetLRUCache {
 
     public Set<BytesKey> sadd(byte[] key, byte[] cacheKey, Set<BytesKey> memberSet) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        RedisSet set = localCache.get(slot, new BytesKey(cacheKey));
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        RedisSet set = localCache.get(slot, bytesKey);
         Set<BytesKey> result = null;
         if (set != null) {
             result = set.sadd(memberSet);
         }
-        set = localCacheForWrite.get(slot, new BytesKey(cacheKey));
+        set = localCacheForWrite.get(slot, bytesKey);
         if (set != null) {
             result = set.sadd(memberSet);
+        }
+        return result;
+    }
+
+    public Set<BytesKey> spop(byte[] key, byte[] cacheKey, int count) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        RedisSet set = localCache.get(slot, bytesKey);
+        Set<BytesKey> result = null;
+        if (set != null) {
+            result = set.spop(count);
+        }
+        set = localCacheForWrite.get(slot, bytesKey);
+        if (set != null) {
+            if (result != null) {
+                set.srem(result);
+            } else {
+                result = set.spop(count);
+            }
+        }
+        return result;
+    }
+
+    public int srem(byte[] key, byte[] cacheKey, Collection<BytesKey> members) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        BytesKey bytesKey = new BytesKey(cacheKey);
+        RedisSet set = localCache.get(slot, bytesKey);
+        int result = -1;
+        if (set != null) {
+            result = set.srem(members);
+        }
+        set = localCacheForWrite.get(slot, bytesKey);
+        if (set != null) {
+            result = set.srem(members);
         }
         return result;
     }

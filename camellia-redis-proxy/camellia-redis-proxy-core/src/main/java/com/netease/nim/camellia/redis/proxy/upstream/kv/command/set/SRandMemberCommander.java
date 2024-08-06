@@ -128,32 +128,8 @@ public class SRandMemberCommander extends Set0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         Set<BytesKey> set = srandmemberFromKv(keyMeta, key, count);
-        return toReply(set, batch);
-    }
 
-    private Set<BytesKey> srandmemberFromKv(KeyMeta keyMeta, byte[] key, int count) {
-        Set<BytesKey> set = new HashSet<>();
-        byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
-        byte[] prefix = startKey;
-        int limit = kvConfig.scanBatch();
-        while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
-            if (scan.isEmpty()) {
-                break;
-            }
-            for (KeyValue keyValue : scan) {
-                byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
-                set.add(new BytesKey(member));
-                startKey = keyValue.getKey();
-                if (set.size() >= count) {
-                    break;
-                }
-            }
-            if (scan.size() < limit) {
-                break;
-            }
-        }
-        return set;
+        return toReply(set, batch);
     }
 
     private Reply toReply(Set<BytesKey> srandmember, boolean batch) {
