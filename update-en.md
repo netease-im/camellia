@@ -1,5 +1,18 @@
 [中文版](update-zh.md)
 
+# 1.2.29（2024/08/xx）
+### add
+* camellia-redis-proxy, kv, support `set` commands, include `sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
+* camellia-redis-client, support smismember method（camellia-redis3）
+* camellia-redis-client，method of eval and executeWrite support MultiWriteType
+
+### update
+* camellia-redis-proxy，kv, upgrade obkv-hbase-client version, support reverse scan
+* reactor multi-write code, include camellia-redis-client、camellia-hbase-client、camellia-feign-client
+
+### fix
+* none
+
 
 # 1.2.28（2024/07/29）
 ### add

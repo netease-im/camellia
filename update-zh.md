@@ -1,5 +1,18 @@
 [ENGLISH](update-en.md)
 
+# 1.2.29（2024/08/xx）
+### 新增
+* camellia-redis-proxy，kv模块，新增支持set相关命令，包括：`sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
+* camellia-redis-client，新增smismember方法的支持（camellia-redis3）
+* camellia-redis-client，eval命令和executeWrite命令，支持不同类型的MultiWriteType
+
+### 更新
+* camellia-redis-proxy，kv模块，升级了obkv-hbase-client的版本，支持反向scan，从而优化了zset反向查询相关命令的性能
+* 重构了multi-write相关的代码，涉及camellia-redis-client、camellia-hbase-client、camellia-feign-client
+
+### fix
+* 无
+
 
 # 1.2.28（2024/07/29）
 ### 新增
