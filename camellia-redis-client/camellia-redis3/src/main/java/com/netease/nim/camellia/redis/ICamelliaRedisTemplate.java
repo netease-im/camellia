@@ -354,6 +354,10 @@ public interface ICamelliaRedisTemplate {
 
     Boolean sismember(String key, String member);
 
+    List<Boolean> smismember(String key, String... members);
+
+    List<Boolean> smismember(byte[] key, byte[]... members);
+
     String srandmember(String key);
 
     List<String> srandmember(String key, int count);

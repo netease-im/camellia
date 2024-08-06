@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis;
 
-import com.netease.nim.camellia.redis.base.utils.CloseUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.GeoRadiusParam;
 import redis.clients.jedis.params.SetParams;
@@ -410,6 +409,10 @@ public interface ICamelliaRedis {
     Long scard(String key);
 
     Boolean sismember(String key, String member);
+
+    List<Boolean> smismember(String key, String... members);
+
+    List<Boolean> smismember(byte[] key, byte[]... members);
 
     String srandmember(String key);
 

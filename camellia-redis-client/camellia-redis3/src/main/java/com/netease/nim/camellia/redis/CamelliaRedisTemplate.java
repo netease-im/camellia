@@ -1182,6 +1182,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public List<Boolean> smismember(String key, String... members) {
+        return factory.getProxy().smismember(key, members);
+    }
+
+    @Override
+    public List<Boolean> smismember(byte[] key, byte[]... members) {
+        return factory.getProxy().smismember(key, members);
+    }
+
+    @Override
     public String srandmember(String key) {
         return factory.getProxy().srandmember(key);
     }

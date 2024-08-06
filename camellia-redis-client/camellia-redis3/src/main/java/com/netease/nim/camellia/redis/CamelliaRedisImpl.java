@@ -943,6 +943,32 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
 
     @ReadOp
     @Override
+    public List<Boolean> smismember(@ShardingParam String key, String... members) {
+        LogUtil.debugLog(resource, key);
+        String command = "smismember(String key, String[] members)";
+        before(key, command);
+        try {
+            return redis.smismember(key, members);
+        } finally {
+            after(key, command);
+        }
+    }
+
+    @ReadOp
+    @Override
+    public List<Boolean> smismember(@ShardingParam byte[] key, byte[]... members) {
+        LogUtil.debugLog(resource, key);
+        String command = "smismember(byte[] key, byte[][] members)";
+        before(key, command);
+        try {
+            return redis.smismember(key, members);
+        } finally {
+            after(key, command);
+        }
+    }
+
+    @ReadOp
+    @Override
     public String srandmember(@ShardingParam String key) {
         LogUtil.debugLog(resource, key);
         String command = "srandmember(String key)";

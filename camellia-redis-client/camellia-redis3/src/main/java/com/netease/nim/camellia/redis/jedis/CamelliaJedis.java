@@ -688,6 +688,26 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public List<Boolean> smismember(String key, String... members) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.smismember(key, members);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public List<Boolean> smismember(byte[] key, byte[]... members) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.smismember(key, members);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public String srandmember(String key) {
         Jedis jedis = jedisPool.getResource();
         try {

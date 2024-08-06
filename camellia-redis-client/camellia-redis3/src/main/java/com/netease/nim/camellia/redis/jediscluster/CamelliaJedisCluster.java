@@ -396,6 +396,16 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
+    public List<Boolean> smismember(String key, String... members) {
+        return jedisCluster.smismember(key, members);
+    }
+
+    @Override
+    public List<Boolean> smismember(byte[] key, byte[]... members) {
+        return jedisCluster.smismember(key, members);
+    }
+
+    @Override
     public String srandmember(String key) {
         return jedisCluster.srandmember(key);
     }
