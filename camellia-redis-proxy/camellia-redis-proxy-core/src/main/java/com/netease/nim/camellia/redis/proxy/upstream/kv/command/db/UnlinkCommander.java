@@ -54,6 +54,10 @@ public class UnlinkCommander extends Commander {
                 byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
                 cacheRedisTemplate.sendDel(cacheKey);
             }
+            if (keyType == KeyType.set && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
+                byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+                cacheRedisTemplate.sendDel(cacheKey);
+            }
         }
         return IntegerReply.parse(ret);
     }

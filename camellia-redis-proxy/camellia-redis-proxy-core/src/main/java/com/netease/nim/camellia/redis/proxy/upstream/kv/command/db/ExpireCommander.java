@@ -86,6 +86,11 @@ public class ExpireCommander extends Commander {
             long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.hgetallCacheMillis());
             cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
         }
+        if (keyType == KeyType.set && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+            long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.hgetallCacheMillis());
+            cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
+        }
         return IntegerReply.REPLY_1;
     }
 }

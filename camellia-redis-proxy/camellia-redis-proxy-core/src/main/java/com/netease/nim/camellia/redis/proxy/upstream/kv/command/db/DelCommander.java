@@ -54,11 +54,17 @@ public class DelCommander extends Commander {
             if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
                 cacheRedisTemplate.sendDel(cacheKey);
             }
+            if (keyType == KeyType.set && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
+                cacheRedisTemplate.sendDel(cacheKey);
+            }
             if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
                 cacheConfig.getHashLRUCache().del(key, cacheKey);
             }
             if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {
                 cacheConfig.getZSetLRUCache().del(key, cacheKey);
+            }
+            if (keyType == KeyType.set && cacheConfig.isSetLocalCacheEnable()) {
+                cacheConfig.getSetLRUCache().del(key, cacheKey);
             }
         }
         return IntegerReply.parse(ret);
