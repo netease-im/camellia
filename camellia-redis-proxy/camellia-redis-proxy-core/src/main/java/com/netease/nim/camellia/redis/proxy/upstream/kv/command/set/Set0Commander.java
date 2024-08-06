@@ -57,9 +57,8 @@ public abstract class Set0Commander extends Commander {
         Set<BytesKey> set = new HashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
-        int limit = kvConfig.scanBatch();
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, count, Sort.ASC, false);
             if (scan.isEmpty()) {
                 break;
             }
@@ -71,7 +70,7 @@ public abstract class Set0Commander extends Commander {
                     break;
                 }
             }
-            if (scan.size() < limit) {
+            if (scan.size() < count) {
                 break;
             }
         }
