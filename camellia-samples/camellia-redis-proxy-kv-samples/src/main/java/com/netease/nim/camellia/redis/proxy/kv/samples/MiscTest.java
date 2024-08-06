@@ -14,8 +14,8 @@ import redis.clients.jedis.JedisPoolConfig;
 public class MiscTest {
 
     public static void main(String[] args) {
-//        String url = "redis://pass123@127.0.0.1:6381";
-        String url = "redis-cluster://7aab8fcd9@10.189.31.11:6382,10.189.31.13:6382";
+        String url = "redis://pass123@127.0.0.1:6381";
+//        String url = "redis-cluster://7aab8fcd9@10.189.31.11:6382,10.189.31.13:6382";
 //        String url = "redis://@127.0.0.1:6379";
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
                 .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000000))
@@ -28,6 +28,7 @@ public class MiscTest {
         int hashVersion = 0;
         int zsetVersion = 0;
         int stringVersion = 0;
+        int setVersion = 0;
 
         for (int i = 0; i<threads; i++) {
             new Thread(() -> {
@@ -56,6 +57,17 @@ public class MiscTest {
                 while (true) {
                     if (stringVersion == 0) {
                         TestStringV0.testString(template);
+                    }
+                    sleep(100);
+                }
+            }).start();
+
+            new Thread(() -> {
+                while (true) {
+                    if (setVersion == 0 || setVersion == 2) {
+                        TestSetV0V2.testSet(template);
+                    } else if (setVersion == 1 || setVersion == 3) {
+                        TestSetV1V3.testSet(template);
                     }
                     sleep(100);
                 }
