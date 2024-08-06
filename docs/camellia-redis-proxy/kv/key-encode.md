@@ -258,10 +258,71 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 * redis-index-zset-store-key不属于cache，属于storage，需要确保storage部分redis内存足够，否则可能被驱逐
 
 
-## list数据结构
-
-todo
-
 ## set数据结构
+
+set数据有四种编码模式
+
+### version-0
+
+#### key-meta
+
+|                  key                  |                      value                       |
+|:-------------------------------------:|:------------------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + md5_prefix + key | 0 + 2 + key-version + expire-time + member-count |
+
+#### sub-key
+
+|                          key                          | value |
+|:-----------------------------------------------------:|:-----:|
+| s# + namespace + key.len + key + key-version + member |  nil  |
+
+* encode-version固定为0，key-type固定为2
+* 因为key-meta中记录了member-count，因此scard快
+* sadd/srem返回结果准确
+* 写操作的读放大多，因为每次写入都需要读一下是否是已经存在的member还是新的member，如sadd操作，前者返回0，后者返回1
+
+### version-1
+
+#### key-meta
+
+|                  key                  |               value               |
+|:-------------------------------------:|:---------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + md5_prefix + key | 1 + 2 + key-version + expire-time |
+
+#### sub-key
+
+|                                  key                                  |    value    |
+|:---------------------------------------------------------------------:|:-----------:|
+| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | field-value |
+
+* encode-version固定为1，key-type固定为2
+* 因为不在key-meta中记录member-count，纯覆盖写，写入快，但是导致了scard慢
+* sadd/srem等操作返回结果不准确，比如sadd操作，不管写入的是已存在的member还是新的member，都返回1
+
+### version-2和version-3
+
+#### key-meta
+
+* version-2同version-0，但是encode-version固定为2
+* version-3同version-1，但是encode-version固定为3
+
+#### sub-key
+
+* version-2同version-0
+* version-3同version-1
+
+相比version-0和version-1，新增了redis缓存层
+
+#### smembers-cache-key
+
+|             redis-key              | redis-type | redis-value |
+|:----------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version |    set     |    full-set |
+
+
+
+## list数据结构
 
 todo

@@ -84,3 +84,11 @@
 |      zrank       |                                   `ZRANK key member [WITHSCORE]` |
 |     zrevrank     |                                `ZREVRANK key member [WITHSCORE]` |
 |     zmscore      |                                `ZMSCORE key member [member ...]` |
+|       sadd       |                                   `SADD key member [member ...]` |
+|     smembers     |                                                   `SMEMBERS key` |
+|       srem       |                                   `SREM key member [member ...]` |
+|   srandmember    |                                        `SRANDMEMBER key [count]` |
+|       spop       |                                               `SPOP key [count]` |
+|    sismember     |                                           `SISMEMBER key member` |
+|    smismember    |                             `SMISMEMBER key member [member ...]` |
+|      scard       |                                                      `SCARD key` |
