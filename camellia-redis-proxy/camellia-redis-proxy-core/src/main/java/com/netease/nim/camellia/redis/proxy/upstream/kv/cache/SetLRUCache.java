@@ -135,11 +135,11 @@ public class SetLRUCache {
         return result;
     }
 
-    public int srem(byte[] key, byte[] cacheKey, Collection<BytesKey> members) {
+    public Set<BytesKey> srem(byte[] key, byte[] cacheKey, Collection<BytesKey> members) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisSet set = localCache.get(slot, bytesKey);
-        int result = -1;
+        Set<BytesKey> result = null;
         if (set != null) {
             result = set.srem(members);
         }

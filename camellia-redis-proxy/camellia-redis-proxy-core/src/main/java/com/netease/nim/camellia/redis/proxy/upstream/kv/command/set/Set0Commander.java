@@ -11,10 +11,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by caojiajun on 2024/8/5
@@ -96,7 +93,7 @@ public abstract class Set0Commander extends Commander {
         }
     }
 
-    protected final void removeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Result result) {
+    protected final void removeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Collection<BytesKey> members, Result result) {
         byte[][] subKeys = new byte[members.size()][];
         int i = 0;
         for (BytesKey bytesKey : members) {
@@ -110,8 +107,27 @@ public abstract class Set0Commander extends Commander {
                 kvClient.batchDelete(subKeys);
             });
         } else {
-            kvClient.batchDelete();
+            kvClient.batchDelete(subKeys);
         }
+    }
+
+    protected final Map<BytesKey, Boolean> smismemberFromKv(KeyMeta keyMeta, byte[] key, Collection<BytesKey> members) {
+        byte[][] subKeys = new byte[members.size()][];
+        int i = 0;
+        for (BytesKey member : members) {
+            subKeys[i] = keyDesign.setMemberSubKey(keyMeta, key, member.getKey());
+            i ++;
+        }
+        List<KeyValue> keyValues = kvClient.batchGet(subKeys);
+        Map<BytesKey, Boolean> map = new HashMap<>();
+        for (KeyValue keyValue : keyValues) {
+            if (keyValue == null || keyValue.getKey() == null) {
+                continue;
+            }
+            byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
+            map.put(new BytesKey(member), true);
+        }
+        return map;
     }
 
     protected final void updateKeyMeta(KeyMeta keyMeta, byte[] key, int add) {

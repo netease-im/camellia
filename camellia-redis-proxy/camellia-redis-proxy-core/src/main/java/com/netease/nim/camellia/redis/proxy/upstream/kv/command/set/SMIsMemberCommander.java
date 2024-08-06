@@ -7,7 +7,6 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
@@ -114,25 +113,6 @@ public class SMIsMemberCommander extends Set0Commander {
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         Map<BytesKey, Boolean> smismember = smismemberFromKv(keyMeta, key, members);
         return toReply(smismember, members);
-    }
-
-    public Map<BytesKey, Boolean> smismemberFromKv(KeyMeta keyMeta, byte[] key, List<BytesKey> members) {
-        byte[][] subKeys = new byte[members.size()][];
-        int i = 0;
-        for (BytesKey member : members) {
-            subKeys[i] = keyDesign.setMemberSubKey(keyMeta, key, member.getKey());
-            i ++;
-        }
-        List<KeyValue> keyValues = kvClient.batchGet(subKeys);
-        Map<BytesKey, Boolean> map = new HashMap<>();
-        for (KeyValue keyValue : keyValues) {
-            if (keyValue == null || keyValue.getKey() == null) {
-                continue;
-            }
-            byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
-            map.put(new BytesKey(member), true);
-        }
-        return map;
     }
 
     private Reply toReply(Map<BytesKey, Boolean> smismember, List<BytesKey> members) {
