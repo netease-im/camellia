@@ -163,7 +163,7 @@ public class TestHashV1V3 {
                 Long hlen2 = template.hlen(key);
                 assertEquals(hlen2, 4L);
 
-                Long expire1 = template.expire(key, 3);
+                Long expire1 = template.expire(key, 5);
                 assertEquals(expire1, 1L);
 
                 String hget10 = template.hget(key, "f1");
@@ -172,7 +172,7 @@ public class TestHashV1V3 {
                 Map<String, String> hgetall5 = template.hgetAll(key);
                 assertEquals(hgetall5.size(), 4);
 
-                Thread.sleep(3050);
+                Thread.sleep(5050);
 
                 String hget11 = template.hget(key, "f1");
                 assertEquals(hget11, null);

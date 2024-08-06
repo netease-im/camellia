@@ -99,7 +99,7 @@ public class SRemCommander extends Set0Commander {
 
         if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
             byte[][] cmd = new byte[members.size() + 2][];
-            cmd[0] = RedisCommand.ZREM.raw();
+            cmd[0] = RedisCommand.SREM.raw();
             cmd[1] = cacheKey;
             int i = 2;
             for (BytesKey member : members) {

@@ -25,9 +25,9 @@ public class MiscTest {
 
         int threads = 3;
 
+        int stringVersion = 0;
         int hashVersion = 0;
         int zsetVersion = 0;
-        int stringVersion = 0;
         int setVersion = 0;
 
         for (int i = 0; i<threads; i++) {

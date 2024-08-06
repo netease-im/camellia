@@ -137,7 +137,7 @@ public abstract class Set0Commander extends Commander {
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
             keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         } else if (add < 0) {
-            int count = BytesUtils.toInt(keyMeta.getExtra()) - add;
+            int count = BytesUtils.toInt(keyMeta.getExtra()) + add;
             if (count > 0) {
                 byte[] extra = BytesUtils.toBytes(count);
                 keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);

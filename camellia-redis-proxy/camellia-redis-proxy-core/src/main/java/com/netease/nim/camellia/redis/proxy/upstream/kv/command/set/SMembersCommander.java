@@ -116,6 +116,7 @@ public class SMembersCommander extends Set0Commander {
         int i = 2;
         for (BytesKey bytesKey : set) {
             cmd[i] = bytesKey.getKey();
+            i++;
         }
         Command saddCmd = new Command(cmd);
         Command pexpireCmd = new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), cacheKey, smembersCacheMillis()});
