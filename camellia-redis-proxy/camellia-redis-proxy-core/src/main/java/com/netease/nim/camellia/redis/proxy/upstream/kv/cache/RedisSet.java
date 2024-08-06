@@ -23,7 +23,7 @@ public class RedisSet {
         Set<BytesKey> existsMember = new HashSet<>();
         for (BytesKey member : members) {
             boolean add = set.add(member);
-            if (add) {
+            if (!add) {
                 existsMember.add(member);
             }
         }

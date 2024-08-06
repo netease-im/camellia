@@ -53,7 +53,7 @@ public class SMembersCommander extends Set0Commander {
         byte[] key = objects[1];
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            return IntegerReply.REPLY_0;
+            return MultiBulkReply.EMPTY;
         }
         if (keyMeta.getKeyType() != KeyType.set) {
             return ErrorReply.WRONG_TYPE;

@@ -71,7 +71,7 @@ public class SRemCommander extends Set0Commander {
 
         if (cacheConfig.isSetLocalCacheEnable()) {
             if (removedMembers == null) {
-                removedMembers = cacheConfig.getSetLRUCache().srem(key, cacheKey, removedMembers);
+                removedMembers = cacheConfig.getSetLRUCache().srem(key, cacheKey, members);
             } else {
                 cacheConfig.getSetLRUCache().srem(key, cacheKey, members);
             }

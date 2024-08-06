@@ -55,7 +55,9 @@ public class SMIsMemberCommander extends Set0Commander {
         }
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            return IntegerReply.REPLY_0;
+            Reply[] replies = new Reply[members.size()];
+            Arrays.fill(replies, IntegerReply.REPLY_0);
+            return new MultiBulkReply(replies);
         }
         if (keyMeta.getKeyType() != KeyType.set) {
             return ErrorReply.WRONG_TYPE;

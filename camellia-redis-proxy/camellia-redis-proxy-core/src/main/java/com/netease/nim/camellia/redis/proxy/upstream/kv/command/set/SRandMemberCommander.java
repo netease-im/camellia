@@ -7,8 +7,6 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
@@ -16,8 +14,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -70,7 +66,11 @@ public class SRandMemberCommander extends Set0Commander {
         }
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            return IntegerReply.REPLY_0;
+            if (batch) {
+                return MultiBulkReply.EMPTY;
+            } else {
+                return BulkReply.NIL_REPLY;
+            }
         }
         if (keyMeta.getKeyType() != KeyType.set) {
             return ErrorReply.WRONG_TYPE;

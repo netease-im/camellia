@@ -60,7 +60,11 @@ public class SPopCommander extends Set0Commander {
         }
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            return BulkReply.NIL_REPLY;
+            if (batch) {
+                return MultiBulkReply.EMPTY;
+            } else {
+                return BulkReply.NIL_REPLY;
+            }
         }
         if (keyMeta.getKeyType() != KeyType.set) {
             return ErrorReply.WRONG_TYPE;

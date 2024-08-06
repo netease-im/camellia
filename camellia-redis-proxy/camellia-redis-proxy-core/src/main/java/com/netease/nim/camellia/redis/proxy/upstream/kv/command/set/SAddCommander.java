@@ -211,6 +211,7 @@ public class SAddCommander extends Set0Commander {
                                Set<BytesKey> memberSet, int existsMemberSize, Result result) {
         if (!first) {
             if (existsMemberSize < 0) {
+                existsMemberSize = 0;
                 byte[][] subKeyArray = new byte[memberSize][];
                 int i=0;
                 for (BytesKey bytesKey : memberSet) {
@@ -233,6 +234,9 @@ public class SAddCommander extends Set0Commander {
             updateKeyMeta(keyMeta, key, add);
         }
         writeMembers(keyMeta, key, cacheKey, memberSize, memberSet, result);
+        if (first) {
+            return IntegerReply.parse(memberSize);
+        }
         return IntegerReply.parse(memberSize - existsMemberSize);
     }
 
