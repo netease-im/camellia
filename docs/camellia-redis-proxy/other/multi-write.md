@@ -3,8 +3,8 @@
 
 ### 支持的双写方案
 * 通过路由配置可以由proxy直接把写命令同时发给redisA和redisB，或者更多的redis集群，我们称之为直接双写模式
-* 可以通过MqMultiWriteCommandInterceptor拦截器把写命令发送给mq（默认支持kafka，其他类型的mq可以自行扩展），并部署消费模式的proxy进行异步双写，我们称之为基于MQ的双写模式
-* 如果有部分key双写，部分key双写的需求，可以通过MultiWriteCommandInterceptor拦截器，搭配自定义MultiWriteFunc实现，我们称之为key级别的自定义双写模式
+* 可以通过MqMultiWriteProducerProxyPlugin插件把写命令发送给mq（默认支持kafka，其他类型的mq可以自行扩展），并部署消费模式的proxy进行异步双写，我们称之为基于MQ的双写模式
+* 如果有部分key双写，部分key双写的需求，可以通过MultiWriteProxyPlugin插件，搭配自定义MultiWriteFunc实现，我们称之为key级别的自定义双写模式
 
 备注，直接双写的三种模式：
 #### first_resource_only
