@@ -266,6 +266,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     futureList.add(future);
                     continue;
                 }
+                if (redisCommand == RedisCommand.PUBSUB) {
+                    //send to first write resource
+                    List<Resource> writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
+                    CompletableFuture<Reply> future = doWrite(Collections.singletonList(writeResources.get(0)), commandFlusher, command);
+                    futureList.add(future);
+                    continue;
+                }
                 //other commands
             }
 
