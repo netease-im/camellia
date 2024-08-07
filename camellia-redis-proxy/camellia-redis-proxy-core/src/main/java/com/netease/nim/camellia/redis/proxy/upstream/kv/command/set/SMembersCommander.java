@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -69,7 +70,10 @@ public class SMembersCommander extends Set0Commander {
             return toReply(smembers);
         }
         if (cacheConfig.isSetLocalCacheEnable()) {
-            RedisSet set = cacheConfig.getSetLRUCache().getForRead(key, cacheKey);
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
+            RedisSet set = setLRUCache.getForRead(key, cacheKey);
+
             if (set != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 Set<BytesKey> smembers = set.smembers();

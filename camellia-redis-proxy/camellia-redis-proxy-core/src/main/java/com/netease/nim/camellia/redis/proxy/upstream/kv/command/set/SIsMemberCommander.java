@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -68,9 +69,21 @@ public class SIsMemberCommander extends Set0Commander {
             return IntegerReply.parse(sismeber ? 1 : 0);
         }
         if (cacheConfig.isSetLocalCacheEnable()) {
-            RedisSet set = cacheConfig.getSetLRUCache().getForRead(key, cacheKey);
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
+            RedisSet set = setLRUCache.getForRead(key, cacheKey);
+
             if (set != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                boolean sismeber = set.sismeber(new BytesKey(member));
+                return IntegerReply.parse(sismeber ? 1 : 0);
+            }
+
+            boolean hotKey = setLRUCache.isHotKey(key);
+
+            if (hotKey) {
+                set = loadLRUCache(keyMeta, key);
+                setLRUCache.putAllForRead(key, cacheKey, set);
                 boolean sismeber = set.sismeber(new BytesKey(member));
                 return IntegerReply.parse(sismeber ? 1 : 0);
             }

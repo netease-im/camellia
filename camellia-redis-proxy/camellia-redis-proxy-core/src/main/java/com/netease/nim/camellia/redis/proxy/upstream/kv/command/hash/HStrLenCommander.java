@@ -85,6 +85,12 @@ public class HStrLenCommander extends Hash0Commander {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(hash.hstrlen(new BytesKey(field)));
             }
+            boolean hotKey = hashLRUCache.isHotKey(key);
+            if (hotKey) {
+                hash = loadLRUCache(keyMeta, key);
+                hashLRUCache.putAllForRead(key, cacheKey, hash);
+                return IntegerReply.parse(hash.hstrlen(new BytesKey(field)));
+            }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();

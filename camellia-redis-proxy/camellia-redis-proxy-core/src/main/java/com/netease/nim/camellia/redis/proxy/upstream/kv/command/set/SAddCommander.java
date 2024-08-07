@@ -109,14 +109,13 @@ public class SAddCommander extends Set0Commander {
         if (cacheConfig.isSetLocalCacheEnable()) {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
 
-            boolean hotKey = setLRUCache.isHotKey(key);
-
             if (first) {
                 set = new RedisSet(new HashSet<>(memberSet));
                 setLRUCache.putAllForWrite(key, cacheKey, set);
             } else {
                 Set<BytesKey> existsSet = setLRUCache.sadd(key, cacheKey, memberSet);
                 if (existsSet == null) {
+                    boolean hotKey = setLRUCache.isHotKey(key);
                     if (hotKey) {
                         set = loadLRUCache(keyMeta, key);
                         //

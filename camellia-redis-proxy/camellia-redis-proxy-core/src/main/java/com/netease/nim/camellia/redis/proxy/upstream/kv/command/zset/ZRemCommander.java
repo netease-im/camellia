@@ -88,7 +88,7 @@ public class ZRemCommander extends ZSet0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+
 
             if (localCacheResult == null) {
                 localCacheResult = zSetLRUCache.zrem(key, cacheKey, members);
@@ -99,16 +99,19 @@ public class ZRemCommander extends ZSet0Commander {
                 zSetLRUCache.zrem(key, cacheKey, members);
             }
 
-            if (hotKey && localCacheResult == null) {
-                RedisZSet zSet = loadLRUCache(keyMeta, key);
-                if (zSet != null) {
-                    //
-                    zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
-                    //
-                    localCacheResult = zSet.zrem(members);
+            if (localCacheResult == null) {
+                boolean hotKey = zSetLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    if (zSet != null) {
+                        //
+                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        //
+                        localCacheResult = zSet.zrem(members);
 
-                    if (localCacheResult != null && localCacheResult.isEmpty()) {
-                        return IntegerReply.REPLY_0;
+                        if (localCacheResult != null && localCacheResult.isEmpty()) {
+                            return IntegerReply.REPLY_0;
+                        }
                     }
                 }
             }

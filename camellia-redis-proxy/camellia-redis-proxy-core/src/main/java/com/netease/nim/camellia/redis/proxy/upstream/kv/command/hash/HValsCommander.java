@@ -3,11 +3,9 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -72,9 +70,16 @@ public class HValsCommander extends Hash0Commander {
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            RedisHash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+            RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply(hash.hgetAll());
+            }
+            boolean hotKey = hashLRUCache.isHotKey(key);
+            if (hotKey) {
+                hash = loadLRUCache(keyMeta, key);
+                hashLRUCache.putAllForRead(key, cacheKey, hash);
                 return toReply(hash.hgetAll());
             }
         }

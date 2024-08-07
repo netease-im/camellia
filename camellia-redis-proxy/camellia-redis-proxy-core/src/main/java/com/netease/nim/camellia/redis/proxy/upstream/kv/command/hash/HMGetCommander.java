@@ -8,8 +8,8 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -26,7 +26,7 @@ import java.util.*;
  * <p>
  * Created by caojiajun on 2024/4/24
  */
-public class HMGetCommander extends Commander {
+public class HMGetCommander extends Hash0Commander {
 
     private static final byte[] script1 = ("local arg = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(arg) == 1 then\n" +
@@ -86,9 +86,18 @@ public class HMGetCommander extends Commander {
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            RedisHash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
+            RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply2(fields, hash.hgetAll());
+            }
+
+            boolean hotKey = hashLRUCache.isHotKey(key);
+            if (hotKey) {
+                hash = loadLRUCache(keyMeta, key);
+                hashLRUCache.putAllForRead(key, cacheKey, hash);
                 return toReply2(fields, hash.hgetAll());
             }
         }
@@ -235,7 +244,4 @@ public class HMGetCommander extends Commander {
         return new MultiBulkReply(replies);
     }
 
-    private byte[] hgetCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.hgetCacheMillis()));
-    }
 }

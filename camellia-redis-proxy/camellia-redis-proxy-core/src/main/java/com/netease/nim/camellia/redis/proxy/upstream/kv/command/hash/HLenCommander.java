@@ -7,8 +7,8 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -20,7 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class HLenCommander extends Commander {
+public class HLenCommander extends Hash0Commander {
 
     public HLenCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -48,7 +48,10 @@ public class HLenCommander extends Commander {
         if (keyMeta.getKeyType() != KeyType.hash) {
             return ErrorReply.WRONG_TYPE;
         }
-        Reply reply = getSizeFromCache(keyMeta, key);
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        Reply reply = getSizeFromCache(keyMeta, key, cacheKey);
         if (reply != null) {
             return reply;
         }
@@ -61,7 +64,6 @@ public class HLenCommander extends Commander {
             long size = getSizeFromKv(keyMeta, key);
             return IntegerReply.parse(size);
         } else if (encodeVersion == EncodeVersion.version_3) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             reply = sync(cacheRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.HLEN.raw(), cacheKey})));
             if (reply instanceof IntegerReply) {
                 Long size = ((IntegerReply) reply).getInteger();
@@ -78,8 +80,7 @@ public class HLenCommander extends Commander {
         }
     }
 
-    private Reply getSizeFromCache(KeyMeta keyMeta, byte[] key) {
-        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+    private Reply getSizeFromCache(KeyMeta keyMeta, byte[] key, byte[] cacheKey) {
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             RedisHash hash = writeBufferValue.getValue();
@@ -87,10 +88,20 @@ public class HLenCommander extends Commander {
             return IntegerReply.parse(hash.hlen());
         }
         if (cacheConfig.isHashLocalCacheEnable()) {
-            RedisHash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+            RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(hash.hlen());
+            }
+            EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+            if (encodeVersion == EncodeVersion.version_1) {
+                boolean hotKey = hashLRUCache.isHotKey(key);
+                if (hotKey) {
+                    hash = loadLRUCache(keyMeta, key);
+                    hashLRUCache.putAllForRead(key, cacheKey, hash);
+                    return IntegerReply.parse(hash.hlen());
+                }
             }
         }
         return null;

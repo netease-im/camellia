@@ -20,6 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -123,11 +124,10 @@ public class HSetNxCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            boolean hotKey = hashLRUCache.isHotKey(key);
-
             boolean loadFromKv = false;
             RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
             if (hash == null) {
+                boolean hotKey = hashLRUCache.isHotKey(key);
                 if (hotKey) {
                     Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
                     loadFromKv = true;
@@ -143,7 +143,9 @@ public class HSetNxCommander extends Hash0Commander {
                     }
                     return IntegerReply.REPLY_0;
                 } else {
-                    hash.hset(filedKey, value);
+                    Map<BytesKey, byte[]> fieldMap = new HashMap<>();
+                    fieldMap.put(filedKey, value);
+                    hashLRUCache.hset(key, cacheKey, fieldMap);
                     cacheCheck = cache_hit_not_exists;
                 }
             }

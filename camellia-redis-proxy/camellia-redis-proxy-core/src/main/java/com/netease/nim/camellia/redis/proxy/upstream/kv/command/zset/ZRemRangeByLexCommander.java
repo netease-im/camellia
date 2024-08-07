@@ -112,7 +112,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+
 
             if (localCacheResult == null) {
                 localCacheResult = zSetLRUCache.zremrangeByLex(key, cacheKey, minLex, maxLex);
@@ -126,16 +126,19 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 zSetLRUCache.zremrangeByLex(key, cacheKey, minLex, maxLex);
             }
 
-            if (hotKey && localCacheResult == null) {
-                RedisZSet zSet = loadLRUCache(keyMeta, key);
-                if (zSet != null) {
-                    //
-                    zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
-                    //
-                    localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
+            if (localCacheResult == null) {
+                boolean hotKey = zSetLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    if (zSet != null) {
+                        //
+                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        //
+                        localCacheResult = zSet.zremrangeByLex(minLex, maxLex);
 
-                    if (localCacheResult != null && localCacheResult.isEmpty()) {
-                        return IntegerReply.REPLY_0;
+                        if (localCacheResult != null && localCacheResult.isEmpty()) {
+                            return IntegerReply.REPLY_0;
+                        }
                     }
                 }
             }

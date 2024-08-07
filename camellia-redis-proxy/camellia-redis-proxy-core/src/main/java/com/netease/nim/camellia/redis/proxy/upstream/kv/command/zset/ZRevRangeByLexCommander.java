@@ -101,8 +101,6 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
-
             RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
 
             if (zSet != null) {
@@ -110,6 +108,8 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return ZSetTupleUtils.toReply(list, false);
             }
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
                 zSet = loadLRUCache(keyMeta, key);

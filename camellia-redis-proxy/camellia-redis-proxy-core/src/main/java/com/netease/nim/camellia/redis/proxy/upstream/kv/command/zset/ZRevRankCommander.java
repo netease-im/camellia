@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -77,11 +78,24 @@ public class ZRevRankCommander extends ZSet0Commander {
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            RedisZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+
             if (zSet != null) {
                 Pair<Integer, ZSetTuple> zrank = zSet.zrevrank(member);
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(zrank, withScores);
+            }
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            if (hotKey) {
+                zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    Pair<Integer, ZSetTuple> zrank = zSet.zrevrank(member);
+                    return toReply(zrank, withScores);
+                }
             }
         }
 

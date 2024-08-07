@@ -386,6 +386,8 @@ public class KvGcExecutor {
                     count = clearHashSubKeys();
                 } else if (keyType == KeyType.zset) {
                     count = clearZSetSubKeys();
+                } else if (keyType == KeyType.set) {
+                    count = clearSetSubKeys();
                 }
                 if (logger.isDebugEnabled()) {
                     logger.debug("sub key delete, count = {}", count);
@@ -397,6 +399,10 @@ public class KvGcExecutor {
         }
 
         private int clearHashSubKeys() {
+            return clearByPrefix(keyDesign.subKeyPrefix(keyMeta, key));
+        }
+
+        private int clearSetSubKeys() {
             return clearByPrefix(keyDesign.subKeyPrefix(keyMeta, key));
         }
 

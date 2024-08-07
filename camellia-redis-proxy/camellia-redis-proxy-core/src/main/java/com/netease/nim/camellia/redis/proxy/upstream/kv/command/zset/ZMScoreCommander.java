@@ -84,10 +84,21 @@ public class ZMScoreCommander extends ZSet0Commander {
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
             RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
             if (zSet != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(zSet.zmscore(members));
+            }
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            if (hotKey) {
+                zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    return toReply(zSet.zmscore(members));
+                }
             }
         }
 

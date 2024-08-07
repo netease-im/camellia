@@ -111,14 +111,13 @@ public class ZAddCommander extends ZSet0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
-
             if (first) {
                 zSet = new RedisZSet(new HashMap<>(memberMap));
                 zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
             } else {
                 Map<BytesKey, Double> map = zSetLRUCache.zadd(key, cacheKey, memberMap);
                 if (map == null) {
+                    boolean hotKey = zSetLRUCache.isHotKey(key);
                     if (hotKey) {
                         zSet = loadLRUCache(keyMeta, key);
                         if (zSet != null) {

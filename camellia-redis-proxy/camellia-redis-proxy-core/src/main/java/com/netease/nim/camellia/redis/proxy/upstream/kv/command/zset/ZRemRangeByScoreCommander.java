@@ -99,8 +99,6 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
-
             if (localCacheResult == null) {
                 localCacheResult = zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
                 if (localCacheResult != null) {
@@ -113,15 +111,18 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
                 zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
             }
 
-            if (hotKey && localCacheResult == null) {
-                RedisZSet zSet = loadLRUCache(keyMeta, key);
-                if (zSet != null) {
-                    //
-                    zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
-                    //
-                    localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
-                    if (localCacheResult != null && localCacheResult.isEmpty()) {
-                        return IntegerReply.REPLY_0;
+            if (localCacheResult == null) {
+                boolean hotKey = zSetLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    if (zSet != null) {
+                        //
+                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        //
+                        localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
+                        if (localCacheResult != null && localCacheResult.isEmpty()) {
+                            return IntegerReply.REPLY_0;
+                        }
                     }
                 }
             }

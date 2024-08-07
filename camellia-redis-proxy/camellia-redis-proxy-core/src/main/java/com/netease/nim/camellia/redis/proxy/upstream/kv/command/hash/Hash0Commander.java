@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -24,6 +25,11 @@ public abstract class Hash0Commander extends Commander {
 
     public Hash0Commander(CommanderConfig commanderConfig) {
         super(commanderConfig);
+    }
+
+    protected final RedisHash loadLRUCache(KeyMeta keyMeta, byte[] key) {
+        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+        return new RedisHash(map);
     }
 
     protected final Map<BytesKey, byte[]> hgetallFromKv(KeyMeta keyMeta, byte[] key) {

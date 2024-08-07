@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.kv;
 import com.netease.nim.camellia.redis.proxy.monitor.KvStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -55,6 +56,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void batchPut(List<KeyValue> list) {
+        if (list.isEmpty()) {
+            return;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             String method = "batchPut_" + list.size();
@@ -101,6 +105,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public boolean[] exists(byte[]... keys) {
+        if (keys.length == 0) {
+            return new boolean[0];
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             String method = "exists_" + keys.length;
@@ -117,6 +124,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public List<KeyValue> batchGet(byte[]... keys) {
+        if (keys.length == 0) {
+            return Collections.emptyList();
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             String method = "batchGet_" + keys.length;
@@ -148,6 +158,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void batchDelete(byte[]... keys) {
+        if (keys.length == 0) {
+            return;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             String method = "batchDelete_" + keys.length;

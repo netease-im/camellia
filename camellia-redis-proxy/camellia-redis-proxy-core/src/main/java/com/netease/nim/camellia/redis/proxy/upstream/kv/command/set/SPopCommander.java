@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -83,14 +84,25 @@ public class SPopCommander extends Set0Commander {
             result = setWriteBuffer.put(cacheKey, set);
         }
         if (cacheConfig.isSetLocalCacheEnable()) {
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
             if (spop == null) {
-                spop = cacheConfig.getSetLRUCache().spop(key, cacheKey, count);
+                spop = setLRUCache.spop(key, cacheKey, count);
             } else {
-                cacheConfig.getSetLRUCache().srem(key, cacheKey, spop);
+                setLRUCache.srem(key, cacheKey, spop);
+            }
+
+            if (spop == null) {
+                boolean hotKey = setLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisSet set = loadLRUCache(keyMeta, key);
+                    setLRUCache.putAllForWrite(key, cacheKey, set);
+                    spop = set.spop(count);
+                }
             }
 
             if (result == null) {
-                RedisSet set = cacheConfig.getSetLRUCache().getForWrite(key, cacheKey);
+                RedisSet set = setLRUCache.getForWrite(key, cacheKey);
                 if (set != null) {
                     result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
                 }

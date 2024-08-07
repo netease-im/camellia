@@ -47,21 +47,31 @@ public class DelCommander extends Commander {
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             KeyType keyType = keyMeta.getKeyType();
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-            if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1
-                    || encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                storeRedisTemplate.sendDel(cacheKey);
+            //redis
+            if (keyType == KeyType.zset) {
+                if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
+                    cacheRedisTemplate.sendDel(cacheKey);
+                }
+                if (encodeVersion == EncodeVersion.version_3) {
+                    storeRedisTemplate.sendDel(cacheKey);
+                }
             }
-            if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                cacheRedisTemplate.sendDel(cacheKey);
+            if (keyType == KeyType.hash) {
+                if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
+                    cacheRedisTemplate.sendDel(cacheKey);
+                }
             }
-            if (keyType == KeyType.set && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                cacheRedisTemplate.sendDel(cacheKey);
+            if (keyType == KeyType.set) {
+                if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
+                    cacheRedisTemplate.sendDel(cacheKey);
+                }
+            }
+            //local
+            if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {
+                cacheConfig.getZSetLRUCache().del(key, cacheKey);
             }
             if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
                 cacheConfig.getHashLRUCache().del(key, cacheKey);
-            }
-            if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {
-                cacheConfig.getZSetLRUCache().del(key, cacheKey);
             }
             if (keyType == KeyType.set && cacheConfig.isSetLocalCacheEnable()) {
                 cacheConfig.getSetLRUCache().del(key, cacheKey);

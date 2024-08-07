@@ -10,7 +10,6 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -26,7 +25,7 @@ import java.nio.charset.StandardCharsets;
  * <p>
  * Created by caojiajun on 2024/4/7
  */
-public class HGetCommander extends Commander {
+public class HGetCommander extends Hash0Commander {
 
     public HGetCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -85,9 +84,17 @@ public class HGetCommander extends Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
             RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return new BulkReply(hash.hget(new BytesKey(field)));
+            }
+
+            boolean hotKey = hashLRUCache.isHotKey(key);
+            if (hotKey) {
+                hash = loadLRUCache(keyMeta, key);
+                hashLRUCache.putAllForRead(key, cacheKey, hash);
                 return new BulkReply(hash.hget(new BytesKey(field)));
             }
         }
@@ -141,11 +148,4 @@ public class HGetCommander extends Commander {
         return new BulkReply(keyValue.getValue());
     }
 
-    private byte[] hgetallCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.hgetallCacheMillis()));
-    }
-
-    private byte[] hgetCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.hgetCacheMillis()));
-    }
 }

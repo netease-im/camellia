@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -70,14 +71,25 @@ public class SRemCommander extends Set0Commander {
         }
 
         if (cacheConfig.isSetLocalCacheEnable()) {
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
             if (removedMembers == null) {
-                removedMembers = cacheConfig.getSetLRUCache().srem(key, cacheKey, members);
+                removedMembers = setLRUCache.srem(key, cacheKey, members);
             } else {
-                cacheConfig.getSetLRUCache().srem(key, cacheKey, members);
+                setLRUCache.srem(key, cacheKey, members);
+            }
+
+            if (removedMembers == null) {
+                boolean hotKey = setLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisSet set = loadLRUCache(keyMeta, key);
+                    setLRUCache.putAllForWrite(key, cacheKey, set);
+                    removedMembers = set.srem(members);
+                }
             }
 
             if (result == null) {
-                RedisSet set = cacheConfig.getSetLRUCache().getForWrite(key, cacheKey);
+                RedisSet set = setLRUCache.getForWrite(key, cacheKey);
                 if (set != null) {
                     result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
                 }

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -86,16 +87,23 @@ public class SRandMemberCommander extends Set0Commander {
             return toReply(srandmember, batch);
         }
         if (cacheConfig.isSetLocalCacheEnable()) {
-            RedisSet set = cacheConfig.getSetLRUCache().getForRead(key, cacheKey);
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
+            RedisSet set = setLRUCache.getForRead(key, cacheKey);
+
             if (set != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 Set<BytesKey> srandmember = set.srandmember(count);
                 return toReply(srandmember, batch);
             }
-            if (cacheConfig.getSetLRUCache().isHotKey(key)) {
+
+            boolean hotKey = setLRUCache.isHotKey(key);
+
+            if (hotKey) {
                 set = loadLRUCache(keyMeta, key);
+                setLRUCache.putAllForRead(key, cacheKey, set);
+
                 Set<BytesKey> srandmember = set.srandmember(count);
-                cacheConfig.getSetLRUCache().putAllForRead(key, cacheKey, set);
                 return toReply(srandmember, batch);
             }
         }

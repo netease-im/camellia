@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -28,7 +27,7 @@ import java.util.*;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class HDelCommander extends Commander {
+public class HDelCommander extends Hash0Commander {
 
     private static final byte[] script = ("local arg1 = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(arg1) == 1 then\n" +
@@ -95,6 +94,7 @@ public class HDelCommander extends Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
             Map<BytesKey, byte[]> deleteMaps = hashLRUCache.hdel(key, cacheKey, fields);
             if (deleteMaps != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -107,6 +107,23 @@ public class HDelCommander extends Commander {
                     return IntegerReply.parse(fields.size());
                 }
                 return IntegerReply.REPLY_0;
+            }
+            if (deleteMaps == null) {
+                boolean hotKey = hashLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisHash hash = loadLRUCache(keyMeta, key);
+                    hashLRUCache.putAllForWrite(key, cacheKey, hash);
+                    deleteMaps = hash.hdel(fields);
+                    if (deleteMaps != null && delCount < 0) {
+                        delCount = deleteMaps.size();
+                    }
+                    if (delCount == 0) {
+                        if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+                            return IntegerReply.parse(fields.size());
+                        }
+                        return IntegerReply.REPLY_0;
+                    }
+                }
             }
             if (deleteMaps != null && result == null) {
                 RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);

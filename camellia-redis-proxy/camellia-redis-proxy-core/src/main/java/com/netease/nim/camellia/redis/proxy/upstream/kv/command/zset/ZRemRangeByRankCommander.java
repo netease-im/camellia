@@ -86,7 +86,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+
 
             if (localCacheResult == null) {
                 localCacheResult = zSetLRUCache.zremrangeByRank(key, cacheKey, start, stop);
@@ -100,15 +100,18 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                 zSetLRUCache.zremrangeByRank(key, cacheKey, start, stop);
             }
 
-            if (hotKey && localCacheResult == null) {
-                RedisZSet zSet = loadLRUCache(keyMeta, key);
-                if (zSet != null) {
-                    //
-                    zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
-                    //
-                    localCacheResult = zSet.zremrangeByRank(start, stop);
-                    if (localCacheResult != null && localCacheResult.isEmpty()) {
-                        return IntegerReply.REPLY_0;
+            if (localCacheResult == null) {
+                boolean hotKey = zSetLRUCache.isHotKey(key);
+                if (hotKey) {
+                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    if (zSet != null) {
+                        //
+                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        //
+                        localCacheResult = zSet.zremrangeByRank(start, stop);
+                        if (localCacheResult != null && localCacheResult.isEmpty()) {
+                            return IntegerReply.REPLY_0;
+                        }
                     }
                 }
             }

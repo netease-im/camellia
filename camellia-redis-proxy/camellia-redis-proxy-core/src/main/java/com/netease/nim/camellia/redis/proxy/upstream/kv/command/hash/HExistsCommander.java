@@ -78,9 +78,18 @@ public class HExistsCommander extends Hash0Commander {
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
             RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return IntegerReply.parse(hash.hexists(new BytesKey(field)));
+            }
+
+            boolean hotKey = hashLRUCache.isHotKey(key);
+
+            if (hotKey) {
+                hash = loadLRUCache(keyMeta, key);
+                hashLRUCache.putAllForRead(key, cacheKey, hash);
                 return IntegerReply.parse(hash.hexists(new BytesKey(field)));
             }
         }

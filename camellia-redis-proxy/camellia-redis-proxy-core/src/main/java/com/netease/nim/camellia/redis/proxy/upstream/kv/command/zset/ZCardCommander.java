@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -56,7 +57,8 @@ public class ZCardCommander extends Commander {
             return IntegerReply.parse(zSet.zcard());
         }
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            RedisZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
             if (zSet != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(zSet.zcard());

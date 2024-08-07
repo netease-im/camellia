@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
+import com.netease.nim.camellia.tools.utils.Pair;
 
 import java.nio.charset.StandardCharsets;
 
@@ -25,7 +26,7 @@ import java.nio.charset.StandardCharsets;
  * <p>
  * Created by caojiajun on 2024/5/15
  */
-public class ZScoreCommander extends Commander {
+public class ZScoreCommander extends ZSet0Commander {
 
     private static final byte[] script = ("local arg = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(arg) == 1 then\n" +
@@ -79,7 +80,9 @@ public class ZScoreCommander extends Commander {
         }
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
-            RedisZSet zSet = cacheConfig.getZSetLRUCache().getForRead(key, cacheKey);
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+
             if (zSet != null) {
                 Double zscore = zSet.zscore(new BytesKey(member));
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -87,6 +90,21 @@ public class ZScoreCommander extends Commander {
                     return BulkReply.NIL_REPLY;
                 } else {
                     return new BulkReply(Utils.doubleToBytes(zscore));
+                }
+            }
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
+
+            if (hotKey) {
+                zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    Double zscore = zSet.zscore(new BytesKey(member));
+                    if (zscore == null) {
+                        return BulkReply.NIL_REPLY;
+                    } else {
+                        return new BulkReply(Utils.doubleToBytes(zscore));
+                    }
                 }
             }
         }

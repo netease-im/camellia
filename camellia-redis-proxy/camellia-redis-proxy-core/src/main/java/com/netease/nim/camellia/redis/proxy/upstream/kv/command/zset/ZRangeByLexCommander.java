@@ -101,14 +101,14 @@ public class ZRangeByLexCommander extends ZRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
-
             RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
             if (zSet != null) {
                 List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return ZSetTupleUtils.toReply(list, false);
             }
+
+            boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
                 zSet = loadLRUCache(keyMeta, key);

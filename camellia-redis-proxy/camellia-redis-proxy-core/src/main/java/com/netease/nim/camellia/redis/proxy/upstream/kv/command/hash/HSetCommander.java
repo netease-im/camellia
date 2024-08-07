@@ -123,14 +123,13 @@ public class HSetCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            boolean hotKey = hashLRUCache.isHotKey(key);
-
             Map<BytesKey, byte[]> existsMap = null;
             if (first) {
                 hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             } else {
                 existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
                 if (existsMap == null) {
+                    boolean hotKey = hashLRUCache.isHotKey(key);
                     if (hotKey) {
                         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
                         hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(map));
