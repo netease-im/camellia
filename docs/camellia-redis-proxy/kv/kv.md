@@ -22,7 +22,7 @@
 
 ## 编译
 
-请参考：[camellia-redis-proxy-bootstrap-all-in-one](../other/camellia-redis-proxy-bootstrap-all-in-one.md)
+请参考：[camellia-redis-proxy-bootstrap](../other/camellia-redis-proxy-bootstrap)
 
 ## 配置列表
 

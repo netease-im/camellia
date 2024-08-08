@@ -16,8 +16,8 @@
 ### 3、安装etcd
 参考：[etcd](https://github.com/etcd-io/etcd)
 
-### 4、编译camellia-redis-proxy-bootstrap-all-in-one并打包
-参考：[camellia-redis-proxy-bootstrap-all-in-one](camellia-redis-proxy-bootstrap-all-in-one.md)
+### 4、编译camellia-redis-proxy-bootstrap并打包
+参考：[camellia-redis-proxy-bootstrap](camellia-redis-proxy-bootstrap)
 
 ### 5、配置etcd
 

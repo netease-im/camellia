@@ -17,7 +17,7 @@
 参考：[nacos](https://github.com/alibaba/nacos)
 
 ### 4、编译camellia-redis-proxy-nacos-bootstrap并打包
-参考：[camellia-redis-proxy-bootstrap-all-in-one](camellia-redis-proxy-bootstrap-all-in-one.md)
+参考：[camellia-redis-proxy-bootstrap](camellia-redis-proxy-bootstrap)
 
 ### 5、配置nacos
 

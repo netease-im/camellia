@@ -18,6 +18,5 @@
 		<module>camellia-redis-proxy-extensions</module>
 		<module>camellia-redis-proxy-spring-boot-starters</module>
 		<module>camellia-redis-proxy-bootstrap</module>
-		<module>camellia-redis-proxy-bootstrap-all-in-one</module>
     </modules>
 </project>
