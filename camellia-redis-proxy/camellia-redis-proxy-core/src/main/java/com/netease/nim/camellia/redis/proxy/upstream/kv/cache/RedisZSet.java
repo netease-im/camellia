@@ -13,12 +13,14 @@ import java.util.*;
 public class RedisZSet {
 
     private final Map<BytesKey, Double> memberMap;
-    private List<ZSetTuple> rank = new ArrayList<>();
-    private List<ZSetTuple> score = new ArrayList<>();
+
+    private boolean sorted;
+    private final List<ZSetTuple> rank = new ArrayList<>();
+    private final List<ZSetTuple> score = new ArrayList<>();
 
     public RedisZSet(Map<BytesKey, Double> memberMap) {
         this.memberMap = memberMap;
-        refresh();
+        sort();
     }
 
     public RedisZSet duplicate() {
@@ -26,25 +28,39 @@ public class RedisZSet {
         return new RedisZSet(map);
     }
 
-    private void refresh() {
+    private void onChange() {
+        rank.clear();
+        score.clear();
+        sorted = false;
+    }
+
+    private void sortIfNeed() {
+        if (!sorted) {
+            sort();
+        }
+    }
+
+    private void sort() {
         List<ZSetTuple> list = new ArrayList<>(memberMap.size());
         for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
             list.add(new ZSetTuple(entry.getKey(), entry.getValue()));
         }
 
-        List<ZSetTuple> rank = new ArrayList<>(list);
-        rank.sort((o1, o2) -> BytesUtils.compare(o1.getMember().getKey(), o2.getMember().getKey()));
-        this.rank = rank;
+        this.rank.clear();
+        this.rank.addAll(list);
+        this.rank.sort((o1, o2) -> BytesUtils.compare(o1.getMember().getKey(), o2.getMember().getKey()));
 
-        List<ZSetTuple> score = new ArrayList<>(list);
-        score.sort((o1, o2) -> {
+        this.score.clear();
+        this.score.addAll(list);
+        this.score.sort((o1, o2) -> {
             int compare = Double.compare(o1.getScore(), o2.getScore());
             if (compare != 0) {
                 return compare;
             }
             return BytesUtils.compare(o1.getMember().getKey(), o2.getMember().getKey());
         });
-        this.score = score;
+
+        this.sorted = true;
     }
 
     public Map<BytesKey, Double> zadd(Map<BytesKey, Double> map) {
@@ -55,7 +71,7 @@ public class RedisZSet {
                 existsMap.put(entry.getKey(), put);
             }
         }
-        refresh();
+        onChange();
         return existsMap;
     }
 
@@ -64,6 +80,7 @@ public class RedisZSet {
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
+        sortIfNeed();
         start = rank.getStart();
         stop = rank.getStop();
         List<ZSetTuple> result = new ArrayList<>();
@@ -85,6 +102,7 @@ public class RedisZSet {
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
+        sortIfNeed();
         start = rank.getStart();
         stop = rank.getStop();
         List<ZSetTuple> result = new ArrayList<>();
@@ -103,6 +121,7 @@ public class RedisZSet {
     }
 
     public int zcount(ZSetScore minScore, ZSetScore maxScore) {
+        sortIfNeed();
         int count = 0;
         for (ZSetTuple member : score) {
             if (member.getScore() > maxScore.getScore()) {
@@ -118,6 +137,7 @@ public class RedisZSet {
     }
 
     public int zlexcount(ZSetLex minLex, ZSetLex maxLex) {
+        sortIfNeed();
         int count = 0;
         for (ZSetTuple member : rank) {
             boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
@@ -130,6 +150,7 @@ public class RedisZSet {
     }
 
     public List<ZSetTuple> zrangebyscore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
+        sortIfNeed();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (ZSetTuple member : score) {
@@ -152,6 +173,7 @@ public class RedisZSet {
     }
 
     public List<ZSetTuple> zrevrangeByScore(ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit) {
+        sortIfNeed();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (int i=this.score.size() - 1; i>=0; i--) {
@@ -175,6 +197,7 @@ public class RedisZSet {
     }
 
     public List<ZSetTuple> zrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+        sortIfNeed();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (ZSetTuple member : this.rank) {
@@ -194,6 +217,7 @@ public class RedisZSet {
     }
 
     public List<ZSetTuple> zrevrangeByLex(ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+        sortIfNeed();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
         for (int i=this.rank.size() - 1; i>=0; i--) {
@@ -222,6 +246,7 @@ public class RedisZSet {
         if (v == null) {
             return null;
         }
+        sortIfNeed();
         for (int i=0; i<rank.size(); i++) {
             ZSetTuple tuple = rank.get(i);
             if (tuple.getMember().equals(member)) {
@@ -236,6 +261,7 @@ public class RedisZSet {
         if (v == null) {
             return null;
         }
+        sortIfNeed();
         for (int i=rank.size()-1; i>=0; i--) {
             ZSetTuple tuple = rank.get(i);
             if (tuple.getMember().equals(member)) {
@@ -259,7 +285,7 @@ public class RedisZSet {
             }
         }
         if (!map.isEmpty()) {
-            refresh();
+            onChange();
         }
         return map;
     }
@@ -277,6 +303,7 @@ public class RedisZSet {
         if (rank.isEmptyRank()) {
             return new HashMap<>();
         }
+        sortIfNeed();
         start = rank.getStart();
         stop = rank.getStop();
         Map<BytesKey, Double> map = new HashMap<>();
@@ -292,12 +319,13 @@ public class RedisZSet {
             count++;
         }
         if (!map.isEmpty()) {
-            refresh();
+            onChange();
         }
         return map;
     }
 
     public Map<BytesKey, Double> zremrangeByScore(ZSetScore minScore, ZSetScore maxScore) {
+        sortIfNeed();
         Map<BytesKey, Double> map = new HashMap<>();
         for (ZSetTuple member : score) {
             if (member.getScore() > maxScore.getScore()) {
@@ -311,12 +339,13 @@ public class RedisZSet {
             memberMap.remove(member.getMember());
         }
         if (!map.isEmpty()) {
-            refresh();
+            onChange();
         }
         return map;
     }
 
     public Map<BytesKey, Double> zremrangeByLex(ZSetLex minLex, ZSetLex maxLex) {
+        sortIfNeed();
         Map<BytesKey, Double> map = new HashMap<>();
         for (ZSetTuple member : rank) {
             boolean pass = ZSetLexUtil.checkLex(member.getMember().getKey(), minLex, maxLex);
@@ -327,7 +356,7 @@ public class RedisZSet {
             memberMap.remove(member.getMember());
         }
         if (!map.isEmpty()) {
-            refresh();
+            onChange();
         }
         return map;
     }
