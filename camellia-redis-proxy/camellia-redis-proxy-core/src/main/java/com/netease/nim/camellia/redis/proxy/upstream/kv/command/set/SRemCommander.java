@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
+import com.netease.nim.camellia.tools.utils.Pair;
 
 import java.util.*;
 
@@ -110,22 +111,15 @@ public class SRemCommander extends Set0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-            byte[][] cmd = new byte[members.size() + 2][];
-            cmd[0] = RedisCommand.SREM.raw();
-            cmd[1] = cacheKey;
-            int i = 2;
-            for (BytesKey member : members) {
-                cmd[i] = member.getKey();
-                i++;
-            }
-            Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(cmd)));
-            if (reply instanceof ErrorReply) {
-                return reply;
-            }
-            if (reply instanceof IntegerReply) {
-                Long integer = ((IntegerReply) reply).getInteger();
-                if (integer > 0) {
-                    removeSize = integer.intValue();
+            if (!members.isEmpty()) {
+                Pair<Reply, Integer> pair = updateCache(cacheKey, members);
+                if (pair != null) {
+                    if (pair.getFirst() != null) {
+                        return pair.getFirst();
+                    }
+                    if (pair.getSecond() != null && pair.getSecond() >= 0) {
+                        removeSize = pair.getSecond();
+                    }
                 }
             }
         }
@@ -154,5 +148,28 @@ public class SRemCommander extends Set0Commander {
         } else {
             return IntegerReply.parse(size);
         }
+    }
+
+    private Pair<Reply, Integer> updateCache(byte[] cacheKey, Set<BytesKey> members) {
+        byte[][] cmd = new byte[members.size() + 2][];
+        cmd[0] = RedisCommand.SREM.raw();
+        cmd[1] = cacheKey;
+        int i = 2;
+        for (BytesKey member : members) {
+            cmd[i] = member.getKey();
+            i++;
+        }
+        Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(cmd)));
+        if (reply instanceof ErrorReply) {
+            return new Pair<>(reply, -1);
+        }
+        if (reply instanceof IntegerReply) {
+            Long integer = ((IntegerReply) reply).getInteger();
+            if (integer > 0) {
+                int removeSize = integer.intValue();
+                return new Pair<>(null, removeSize);
+            }
+        }
+        return null;
     }
 }
