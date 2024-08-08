@@ -19,10 +19,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -103,45 +100,53 @@ public class HSetCommander extends Hash0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
+        KvCacheMonitor.Type type = null;
+
         int existsCount = -1;
+        Map<BytesKey, byte[]> existsMap = null;
+
         Result result = null;
         if (first) {
             existsCount = 0;
             result = hashWriteBuffer.put(cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            type = KvCacheMonitor.Type.write_buffer;
         } else {
             WriteBufferValue<RedisHash> value = hashWriteBuffer.get(cacheKey);
             if (value != null) {
                 RedisHash hash = value.getValue();
-                Map<BytesKey, byte[]> existsMap = hash.hset(fieldMap);
+                existsMap = hash.hset(fieldMap);
                 existsCount = existsMap.size();
                 result = hashWriteBuffer.put(cacheKey, hash);
                 KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                type = KvCacheMonitor.Type.write_buffer;
             }
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            Map<BytesKey, byte[]> existsMap = null;
+            Map<BytesKey, byte[]> existMapByCache = null;
             if (first) {
                 hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             } else {
-                existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
-                if (existsMap == null) {
+                existMapByCache = hashLRUCache.hset(key, cacheKey, fieldMap);
+                if (existMapByCache == null) {
                     boolean hotKey = hashLRUCache.isHotKey(key);
                     if (hotKey) {
-                        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-                        hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(map));
-                        existsMap = hashLRUCache.hset(key, cacheKey, fieldMap);
+                        Map<BytesKey, byte[]> hgetall = hgetallFromKv(keyMeta, key);
+                        hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(hgetall));
+                        existMapByCache = hashLRUCache.hset(key, cacheKey, fieldMap);
                     }
                 } else {
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    type = KvCacheMonitor.Type.local_cache;
                 }
             }
 
-            if (existsMap != null && existsCount < 0) {
-                existsCount = existsMap.size();
+            if (existsMap == null && existsCount < 0 && existMapByCache != null) {
+                existsCount = existMapByCache.size();
+                existsMap = existMapByCache;
             }
 
             if (result == null) {
@@ -156,13 +161,21 @@ public class HSetCommander extends Hash0Commander {
             result = NoOpResult.INSTANCE;
         }
 
-        if (existsCount < 0) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        if (!first && existsMap != null && !existsMap.isEmpty()) {
+            for (Map.Entry<BytesKey, byte[]> entry : existsMap.entrySet()) {
+                byte[] value = fieldMap.get(entry.getKey());
+                if (Arrays.equals(value, entry.getValue())) {
+                    fieldMap.remove(entry.getKey());
+                }
+            }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (first || encodeVersion == EncodeVersion.version_1) {
+            if (type == null) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
             List<KeyValue> list = new ArrayList<>();
             for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
                 byte[] field = entry.getKey().getKey();
@@ -189,6 +202,7 @@ public class HSetCommander extends Hash0Commander {
                 i++;
             }
             if (existsCount < 0) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 boolean[] exists = kvClient.exists(subKeys);
                 existsCount = Utils.count(exists);
             }
@@ -257,6 +271,11 @@ public class HSetCommander extends Hash0Commander {
             index++;
         }
 
+        if (type == null && unknownFields.isEmpty()) {
+            type = KvCacheMonitor.Type.redis_cache;
+            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
         if (keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
             if (existsCount < 0) {
                 existsCount = existsFields;
@@ -268,6 +287,9 @@ public class HSetCommander extends Hash0Commander {
                     }
                     boolean[] exists = kvClient.exists(subKeys);
                     existsCount += Utils.count(exists);
+
+                    type = KvCacheMonitor.Type.kv_store;
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             }
             int add = list.size() - existsCount;
@@ -287,14 +309,23 @@ public class HSetCommander extends Hash0Commander {
                 }
             }
 
+            if (type == null) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
+
             return IntegerReply.parse(add);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
+
             batchPut(cacheKey, result, list);
 
             for (Reply reply : replyList) {
                 if (reply instanceof ErrorReply) {
                     return reply;
                 }
+            }
+
+            if (type == null) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
 
             return IntegerReply.parse(list.size());//可能不准

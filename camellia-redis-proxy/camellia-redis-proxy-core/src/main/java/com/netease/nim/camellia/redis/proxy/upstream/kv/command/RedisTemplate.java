@@ -101,10 +101,16 @@ public class RedisTemplate {
     }
 
     public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
+        if (commands.isEmpty()) {
+            return Collections.emptyList();
+        }
         return template.sendCommand(-1, commands);
     }
 
     public List<Reply> sync(List<CompletableFuture<Reply>> futures, long timeoutMillis) {
+        if (futures.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<Reply> replies = new ArrayList<>();
         for (CompletableFuture<Reply> future : futures) {
             Reply reply = sync(future, timeoutMillis);

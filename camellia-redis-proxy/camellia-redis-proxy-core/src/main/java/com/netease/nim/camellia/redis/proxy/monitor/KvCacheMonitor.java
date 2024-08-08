@@ -17,6 +17,14 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class KvCacheMonitor {
 
+    public static enum Type {
+        write_buffer,
+        local_cache,
+        redis_cache,
+        kv_store,
+        ;
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(KvCacheMonitor.class);
 
     private static final ConcurrentHashMap<String, Counter> map = new ConcurrentHashMap<>();
