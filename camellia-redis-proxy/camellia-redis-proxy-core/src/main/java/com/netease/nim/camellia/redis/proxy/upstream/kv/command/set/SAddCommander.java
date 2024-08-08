@@ -150,14 +150,18 @@ public class SAddCommander extends Set0Commander {
             existsMemberSize = existsMemberSet.size();
         }
 
+        if (existsMemberSet != null && !existsMemberSet.isEmpty()) {
+            memberSet.removeAll(existsMemberSet);
+        }
+
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, memberSet, existsMemberSize, result);
+            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return saddVersion1(keyMeta, key, cacheKey, memberSize, memberSet, result);
+            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
         }
 
         if (encodeVersion == EncodeVersion.version_2) {
@@ -167,14 +171,17 @@ public class SAddCommander extends Set0Commander {
                     existsMemberSize = ret;
                 }
             }
-            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, memberSet, existsMemberSize, result);
+            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
         }
 
         if (encodeVersion == EncodeVersion.version_3) {
             if (!first) {
-                checkAndUpdateCache(cacheKey, memberSet, memberSize);
+                int ret = checkAndUpdateCache(cacheKey, memberSet, memberSize);
+                if (existsMemberSize < 0 && ret >= 0) {
+                    existsMemberSize = ret;
+                }
             }
-            return saddVersion1(keyMeta, key, cacheKey, memberSize, memberSet, result);
+            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
@@ -207,40 +214,56 @@ public class SAddCommander extends Set0Commander {
     }
 
     private Reply saddVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
-                               Set<BytesKey> memberSet, int existsMemberSize, Result result) {
-        if (!first) {
-            if (existsMemberSize < 0) {
-                existsMemberSize = 0;
-                byte[][] subKeyArray = new byte[memberSize][];
-                int i=0;
-                for (BytesKey bytesKey : memberSet) {
-                    byte[] member = bytesKey.getKey();
-                    byte[] subKey = keyDesign.setMemberSubKey(keyMeta, key, member);
-                    subKeyArray[i] = subKey;
-                    i++;
-                }
-                List<KeyValue> keyValues = kvClient.batchGet(subKeyArray);
-                for (KeyValue keyValue : keyValues) {
-                    if (keyValue == null || keyValue.getKey() == null) {
-                        continue;
-                    }
-                    existsMemberSize ++;
-                }
-            }
-        }
-        if (!first) {
-            int add = memberSize - existsMemberSize;
-            updateKeyMeta(keyMeta, key, add);
-        }
-        writeMembers(keyMeta, key, cacheKey, memberSize, memberSet, result);
+                               int existsMemberSize, Set<BytesKey> memberSet, Result result) {
         if (first) {
+            writeMembers(keyMeta, key, cacheKey, memberSet, result);
             return IntegerReply.parse(memberSize);
         }
+
+        if (existsMemberSize < 0) {
+            existsMemberSize = 0;
+            byte[][] subKeyArray = new byte[memberSize][];
+            int i=0;
+            for (BytesKey bytesKey : memberSet) {
+                byte[] member = bytesKey.getKey();
+                byte[] subKey = keyDesign.setMemberSubKey(keyMeta, key, member);
+                subKeyArray[i] = subKey;
+                i++;
+            }
+            List<KeyValue> keyValues = kvClient.batchGet(subKeyArray);
+            for (KeyValue keyValue : keyValues) {
+                if (keyValue == null || keyValue.getKey() == null) {
+                    continue;
+                }
+                existsMemberSize ++;
+                memberSet.remove(new BytesKey(keyValue.getKey()));
+            }
+        }
+
+        int add = memberSize - existsMemberSize;
+
+        updateKeyMeta(keyMeta, key, add);
+
+        if (add <= 0) {
+            writeMembers(keyMeta, key, cacheKey, Collections.emptySet(), result);
+        } else {
+            writeMembers(keyMeta, key, cacheKey, memberSet, result);
+        }
+
         return IntegerReply.parse(memberSize - existsMemberSize);
     }
 
-    private Reply saddVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Set<BytesKey> memberSet, Result result) {
-        writeMembers(keyMeta, key, cacheKey, memberSize, memberSet, result);
+    private Reply saddVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
+                               int existsMemberSize, Set<BytesKey> memberSet, Result result) {
+        if (first) {
+            writeMembers(keyMeta, key, cacheKey, memberSet, result);
+        } else {
+            if (memberSize == existsMemberSize) {
+                writeMembers(keyMeta, key, cacheKey, Collections.emptySet(), result);
+            } else {
+                writeMembers(keyMeta, key, cacheKey, memberSet, result);
+            }
+        }
         return IntegerReply.parse(memberSize);
     }
 

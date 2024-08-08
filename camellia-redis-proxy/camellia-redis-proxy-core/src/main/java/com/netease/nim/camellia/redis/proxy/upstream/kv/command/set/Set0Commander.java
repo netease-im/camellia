@@ -77,8 +77,8 @@ public abstract class Set0Commander extends Commander {
         return set;
     }
 
-    protected final void writeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Set<BytesKey> memberSet, Result result) {
-        List<KeyValue> list = new ArrayList<>(memberSize);
+    protected final void writeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> memberSet, Result result) {
+        List<KeyValue> list = new ArrayList<>(memberSet.size());
         for (BytesKey bytesKey : memberSet) {
             byte[] member = bytesKey.getKey();
             byte[] subKey = keyDesign.setMemberSubKey(keyMeta, key, member);
