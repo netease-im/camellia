@@ -55,6 +55,21 @@ public class TestSetV0V2 {
                 Long sadd1 = template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
                 assertEquals(sadd1, 1L);
 
+                Long sadd2 = template.sadd(key, "a", "b");
+                assertEquals(sadd2, 0L);
+
+                Set<String> smembers = template.smembers(key);
+                assertEquals(smembers.size(), 7);
+            }
+
+            template.del(key);
+            {
+                Long sadd = template.sadd(key, "a", "b", "c", "d", "e", "f");
+                assertEquals(sadd, 6L);
+
+                Long sadd1 = template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
+                assertEquals(sadd1, 1L);
+
                 Set<String> smembers = template.smembers(key);
                 assertEquals(smembers.size(), 7);
                 assertEquals(smembers.contains("a"), true);

@@ -55,6 +55,20 @@ public class TestHashV1V3 {
                 Long hset2 = template.hset(key, "f1", "v1");
                 assertEquals(hset2, 1L);
 
+                Long hset3 = template.hset(key, "f1", "v2");
+                assertEquals(hset3, 1L);
+
+                Map<String, String> stringStringMap = template.hgetAll(key);
+                assertEquals(stringStringMap.size(), 1);
+            }
+            template.del(key);
+            {
+                Long hset1 = template.hset(key, "f1", "v1");
+                assertEquals(hset1, 1L);
+
+                Long hset2 = template.hset(key, "f1", "v1");
+                assertEquals(hset2, 1L);
+
                 Long hlen1 = template.hlen(key);
                 assertEquals(hlen1, 1L);
 

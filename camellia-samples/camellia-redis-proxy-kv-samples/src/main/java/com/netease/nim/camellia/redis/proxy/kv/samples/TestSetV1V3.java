@@ -53,6 +53,18 @@ public class TestSetV1V3 {
 
                 template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
 
+                template.sadd(key, "a", "b");
+
+                Set<String> smembers = template.smembers(key);
+                assertEquals(smembers.size(), 7);
+            }
+            //
+            template.del(key);
+            {
+                template.sadd(key, "a", "b", "c", "d", "e", "f");
+
+                template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
+
                 Set<String> smembers = template.smembers(key);
                 assertEquals(smembers.size(), 7);
                 assertEquals(smembers.contains("a"), true);

@@ -50,6 +50,33 @@ public class TestZSetV0V1V2 {
             keyThreadLocal.set(key);
 
             template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("v1", 1.0);
+                map1.put("v2", 2.0);
+                map1.put("v3", 3.0);
+                map1.put("v4", 4.0);
+                map1.put("v5", 5.0);
+                map1.put("v6", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+
+                Long zadd1 = template.zadd(key, map1);
+                assertEquals(zadd1, 0L);
+
+                map1.put("v7", 7.0);
+
+                Long zadd2 = template.zadd(key, map1);
+                assertEquals(zadd2, 1L);
+
+                Set<String> zrange = template.zrange(key, 0, -1);
+                assertEquals(zrange.size(), 7);
+
+                Set<String> strings = template.zrangeByScore(key, 0, 100);
+                assertEquals(strings.size(), 7);
+            }
+
+            template.del(key);
 
             {
                 Map<String, Double> map1 = new HashMap<>();
