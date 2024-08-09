@@ -97,6 +97,7 @@ public class ZMScoreCommander extends ZSet0Commander {
                 zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return toReply(zSet.zmscore(members));
                 }
             }

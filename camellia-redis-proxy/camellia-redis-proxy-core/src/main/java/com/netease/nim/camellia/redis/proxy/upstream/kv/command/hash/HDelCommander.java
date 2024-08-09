@@ -115,6 +115,10 @@ public class HDelCommander extends Hash0Commander {
             if (deleteMaps == null) {
                 boolean hotKey = hashLRUCache.isHotKey(key);
                 if (hotKey) {
+                    //
+                    type = KvCacheMonitor.Type.kv_store;
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    //
                     RedisHash hash = loadLRUCache(keyMeta, key);
                     hashLRUCache.putAllForWrite(key, cacheKey, hash);
                     deleteMaps = hash.hdel(fields);

@@ -68,6 +68,8 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         int start = (int) Utils.bytesToNum(objects[2]);
         int stop = (int) Utils.bytesToNum(objects[3]);
 
+        KvCacheMonitor.Type type = null;
+
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         Map<BytesKey, Double> localCacheResult = null;
         Result result = null;
@@ -76,6 +78,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         if (bufferValue != null) {
             RedisZSet zSet = bufferValue.getValue();
             localCacheResult = zSet.zremrangeByRank(start, stop);
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (localCacheResult != null && localCacheResult.isEmpty()) {
                 return IntegerReply.REPLY_0;
@@ -86,11 +89,10 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-
-
             if (localCacheResult == null) {
                 localCacheResult = zSetLRUCache.zremrangeByRank(key, cacheKey, start, stop);
                 if (localCacheResult != null) {
+                    type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
                 if (localCacheResult != null && localCacheResult.isEmpty()) {
@@ -105,6 +107,9 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                 if (hotKey) {
                     RedisZSet zSet = loadLRUCache(keyMeta, key);
                     if (zSet != null) {
+                        //
+                        type = KvCacheMonitor.Type.kv_store;
+                        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
                         zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                         //
@@ -128,7 +133,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
             result = NoOpResult.INSTANCE;
         }
 
-        if (localCacheResult != null) {
+        if (type == null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 

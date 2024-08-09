@@ -102,6 +102,10 @@ public class SPopCommander extends Set0Commander {
             if (spop == null) {
                 boolean hotKey = setLRUCache.isHotKey(key);
                 if (hotKey) {
+                    //
+                    type = KvCacheMonitor.Type.kv_store;
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    //
                     RedisSet set = loadLRUCache(keyMeta, key);
                     setLRUCache.putAllForWrite(key, cacheKey, set);
                     spop = set.spop(count);

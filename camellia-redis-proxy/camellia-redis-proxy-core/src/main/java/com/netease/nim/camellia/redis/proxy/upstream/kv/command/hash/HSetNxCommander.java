@@ -126,12 +126,15 @@ public class HSetNxCommander extends Hash0Commander {
 
         int cacheCheck = cache_miss;
 
+        KvCacheMonitor.Type type = null;
+
         Result result = null;
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             RedisHash hash = writeBufferValue.getValue();
             byte[] hget = hash.hget(filedKey);
             if (hget != null) {
+                type = KvCacheMonitor.Type.write_buffer;
                 KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.REPLY_0;
             } else {
@@ -149,6 +152,10 @@ public class HSetNxCommander extends Hash0Commander {
             if (hash == null) {
                 boolean hotKey = hashLRUCache.isHotKey(key);
                 if (hotKey) {
+                    //
+                    type = KvCacheMonitor.Type.kv_store;
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    //
                     Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
                     loadFromKv = true;
                     hash = new RedisHash(map);
@@ -159,6 +166,7 @@ public class HSetNxCommander extends Hash0Commander {
                 byte[] hget = hash.hget(filedKey);
                 if (hget != null) {
                     if (!loadFromKv) {
+                        type = KvCacheMonitor.Type.local_cache;
                         KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     }
                     return IntegerReply.REPLY_0;
@@ -179,6 +187,10 @@ public class HSetNxCommander extends Hash0Commander {
 
         if (result == null) {
             result = NoOpResult.INSTANCE;
+        }
+
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();

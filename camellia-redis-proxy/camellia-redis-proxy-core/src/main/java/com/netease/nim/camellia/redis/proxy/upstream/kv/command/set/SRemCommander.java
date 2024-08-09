@@ -89,6 +89,10 @@ public class SRemCommander extends Set0Commander {
             if (removedMembers == null) {
                 boolean hotKey = setLRUCache.isHotKey(key);
                 if (hotKey) {
+                    //
+                    type = KvCacheMonitor.Type.kv_store;
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    //
                     RedisSet set = loadLRUCache(keyMeta, key);
                     setLRUCache.putAllForWrite(key, cacheKey, set);
                     removedMembers = set.srem(members);
@@ -132,6 +136,10 @@ public class SRemCommander extends Set0Commander {
                     }
                 }
             }
+        }
+
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         if (removeSize < 0) {

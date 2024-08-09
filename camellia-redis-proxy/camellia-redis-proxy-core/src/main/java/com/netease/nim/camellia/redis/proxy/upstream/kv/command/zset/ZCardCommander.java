@@ -50,6 +50,7 @@ public class ZCardCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
         WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             RedisZSet zSet = bufferValue.getValue();

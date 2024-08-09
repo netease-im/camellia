@@ -17,7 +17,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
-import com.netease.nim.camellia.tools.utils.Pair;
 
 import java.nio.charset.StandardCharsets;
 
@@ -98,6 +97,9 @@ public class ZScoreCommander extends ZSet0Commander {
             if (hotKey) {
                 zSet = loadLRUCache(keyMeta, key);
                 if (zSet != null) {
+                    //
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    //
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     Double zscore = zSet.zscore(new BytesKey(member));
                     if (zscore == null) {

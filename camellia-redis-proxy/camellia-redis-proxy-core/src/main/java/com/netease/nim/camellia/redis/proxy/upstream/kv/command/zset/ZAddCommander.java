@@ -98,10 +98,12 @@ public class ZAddCommander extends ZSet0Commander {
 
         if (first) {
             zSet = new RedisZSet(new HashMap<>(memberMap));
-            zsetWriteBuffer.put(cacheKey, zSet);
+            result = zsetWriteBuffer.put(cacheKey, zSet);
             //
-            type = KvCacheMonitor.Type.write_buffer;
-            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (result != NoOpResult.INSTANCE) {
+                type = KvCacheMonitor.Type.write_buffer;
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
         } else {
             WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
             if (bufferValue != null) {
@@ -127,6 +129,9 @@ public class ZAddCommander extends ZSet0Commander {
                     if (hotKey) {
                         zSet = loadLRUCache(keyMeta, key);
                         if (zSet != null) {
+                            //
+                            type = KvCacheMonitor.Type.kv_store;
+                            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                             //
                             zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                             //

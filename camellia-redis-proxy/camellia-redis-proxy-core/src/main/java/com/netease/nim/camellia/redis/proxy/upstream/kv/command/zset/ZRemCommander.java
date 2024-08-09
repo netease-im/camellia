@@ -73,11 +73,14 @@ public class ZRemCommander extends ZSet0Commander {
 
         Map<BytesKey, Double> localCacheResult = null;
         Result result = null;
+        KvCacheMonitor.Type type = null;
 
         WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             RedisZSet zSet = bufferValue.getValue();
             localCacheResult = zSet.zrem(members);
+            //
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (localCacheResult.isEmpty()) {
                 return IntegerReply.REPLY_0;
@@ -88,11 +91,10 @@ public class ZRemCommander extends ZSet0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-
-
             if (localCacheResult == null) {
                 localCacheResult = zSetLRUCache.zrem(key, cacheKey, members);
                 if (localCacheResult != null) {
+                    type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             } else {
@@ -104,6 +106,8 @@ public class ZRemCommander extends ZSet0Commander {
                 if (hotKey) {
                     RedisZSet zSet = loadLRUCache(keyMeta, key);
                     if (zSet != null) {
+                        type = KvCacheMonitor.Type.kv_store;
+                        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
                         zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                         //
@@ -128,27 +132,28 @@ public class ZRemCommander extends ZSet0Commander {
             result = NoOpResult.INSTANCE;
         }
 
-        if (localCacheResult != null) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        }
-
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremVersion0(keyMeta, key, cacheKey, members, localCacheResult, result);
+            return zremVersion0(keyMeta, key, cacheKey, members, localCacheResult, result, type);
         }
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremVersion1(keyMeta, key, cacheKey, members, localCacheResult, result);
+            return zremVersion1(keyMeta, key, cacheKey, members, localCacheResult, result, type);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zremVersion2(keyMeta, key, cacheKey, members, localCacheResult, result);
+            return zremVersion2(keyMeta, key, cacheKey, members, localCacheResult, result, type);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zremVersion3(keyMeta, key, cacheKey, members, result);
+            return zremVersion3(keyMeta, key, cacheKey, members, result, type);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result) {
+    private Reply zremVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result, KvCacheMonitor.Type type) {
+        if (type != null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
         if (localCacheResult != null) {
             List<byte[]> delStoreKeys = new ArrayList<>(localCacheResult.size() * 2);
             for (Map.Entry<BytesKey, Double> entry : localCacheResult.entrySet()) {
@@ -195,7 +200,7 @@ public class ZRemCommander extends ZSet0Commander {
         return IntegerReply.parse(deleteCount);
     }
 
-    private Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result) {
+    private Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result, KvCacheMonitor.Type type) {
         byte[][] args = new byte[members.size()][];
         int i = 0;
         for (BytesKey member : members) {
@@ -218,11 +223,16 @@ public class ZRemCommander extends ZSet0Commander {
                     if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
                         if (replies[1] instanceof IntegerReply) {
                             deleteCount = (((IntegerReply) replies[1]).getInteger()).intValue();
+                            type = KvCacheMonitor.Type.redis_cache;
                             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                         }
                     }
                 }
             }
+        }
+
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         byte[][] storeKeys = new byte[members.size()][];
@@ -259,7 +269,7 @@ public class ZRemCommander extends ZSet0Commander {
         return IntegerReply.parse(deleteCount);
     }
 
-    private Reply zremVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result) {
+    private Reply zremVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result, KvCacheMonitor.Type type) {
         byte[][] args = new byte[members.size()][];
 
         List<byte[]> indexCacheDeleteCmd = new ArrayList<>(members.size() + 1);
@@ -303,11 +313,16 @@ public class ZRemCommander extends ZSet0Commander {
                     if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
                         if (replies[1] instanceof IntegerReply) {
                             deleteCount = (((IntegerReply) replies[1]).getInteger()).intValue();
+                            type = KvCacheMonitor.Type.redis_cache;
                             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                         }
                     }
                 }
             }
+        }
+
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         if (deleteCount < 0) {
@@ -337,7 +352,11 @@ public class ZRemCommander extends ZSet0Commander {
         return IntegerReply.parse(deleteCount);
     }
 
-    private Reply zremVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Result result) {
+    private Reply zremVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Result result, KvCacheMonitor.Type type) {
+        if (type == null) {
+            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
+
         byte[][] cmd = new byte[members.size() + 2][];
         cmd[0] = RedisCommand.ZREM.raw();
         cmd[1] = cacheKey;

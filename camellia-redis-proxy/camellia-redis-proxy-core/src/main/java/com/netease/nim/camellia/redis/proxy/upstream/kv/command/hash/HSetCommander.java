@@ -138,6 +138,10 @@ public class HSetCommander extends Hash0Commander {
                 if (existMapByCache == null) {
                     boolean hotKey = hashLRUCache.isHotKey(key);
                     if (hotKey) {
+                        //
+                        type = KvCacheMonitor.Type.kv_store;
+                        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                        //
                         Map<BytesKey, byte[]> hgetall = hgetallFromKv(keyMeta, key);
                         hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(hgetall));
                         existMapByCache = hashLRUCache.hset(key, cacheKey, fieldMap);

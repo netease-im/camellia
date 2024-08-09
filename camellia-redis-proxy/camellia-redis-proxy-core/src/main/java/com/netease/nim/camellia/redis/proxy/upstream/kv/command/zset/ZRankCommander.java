@@ -94,6 +94,7 @@ public class ZRankCommander extends ZSet0Commander {
                 if (zSet != null) {
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return toReply(zrank, withScores);
                 }
             }
