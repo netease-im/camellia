@@ -188,7 +188,10 @@ public class SAddCommander extends Set0Commander {
     }
 
     private int checkAndUpdateCache(byte[] cacheKey, Set<BytesKey> memberSet, int memberSize) {
-        byte[][] args = new byte[memberSize][];
+        if (memberSet.isEmpty()) {
+            return -1;
+        }
+        byte[][] args = new byte[memberSet.size()][];
         int i = 0;
         for (BytesKey bytesKey : memberSet) {
             args[i] = bytesKey.getKey();

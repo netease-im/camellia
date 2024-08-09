@@ -74,6 +74,7 @@ public class HSetCommander extends Hash0Commander {
             byte[] value = objects[i + 1];
             fieldMap.put(new BytesKey(field), value);
         }
+        int fieldSize = fieldMap.size();
 
         boolean first = false;
 
@@ -185,7 +186,7 @@ public class HSetCommander extends Hash0Commander {
                 list.add(keyValue);
             }
             batchPut(cacheKey, result, list);
-            return IntegerReply.parse(list.size());
+            return IntegerReply.parse(fieldSize);
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
@@ -206,7 +207,7 @@ public class HSetCommander extends Hash0Commander {
                 boolean[] exists = kvClient.exists(subKeys);
                 existsCount = Utils.count(exists);
             }
-            int add = list.size() - existsCount;
+            int add = fieldSize - existsCount;
             if (add > 0) {
                 int size = BytesUtils.toInt(keyMeta.getExtra());
                 size = size + add;
@@ -292,7 +293,7 @@ public class HSetCommander extends Hash0Commander {
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             }
-            int add = list.size() - existsCount;
+            int add = fieldSize - existsCount;
             if (add > 0) {
                 int size = BytesUtils.toInt(keyMeta.getExtra());
                 size = size + add;
@@ -328,7 +329,7 @@ public class HSetCommander extends Hash0Commander {
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
 
-            return IntegerReply.parse(list.size());//可能不准
+            return IntegerReply.parse(fieldSize);//可能不准
         } else {
             return ErrorReply.INTERNAL_ERROR;
         }

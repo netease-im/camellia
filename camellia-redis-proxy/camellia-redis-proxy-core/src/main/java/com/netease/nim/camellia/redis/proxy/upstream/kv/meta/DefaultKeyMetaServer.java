@@ -168,6 +168,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             }
             return keyMeta;
         }
+        ErrorLogCollector.collect(DefaultKeyMetaServer.class, "reply = " + reply);
         throw new KvException("ERR key meta error");
     }
 
