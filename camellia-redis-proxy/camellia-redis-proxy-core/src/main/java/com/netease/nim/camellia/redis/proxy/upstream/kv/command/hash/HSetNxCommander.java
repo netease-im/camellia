@@ -131,11 +131,13 @@ public class HSetNxCommander extends Hash0Commander {
         Result result = null;
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
+            //
+            type = KvCacheMonitor.Type.write_buffer;
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            //
             RedisHash hash = writeBufferValue.getValue();
             byte[] hget = hash.hget(filedKey);
             if (hget != null) {
-                type = KvCacheMonitor.Type.write_buffer;
-                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.REPLY_0;
             } else {
                 cacheCheck = cache_hit_not_exists;
@@ -147,7 +149,6 @@ public class HSetNxCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            boolean loadFromKv = false;
             RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
             if (hash == null) {
                 boolean hotKey = hashLRUCache.isHotKey(key);
@@ -157,18 +158,16 @@ public class HSetNxCommander extends Hash0Commander {
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
                     Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-                    loadFromKv = true;
                     hash = new RedisHash(map);
                     hashLRUCache.putAllForWrite(key, cacheKey, hash);
                 }
+            } else {
+                type = KvCacheMonitor.Type.local_cache;
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
             if (hash != null) {
                 byte[] hget = hash.hget(filedKey);
                 if (hget != null) {
-                    if (!loadFromKv) {
-                        type = KvCacheMonitor.Type.local_cache;
-                        KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                    }
                     return IntegerReply.REPLY_0;
                 } else {
                     Map<BytesKey, byte[]> fieldMap = new HashMap<>();
