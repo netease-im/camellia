@@ -24,7 +24,11 @@ data:
         local:
           type: complex 
           json-file: resource-table.json
-
+        redis-conf:
+          preheat: false
+          close-idle-connection: true
+          check-idle-connection-threshold-seconds: 600
+          close-idle-connection-delay-seconds: 60
   logback.xml: |
     <?xml version="1.0" encoding="UTF-8"?>
     <configuration scan="true" scanPeriod="60 seconds" debug="false">
@@ -78,7 +82,11 @@ data:
         local:
           type: simple #simple、complex
           resource: redis://@sts-db-redis-single1-camellia-0.svc-db-redis-single1-camellia.db.svc.cluster.local:6379
-
+        redis-conf:
+          preheat: false
+          close-idle-connection: true
+          check-idle-connection-threshold-seconds: 600
+          close-idle-connection-delay-seconds: 60
   application-singlewrite-multiread.yml: |
     server:
       port: 6380
@@ -98,7 +106,11 @@ data:
         local:
           type: complex
           json-file: resource-singlewrite-multiread.json
-
+        redis-conf:
+          preheat: false
+          close-idle-connection: true
+          check-idle-connection-threshold-seconds: 600
+          close-idle-connection-delay-seconds: 60
   resource-singlewrite-multiread.json: |
     {
       "type": "simple",
@@ -137,7 +149,10 @@ data:
           json-file: resource-sharding-singlewrite-multiread.json
         redis-conf:
           sharding-func: com.netease.nim.camellia.core.client.env.CRC16HashTagShardingFunc
-
+          preheat: false
+          close-idle-connection: true
+          check-idle-connection-threshold-seconds: 600
+          close-idle-connection-delay-seconds: 60
   resource-sharding-singlewrite-multiread.json: |
     {
       "type": "sharding",
@@ -201,7 +216,11 @@ data:
         local:
           type: complex
           json-file: resource-sentinel-singlewrite-multiread.json
-
+        redis-conf:
+          preheat: false
+          close-idle-connection: true
+          check-idle-connection-threshold-seconds: 600
+          close-idle-connection-delay-seconds: 60
   resource-sentinel-singlewrite-multiread.json: |
     {
       "type": "simple",
