@@ -95,6 +95,7 @@ public class HGetCommander extends Hash0Commander {
             if (hotKey) {
                 hash = loadLRUCache(keyMeta, key);
                 hashLRUCache.putAllForRead(key, cacheKey, hash);
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new BulkReply(hash.hget(new BytesKey(field)));
             }
         }

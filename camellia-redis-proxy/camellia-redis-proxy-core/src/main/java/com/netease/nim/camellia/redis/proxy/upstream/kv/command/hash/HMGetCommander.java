@@ -98,13 +98,16 @@ public class HMGetCommander extends Hash0Commander {
             if (hotKey) {
                 hash = loadLRUCache(keyMeta, key);
                 hashLRUCache.putAllForRead(key, cacheKey, hash);
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply2(fields, hash.hgetAll());
             }
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
+            //
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            //
             List<BytesKey> list = new ArrayList<>(objects.length - 2);
             byte[][] subKeys = new byte[objects.length - 2][];
             for (int i=2; i<objects.length; i++) {

@@ -99,8 +99,28 @@ public class HSetNxCommander extends Hash0Commander {
         BytesKey filedKey = new BytesKey(field);
 
         if (first) {
+            Map<BytesKey, byte[]> fieldMap = new HashMap<>();
+            fieldMap.put(new BytesKey(field), value);
+            Result result = hashWriteBuffer.put(cacheKey, new RedisHash(fieldMap));
+
+            if (result == NoOpResult.INSTANCE) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            } else {
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
+
+            if (cacheConfig.isHashLocalCacheEnable()) {
+                HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+                hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
+            }
+
             byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
-            kvClient.put(subKey, value);
+
+            if (result.isKvWriteDelayEnable()) {
+                submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(subKey, value));
+            } else {
+                kvClient.put(subKey, value);
+            }
             return IntegerReply.REPLY_1;
         }
 

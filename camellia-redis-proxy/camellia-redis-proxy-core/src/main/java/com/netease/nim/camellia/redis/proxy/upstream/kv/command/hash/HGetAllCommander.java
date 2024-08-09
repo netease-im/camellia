@@ -99,6 +99,7 @@ public class HGetAllCommander extends Hash0Commander {
             }
             return reply;
         }
+
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);

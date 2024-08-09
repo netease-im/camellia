@@ -96,10 +96,12 @@ public class SAddCommander extends Set0Commander {
 
         if (first) {
             set = new RedisSet(new HashSet<>(memberSet));
-            setWriteBuffer.put(cacheKey, set);
+            result = setWriteBuffer.put(cacheKey, set);
             //
-            type = KvCacheMonitor.Type.write_buffer;
-            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            if (result != NoOpResult.INSTANCE) {
+                type = KvCacheMonitor.Type.write_buffer;
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
         } else {
             WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
             if (bufferValue != null) {

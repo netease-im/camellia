@@ -72,12 +72,15 @@ public class HDelCommander extends Hash0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
+        KvCacheMonitor.Type type = null;
+
         int delCount = -1;
 
         Result result = null;
         boolean deleteAll = false;
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             RedisHash hash = writeBufferValue.getValue();
             Map<BytesKey, byte[]> deleteMaps = hash.hdel(fields);
@@ -97,6 +100,7 @@ public class HDelCommander extends Hash0Commander {
 
             Map<BytesKey, byte[]> deleteMaps = hashLRUCache.hdel(key, cacheKey, fields);
             if (deleteMaps != null) {
+                type = KvCacheMonitor.Type.write_buffer;
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
             if (deleteMaps != null && delCount < 0) {
@@ -135,9 +139,6 @@ public class HDelCommander extends Hash0Commander {
                 }
             }
         }
-        if (delCount < 0) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        }
 
         if (result == null) {
             result = NoOpResult.INSTANCE;
@@ -146,6 +147,9 @@ public class HDelCommander extends Hash0Commander {
         int fieldSize = fields.size();
 
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
+            if (type == null) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
             byte[][] subKeys = new byte[fieldSize][];
             int i=0;
             for (BytesKey field : fields) {
@@ -201,8 +205,8 @@ public class HDelCommander extends Hash0Commander {
         Reply reply = null;
         if (luaReply instanceof MultiBulkReply) {
             Reply[] replies = ((MultiBulkReply) luaReply).getReplies();
-            String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-            if (type.equalsIgnoreCase("1")) {//cache hit
+            String opeType = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
+            if (opeType.equalsIgnoreCase("1")) {//cache hit
                 reply = replies[1];
             }
         }
@@ -210,7 +214,13 @@ public class HDelCommander extends Hash0Commander {
         if (delCount < 0) {
             if (reply instanceof IntegerReply) {
                 delCount = ((IntegerReply) reply).getInteger().intValue();
+                type = KvCacheMonitor.Type.redis_cache;
+                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
+        }
+
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         if (encodeVersion == EncodeVersion.version_2) {

@@ -110,8 +110,11 @@ public class HSetCommander extends Hash0Commander {
         if (first) {
             existsCount = 0;
             result = hashWriteBuffer.put(cacheKey, new RedisHash(new HashMap<>(fieldMap)));
-            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-            type = KvCacheMonitor.Type.write_buffer;
+            //
+            if (result != NoOpResult.INSTANCE) {
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                type = KvCacheMonitor.Type.write_buffer;
+            }
         } else {
             WriteBufferValue<RedisHash> value = hashWriteBuffer.get(cacheKey);
             if (value != null) {
