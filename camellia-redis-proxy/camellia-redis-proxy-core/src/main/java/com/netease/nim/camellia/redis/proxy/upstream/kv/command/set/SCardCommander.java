@@ -54,6 +54,7 @@ public class SCardCommander extends Set0Commander {
         WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             RedisSet set = bufferValue.getValue();
+            //
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             return IntegerReply.parse(set.scard());
         }
@@ -72,6 +73,8 @@ public class SCardCommander extends Set0Commander {
                 if (hotKey) {
                     set = loadLRUCache(keyMeta, key);
                     setLRUCache.putAllForRead(key, cacheKey, set);
+                    //
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return IntegerReply.parse(set.scard());
                 }
             }

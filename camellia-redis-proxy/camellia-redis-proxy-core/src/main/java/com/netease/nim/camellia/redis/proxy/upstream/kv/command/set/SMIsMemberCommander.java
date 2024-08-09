@@ -89,6 +89,8 @@ public class SMIsMemberCommander extends Set0Commander {
             if (hotKey) {
                 set = loadLRUCache(keyMeta, key);
                 setLRUCache.putAllForRead(key, cacheKey, set);
+                //
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 Map<BytesKey, Boolean> smismember = set.smismember(members);
                 return toReply(smismember, members);
             }
@@ -120,6 +122,7 @@ public class SMIsMemberCommander extends Set0Commander {
         }
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
         Map<BytesKey, Boolean> smismember = smismemberFromKv(keyMeta, key, members);
         return toReply(smismember, members);
     }

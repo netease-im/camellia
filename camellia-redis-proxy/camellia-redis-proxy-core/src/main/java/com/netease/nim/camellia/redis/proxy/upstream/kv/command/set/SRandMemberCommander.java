@@ -102,7 +102,8 @@ public class SRandMemberCommander extends Set0Commander {
             if (hotKey) {
                 set = loadLRUCache(keyMeta, key);
                 setLRUCache.putAllForRead(key, cacheKey, set);
-
+                //
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 Set<BytesKey> srandmember = set.srandmember(count);
                 return toReply(srandmember, batch);
             }
@@ -135,6 +136,7 @@ public class SRandMemberCommander extends Set0Commander {
         }
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
         Set<BytesKey> set = srandmemberFromKv(keyMeta, key, count);
 
         return toReply(set, batch);

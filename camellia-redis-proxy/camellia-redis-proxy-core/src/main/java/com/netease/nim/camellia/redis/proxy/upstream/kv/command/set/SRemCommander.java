@@ -62,10 +62,12 @@ public class SRemCommander extends Set0Commander {
 
         Set<BytesKey> removedMembers = null;
         Result result = null;
+        KvCacheMonitor.Type type = null;
 
         WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             RedisSet set = bufferValue.getValue();
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             removedMembers = set.srem(members);
             result = setWriteBuffer.put(cacheKey, set);
@@ -76,6 +78,10 @@ public class SRemCommander extends Set0Commander {
 
             if (removedMembers == null) {
                 removedMembers = setLRUCache.srem(key, cacheKey, members);
+                if (removedMembers != null) {
+                    type = KvCacheMonitor.Type.local_cache;
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             } else {
                 setLRUCache.srem(key, cacheKey, members);
             }
@@ -118,6 +124,10 @@ public class SRemCommander extends Set0Commander {
                         return pair.getFirst();
                     }
                     if (pair.getSecond() != null && pair.getSecond() >= 0) {
+                        if (type == null) {
+                            type = KvCacheMonitor.Type.redis_cache;
+                            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                        }
                         removeSize = pair.getSecond();
                     }
                 }

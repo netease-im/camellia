@@ -92,9 +92,13 @@ public class SAddCommander extends Set0Commander {
         RedisSet set = null;
         Set<BytesKey> existsMemberSet = null;
 
+        KvCacheMonitor.Type type = null;
+
         if (first) {
             set = new RedisSet(new HashSet<>(memberSet));
             setWriteBuffer.put(cacheKey, set);
+            //
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
         } else {
             WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
@@ -102,6 +106,8 @@ public class SAddCommander extends Set0Commander {
                 set = bufferValue.getValue();
                 existsMemberSet = set.sadd(memberSet);
                 result = setWriteBuffer.put(cacheKey, set);
+                //
+                type = KvCacheMonitor.Type.write_buffer;
                 KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
         }
@@ -124,6 +130,7 @@ public class SAddCommander extends Set0Commander {
                         existsSet = set.sadd(memberSet);
                     }
                 } else {
+                    type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
                 if (existsMemberSet == null && existsSet != null) {
@@ -157,11 +164,11 @@ public class SAddCommander extends Set0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
+            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
+            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
         if (encodeVersion == EncodeVersion.version_2) {
@@ -169,19 +176,25 @@ public class SAddCommander extends Set0Commander {
                 int ret = checkAndUpdateCache(cacheKey, memberSet, memberSize);
                 if (existsMemberSize < 0 && ret >= 0) {
                     existsMemberSize = ret;
+                    //
+                    type = KvCacheMonitor.Type.redis_cache;
+                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             }
-            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
+            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
         if (encodeVersion == EncodeVersion.version_3) {
             if (!first) {
                 int ret = checkAndUpdateCache(cacheKey, memberSet, memberSize);
                 if (existsMemberSize < 0 && ret >= 0) {
+                    //
+                    type = KvCacheMonitor.Type.redis_cache;
+                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                     existsMemberSize = ret;
                 }
             }
-            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result);
+            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
         return ErrorReply.INTERNAL_ERROR;
@@ -217,7 +230,10 @@ public class SAddCommander extends Set0Commander {
     }
 
     private Reply saddVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
-                               int existsMemberSize, Set<BytesKey> memberSet, Result result) {
+                               int existsMemberSize, Set<BytesKey> memberSet, Result result, KvCacheMonitor.Type type) {
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
         if (first) {
             writeMembers(keyMeta, key, cacheKey, memberSet, result);
             return IntegerReply.parse(memberSize);
@@ -257,7 +273,10 @@ public class SAddCommander extends Set0Commander {
     }
 
     private Reply saddVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
-                               int existsMemberSize, Set<BytesKey> memberSet, Result result) {
+                               int existsMemberSize, Set<BytesKey> memberSet, Result result, KvCacheMonitor.Type type) {
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
         if (first) {
             writeMembers(keyMeta, key, cacheKey, memberSet, result);
         } else {

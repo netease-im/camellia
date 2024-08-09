@@ -84,6 +84,8 @@ public class SIsMemberCommander extends Set0Commander {
             if (hotKey) {
                 set = loadLRUCache(keyMeta, key);
                 setLRUCache.putAllForRead(key, cacheKey, set);
+                //
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 boolean sismeber = set.sismeber(new BytesKey(member));
                 return IntegerReply.parse(sismeber ? 1 : 0);
             }
@@ -98,12 +100,15 @@ public class SIsMemberCommander extends Set0Commander {
                     byte[] raw = ((BulkReply) replies[0]).getRaw();
                     if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
                         if (replies[1] instanceof IntegerReply) {
+                            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                             return replies[1];
                         }
                     }
                 }
             }
         }
+
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         byte[] subKey = keyDesign.setMemberSubKey(keyMeta, key, member);
         KeyValue keyValue = kvClient.get(subKey);

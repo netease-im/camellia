@@ -75,10 +75,13 @@ public class SPopCommander extends Set0Commander {
 
         Set<BytesKey> spop = null;
         Result result = null;
+        KvCacheMonitor.Type type = null;
 
         WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             RedisSet set = bufferValue.getValue();
+            //
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             spop = set.spop(count);
             result = setWriteBuffer.put(cacheKey, set);
@@ -88,6 +91,10 @@ public class SPopCommander extends Set0Commander {
 
             if (spop == null) {
                 spop = setLRUCache.spop(key, cacheKey, count);
+                if (spop != null) {
+                    type = KvCacheMonitor.Type.local_cache;
+                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             } else {
                 setLRUCache.srem(key, cacheKey, spop);
             }
@@ -118,6 +125,12 @@ public class SPopCommander extends Set0Commander {
         if (spop == null) {
             if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
                 spop = spopFromCache(cacheKey, count);
+                if (spop != null) {
+                    if (type != null) {
+                        type = KvCacheMonitor.Type.redis_cache;
+                        KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                    }
+                }
             }
         } else {
             if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
@@ -126,6 +139,10 @@ public class SPopCommander extends Set0Commander {
                     return reply;
                 }
             }
+        }
+
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
         if (spop == null) {
