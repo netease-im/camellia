@@ -92,11 +92,15 @@ public class ZAddCommander extends ZSet0Commander {
         RedisZSet zSet = null;
         Map<BytesKey, Double> existsMap = null;
 
+        KvCacheMonitor.Type type = null;
+
         Result result = null;
 
         if (first) {
             zSet = new RedisZSet(new HashMap<>(memberMap));
             zsetWriteBuffer.put(cacheKey, zSet);
+            //
+            type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
         } else {
             WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
@@ -104,6 +108,8 @@ public class ZAddCommander extends ZSet0Commander {
                 zSet = bufferValue.getValue();
                 existsMap = zSet.zadd(memberMap);
                 result = zsetWriteBuffer.put(cacheKey, zSet);
+                //
+                type = KvCacheMonitor.Type.write_buffer;
                 KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             }
         }
@@ -128,6 +134,7 @@ public class ZAddCommander extends ZSet0Commander {
                         }
                     }
                 } else {
+                    type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
                 if (existsMap == null && map != null) {
@@ -148,27 +155,26 @@ public class ZAddCommander extends ZSet0Commander {
             result = NoOpResult.INSTANCE;
         }
 
-        if (existsMap == null) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        }
-
         if (encodeVersion == EncodeVersion.version_0) {
-            return zaddVersion0(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result);
+            return zaddVersion0(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result, type);
         }
         if (encodeVersion == EncodeVersion.version_1) {
-            return zaddVersion1(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result);
+            return zaddVersion1(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result, type);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zaddVersion2(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result);
+            return zaddVersion2(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result, type);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zaddVersion3(keyMeta, key, cacheKey, memberSize, memberMap, result);
+            return zaddVersion3(keyMeta, key, cacheKey, memberSize, memberMap, result, type);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
     private Reply zaddVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
-                               Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result) {
+                               Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result, KvCacheMonitor.Type type) {
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
         if (first) {
             List<KeyValue> list = new ArrayList<>(memberSize*2);
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
@@ -249,8 +255,11 @@ public class ZAddCommander extends ZSet0Commander {
     }
 
     private Reply zaddVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
-                               Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result) {
+                               Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result, KvCacheMonitor.Type type) {
         if (first) {
+            if (type == null) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
             List<KeyValue> list = new ArrayList<>(memberSize);
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
@@ -308,6 +317,10 @@ public class ZAddCommander extends ZSet0Commander {
                 boolean[] exists = kvClient.exists(existsKeys);
                 int existsCount = Utils.count(exists);
                 add = memberSize - existsCount;
+                //
+                if (type == null) {
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             } else {
                 for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
@@ -315,6 +328,10 @@ public class ZAddCommander extends ZSet0Commander {
                     byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                     KeyValue keyValue1 = new KeyValue(subKey1, Utils.doubleToBytes(score));
                     list.add(keyValue1);
+                }
+                //
+                if (type == null) {
+                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             }
             if (result.isKvWriteDelayEnable()) {
@@ -331,9 +348,13 @@ public class ZAddCommander extends ZSet0Commander {
     }
 
     private Reply zaddVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
-                               Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result) {
+                               Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result, KvCacheMonitor.Type type) {
         List<KeyValue> list = new ArrayList<>(memberSize*2);
         if (first) {
+            //
+            if (type == null) {
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+            }
             for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
                 Double score = entry.getValue();
@@ -410,6 +431,15 @@ public class ZAddCommander extends ZSet0Commander {
                 boolean[] exists = kvClient.exists(existsKeys);
                 int existsCount = Utils.count(exists);
                 add = memberSize - existsCount;
+                //
+                if (type == null) {
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
+            } else {
+                //
+                if (type == null) {
+                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                }
             }
             if (result.isKvWriteDelayEnable()) {
                 submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
@@ -426,7 +456,10 @@ public class ZAddCommander extends ZSet0Commander {
         }
     }
 
-    private Reply zaddVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Map<BytesKey, Double> memberMap, Result result) {
+    private Reply zaddVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Map<BytesKey, Double> memberMap, Result result, KvCacheMonitor.Type type) {
+        if (type == null) {
+            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+        }
         byte[][] rewriteCmd = new byte[memberSize*2+2][];
         rewriteCmd[0] = RedisCommand.ZADD.raw();
         rewriteCmd[1] = cacheKey;
