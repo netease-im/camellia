@@ -17,7 +17,6 @@ public class CacheConfig {
     private static final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
 
     private final String namespace;
-    private final boolean metaCacheEnable;
     private boolean metaLocalCacheEnable;
     private boolean hashLocalCacheEnable;
     private boolean zsetLocalCacheEnable;
@@ -27,11 +26,9 @@ public class CacheConfig {
     private final ZSetLRUCache zSetLRUCache;
     private final SetLRUCache setLRUCache;
 
-    public CacheConfig(String namespace, boolean metaCacheEnable) {
+    public CacheConfig(String namespace) {
         this.namespace = namespace;
-        this.metaCacheEnable = metaCacheEnable;
         initCacheConfig();
-        logger.info("namespace = {}, metaCacheEnable = {}", namespace, metaCacheEnable);
         logger.info("namespace = {}, metaLocalCacheEnable = {}", namespace, metaLocalCacheEnable);
         logger.info("namespace = {}, hashLocalCacheEnable = {}", namespace, hashLocalCacheEnable);
         logger.info("namespace = {}, zsetLocalCacheEnable = {}", namespace, zsetLocalCacheEnable);
@@ -82,10 +79,6 @@ public class CacheConfig {
         return namespace;
     }
 
-    public boolean isMetaCacheEnable() {
-        return metaCacheEnable;
-    }
-
     public boolean isMetaLocalCacheEnable() {
         return metaLocalCacheEnable;
     }
@@ -118,32 +111,8 @@ public class CacheConfig {
         return setLRUCache;
     }
 
-    public long metaCacheMillis() {
-        return RedisKvConf.getLong(namespace, "kv.key.meta.cache.millis", 1000L * 60 * 10);
-    }
-
-    public int keyMetaCacheDelayMapSize() {
-        return RedisKvConf.getInt(namespace, "kv.key.meta.cache.delay.map.size", 100000);
-    }
-
-    public long keyMetaCacheKeyDelayMinIntervalSeconds() {
-        return RedisKvConf.getLong(namespace, "kv.key.meta.cache.delay.min.interval.seconds", 10);
-    }
-
-    public long keyMetaTimeoutMillis() {
-        return RedisKvConf.getLong(namespace, "kv.key.meta.timeout.millis", 2000L);
-    }
-
     public long cacheTimeoutMillis() {
         return RedisKvConf.getLong(namespace, "kv.cache.timeout.millis", 2000L);
-    }
-
-    public long hgetCacheMillis() {
-        return RedisKvConf.getLong(namespace, "kv.cache.hget.cache.millis", 5*60*1000L);
-    }
-
-    public long hgetallCacheMillis() {
-        return RedisKvConf.getLong(namespace, "kv.cache.hgetall.cache.millis", 5*60*1000L);
     }
 
     public long smembersCacheMillis() {
@@ -152,10 +121,6 @@ public class CacheConfig {
 
     public long zsetMemberCacheMillis() {
         return RedisKvConf.getLong(namespace, "kv.cache.zset.member.cache.millis", 5*60*1000L);
-    }
-
-    public long zsetRangeCacheMillis() {
-        return RedisKvConf.getLong(namespace, "kv.cache.zset.range.cache.millis", 5*60*1000L);
     }
 
 }

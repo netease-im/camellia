@@ -279,14 +279,14 @@ public class ZAddCommander extends ZSet0Commander {
             }
         }
         if (!memberIndexCacheWriteCommands.isEmpty()) {
-            List<Reply> replyList = sync(redisTemplate.sendCommand(memberIndexCacheWriteCommands));
+            List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(memberIndexCacheWriteCommands));
             for (Reply reply : replyList) {
                 if (reply instanceof ErrorReply) {
                     return reply;
                 }
             }
         }
-        return sync(redisTemplate.sendCommand(new Command(rewriteCmd)));
+        return sync(storageRedisTemplate.sendCommand(new Command(rewriteCmd)));
     }
 
     private void updateKeyMeta(KeyMeta keyMeta, byte[] key, int add) {

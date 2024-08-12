@@ -212,14 +212,16 @@ public class ZRemCommander extends ZSet0Commander {
             i++;
         }
 
-        List<Command> commandList = new ArrayList<>(3);
+        List<Command> commandList = new ArrayList<>(2);
         commandList.add(new Command(cmd));
         commandList.add(new Command(new byte[][]{RedisCommand.ZCARD.raw(), cacheKey}));
-        if (indexCacheDeleteCmd.size() > 1) {
-            commandList.add(new Command(indexCacheDeleteCmd.toArray(new byte[0][0])));
-        }
 
-        List<CompletableFuture<Reply>> futures = redisTemplate.sendCommand(commandList);
+        List<CompletableFuture<Reply>> futures = storageRedisTemplate.sendCommand(commandList);
+
+        CompletableFuture<Reply> future = null;
+        if (indexCacheDeleteCmd.size() > 1) {
+            future = cacheRedisTemplate.sendCommand(new Command(indexCacheDeleteCmd.toArray(new byte[0][0])));
+        }
 
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(cacheKey, result, () -> {
@@ -246,6 +248,11 @@ public class ZRemCommander extends ZSet0Commander {
                 keyMetaServer.deleteKeyMeta(key);
             }
         }
+
+        if (future != null) {
+            sync(future);
+        }
+
         return replyList.get(0);
     }
 

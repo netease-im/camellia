@@ -33,13 +33,14 @@ camellia-redis-proxy:
 
 ```properties
 
-kv.redis.cache.url=redis://@127.0.0.1:6379
+#只有zset的encode-version设置为1时才依赖redis
 kv.redis.store.url=redis://@127.0.0.1:6379
+kv.redis.cache.url=redis://@127.0.0.1:6379
 
-#支持0、1、2、3
+#支持0、1
 #支持不重启动态修改
 kv.hash.key.meta.version=0
-#支持0、1、2、3
+#支持0、1
 #支持不重启动态修改
 kv.zset.key.meta.version=0
 

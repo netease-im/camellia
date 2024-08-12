@@ -47,7 +47,7 @@ public class UnlinkCommander extends Commander {
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
             if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1)) {
                 byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-                redisTemplate.sendDel(cacheKey);
+                storageRedisTemplate.sendDel(cacheKey);
             }
         }
         return IntegerReply.parse(ret);

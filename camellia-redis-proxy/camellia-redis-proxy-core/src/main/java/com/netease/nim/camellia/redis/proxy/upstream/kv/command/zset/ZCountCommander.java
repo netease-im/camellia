@@ -122,7 +122,7 @@ public class ZCountCommander extends ZSet0Commander {
 
         if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(redisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCOUNT.raw(), cacheKey, objects[2], objects[3]})));
+            return sync(storageRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCOUNT.raw(), cacheKey, objects[2], objects[3]})));
         }
 
         return ErrorReply.INTERNAL_ERROR;

@@ -22,7 +22,8 @@ public class CommanderConfig {
     private final CacheConfig cacheConfig;
     private final KvConfig kvConfig;
     private final KeyMetaServer keyMetaServer;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate cacheRedisTemplate;
+    private final RedisTemplate storageRedisTemplate;
     private final KvGcExecutor gcExecutor;
     private final WriteBuffer<RedisHash> hashWriteBuffer;
     private final WriteBuffer<RedisZSet> zsetWriteBuffer;
@@ -30,14 +31,15 @@ public class CommanderConfig {
 
     public CommanderConfig(KVClient kvClient, KeyDesign keyDesign, CacheConfig cacheConfig,
                            KvConfig kvConfig, KeyMetaServer keyMetaServer,
-                           RedisTemplate redisTemplate, KvGcExecutor gcExecutor,
+                           RedisTemplate cacheRedisTemplate, RedisTemplate storageRedisTemplate, KvGcExecutor gcExecutor,
                            WriteBuffer<RedisHash> hashWriteBuffer, WriteBuffer<RedisZSet> zsetWriteBuffer, WriteBuffer<RedisSet> setWriteBuffer) {
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.cacheConfig = cacheConfig;
         this.kvConfig = kvConfig;
         this.keyMetaServer = keyMetaServer;
-        this.redisTemplate = redisTemplate;
+        this.cacheRedisTemplate = cacheRedisTemplate;
+        this.storageRedisTemplate = storageRedisTemplate;
         this.gcExecutor = gcExecutor;
         this.hashWriteBuffer = hashWriteBuffer;
         this.zsetWriteBuffer = zsetWriteBuffer;
@@ -64,8 +66,12 @@ public class CommanderConfig {
         return keyMetaServer;
     }
 
-    public RedisTemplate getRedisTemplate() {
-        return redisTemplate;
+    public RedisTemplate getCacheRedisTemplate() {
+        return cacheRedisTemplate;
+    }
+
+    public RedisTemplate getStorageRedisTemplate() {
+        return storageRedisTemplate;
     }
 
     public KvGcExecutor getGcExecutor() {

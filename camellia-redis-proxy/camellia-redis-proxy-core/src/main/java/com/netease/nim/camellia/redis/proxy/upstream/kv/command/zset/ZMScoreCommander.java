@@ -109,7 +109,7 @@ public class ZMScoreCommander extends ZSet0Commander {
                 cmd[i] = index.getRef();
             }
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(redisTemplate.sendCommand(new Command(cmd)));
+            return sync(storageRedisTemplate.sendCommand(new Command(cmd)));
         }
         return ErrorReply.INTERNAL_ERROR;
     }

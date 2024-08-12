@@ -52,7 +52,7 @@ public enum KeyType {
 
 ## hash数据结构
 
-hash数据有四种编码模式
+hash数据有2种编码模式
 
 ### version-0
 
@@ -93,37 +93,10 @@ hash数据有四种编码模式
 * 因为不在key-meta中记录field-count，纯覆盖写，写入快，但是导致了hlen慢
 * hset/hdel等操作返回结果不准确，比如hset操作，不管写入的是已存在的field还是新的field，都返回1
 
-### version-2和version-3
-
-#### key-meta
-
-* version-2同version-0，但是encode-version固定为2
-* version-3同version-1，但是encode-version固定为3
-
-#### sub-key
-
-* version-2同version-0
-* version-3同version-1
-
-相比version-0和version-1，新增了redis缓存层
-
-#### hget-cache-key
-
-|                 redis-key                  | redis-type | redis-value |
-|:------------------------------------------:|:----------:|------------:|
-| c# + namespace + key + key-version + field |   string   | field-value |
-
-#### hgetall-cache-key
-
-|             redis-key              | redis-type | redis-value |
-|:----------------------------------:|:----------:|------------:|
-| c# + namespace + key + key-version |    hash    |   full-hash |
-
-
 
 ## zset数据结构
 
-zset有5种编码结构
+zset有2种编码结构
 
 ### version-0
 
@@ -149,74 +122,8 @@ zset有5种编码结构
 * key-meta中记录了member-count，zcard快
 * 写操作的读放大多，因为每次写入都需要读一下是否是已经存在的member还是新的member，如zadd操作，前者返回0，后者返回1
 
+
 ### version-1
-
-#### key-meta
-
-|                  key                  |                      value                       |
-|:-------------------------------------:|:------------------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + md5_prefix + key | 1 + 3 + key-version + expire-time + member-count |
-
-#### sub-key
-
-|                                  key                                  | value |
-|:---------------------------------------------------------------------:|:-----:|
-| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | score |
-
-#### redis-cache-key
-
-|                redis-key                | redis-type | redis-value |
-|:---------------------------------------:|:----------:|------------:|
-|   c# + namespace + key + key-version    |    zset    |    full-zet |
-
-* encode-version固定为1，key-type固定为3
-* 依赖redis做复杂的zset操作
-* 当redis过期时，需要从kv中全量导出所有数据重建cache
-
-### version-2
-
-#### key-meta
-
-|                  key                  |                      value                       |
-|:-------------------------------------:|:------------------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + md5_prefix + key | 0 + 3 + key-version + expire-time + member-count |
-
-#### index
-
-index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
-
-#### sub-key
-
-|                                  key                                  | value |
-|:---------------------------------------------------------------------:|:-----:|
-| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | score |
-
-|                                 key                                  | value  |
-|:--------------------------------------------------------------------:|:------:|
-| i# + namespace + md5(key)[0-8] + key.len + key + key-version + index | member |
-
-* 如果member很小，则只有第一个sub-key
-
-#### redis-index-zset-cache-key
-
-|             redis-key              | redis-type | redis-value |
-|:----------------------------------:|:----------:|------------:|
-| c# + namespace + key + key-version |    zset    |   index-zet |
-
-#### redis-index-member-cache-key
-
-|                 redis-key                  | redis-type | redis-value |
-|:------------------------------------------:|:----------:|------------:|
-| c# + namespace + key + key-version + index |   string   |      member |
-
-* encode-version固定为2，key-type固定为3
-* 依赖redis做复杂的zset操作
-* redis纯缓存使用，可以换出，且redis里可以只存部分数据
-* 当redis过期时，需要从kv中导出数据重建cache（可以只导出index）
-
-### version-3
 
 #### key-meta
 
@@ -260,7 +167,7 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 ## set数据结构
 
-set数据有四种编码模式
+set数据有2种编码模式
 
 ### version-0
 
@@ -300,27 +207,6 @@ set数据有四种编码模式
 * encode-version固定为1，key-type固定为2
 * 因为不在key-meta中记录member-count，纯覆盖写，写入快，但是导致了scard慢
 * sadd/srem等操作返回结果不准确，比如sadd操作，不管写入的是已存在的member还是新的member，都返回1
-
-### version-2和version-3
-
-#### key-meta
-
-* version-2同version-0，但是encode-version固定为2
-* version-3同version-1，但是encode-version固定为3
-
-#### sub-key
-
-* version-2同version-0
-* version-3同version-1
-
-相比version-0和version-1，新增了redis缓存层
-
-#### smembers-cache-key
-
-|             redis-key              | redis-type | redis-value |
-|:----------------------------------:|:----------:|------------:|
-| c# + namespace + key + key-version |    set     |    full-set |
-
 
 
 ## list数据结构

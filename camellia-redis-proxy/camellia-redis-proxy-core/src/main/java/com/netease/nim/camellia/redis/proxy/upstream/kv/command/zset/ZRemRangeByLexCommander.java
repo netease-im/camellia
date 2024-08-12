@@ -218,7 +218,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 commands.add(new Command(deleteCmd.toArray(new byte[0][0])));
             }
 
-            List<CompletableFuture<Reply>> futures = redisTemplate.sendCommand(commands);
+            List<CompletableFuture<Reply>> futures = cacheRedisTemplate.sendCommand(commands);
 
             if (result.isKvWriteDelayEnable()) {
                 submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0])));

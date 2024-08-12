@@ -226,11 +226,10 @@ public class RedisKvClient implements IUpstreamClient {
         KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyDesign, kvConfig);
         gcExecutor.start();
 
-        boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.meta.cache.enable", true);
+        CacheConfig cacheConfig = new CacheConfig(namespace);
 
-        CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable);
-
-        RedisTemplate redisTemplate = initRedisTemplate();
+        RedisTemplate cacheRedisTemplate = initRedisTemplate("kv.redis.cache");
+        RedisTemplate storageRedisTemplate = initRedisTemplate("kv.redis.storage");
 
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, keyDesign, gcExecutor, cacheConfig);
 
@@ -239,13 +238,12 @@ public class RedisKvClient implements IUpstreamClient {
         WriteBuffer<RedisSet> setWriteBuffer = WriteBuffer.newWriteBuffer(namespace, "set");
 
         CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyDesign, cacheConfig, kvConfig,
-                keyMetaServer, redisTemplate, gcExecutor, hashWriteBuffer, zsetWriteBuffer, setWriteBuffer);
+                keyMetaServer, cacheRedisTemplate, storageRedisTemplate, gcExecutor, hashWriteBuffer, zsetWriteBuffer, setWriteBuffer);
 
         return new Commanders(commanderConfig);
     }
 
-    private RedisTemplate initRedisTemplate() {
-        String key = "kv.redis.cache";
+    private RedisTemplate initRedisTemplate(String key) {
         String type = RedisKvConf.getString(namespace, key + ".config.type", "local");
         if (type.equalsIgnoreCase("local")) {
             String url = RedisKvConf.getString(namespace, key + ".url", null);

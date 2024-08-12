@@ -74,7 +74,7 @@ public class PExpireCommander extends Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (keyType == KeyType.zset && encodeVersion == EncodeVersion.version_1) {
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            redisTemplate.sendPExpire(cacheKey, expireTime - System.currentTimeMillis() + 1000L);
+            storageRedisTemplate.sendPExpire(cacheKey, expireTime - System.currentTimeMillis() + 1000L);
         }
         return IntegerReply.REPLY_1;
     }

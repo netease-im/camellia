@@ -49,7 +49,7 @@ public class DelCommander extends Commander {
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
             //redis
             if (keyType == KeyType.zset && encodeVersion == EncodeVersion.version_1) {
-                redisTemplate.sendDel(cacheKey);
+                storageRedisTemplate.sendDel(cacheKey);
             }
             //local
             if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {

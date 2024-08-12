@@ -34,7 +34,7 @@ public abstract class ZRange0Commander extends ZSet0Commander {
         System.arraycopy(objects, 0, cmd, 0, objects.length);
         cmd[1] = cacheKey;
 
-        Reply reply = sync(redisTemplate.sendCommand(new Command(cmd)));
+        Reply reply = sync(storageRedisTemplate.sendCommand(new Command(cmd)));
         if (reply instanceof ErrorReply) {
             return reply;
         }
@@ -80,7 +80,7 @@ public abstract class ZRange0Commander extends ZSet0Commander {
                 commandList.add(cmd1);
                 commandList.add(cmd2);
             }
-            List<Reply> replyList = sync(redisTemplate.sendCommand(commandList));
+            List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commandList));
             for (int i = 0; i < replyList.size(); i++) {
                 Reply subReply = replyList.get(i);
                 if (subReply instanceof ErrorReply) {
@@ -126,7 +126,7 @@ public abstract class ZRange0Commander extends ZSet0Commander {
                 missingMemberMap.remove(bytesKey);
             }
             if (!buildCacheCommands.isEmpty()) {
-                List<Reply> replyList = sync(redisTemplate.sendCommand(buildCacheCommands));
+                List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(buildCacheCommands));
                 for (Reply reply1 : replyList) {
                     if (reply1 instanceof ErrorReply) {
                         return reply1;

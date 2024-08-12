@@ -111,7 +111,7 @@ public class ZScoreCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_1) {
             Index index = Index.fromRaw(member);
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(redisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZSCORE.raw(), cacheKey, index.getRef()})));
+            return sync(storageRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZSCORE.raw(), cacheKey, index.getRef()})));
         }
 
         return ErrorReply.INTERNAL_ERROR;

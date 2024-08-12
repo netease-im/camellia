@@ -77,7 +77,7 @@ meta-value由5部分构造，如下：
 redis的string其实就是一个简单的k-v结构，因此此时不需要额外的sub-key结构了，而string的value直接存储在meta-value的extra里即可
 
 
-### 3、hash
+### 3、hash和set
 redis里的hash是一个字典结构，我们需要单独的sub-key结构来存储hash里的field-value
 
 sub-key结构如下：
@@ -95,14 +95,14 @@ sub-key有7部分组成，分别如下：
 * key，redis-key本身
 * key-version，key的版本，同meta-value中的key-version
 * field，哈希字典中的field
-* sub-value，就是value本身
+* sub-value，就是value本身，对于set，则value为null
 
 
-此外，为了更快的执行hlen命令，对于hash的meta-key，我们会在extra中记录size  
-但是，有一些业务场景下，可能只有hset、hdel、hget、hgetall，而且并不关心hset的是否是一个已存在的field，而且也不需要执行hlen，此时单独维护size反而降低了性能，因此对于这两种不同的业务场景，我们提供了不同的encode-version来区分：
+此外，为了更快的执行hlen/scard命令，对于hash/set的meta-key，我们会在extra中记录size  
+但是，有一些业务场景下，可能只有hset、hdel、hget、hgetall、sadd、srem，而且并不关心hset的是否是一个已存在的field，而且也不需要执行hlen，此时单独维护size反而降低了性能，因此对于这两种不同的业务场景，我们提供了不同的encode-version来区分：
 
 * encode-version为0时，meta-key中的extra字段为4字节，用于记录hash的size，此外hset和hdel等命令会准确的返回影响的行数，内部逻辑是先read后write，此外hlen是O(1)的复杂度，这是默认的encode-version
-* encode-version为1时，meta-key中的extra字段为空，此外hset和hdel等命令会直接进行写入，返回的影响行数是固定的参数长度，此外hlen命令需要对底层进行scan操作，是O(n)的复杂度
+* encode-version为1时，meta-key中的extra字段为空，此外hset、hdel、sadd、srem等命令会直接进行写入，返回的影响行数是固定的参数长度，此外hlen/scard命令需要对底层进行scan操作，是O(n)的复杂度
 
 
 ### 4、zset
@@ -132,9 +132,19 @@ redis里的zset是一个有序集合，并且可以根据score、rank、lex等�
 
 存在第二个sub-key的原因是为了根据score进行正序和逆序的scan，表现为zrangebyscore、zrevrangebyscore、zremrangebyscore等命令
 
+特别的，对于zset，有这样一种业务场景：
+* 每个zset的key会不断的写入，同时不断的弹出最早的数据，从而每个key只保留最近n个元素，元素的score就是写入的时间戳
+* 每个元素的长度可能比较长，比如几百或者上千字节
+* zset的查询是根据时间戳来增量查询的，也就意味着大部分情况下只需要查询最近的几个元素
 
-### 5、其他数据结构
-set的结构其实和hash是一致的，只需要把value部分设置为null即可，不过目前我们没有需求，因此未实现  
+针对这次场景，我们额外提供了一种编码模式（encode-version=1），这种编码模式下：
+* zset的结构本身是维护在redis中的，不再落库到kv存储
+* redis中针对zset的member，只保留一个较小的索引，索引指向的原值，会落库到kv存储
+* 索引到原值，会保留一个较短ttl的redis-cache
+* 因为大部分读请求，都只查询最近几个元素，因此可以极大的降低redis的内存开销
+
+
+### 5、其他数据结构 
 使用kv去模拟list数据结构，效率较低，此外目前我们也没有需求，因此未实现  
 
 
@@ -158,39 +168,14 @@ set的结构其实和hash是一致的，只需要把value部分设置为null即�
 * 特别的，缓存既能提升读请求的响应时间，也能提升写请求，以zadd k1 1.0 v1为例，zadd请求映射到kv后，对于第一个sub-key，直接覆盖写即可，而对于第二个sub-key，则需要先获取v1的旧的score，删除后再写入新的score；而如果命中了本地缓存，则可以省略读的流程
 
 
-
 什么时候新建缓存：
 
 * 如果触发了全量读，如hgetall等，则读出来的结果可以直接写入本地缓存，没有额外成本
 * 如果检测到是热key，如大量的zrange，虽然每次可能只是读一部分，但是超过了配置的阈值，如1秒10次，则会触发一次全量读，并写入到本地缓存，之后的读取可以直接走本地缓存
 * 第一次写入，此时新建缓存不需要额外读取，但是为了避免大量写入产生的缓存新建影响到了读缓存，proxy内部会维护2套lru的缓存，即read-lru-cache和write-lru-cache，只有当产生实际的读请求，cache才会从write-lru-cache迁移到read-lru-cache
 
-## 六、redis缓存
-redis作为一个可选的组件，可以被引入用于处理本地缓存不能覆盖到的场景，redis可以用于2个地方：
 
-### 1、meta-key
-meta-key本身就是一个简单的k-v，因此你可以使用redis作为本地缓存的二级缓存，则当本地缓存被驱逐或者清除时，优先查询redis而非直接请求kv本身；当然有写入操作时也多了一些维护的开销，因此按需开启
-
-### 2、sub-key
-sub-key中使用redis，我们通过不同的encode-version来区分
-
-#### 1）hash
-
-* hash的常见的读取操作是hget和hgetall，因此引入redis后，分别针对hget和hgetall做缓存，可以单独设置一个较短的ttl，并且redis在此是允许换出的
-* 前文提到hash的encode-version有0和1两种，如果开启了redis，则分别为2和3
-* 如果希望将更多的读请求拦截在kv存储之外，可以开启2和3的encode-version，当然代价就是写操作会产生维护开销，并且要能接受redis和底层kv可能产生的不一致问题，因此按需开启
-
-#### 2）zset
-zset默认的encode-version是0，也就是前文的设计；
-
-* 如果设置为1，则需要引入redis作为cache。此时读取操作的流程会变成先读取redis，如果不存在，则load所有的sub-key到redis中，再进行对应的复杂命令操作，此时kv层可以仅保留1组sub-key即可。
-* 如果设置为2，同样引入redis作为cache，但是不同于1，在2的编码方式中，有一个隐藏的假设，zset可能size很大，但是只读取其中的部分数据。因此我们对redis中的数据结构做了一些细微的调整，member部分不再是原始值，而是一个对原始值做md5后的索引，索引再指向实际的值。这个index->value的指向，我们会在zadd时在kv中存储一份，kv之上会在redis中用简单kv做一个短ttl的cache。通过这种方式可以减少对redis的内存的占用，提高redis的命中率。
-* 如果设置为3，同样引入redis，但是却是以一种storage的模式引入，encode-version=3的结构其实和encode-version=2是一致的，也是索引结构，但是zset的骨架在redis就不再是cache的身份，而是和meta-key有着一样的ttl。这种模式下，redis将不允许换出，同样的，kv中此时只需要存储index->value即可了。这个模式相比2的优点是写入和读取会更快，但是zrangebylex、zlexcount等命令将不再支持。
-
-* encode-version=1、2、3是针对特定场景设计的，其中1适用于减少kv存储开销，同时读写在key分布上有明显的热点（如写100亿个key，但是相同时间内可能只会读取其中10w个key），而2和3适用于zset中的member比较大，同时大部分请求都是部分读取的场景（如score是时间戳，保留100个元素，但是大部分都只读最近的几个元素），因此按需开启
-
-
-## 七、write-buffer
+## 六、write-buffer
 
 通过本地缓存和redis，底层kv的读请求会有很大一个比例被拦截，而对于写入，可能会因为抖动产生尖刺，因此proxy还支持开启write-buffer，让底层kv的写入异步化，大致逻辑如下：
 
@@ -201,7 +186,7 @@ zset默认的encode-version是0，也就是前文的设计；
 * 开启write-buffer可以降低写入命令的响应时间，减少尖刺，当然缺点就是如果底层kv写入失败，会产生写命令返回成功，但是实际失败的不一致问题，因此按需开启
 
 
-## 八、扩缩容
+## 七、扩缩容
 
 通过前文的描述，proxy是一个弱状态的服务，本身只保存可以驱逐的lru数据，但是又不是单纯的无状态服务，slot信息需要在proxy节点间达成一致，确保同一个key只会被同一个proxy节点处理。
 
@@ -232,11 +217,11 @@ proxy之前就支持伪redis-cluster模式，在之前的模式中，proxy节点
 * proxy在收到commit后，会把不再归属于自己的slot的cache清空，而不是全量清空
 
 
-## 九、过期key的清理（gc）
+## 八、过期key的清理（gc）
 
 不同于pika/rocksdb，可以把过期的key的清理和compact绑定，我们这里需要使用定期扫描的方式，去删除过期的key，你可以配置在业务低峰期进行，并且可以配置扫描的速度。  
 此外，你可以单独部署一个proxy节点，但是不加入集群中，由这个节点单独执行gc任务。
 
 
-## 十、结论
+## 九、结论
 目前实现了string、hash、zset的常用命令，会应用于云信相关的服务中，欢迎大家一起共建共享～

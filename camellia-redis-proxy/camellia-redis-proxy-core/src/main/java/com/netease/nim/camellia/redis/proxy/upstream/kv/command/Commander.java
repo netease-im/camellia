@@ -33,7 +33,8 @@ public abstract class Commander {
     protected final CacheConfig cacheConfig;
     protected final KvConfig kvConfig;
     protected final KeyMetaServer keyMetaServer;
-    protected final RedisTemplate redisTemplate;
+    protected final RedisTemplate cacheRedisTemplate;
+    protected final RedisTemplate storageRedisTemplate;
     protected final KvGcExecutor gcExecutor;
     protected final MpscSlotHashExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
     protected final WriteBuffer<RedisHash> hashWriteBuffer;
@@ -46,7 +47,8 @@ public abstract class Commander {
         this.cacheConfig = commanderConfig.getCacheConfig();
         this.kvConfig = commanderConfig.getKvConfig();
         this.keyMetaServer = commanderConfig.getKeyMetaServer();
-        this.redisTemplate = commanderConfig.getRedisTemplate();
+        this.cacheRedisTemplate = commanderConfig.getCacheRedisTemplate();
+        this.storageRedisTemplate = commanderConfig.getStorageRedisTemplate();
         this.gcExecutor = commanderConfig.getGcExecutor();
         this.hashWriteBuffer = commanderConfig.getHashWriteBuffer();
         this.zsetWriteBuffer = commanderConfig.getZsetWriteBuffer();
@@ -60,27 +62,11 @@ public abstract class Commander {
     protected abstract Reply execute(Command command);
 
     protected final Reply sync(CompletableFuture<Reply> future) {
-        return redisTemplate.sync(future, cacheConfig.cacheTimeoutMillis());
+        return cacheRedisTemplate.sync(future, cacheConfig.cacheTimeoutMillis());
     }
 
     protected final List<Reply> sync(List<CompletableFuture<Reply>> futures) {
-        return redisTemplate.sync(futures, cacheConfig.cacheTimeoutMillis());
-    }
-
-    protected final Reply checkCache(byte[] script, byte[] cacheKey, byte[][] args) {
-        //cache
-        Reply reply = sync(redisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
-        if (reply instanceof ErrorReply) {
-            return reply;
-        }
-        if (reply instanceof MultiBulkReply) {
-            Reply[] replies = ((MultiBulkReply) reply).getReplies();
-            String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-            if (type.equalsIgnoreCase("1")) {//cache hit
-                return replies[1];
-            }
-        }
-        return null;
+        return cacheRedisTemplate.sync(futures, cacheConfig.cacheTimeoutMillis());
     }
 
     protected final void submitAsyncWriteTask(byte[] cacheKey, Result result, Runnable runnable) {

@@ -44,13 +44,13 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
                 zremCmd[i] = index.getRef();
                 i ++;
             }
-            CompletableFuture<Reply> future1 = redisTemplate.sendCommand(new Command(zremCmd));
+            CompletableFuture<Reply> future1 = storageRedisTemplate.sendCommand(new Command(zremCmd));
             CompletableFuture<Reply> future2 = null;
             if (!delCacheKeys.isEmpty()) {
                 List<byte[]> delCmd = new ArrayList<>(delCacheKeys.size() + 1);
                 delCmd.add(RedisCommand.DEL.raw());
                 delCmd.addAll(delCacheKeys);
-                future2 = redisTemplate.sendCommand(new Command(delCmd.toArray(new byte[0][0])));
+                future2 = cacheRedisTemplate.sendCommand(new Command(delCmd.toArray(new byte[0][0])));
             }
 
             if (result.isKvWriteDelayEnable()) {
@@ -82,7 +82,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             return ErrorReply.INTERNAL_ERROR;
         }
         cmd[1] = cacheKey;
-        Reply reply = sync(redisTemplate.sendCommand(new Command(cmd)));
+        Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(cmd)));
         if (reply instanceof ErrorReply) {
             return reply;
         }
@@ -115,10 +115,12 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             List<Command> cmds = new ArrayList<>(2);
             cmds.add(new Command(zremCmd));
             cmds.add(new Command(new byte[][]{RedisCommand.ZCARD.raw(), cacheKey}));
+
+            CompletableFuture<Reply> future = null;
             if (delCacheKeys.size() > 1) {
-                cmds.add(new Command(delCacheKeys.toArray(new byte[0][0])));
+                future = cacheRedisTemplate.sendCommand(new Command(delCacheKeys.toArray(new byte[0][0])));
             }
-            List<CompletableFuture<Reply>> futures = redisTemplate.sendCommand(cmds);
+            List<CompletableFuture<Reply>> futures = cacheRedisTemplate.sendCommand(cmds);
             if (!delStoreKeys.isEmpty()) {
                 kvClient.batchDelete(delStoreKeys.toArray(new byte[0][0]));
             }
@@ -133,6 +135,9 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
                 if (((IntegerReply) reply1).getInteger() == 0) {
                     keyMetaServer.deleteKeyMeta(key);
                 }
+            }
+            if (future != null) {
+                sync(future);
             }
             return IntegerReply.parse(replies.length);
         }

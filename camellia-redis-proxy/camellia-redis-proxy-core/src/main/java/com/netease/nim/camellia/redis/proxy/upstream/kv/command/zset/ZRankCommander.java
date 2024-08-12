@@ -107,7 +107,7 @@ public class ZRankCommander extends ZSet0Commander {
             Index index = Index.fromRaw(cmd[2]);
             cmd[2] = index.getRef();
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(redisTemplate.sendCommand(new Command(cmd)));
+            return sync(storageRedisTemplate.sendCommand(new Command(cmd)));
         }
 
         return ErrorReply.INTERNAL_ERROR;
