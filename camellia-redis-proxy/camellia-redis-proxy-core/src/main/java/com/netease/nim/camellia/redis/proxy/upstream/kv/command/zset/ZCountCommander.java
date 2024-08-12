@@ -16,7 +16,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.ScriptReplyUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 import java.nio.charset.StandardCharsets;
@@ -121,21 +120,9 @@ public class ZCountCommander extends ZSet0Commander {
             return IntegerReply.parse(count);
         }
 
-        if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{objects[2], objects[3]}));
-            reply = ScriptReplyUtils.check(reply);
-            if (reply != null) {
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return reply;
-            }
-            int count = zcountFromKv(keyMeta, key, minScore, maxScore);
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return IntegerReply.parse(count);
-        }
-
-        if (encodeVersion == EncodeVersion.version_3) {
+        if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(storeRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCOUNT.raw(), cacheKey, objects[2], objects[3]})));
+            return sync(redisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCOUNT.raw(), cacheKey, objects[2], objects[3]})));
         }
 
         return ErrorReply.INTERNAL_ERROR;

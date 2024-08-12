@@ -31,23 +31,16 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     private final KeyMetaLRUCache keyMetaLRUCache;
     private final WriteBuffer<KeyMeta> writeBuffer;
     private final MpscSlotHashExecutor asyncWriteExecutor;
-    private final ConcurrentLinkedHashMap<BytesKey, Long> delayCacheKeyMap;
     private final KVClient kvClient;
-    private final RedisTemplate redisTemplate;
     private final KeyDesign keyDesign;
     private final KvGcExecutor gcExecutor;
     private final CacheConfig cacheConfig;
 
-    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate redisTemplate, KeyDesign keyDesign, KvGcExecutor gcExecutor, CacheConfig cacheConfig) {
+    public DefaultKeyMetaServer(KVClient kvClient, KeyDesign keyDesign, KvGcExecutor gcExecutor, CacheConfig cacheConfig) {
         this.kvClient = kvClient;
-        this.redisTemplate = redisTemplate;
         this.keyDesign = keyDesign;
         this.gcExecutor = gcExecutor;
         this.cacheConfig = cacheConfig;
-        this.delayCacheKeyMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
-                .initialCapacity(cacheConfig.keyMetaCacheDelayMapSize())
-                .maximumWeightedCapacity(cacheConfig.keyMetaCacheDelayMapSize())
-                .build();
         this.asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
         this.keyMetaLRUCache = cacheConfig.getKeyMetaLRUCache();
         this.writeBuffer = WriteBuffer.newWriteBuffer(cacheConfig.getNamespace(), "key.meta");
@@ -90,100 +83,27 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
         byte[] metaKey = keyDesign.metaKey(key);
 
-        if (!cacheConfig.isMetaCacheEnable()) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "getKeyMeta");
-            KeyValue keyValue = kvClient.get(metaKey);
-            if (keyValue == null || keyValue.getValue() == null) {
-                keyMetaLRUCache.setNull(key);
-                return null;
-            }
-            KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
-            if (keyMeta == null || keyMeta.isExpire()) {
-                kvClient.delete(metaKey);
-                KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
-                keyMetaLRUCache.setNull(key);
-                return null;
-            }
-            if (cacheConfig.isMetaLocalCacheEnable()) {
-                keyMetaLRUCache.put(key, keyMeta);
-            }
-            return keyMeta;
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "getKeyMeta");
+        KeyValue keyValue = kvClient.get(metaKey);
+        if (keyValue == null || keyValue.getValue() == null) {
+            keyMetaLRUCache.setNull(key);
+            return null;
         }
-
-        Reply reply = sync(redisTemplate.sendGet(metaKey));
-        if (reply instanceof ErrorReply) {
-            throw new KvException(((ErrorReply) reply).getError());
-        }
-        if (reply instanceof BulkReply) {
-            byte[] raw = ((BulkReply) reply).getRaw();
-            KeyMeta keyMeta = null;
-            if (raw != null) {
-                keyMeta = KeyMeta.fromBytes(raw);
-            }
+        KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
+        if (keyMeta == null || keyMeta.isExpire()) {
+            kvClient.delete(metaKey);
+            KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
+            keyMetaLRUCache.setNull(key);
             if (keyMeta != null) {
-                BytesKey bytesKey = new BytesKey(key);
-                Long lastDelayTime = delayCacheKeyMap.get(bytesKey);
-                if (lastDelayTime == null || System.currentTimeMillis() - lastDelayTime > cacheConfig.keyMetaCacheKeyDelayMinIntervalSeconds()*1000L) {
-                    long redisExpireMillis = redisExpireMillis(keyMeta);
-                    if (redisExpireMillis > 0) {
-                        redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes());
-                        delayCacheKeyMap.put(bytesKey, System.currentTimeMillis());
-                    }
-                }
-                if (cacheConfig.isMetaLocalCacheEnable()) {
-                    keyMetaLRUCache.put(key, keyMeta);
-                }
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), "getKeyMeta");
-                return keyMeta;
+                gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
             }
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "getKeyMeta");
-
-            KeyValue keyValue = kvClient.get(metaKey);
-            if (keyValue == null || keyValue.getValue() == null) {
-                keyMetaLRUCache.setNull(key);
-                return null;
-            }
-            keyMeta = KeyMeta.fromBytes(keyValue.getValue());
-            if (keyMeta == null || keyMeta.isExpire()) {
-                kvClient.delete(metaKey);
-                KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
-                if (keyMeta != null) {
-                    gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
-                }
-                keyMetaLRUCache.setNull(key);
-                return null;
-            }
-
-            long redisExpireMillis = redisExpireMillis(keyMeta);
-
-            if (redisExpireMillis > 0) {
-                Reply reply1 = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
-                if (reply1 instanceof ErrorReply) {
-                    throw new KvException(((ErrorReply) reply1).getError());
-                }
-                delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
-            }
-            if (cacheConfig.isMetaLocalCacheEnable()) {
-                keyMetaLRUCache.put(key, keyMeta);
-            }
-            return keyMeta;
+            return null;
         }
-        ErrorLogCollector.collect(DefaultKeyMetaServer.class, "reply = " + reply);
-        throw new KvException("ERR key meta error");
-    }
 
-    private long redisExpireMillis(KeyMeta keyMeta) {
-        long redisExpireMillis;
-        if (keyMeta.getExpireTime() < 0) {
-            redisExpireMillis = cacheConfig.metaCacheMillis();
-        } else {
-            redisExpireMillis = keyMeta.getExpireTime() - System.currentTimeMillis();
-            redisExpireMillis = Math.min(redisExpireMillis, cacheConfig.metaCacheMillis());
+        if (cacheConfig.isMetaLocalCacheEnable()) {
+            keyMetaLRUCache.put(key, keyMeta);
         }
-        if (redisExpireMillis <= 0) {
-            redisExpireMillis = 1;
-        }
-        return redisExpireMillis;
+        return keyMeta;
     }
 
     @Override
@@ -193,16 +113,6 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
             keyMetaLRUCache.put(key, keyMeta);
-        }
-        if (cacheConfig.isMetaCacheEnable()) {
-            Reply reply;
-            long redisExpireMillis = redisExpireMillis(keyMeta);
-            reply = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
-            delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
-
-            if (reply instanceof ErrorReply) {
-                throw new KvException(((ErrorReply) reply).getError());
-            }
         }
         if (!result.isKvWriteDelayEnable()) {
             put(metaKey, keyMeta);
@@ -227,13 +137,6 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
             keyMetaLRUCache.remove(key);
-        }
-        if (cacheConfig.isMetaCacheEnable()) {
-            Reply reply = sync(redisTemplate.sendDel(metaKey));
-            if (reply instanceof ErrorReply) {
-                throw new KvException(((ErrorReply) reply).getError());
-            }
-            delayCacheKeyMap.remove(new BytesKey(key));
         }
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(key, result, () -> {
@@ -282,18 +185,6 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         }
 
         byte[] metaKey = keyDesign.metaKey(key);
-        if (cacheConfig.isMetaCacheEnable()) {
-            Reply reply = sync(redisTemplate.sendExists(metaKey));
-            if (reply instanceof ErrorReply) {
-                throw new KvException(((ErrorReply) reply).getError());
-            }
-            if (reply instanceof IntegerReply) {
-                if (((IntegerReply) reply).getInteger().intValue() > 0) {
-                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), "existsKeyMeta");
-                    return true;
-                }
-            }
-        }
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "existsKeyMeta");
         KeyValue keyValue = kvClient.get(metaKey);
         if (keyValue == null || keyValue.getValue() == null) {
@@ -321,17 +212,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             if (cacheConfig.isMetaLocalCacheEnable()) {
                 keyMetaLRUCache.remove(key);
             }
-            if (cacheConfig.isMetaCacheEnable()) {
-                Reply reply = sync(redisTemplate.sendDel(metaKey));
-                if (reply instanceof ErrorReply) {
-                    ErrorLogCollector.collect(DefaultKeyMetaServer.class, "checkKeyMetaExpired error, error = " + ((ErrorReply) reply).getError());
-                }
-            }
         }
-    }
-
-    private Reply sync(CompletableFuture<Reply> future) {
-        return redisTemplate.sync(future, cacheConfig.keyMetaTimeoutMillis());
     }
 
     private void submitAsyncWriteTask(byte[] key, Result result, Runnable runnable) {

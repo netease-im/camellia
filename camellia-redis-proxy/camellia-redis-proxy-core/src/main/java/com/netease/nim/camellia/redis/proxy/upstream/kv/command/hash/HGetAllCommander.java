@@ -10,13 +10,10 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -25,14 +22,6 @@ import java.util.Map;
  * Created by caojiajun on 2024/4/7
  */
 public class HGetAllCommander extends Hash0Commander {
-
-    private static final byte[] script = ("local arg = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(arg) == 1 then\n" +
-            "\tlocal ret = redis.call('hgetall', KEYS[1]);\n" +
-            "\tredis.call('pexpire', KEYS[1], ARGV[1]);\n" +
-            "\treturn {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public HGetAllCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -79,39 +68,12 @@ public class HGetAllCommander extends Hash0Commander {
             }
         }
 
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-            if (cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
-            }
-            return toReply(map);
-        }
-
-        Reply reply = checkCache(script, cacheKey, new byte[][]{hgetallCacheMillis()});
-        if (reply != null) {
-            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            if (cacheConfig.isHashLocalCacheEnable()) {
-                if (reply instanceof MultiBulkReply) {
-                    cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(toMap((MultiBulkReply) reply)));
-                }
-            }
-            return reply;
-        }
-
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
             cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
         }
-
-        ErrorReply errorReply = buildCache(cacheKey, map);
-        if (errorReply != null) {
-            return errorReply;
-        }
-
         return toReply(map);
     }
 
@@ -128,18 +90,4 @@ public class HGetAllCommander extends Hash0Commander {
         }
         return new MultiBulkReply(replies);
     }
-
-    private Map<BytesKey, byte[]> toMap(MultiBulkReply reply) {
-        Reply[] replies = reply.getReplies();
-        Map<BytesKey, byte[]> map = new HashMap<>(replies.length / 2);
-        for (int i = 0; i < replies.length; i += 2) {
-            Reply field = replies[i];
-            Reply value = replies[i + 1];
-            if (field instanceof BulkReply && value instanceof BulkReply) {
-                map.put(new BytesKey(((BulkReply) field).getRaw()), ((BulkReply) value).getRaw());
-            }
-        }
-        return map;
-    }
-
 }

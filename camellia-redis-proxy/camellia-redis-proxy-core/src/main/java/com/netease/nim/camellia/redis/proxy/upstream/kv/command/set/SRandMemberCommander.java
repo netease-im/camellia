@@ -8,13 +8,11 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
@@ -23,22 +21,6 @@ import java.util.Set;
  * Created by caojiajun on 2024/8/5
  */
 public class SRandMemberCommander extends Set0Commander {
-
-    private static final byte[] script1 = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('srandmember', KEYS[1], ARGV[1]);\n" +
-            "  redis.call('pexpire', KEYS[1], ARGV[2]);\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
-
-    private static final byte[] script2 = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('srandmember', KEYS[1]);\n" +
-            "  redis.call('pexpire', KEYS[1], ARGV[1]);\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public SRandMemberCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -106,32 +88,6 @@ public class SRandMemberCommander extends Set0Commander {
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 Set<BytesKey> srandmember = set.srandmember(count);
                 return toReply(srandmember, batch);
-            }
-        }
-
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-            byte[][] args;
-            Reply reply;
-            if (batch) {
-                args = new byte[2][];
-                args[0] = Utils.stringToBytes(String.valueOf(count));
-                args[1] = smembersCacheMillis();
-                reply = sync(cacheRedisTemplate.sendLua(script1, new byte[][]{cacheKey}, args));
-            } else {
-                args = new byte[1][];
-                args[0] = smembersCacheMillis();
-                reply = sync(cacheRedisTemplate.sendLua(script2, new byte[][]{cacheKey}, args));
-            }
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                        KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                        return replies[1];
-                    }
-                }
             }
         }
 

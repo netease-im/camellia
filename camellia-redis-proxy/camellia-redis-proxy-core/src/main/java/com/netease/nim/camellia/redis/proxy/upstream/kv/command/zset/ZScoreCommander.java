@@ -18,7 +18,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 
 /**
  * ZSCORE key member
@@ -26,14 +25,6 @@ import java.nio.charset.StandardCharsets;
  * Created by caojiajun on 2024/5/15
  */
 public class ZScoreCommander extends ZSet0Commander {
-
-    private static final byte[] script = ("local arg = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(arg) == 1 then\n" +
-            "\tlocal ret = redis.call('zscore', KEYS[1], ARG[1]);\n" +
-            "\tredis.call('pexpire', KEYS[1], ARGV[2]);\n" +
-            "\treturn {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZScoreCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -118,30 +109,9 @@ public class ZScoreCommander extends ZSet0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            Reply reply = checkCache(script, cacheKey, new byte[][]{member, zsetRangeCacheMillis()});
-            if (reply != null) {
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return reply;
-            }
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zscoreFromKv(keyMeta, key, member);
-        }
-
-        if (encodeVersion == EncodeVersion.version_2) {
-            Index index = Index.fromRaw(member);
-            Reply reply = checkCache(script, cacheKey, new byte[][]{index.getRef(), zsetRangeCacheMillis()});
-            if (reply != null) {
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return reply;
-            }
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zscoreFromKv(keyMeta, key, member);
-        }
-
-        if (encodeVersion == EncodeVersion.version_3) {
             Index index = Index.fromRaw(member);
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(storeRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZSCORE.raw(), cacheKey, index.getRef()})));
+            return sync(redisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZSCORE.raw(), cacheKey, index.getRef()})));
         }
 
         return ErrorReply.INTERNAL_ERROR;
@@ -156,7 +126,4 @@ public class ZScoreCommander extends ZSet0Commander {
         return new BulkReply(keyValue.getValue());
     }
 
-    protected final byte[] zsetRangeCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.zsetRangeCacheMillis()));
-    }
 }

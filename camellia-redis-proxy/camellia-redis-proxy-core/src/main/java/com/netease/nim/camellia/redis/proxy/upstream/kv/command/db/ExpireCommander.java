@@ -72,24 +72,9 @@ public class ExpireCommander extends Commander {
         //
         KeyType keyType = keyMeta.getKeyType();
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (keyType == KeyType.zset && encodeVersion == EncodeVersion.version_3) {
+        if (keyType == KeyType.zset && encodeVersion == EncodeVersion.version_1) {
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            storeRedisTemplate.sendPExpire(cacheKey, expireTime - System.currentTimeMillis() + 1000L);
-        }
-        if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2)) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.zsetRangeCacheMillis());
-            cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
-        }
-        if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.hgetallCacheMillis());
-            cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
-        }
-        if (keyType == KeyType.set && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.hgetallCacheMillis());
-            cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
+            redisTemplate.sendPExpire(cacheKey, expireTime - System.currentTimeMillis() + 1000L);
         }
         return IntegerReply.REPLY_1;
     }

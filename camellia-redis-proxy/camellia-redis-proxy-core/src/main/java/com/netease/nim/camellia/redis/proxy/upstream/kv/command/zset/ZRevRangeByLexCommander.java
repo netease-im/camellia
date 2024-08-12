@@ -19,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +28,6 @@ import java.util.List;
  * Created by caojiajun on 2024/4/11
  */
 public class ZRevRangeByLexCommander extends ZRange0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('zrevrangebylex', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZRevRangeByLexCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -66,7 +58,7 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
-        if (encodeVersion == EncodeVersion.version_3) {
+        if (encodeVersion == EncodeVersion.version_1) {
             return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
         }
 
@@ -126,19 +118,12 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
             }
         }
 
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+        if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (!kvClient.supportReverseScan()) {
                 return zrevrangeByLexVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minLex, maxLex, limit);
             }
             return zrevrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);
-        }
-
-        byte[][] args = new byte[objects.length - 2][];
-        System.arraycopy(objects, 2, args, 0, args.length);
-
-        if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, cacheKey, args, script, true);
         }
 
         return ErrorReply.INTERNAL_ERROR;

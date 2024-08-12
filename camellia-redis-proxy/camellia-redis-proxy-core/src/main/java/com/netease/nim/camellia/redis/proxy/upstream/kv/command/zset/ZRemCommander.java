@@ -16,10 +16,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -29,13 +27,6 @@ import java.util.concurrent.CompletableFuture;
  * Created by caojiajun on 2024/5/8
  */
 public class ZRemCommander extends ZSet0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('zrem', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZRemCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -137,15 +128,11 @@ public class ZRemCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             return zremVersion0(keyMeta, key, cacheKey, members, localCacheResult, result, type);
         }
+
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremVersion1(keyMeta, key, cacheKey, members, localCacheResult, result, type);
+            return zremVersion1(keyMeta, key, cacheKey, members, result, type);
         }
-        if (encodeVersion == EncodeVersion.version_2) {
-            return zremVersion2(keyMeta, key, cacheKey, members, localCacheResult, result, type);
-        }
-        if (encodeVersion == EncodeVersion.version_3) {
-            return zremVersion3(keyMeta, key, cacheKey, members, result, type);
-        }
+
         return ErrorReply.INTERNAL_ERROR;
     }
 
@@ -200,159 +187,7 @@ public class ZRemCommander extends ZSet0Commander {
         return IntegerReply.parse(deleteCount);
     }
 
-    private Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result, KvCacheMonitor.Type type) {
-        byte[][] args = new byte[members.size()][];
-        int i = 0;
-        for (BytesKey member : members) {
-            args[i] = member.getKey();
-            i++;
-        }
-        Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
-
-        int deleteCount = -1;
-
-        if (localCacheResult != null) {
-            deleteCount = localCacheResult.size();
-        }
-
-        if (deleteCount < 0) {
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                        if (replies[1] instanceof IntegerReply) {
-                            deleteCount = (((IntegerReply) replies[1]).getInteger()).intValue();
-                            type = KvCacheMonitor.Type.redis_cache;
-                            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                        }
-                    }
-                }
-            }
-        }
-
-        if (type == null) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        }
-
-        byte[][] storeKeys = new byte[members.size()][];
-        int j=0;
-        for (BytesKey member : members) {
-            storeKeys[j] = keyDesign.zsetMemberSubKey1(keyMeta, key, member.getKey());
-            j++;
-        }
-
-        if (deleteCount < 0) {
-            List<byte[]> existsStoreKeys = new ArrayList<>(args.length);
-            List<KeyValue> keyValues = kvClient.batchGet(storeKeys);
-            for (KeyValue keyValue : keyValues) {
-                if (keyValue == null || keyValue.getValue() == null) {
-                    continue;
-                }
-                existsStoreKeys.add(keyValue.getKey());
-            }
-            deleteCount = existsStoreKeys.size();
-            kvClient.batchDelete(existsStoreKeys.toArray(new byte[0][0]));
-        } else {
-            if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(storeKeys));
-            } else {
-                kvClient.batchDelete(storeKeys);
-            }
-        }
-
-        updateKeyMeta(keyMeta, key, deleteCount);
-
-        if (reply instanceof ErrorReply) {
-            return reply;
-        }
-        return IntegerReply.parse(deleteCount);
-    }
-
-    private Reply zremVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> localCacheResult, Result result, KvCacheMonitor.Type type) {
-        byte[][] args = new byte[members.size()][];
-
-        List<byte[]> indexCacheDeleteCmd = new ArrayList<>(members.size() + 1);
-        indexCacheDeleteCmd.add(RedisCommand.DEL.raw());
-
-        List<byte[]> deleteStoreKeys = new ArrayList<>(members.size());
-        List<byte[]> subKeys = new ArrayList<>(members.size());
-        int i=0;
-        for (BytesKey member : members) {
-            Index index = Index.fromRaw(member.getKey());
-            if (index.isIndex()) {
-                indexCacheDeleteCmd.add(keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index));
-                deleteStoreKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
-            }
-            args[i] = index.getRef();
-
-            byte[] zsetMemberSubKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member.getKey());
-            subKeys.add(zsetMemberSubKey1);
-            deleteStoreKeys.add(zsetMemberSubKey1);
-            i++;
-        }
-
-        List<Command> commandList = new ArrayList<>(2);
-        commandList.add(cacheRedisTemplate.luaCommand(script, new byte[][]{cacheKey}, args));
-        if (indexCacheDeleteCmd.size() > 1) {
-            commandList.add(new Command(indexCacheDeleteCmd.toArray(new byte[0][0])));
-        }
-
-        List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commandList));
-        Reply reply = replyList.get(0);
-        int deleteCount = -1;
-        if (localCacheResult != null) {
-            deleteCount = localCacheResult.size();
-        }
-
-        if (deleteCount < 0) {
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                        if (replies[1] instanceof IntegerReply) {
-                            deleteCount = (((IntegerReply) replies[1]).getInteger()).intValue();
-                            type = KvCacheMonitor.Type.redis_cache;
-                            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                        }
-                    }
-                }
-            }
-        }
-
-        if (type == null) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        }
-
-        if (deleteCount < 0) {
-            deleteCount = 0;
-            List<KeyValue> keyValues = kvClient.batchGet(subKeys.toArray(new byte[0][0]));
-            for (KeyValue keyValue : keyValues) {
-                if (keyValue == null || keyValue.getValue() == null) {
-                    continue;
-                }
-                deleteCount ++;
-            }
-        }
-
-        if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0])));
-        } else {
-            kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0]));
-        }
-
-        updateKeyMeta(keyMeta, key, deleteCount);
-
-        for (Reply reply1 : replyList) {
-            if (reply1 instanceof ErrorReply) {
-                return reply1;
-            }
-        }
-        return IntegerReply.parse(deleteCount);
-    }
-
-    private Reply zremVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Result result, KvCacheMonitor.Type type) {
+    private Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Result result, KvCacheMonitor.Type type) {
         if (type == null) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
@@ -384,7 +219,7 @@ public class ZRemCommander extends ZSet0Commander {
             commandList.add(new Command(indexCacheDeleteCmd.toArray(new byte[0][0])));
         }
 
-        List<CompletableFuture<Reply>> futures = cacheRedisTemplate.sendCommand(commandList);
+        List<CompletableFuture<Reply>> futures = redisTemplate.sendCommand(commandList);
 
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(cacheKey, result, () -> {

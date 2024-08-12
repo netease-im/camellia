@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/8/6
  */
-public class TestSetV1V3 {
+public class TestSetV0 {
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
 
 
@@ -49,21 +49,26 @@ public class TestSetV1V3 {
             //
             template.del(key);
             {
-                template.sadd(key, "a", "b", "c", "d", "e", "f");
+                Long sadd = template.sadd(key, "a", "b", "c", "d", "e", "f");
+                assertEquals(sadd, 6L);
 
-                template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
+                Long sadd1 = template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
+                assertEquals(sadd1, 1L);
 
-                template.sadd(key, "a", "b");
+                Long sadd2 = template.sadd(key, "a", "b");
+                assertEquals(sadd2, 0L);
 
                 Set<String> smembers = template.smembers(key);
                 assertEquals(smembers.size(), 7);
             }
-            //
+
             template.del(key);
             {
-                template.sadd(key, "a", "b", "c", "d", "e", "f");
+                Long sadd = template.sadd(key, "a", "b", "c", "d", "e", "f");
+                assertEquals(sadd, 6L);
 
-                template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
+                Long sadd1 = template.sadd(key, "a", "b", "c", "d", "e", "f", "g");
+                assertEquals(sadd1, 1L);
 
                 Set<String> smembers = template.smembers(key);
                 assertEquals(smembers.size(), 7);
@@ -108,13 +113,15 @@ public class TestSetV1V3 {
 
                 Set<String> smembers1 = template.smembers(key);
 
-                template.srem(key, smembers1.iterator().next());
+                Long srem = template.srem(key, smembers1.iterator().next());
+                assertEquals(srem, 1L);
 
                 Set<String> smembers2 = template.smembers(key);
                 Iterator<String> iterator = smembers2.iterator();
                 String next = iterator.next();
                 String next1 = iterator.next();
-                template.srem(key, next, next1);
+                Long srem1 = template.srem(key, next, next1);
+                assertEquals(srem1, 2L);
 
                 Long scard2 = template.scard(key);
                 assertEquals(scard2, 1L);

@@ -409,13 +409,13 @@ public class KvGcExecutor {
         private int clearZSetSubKeys() {
             int count = 0;
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-            if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
+            if (encodeVersion == EncodeVersion.version_0) {
                 count += clearByPrefix(keyDesign.subKeyPrefix(keyMeta, key));
             }
             if (encodeVersion == EncodeVersion.version_0) {
                 count += clearByPrefix(keyDesign.subKeyPrefix2(keyMeta, key));
             }
-            if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
+            if (encodeVersion == EncodeVersion.version_1) {
                 count += clearByPrefix(keyDesign.subIndexKeyPrefix(keyMeta, key));
             }
             return count;

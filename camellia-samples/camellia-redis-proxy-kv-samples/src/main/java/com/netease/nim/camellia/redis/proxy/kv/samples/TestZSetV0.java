@@ -14,11 +14,11 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/5/16
  */
-public class TestZSetV3 {
+public class TestZSetV0 {
 
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         String url = "redis://pass123@127.0.0.1:6381";
 //        String url = "redis://@127.0.0.1:6379";
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
@@ -43,8 +43,10 @@ public class TestZSetV3 {
     private static final ThreadLocal<String> keyThreadLocal = new ThreadLocal<>();
 
     public static void testZSet(CamelliaRedisTemplate template) {
+
         try {
             String key = UUID.randomUUID().toString().replace("-", "");
+
             keyThreadLocal.set(key);
 
             template.del(key);
@@ -174,6 +176,39 @@ public class TestZSetV3 {
                 assertEquals(iterator.next(), "v3");
             }
             {
+                Set<String> strings = template.zrangeByLex(key, "[v2", "[v5");
+                assertEquals(strings.size(), 4);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v5");
+            }
+            {
+                Set<String> strings = template.zrangeByLex(key, "-", "+");
+                assertEquals(strings.size(), 7);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v1");
+                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v5");
+                assertEquals(iterator.next(), "v6");
+                assertEquals(iterator.next(), "v7");
+            }
+            {
+                Set<String> strings = template.zrevrangeByLex(key, "+", "-");
+                assertEquals(strings.size(), 7);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v7");
+                assertEquals(iterator.next(), "v6");
+                assertEquals(iterator.next(), "v5");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), "v1");
+            }
+            {
                 Long zremrange = template.zremrangeByRank(key, 1, 2);
                 assertEquals(zremrange, 2L);
             }
@@ -196,6 +231,37 @@ public class TestZSetV3 {
             {
                 Long zcard = template.zcard(key);
                 assertEquals(zcard, 1L);
+            }
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("v1", 1.0);
+                map1.put("v2", 2.0);
+                map1.put("v3", 3.0);
+                map1.put("v4", 4.0);
+                map1.put("v5", 5.0);
+                map1.put("v6", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+
+                Set<String> strings = template.zrangeByLex(key, "[v1", "(v3");
+                assertEquals(strings.size(), 2);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v1");
+                assertEquals(iterator.next(), "v2");
+
+                Long zremrange = template.zremrangeByLex(key, "(v1", "(v3");
+                assertEquals(zremrange, 1L);
+            }
+            {
+                Set<String> set = template.zrange(key, 0, -1);
+                assertEquals(set.size(), 5);
+                Iterator<String> iterator = set.iterator();
+                assertEquals(iterator.next(), "v1");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v5");
+                assertEquals(iterator.next(), "v6");
             }
             template.del(key);
             {
@@ -244,6 +310,24 @@ public class TestZSetV3 {
                 template.zremrangeByScore(key, 1, 3);
                 Long zcount1 = template.zcount(key, 2, 5);
                 assertEquals(zcount1, 2L);
+            }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("a", 1.0);
+                map1.put("b", 2.0);
+                map1.put("c", 3.0);
+                map1.put("d", 4.0);
+                map1.put("e", 5.0);
+                map1.put("f", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+                Long zcount = template.zlexcount(key, "(a", "[d");
+                assertEquals(zcount, 3L);
+                template.zremrangeByScore(key, 1, 3);
+                Long zcount1 = template.zlexcount(key, "-", "(e");
+                assertEquals(zcount1, 1L);
             }
 
             template.del(key);
@@ -311,7 +395,6 @@ public class TestZSetV3 {
             sleep(100);
             System.exit(-1);
         }
-
 
     }
 

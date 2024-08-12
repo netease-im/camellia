@@ -33,8 +33,7 @@ public abstract class Commander {
     protected final CacheConfig cacheConfig;
     protected final KvConfig kvConfig;
     protected final KeyMetaServer keyMetaServer;
-    protected final RedisTemplate cacheRedisTemplate;
-    protected final RedisTemplate storeRedisTemplate;
+    protected final RedisTemplate redisTemplate;
     protected final KvGcExecutor gcExecutor;
     protected final MpscSlotHashExecutor asyncWriteExecutor = KvExecutors.getInstance().getAsyncWriteExecutor();
     protected final WriteBuffer<RedisHash> hashWriteBuffer;
@@ -47,8 +46,7 @@ public abstract class Commander {
         this.cacheConfig = commanderConfig.getCacheConfig();
         this.kvConfig = commanderConfig.getKvConfig();
         this.keyMetaServer = commanderConfig.getKeyMetaServer();
-        this.cacheRedisTemplate = commanderConfig.getCacheRedisTemplate();
-        this.storeRedisTemplate = commanderConfig.getStoreRedisTemplate();
+        this.redisTemplate = commanderConfig.getRedisTemplate();
         this.gcExecutor = commanderConfig.getGcExecutor();
         this.hashWriteBuffer = commanderConfig.getHashWriteBuffer();
         this.zsetWriteBuffer = commanderConfig.getZsetWriteBuffer();
@@ -62,16 +60,16 @@ public abstract class Commander {
     protected abstract Reply execute(Command command);
 
     protected final Reply sync(CompletableFuture<Reply> future) {
-        return cacheRedisTemplate.sync(future, cacheConfig.cacheTimeoutMillis());
+        return redisTemplate.sync(future, cacheConfig.cacheTimeoutMillis());
     }
 
     protected final List<Reply> sync(List<CompletableFuture<Reply>> futures) {
-        return cacheRedisTemplate.sync(futures, cacheConfig.cacheTimeoutMillis());
+        return redisTemplate.sync(futures, cacheConfig.cacheTimeoutMillis());
     }
 
     protected final Reply checkCache(byte[] script, byte[] cacheKey, byte[][] args) {
         //cache
-        Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
+        Reply reply = sync(redisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
         if (reply instanceof ErrorReply) {
             return reply;
         }

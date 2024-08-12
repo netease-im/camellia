@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/4/12
  */
-public class TestHashV1V3 {
+public class TestHashV1 {
 
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
 

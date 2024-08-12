@@ -86,7 +86,7 @@ public class HSetCommander extends Hash0Commander {
                 int count = fieldMap.size();
                 byte[] extra = BytesUtils.toBytes(count);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);
-            } else if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+            } else if (encodeVersion == EncodeVersion.version_1) {
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1);
             } else {
                 return ErrorReply.INTERNAL_ERROR;
@@ -226,120 +226,7 @@ public class HSetCommander extends Hash0Commander {
             return IntegerReply.parse(add);
         }
 
-        //param parse
-        List<Command> commands = new ArrayList<>(fieldMap.size());
-        List<KeyValue> list = new ArrayList<>(fieldMap.size());
-        List<byte[]> fieldList = new ArrayList<>(fieldMap.size());
-        for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
-            byte[] field = entry.getKey().getKey();
-            fieldList.add(field);
-            byte[] value = entry.getValue();
-            byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);//store-key
-            KeyValue keyValue = new KeyValue(subKey, value);
-            list.add(keyValue);
-            byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);//cache-key
-            Command cmd = new Command(new byte[][]{RedisCommand.EVAL.raw(), script, two, cacheKey, hashFieldCacheKey, field, value});
-            commands.add(cmd);
-        }
-
-        int existsFields = 0;
-        List<byte[]> unknownFields = new ArrayList<>();
-        //cache
-        List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commands));
-        int index = 0;
-        for (Reply reply : replyList) {
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("2")) {
-                        if (replies[1] instanceof IntegerReply) {
-                            Long integer = ((IntegerReply) replies[1]).getInteger();
-                            if (integer == 0) {
-                                existsFields++;
-                                index++;
-                                continue;
-                            } else if (integer == 1) {
-                                index++;
-                                continue;
-                            }
-                        }
-                    }
-                }
-                if (replies[2] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[2]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("2")) {
-                        existsFields++;
-                        index++;
-                        continue;
-                    }
-                }
-            }
-            unknownFields.add(fieldList.get(index));
-            index++;
-        }
-
-        if (type == null && unknownFields.isEmpty()) {
-            type = KvCacheMonitor.Type.redis_cache;
-            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-        }
-
-        if (keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
-            if (existsCount < 0) {
-                existsCount = existsFields;
-                if (!unknownFields.isEmpty()) {
-                    byte[][] subKeys = new byte[unknownFields.size()][];
-                    for (int i = 0; i < unknownFields.size(); i++) {
-                        byte[] field = unknownFields.get(i);
-                        subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field);
-                    }
-                    boolean[] exists = kvClient.exists(subKeys);
-                    existsCount += Utils.count(exists);
-
-                    type = KvCacheMonitor.Type.kv_store;
-                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-                }
-            }
-            int add = fieldSize - existsCount;
-            if (add > 0) {
-                int size = BytesUtils.toInt(keyMeta.getExtra());
-                size = size + add;
-                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
-                        keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size));
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-            }
-
-            batchPut(cacheKey, result, list);
-
-            for (Reply reply : replyList) {
-                if (reply instanceof ErrorReply) {
-                    return reply;
-                }
-            }
-
-            if (type == null) {
-                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            }
-
-            return IntegerReply.parse(add);
-        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
-
-            batchPut(cacheKey, result, list);
-
-            for (Reply reply : replyList) {
-                if (reply instanceof ErrorReply) {
-                    return reply;
-                }
-            }
-
-            if (type == null) {
-                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            }
-
-            return IntegerReply.parse(fieldSize);//可能不准
-        } else {
-            return ErrorReply.INTERNAL_ERROR;
-        }
+        return ErrorReply.INTERNAL_ERROR;
     }
 
     private void batchPut(byte[] cacheKey, Result result, List<KeyValue> list) {

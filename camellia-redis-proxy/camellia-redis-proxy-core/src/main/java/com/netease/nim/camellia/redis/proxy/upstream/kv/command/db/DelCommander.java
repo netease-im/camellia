@@ -48,23 +48,8 @@ public class DelCommander extends Commander {
             KeyType keyType = keyMeta.getKeyType();
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
             //redis
-            if (keyType == KeyType.zset) {
-                if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
-                    cacheRedisTemplate.sendDel(cacheKey);
-                }
-                if (encodeVersion == EncodeVersion.version_3) {
-                    storeRedisTemplate.sendDel(cacheKey);
-                }
-            }
-            if (keyType == KeyType.hash) {
-                if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-                    cacheRedisTemplate.sendDel(cacheKey);
-                }
-            }
-            if (keyType == KeyType.set) {
-                if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-                    cacheRedisTemplate.sendDel(cacheKey);
-                }
+            if (keyType == KeyType.zset && encodeVersion == EncodeVersion.version_1) {
+                redisTemplate.sendDel(cacheKey);
             }
             //local
             if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {

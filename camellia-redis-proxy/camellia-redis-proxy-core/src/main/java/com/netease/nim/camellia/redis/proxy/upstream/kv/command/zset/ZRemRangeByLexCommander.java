@@ -24,7 +24,6 @@ import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,13 +36,6 @@ import java.util.concurrent.CompletableFuture;
  * Created by caojiajun on 2024/5/8
  */
 public class ZRemRangeByLexCommander extends ZRemRange0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('zrangebylex', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZRemRangeByLexCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -74,7 +66,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
-        if (encodeVersion == EncodeVersion.version_3) {
+        if (encodeVersion == EncodeVersion.version_1) {
             return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
         }
 
@@ -164,22 +156,15 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
 
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
-            return zremrangeByLexVersion0OrVersion2(keyMeta, key, cacheKey, minLex, maxLex, localCacheResult, result);
-        }
-
-        byte[][] args = new byte[objects.length - 2][];
-        System.arraycopy(objects, 2, args, 0, args.length);
-
-        if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, cacheKey, args, script, localCacheResult, result);
+        if (encodeVersion == EncodeVersion.version_0) {
+            return zremrangeByLex(keyMeta, key, cacheKey, minLex, maxLex, localCacheResult, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex,
-                                                   Map<BytesKey, Double> localCacheResult, Result result) {
+    private Reply zremrangeByLex(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex,
+                                 Map<BytesKey, Double> localCacheResult, Result result) {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         Map<BytesKey, Double> toRemoveMembers = localCacheResult;
@@ -233,7 +218,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 commands.add(new Command(deleteCmd.toArray(new byte[0][0])));
             }
 
-            List<CompletableFuture<Reply>> futures = cacheRedisTemplate.sendCommand(commands);
+            List<CompletableFuture<Reply>> futures = redisTemplate.sendCommand(commands);
 
             if (result.isKvWriteDelayEnable()) {
                 submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys.toArray(new byte[0][0])));

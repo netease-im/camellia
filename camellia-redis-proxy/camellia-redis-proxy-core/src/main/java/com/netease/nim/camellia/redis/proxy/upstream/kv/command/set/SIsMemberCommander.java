@@ -9,13 +9,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * SISMEMBER key member
@@ -23,14 +19,6 @@ import java.nio.charset.StandardCharsets;
  * Created by caojiajun on 2024/8/5
  */
 public class SIsMemberCommander extends Set0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('sismember', KEYS[1], ARGV[1]);\n" +
-            "  redis.call('pexpire', KEYS[1], ARGV[2]);\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public SIsMemberCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -88,23 +76,6 @@ public class SIsMemberCommander extends Set0Commander {
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 boolean sismeber = set.sismeber(new BytesKey(member));
                 return IntegerReply.parse(sismeber ? 1 : 0);
-            }
-        }
-
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{member, smembersCacheMillis()}));
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                        if (replies[1] instanceof IntegerReply) {
-                            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                            return replies[1];
-                        }
-                    }
-                }
             }
         }
 

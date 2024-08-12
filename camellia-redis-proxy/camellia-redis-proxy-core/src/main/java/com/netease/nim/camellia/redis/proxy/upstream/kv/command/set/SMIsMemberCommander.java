@@ -8,13 +8,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -23,13 +20,6 @@ import java.util.*;
  * Created by caojiajun on 2024/8/5
  */
 public class SMIsMemberCommander extends Set0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('smismember', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public SMIsMemberCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -93,31 +83,6 @@ public class SMIsMemberCommander extends Set0Commander {
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 Map<BytesKey, Boolean> smismember = set.smismember(members);
                 return toReply(smismember, members);
-            }
-        }
-
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-
-        if (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3) {
-            byte[][] args = new byte[members.size()][];
-            int i = 0;
-            for (BytesKey member : members) {
-                args[i] = member.getKey();
-                i++;
-            }
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies[0] instanceof BulkReply) {
-                    byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                        if (replies[1] instanceof MultiBulkReply) {
-                            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                            cacheRedisTemplate.sendPExpire(cacheKey, cacheConfig.smembersCacheMillis());
-                            return replies[1];
-                        }
-                    }
-                }
             }
         }
 

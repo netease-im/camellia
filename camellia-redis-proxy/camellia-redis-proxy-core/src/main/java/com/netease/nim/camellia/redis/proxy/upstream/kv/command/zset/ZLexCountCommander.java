@@ -19,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.ScriptReplyUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -28,13 +27,6 @@ import java.util.List;
  * Created by caojiajun on 2024/6/6
  */
 public class ZLexCountCommander extends ZSet0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('zlexcount', KEYS[1], ARGV[1], ARGV[2]);\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZLexCountCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -64,7 +56,7 @@ public class ZLexCountCommander extends ZSet0Commander {
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_3) {
+        if (encodeVersion == EncodeVersion.version_1) {
             return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
         }
 
@@ -122,18 +114,7 @@ public class ZLexCountCommander extends ZSet0Commander {
             }
         }
 
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return IntegerReply.parse(zrangeByLexFromKv(keyMeta, key, minLex, maxLex));
-        }
-
-        if (encodeVersion == EncodeVersion.version_1) {
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{objects[2], objects[3]}));
-            reply = ScriptReplyUtils.check(reply);
-            if (reply != null) {
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return reply;
-            }
+        if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return IntegerReply.parse(zrangeByLexFromKv(keyMeta, key, minLex, maxLex));
         }

@@ -29,103 +29,12 @@ public abstract class ZRange0Commander extends ZSet0Commander {
         super(commanderConfig);
     }
 
-    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] args, byte[] script, boolean forRead) {
-        Reply reply = zrangeFromRedis(cacheKey, script, args, forRead);
-        if (reply != null) {
-            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return reply;
-        }
-
-        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-
-        List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
-
-        byte[][] cmd = new byte[tuples.size() * 2 + 2][];
-        cmd[0] = RedisCommand.ZADD.raw();
-        cmd[1] = cacheKey;
-        int i = 2;
-        for (ZSetTuple tuple : tuples) {
-            cmd[i] = Utils.doubleToBytes(tuple.getScore());
-            cmd[i + 1] = tuple.getMember().getKey();
-            i += 2;
-        }
-        Command zaddCmd = new Command(cmd);
-        Command pexireCmd = new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), cacheKey, zsetRangeCacheMillis()});
-        List<Command> list = new ArrayList<>(2);
-        list.add(zaddCmd);
-        list.add(pexireCmd);
-        List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(list));
-        for (Reply reply1 : replyList) {
-            if (reply1 instanceof ErrorReply) {
-                return reply1;
-            }
-        }
-        reply = zrangeFromRedis(cacheKey, script, args, false);
-        if (reply != null) {
-            return reply;
-        }
-        return ErrorReply.INTERNAL_ERROR;
-    }
-
-    protected final Reply zrangeVersion2(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] args, boolean withScores, byte[] script, boolean forRead) {
-        Reply reply = zrangeFromRedis(cacheKey, script, args, forRead);
-        if (reply != null) {
-            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            if (reply instanceof MultiBulkReply) {
-                return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores);
-            }
-            return reply;
-        }
-
-        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-
-        List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
-        byte[][] cmd = new byte[tuples.size() * 2 + 2][];
-        cmd[0] = RedisCommand.ZADD.raw();
-        cmd[1] = cacheKey;
-        List<Command> refCommands = new ArrayList<>();
-        int i = 2;
-        for (ZSetTuple tuple : tuples) {
-            cmd[i] = Utils.doubleToBytes(tuple.getScore());
-            byte[] member = tuple.getMember().getKey();
-            Index index = Index.fromRaw(member);
-            cmd[i + 1] = index.getRef();
-            if (index.isIndex()) {
-                if (forRead) {
-                    byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
-                    refCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
-                }
-            }
-            i += 2;
-        }
-        Command zaddCmd = new Command(cmd);
-        Command pexireCmd = new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), cacheKey, zsetRangeCacheMillis()});
-        List<Command> list = new ArrayList<>(2+refCommands.size());
-        list.add(zaddCmd);
-        list.add(pexireCmd);
-        list.addAll(refCommands);
-        List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(list));
-        for (Reply reply1 : replyList) {
-            if (reply1 instanceof ErrorReply) {
-                return reply1;
-            }
-        }
-        reply = zrangeFromRedis(cacheKey, script, args, false);
-        if (reply != null) {
-            if (reply instanceof MultiBulkReply) {
-                return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores);
-            }
-            return reply;
-        }
-        return ErrorReply.INTERNAL_ERROR;
-    }
-
-    protected final Reply zrangeVersion3(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, boolean withScores) {
+    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, boolean withScores) {
         byte[][] cmd = new byte[objects.length][];
         System.arraycopy(objects, 0, cmd, 0, objects.length);
         cmd[1] = cacheKey;
 
-        Reply reply = sync(storeRedisTemplate.sendCommand(new Command(cmd)));
+        Reply reply = sync(redisTemplate.sendCommand(new Command(cmd)));
         if (reply instanceof ErrorReply) {
             return reply;
         }
@@ -137,30 +46,6 @@ public abstract class ZRange0Commander extends ZSet0Commander {
 
     protected final byte[] zsetMemberCacheMillis() {
         return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
-    }
-
-    protected final byte[] zsetRangeCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.zsetRangeCacheMillis()));
-    }
-
-    protected final Reply zrangeFromRedis(byte[] cacheKey, byte[] script, byte[][] args, boolean delayTtl) {
-        Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
-        if (reply instanceof ErrorReply) {
-            return reply;
-        }
-        if (reply instanceof MultiBulkReply) {
-            Reply[] replies = ((MultiBulkReply) reply).getReplies();
-            if (replies[0] instanceof BulkReply) {
-                byte[] raw = ((BulkReply) replies[0]).getRaw();
-                if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                    if (delayTtl) {
-                        cacheRedisTemplate.sendPExpire(cacheKey, cacheConfig.zsetRangeCacheMillis());
-                    }
-                    return replies[1];
-                }
-            }
-        }
-        return null;
     }
 
     protected final Reply checkReplyWithIndex(KeyMeta keyMeta, byte[] key, MultiBulkReply reply, boolean withScores) {
@@ -195,7 +80,7 @@ public abstract class ZRange0Commander extends ZSet0Commander {
                 commandList.add(cmd1);
                 commandList.add(cmd2);
             }
-            List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commandList));
+            List<Reply> replyList = sync(redisTemplate.sendCommand(commandList));
             for (int i = 0; i < replyList.size(); i++) {
                 Reply subReply = replyList.get(i);
                 if (subReply instanceof ErrorReply) {
@@ -241,7 +126,7 @@ public abstract class ZRange0Commander extends ZSet0Commander {
                 missingMemberMap.remove(bytesKey);
             }
             if (!buildCacheCommands.isEmpty()) {
-                List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(buildCacheCommands));
+                List<Reply> replyList = sync(redisTemplate.sendCommand(buildCacheCommands));
                 for (Reply reply1 : replyList) {
                     if (reply1 instanceof ErrorReply) {
                         return reply1;

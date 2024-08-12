@@ -19,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,12 +30,6 @@ import java.util.Map;
  */
 public class ZRemRangeByRankCommander extends ZRemRange0Commander {
 
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('zrange', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZRemRangeByRankCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -142,18 +135,8 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
             return zremrangeByRankVersion0(keyMeta, key, cacheKey, start, stop, localCacheResult, result);
         }
 
-        if (encodeVersion == EncodeVersion.version_3) {
-            return zremrangeVersion3(keyMeta, key, cacheKey, objects, redisCommand(), localCacheResult, result);
-        }
-
-        byte[][] args = new byte[objects.length - 2][];
-        System.arraycopy(objects, 2, args, 0, args.length);
-
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, cacheKey, args, script, localCacheResult, result);
-        }
-        if (encodeVersion == EncodeVersion.version_2) {
-            return zremrangeVersion2(keyMeta, key, cacheKey, args, script, localCacheResult, result);
+            return zremrangeVersion1(keyMeta, key, cacheKey, objects, redisCommand(), localCacheResult, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;

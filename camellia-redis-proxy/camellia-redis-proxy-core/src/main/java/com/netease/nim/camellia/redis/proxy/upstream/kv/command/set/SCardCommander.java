@@ -80,7 +80,7 @@ public class SCardCommander extends Set0Commander {
             }
         }
 
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+        if (encodeVersion == EncodeVersion.version_0) {
             return IntegerReply.parse(BytesUtils.toInt(keyMeta.getExtra()));
         }
 
@@ -89,21 +89,8 @@ public class SCardCommander extends Set0Commander {
             long size = getSizeFromKv(keyMeta, key);
             return IntegerReply.parse(size);
         }
-        if (encodeVersion == EncodeVersion.version_3) {
-            Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.SCARD.raw(), cacheKey})));
-            if (reply instanceof IntegerReply) {
-                Long size = ((IntegerReply) reply).getInteger();
-                if (size != null && size > 0) {
-                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                    return reply;
-                }
-            }
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            long size = getSizeFromKv(keyMeta, key);
-            return IntegerReply.parse(size);
-        } else {
-            return ErrorReply.INTERNAL_ERROR;
-        }
+
+        return ErrorReply.INTERNAL_ERROR;
     }
 
     private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {

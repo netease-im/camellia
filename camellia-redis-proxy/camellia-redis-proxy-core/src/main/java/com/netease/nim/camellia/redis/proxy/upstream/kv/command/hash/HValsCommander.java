@@ -8,12 +8,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -22,14 +20,6 @@ import java.util.Map;
  * Created by caojiajun on 2024/5/15
  */
 public class HValsCommander extends Hash0Commander {
-
-    private static final byte[] script = ("local arg = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(arg) == 1 then\n" +
-            "\tlocal ret = redis.call('hvals', KEYS[1]);\n" +
-            "\tredis.call('pexpire', KEYS[1], ARGV[1]);\n" +
-            "\treturn {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public HValsCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -85,35 +75,11 @@ public class HValsCommander extends Hash0Commander {
             }
         }
 
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
-            if (cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
-            }
-            return toReply(map);
-        }
-
-        Reply reply = checkCache(script, cacheKey, new byte[][]{hgetallCacheMillis()});
-        if (reply != null) {
-            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return reply;
-        }
-
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-
         Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
             cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
         }
-
-        ErrorReply errorReply = buildCache(cacheKey, map);
-        if (errorReply != null) {
-            return errorReply;
-        }
-
         return toReply(map);
     }
 

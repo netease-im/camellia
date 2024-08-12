@@ -33,10 +33,10 @@ public class MiscTest {
         for (int i = 0; i<threads; i++) {
             new Thread(() -> {
                 while (true) {
-                    if (hashVersion == 0 || hashVersion == 2) {
-                        TestHashV0V2.testHash(template);
-                    } else if (hashVersion == 1 || hashVersion == 3){
-                        TestHashV1V3.testHash(template);
+                    if (hashVersion == 0) {
+                        TestHashV0.testHash(template);
+                    } else if (hashVersion == 1){
+                        TestHashV1.testHash(template);
                     }
                     sleep(100);
                 }
@@ -44,10 +44,10 @@ public class MiscTest {
 
             new Thread(() -> {
                 while (true) {
-                    if (zsetVersion == 0 || zsetVersion == 1 || zsetVersion == 2) {
-                        TestZSetV0V1V2.testZSet(template);
-                    } else if (zsetVersion == 3) {
-                        TestZSetV3.testZSet(template);
+                    if (zsetVersion == 0) {
+                        TestZSetV0.testZSet(template);
+                    } else if (zsetVersion == 1) {
+                        TestZSetV1.testZSet(template);
                     }
                     sleep(100);
                 }
@@ -64,10 +64,10 @@ public class MiscTest {
 
             new Thread(() -> {
                 while (true) {
-                    if (setVersion == 0 || setVersion == 2) {
-                        TestSetV0V2.testSet(template);
-                    } else if (setVersion == 1 || setVersion == 3) {
-                        TestSetV1V3.testSet(template);
+                    if (setVersion == 0) {
+                        TestSetV0.testSet(template);
+                    } else if (setVersion == 1) {
+                        TestSetV1.testSet(template);
                     }
                     sleep(100);
                 }

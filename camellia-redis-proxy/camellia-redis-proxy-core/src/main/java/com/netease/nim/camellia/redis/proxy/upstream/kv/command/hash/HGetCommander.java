@@ -18,8 +18,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
-
 /**
  * HGET key field
  * <p>
@@ -30,22 +28,6 @@ public class HGetCommander extends Hash0Commander {
     public HGetCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
-
-    //get hget cache, if exists, delay ttl, return 1 and value
-    //get hgetall cache, if exists, delay ttl, return 2 and value
-    //return 3 and value
-    private static final byte[] script = ("local ret1 = redis.call('get', KEYS[1]);\n" +
-            "if ret1 then\n" +
-            "\tredis.call('pexpire', KEYS[1], ARGV[2]);\n" +
-            "\treturn {'1', ret1};\n" +
-            "end\n" +
-            "local arg1 = redis.call('exists', KEYS[2]);\n" +
-            "if tonumber(arg1) == 1 then\n" +
-            "\tlocal ret2 = redis.call('hget', KEYS[2], ARGV[1]);\n" +
-            "\tredis.call('pexpire', KEYS[2], ARGV[3]);\n" +
-            "\treturn {'2', ret2};\n" +
-            "end\n" +
-            "return {'3'};").getBytes(StandardCharsets.UTF_8);
 
     @Override
     public RedisCommand redisCommand() {
@@ -100,51 +82,11 @@ public class HGetCommander extends Hash0Commander {
             }
         }
 
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
-            KeyValue keyValue = kvClient.get(subKey);
-            if (keyValue == null || keyValue.getValue() == null) {
-                return BulkReply.NIL_REPLY;
-            }
-            return new BulkReply(keyValue.getValue());
-        }
-
-        byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
-
-        //cache
-        {
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{hashFieldCacheKey, cacheKey},
-                    new byte[][]{field, hgetCacheMillis(), hgetallCacheMillis()}));
-            if (reply instanceof ErrorReply) {
-                return reply;
-            }
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-                if (type.equalsIgnoreCase("1") || type.equalsIgnoreCase("2")) {
-                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                    return replies[1];
-                }
-            }
-        }
-
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-
-        //get from kv
         byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
         KeyValue keyValue = kvClient.get(subKey);
-
         if (keyValue == null || keyValue.getValue() == null) {
             return BulkReply.NIL_REPLY;
-        }
-
-        //build hget cache
-        Reply reply = sync(cacheRedisTemplate.sendPSetEx(hashFieldCacheKey, cacheConfig.hgetCacheMillis(), keyValue.getValue()));
-        if (reply instanceof ErrorReply) {
-            return reply;
         }
         return new BulkReply(keyValue.getValue());
     }

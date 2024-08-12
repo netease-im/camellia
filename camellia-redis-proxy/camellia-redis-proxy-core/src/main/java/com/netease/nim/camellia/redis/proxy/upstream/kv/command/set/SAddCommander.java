@@ -15,10 +15,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -27,13 +25,6 @@ import java.util.*;
  * Created by caojiajun on 2024/8/5
  */
 public class SAddCommander extends Set0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('sadd', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public SAddCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -68,12 +59,12 @@ public class SAddCommander extends Set0Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            EncodeVersion encodeVersion = keyDesign.hashKeyMetaVersion();
-            if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+            EncodeVersion encodeVersion = keyDesign.setKeyMetaVersion();
+            if (encodeVersion == EncodeVersion.version_0) {
                 int count = memberSet.size();
                 byte[] extra = BytesUtils.toBytes(count);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.set, System.currentTimeMillis(), -1, extra);
-            } else if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+            } else if (encodeVersion == EncodeVersion.version_1) {
                 keyMeta = new KeyMeta(encodeVersion, KeyType.set, System.currentTimeMillis(), -1);
             } else {
                 return ErrorReply.INTERNAL_ERROR;
@@ -177,62 +168,7 @@ public class SAddCommander extends Set0Commander {
             return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
-        if (encodeVersion == EncodeVersion.version_2) {
-            if (!first) {
-                int ret = checkAndUpdateCache(cacheKey, memberSet, memberSize);
-                if (existsMemberSize < 0 && ret >= 0) {
-                    existsMemberSize = ret;
-                    //
-                    type = KvCacheMonitor.Type.redis_cache;
-                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                }
-            }
-            return saddVersion0(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
-        }
-
-        if (encodeVersion == EncodeVersion.version_3) {
-            if (!first) {
-                int ret = checkAndUpdateCache(cacheKey, memberSet, memberSize);
-                if (existsMemberSize < 0 && ret >= 0) {
-                    //
-                    type = KvCacheMonitor.Type.redis_cache;
-                    KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                    existsMemberSize = ret;
-                }
-            }
-            return saddVersion1(keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
-        }
-
         return ErrorReply.INTERNAL_ERROR;
-    }
-
-    private int checkAndUpdateCache(byte[] cacheKey, Set<BytesKey> memberSet, int memberSize) {
-        if (memberSet.isEmpty()) {
-            return -1;
-        }
-        byte[][] args = new byte[memberSet.size()][];
-        int i = 0;
-        for (BytesKey bytesKey : memberSet) {
-            args[i] = bytesKey.getKey();
-            i++;
-        }
-        int ret = -1;
-        Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
-        if (reply instanceof MultiBulkReply) {
-            Reply[] replies = ((MultiBulkReply) reply).getReplies();
-            if (replies[0] instanceof BulkReply) {
-                byte[] raw = ((BulkReply) replies[0]).getRaw();
-                if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
-                    if (replies[1] instanceof IntegerReply) {
-                        ret = (((IntegerReply) replies[1]).getInteger()).intValue();
-                    }
-                }
-            }
-        }
-        if (ret >= 0) {
-            return memberSize - ret;
-        }
-        return ret;
     }
 
     private Reply saddVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,

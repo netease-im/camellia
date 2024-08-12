@@ -19,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,14 +30,6 @@ import java.util.Map;
  * Created by caojiajun on 2024/6/6
  */
 public class ZMScoreCommander extends ZSet0Commander {
-
-    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(ret1) == 1 then\n" +
-            "  local ret = redis.call('zmscore', KEYS[1], unpack(ARGV));\n" +
-            "  return {'1', ret};\n" +
-            "end\n" +
-            "return {'2'};").getBytes(StandardCharsets.UTF_8);
-
 
     public ZMScoreCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -110,34 +101,6 @@ public class ZMScoreCommander extends ZSet0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            byte[][] args = new byte[objects.length - 2][];
-            System.arraycopy(objects, 2, args, 0, args.length);
-            Reply reply = checkCache(script, cacheKey, args);
-            if (reply != null) {
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return reply;
-            }
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zmscoreFromKv(keyMeta, key, members);
-        }
-
-        if (encodeVersion == EncodeVersion.version_2) {
-            byte[][] args = new byte[objects.length - 2][];
-            System.arraycopy(objects, 2, args, 0, args.length);
-            for (int i=0; i<args.length; i++) {
-                Index index = Index.fromRaw(args[i]);
-                args[i] = index.getRef();
-            }
-            Reply reply = checkCache(script, cacheKey, args);
-            if (reply != null) {
-                KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-                return reply;
-            }
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zmscoreFromKv(keyMeta, key, members);
-        }
-
-        if (encodeVersion == EncodeVersion.version_3) {
             byte[][] cmd = new byte[objects.length][];
             System.arraycopy(objects, 0, cmd, 0, cmd.length);
             cmd[1] = cacheKey;
@@ -146,7 +109,7 @@ public class ZMScoreCommander extends ZSet0Commander {
                 cmd[i] = index.getRef();
             }
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return sync(storeRedisTemplate.sendCommand(new Command(cmd)));
+            return sync(redisTemplate.sendCommand(new Command(cmd)));
         }
         return ErrorReply.INTERNAL_ERROR;
     }

@@ -19,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,22 +28,6 @@ import java.util.Map;
  * Created by caojiajun on 2024/6/6
  */
 public class HSetNxCommander extends Hash0Commander {
-
-    private static final byte[] script = ("local arg1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(arg1) == 1 then\n" +
-            "\treturn 1;\n" +
-            "end\n" +
-            "local arg2 = redis.call('exists', KEYS[2]);\n" +
-            "if tonumber(arg2) == 1 then\n" +
-            "\tlocal arg3 = redis.call('hsetnx', KEYS[2], ARGV[1], ARGV[2]);\n" +
-            "\tif tonumber(arg3) == 1 then\n" +
-            "\t\treturn 2;\n" +
-            "\tend\n" +
-            "\tif tonumber(arg3) == 0 then\n" +
-            "\t\treturn 3;\n" +
-            "\tend\n" +
-            "end\n" +
-            "return 4;").getBytes(StandardCharsets.UTF_8);
 
     private static final int cache_miss = 0;
     private static final int cache_hit_exist = 1;
@@ -81,7 +64,7 @@ public class HSetNxCommander extends Hash0Commander {
             if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
                 byte[] extra = BytesUtils.toBytes(1);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);
-            } else if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+            } else if (encodeVersion == EncodeVersion.version_1) {
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1);
             } else {
                 return ErrorReply.INTERNAL_ERROR;
@@ -193,50 +176,8 @@ public class HSetNxCommander extends Hash0Commander {
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
 
-            if (cacheCheck == cache_miss) {
-                KeyValue keyValue = kvClient.get(subKey);
-                if (keyValue != null && keyValue.getValue() != null) {
-                    return IntegerReply.REPLY_0;
-                }
-            }
-
-            if (encodeVersion == EncodeVersion.version_0) {
-                int size = BytesUtils.toInt(keyMeta.getExtra());
-                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
-                        keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size + 1));
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-            }
-            put(cacheKey, result, new KeyValue(subKey, value));
-            return IntegerReply.REPLY_1;
-        }
-
-        if (cacheCheck == cache_miss) {
-            byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
-            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{hashFieldCacheKey, cacheKey}, new byte[][]{field, value}));
-            if (reply instanceof ErrorReply) {
-                return reply;
-            }
-            if (reply instanceof IntegerReply) {
-                Long integer = ((IntegerReply) reply).getInteger();
-                if (integer == 1) {
-                    cacheCheck = cache_hit_exist;
-                } else if (integer == 2) {
-                    cacheCheck = cache_hit_not_exists;
-                } else if (integer == 3) {
-                    cacheCheck = cache_hit_exist;
-                }
-            }
-        }
-
-        if (cacheCheck == cache_hit_exist) {
-            KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return IntegerReply.REPLY_0;
-        }
-
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
 
         if (cacheCheck == cache_miss) {
@@ -246,7 +187,7 @@ public class HSetNxCommander extends Hash0Commander {
             }
         }
 
-        if (encodeVersion == EncodeVersion.version_2) {
+        if (encodeVersion == EncodeVersion.version_0) {
             int size = BytesUtils.toInt(keyMeta.getExtra());
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
                     keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size + 1));
