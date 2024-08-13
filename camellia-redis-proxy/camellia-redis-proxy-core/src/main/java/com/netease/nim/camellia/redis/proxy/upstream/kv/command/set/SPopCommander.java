@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.DeleteType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
@@ -68,6 +69,7 @@ public class SPopCommander extends Set0Commander {
         Set<BytesKey> spop = null;
         Result result = null;
         KvCacheMonitor.Type type = null;
+        DeleteType deleteType = DeleteType.unknown;
 
         WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
@@ -77,6 +79,11 @@ public class SPopCommander extends Set0Commander {
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             spop = set.spop(count);
             result = setWriteBuffer.put(cacheKey, set);
+            if (set.isEmpty()) {
+                deleteType = DeleteType.delete_all;
+            } else {
+                deleteType = DeleteType.delete_someone;
+            }
         }
         if (cacheConfig.isSetLocalCacheEnable()) {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
@@ -108,6 +115,11 @@ public class SPopCommander extends Set0Commander {
                 RedisSet set = setLRUCache.getForWrite(key, cacheKey);
                 if (set != null) {
                     result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
+                    if (set.isEmpty()) {
+                        deleteType = DeleteType.delete_all;
+                    } else {
+                        deleteType = DeleteType.delete_someone;
+                    }
                 }
             }
         }
@@ -126,10 +138,19 @@ public class SPopCommander extends Set0Commander {
             spop = srandmemberFromKv(keyMeta, key, count);
         }
 
-        removeMembers(keyMeta, key, cacheKey, spop, result);
-
         if (encodeVersion == EncodeVersion.version_0) {
-            updateKeyMeta(keyMeta, key, spop.size() * -1);
+            removeMembers(keyMeta, key, cacheKey, spop, result, false);
+        } else {
+            boolean checkSCard = deleteType == DeleteType.unknown;
+            removeMembers(keyMeta, key, cacheKey, spop, result, checkSCard);
+        }
+
+        if (deleteType == DeleteType.delete_all) {
+            keyMetaServer.deleteKeyMeta(key);
+        } else {
+            if (encodeVersion == EncodeVersion.version_0) {
+                updateKeyMeta(keyMeta, key, spop.size() * -1);
+            }
         }
 
         return toReply(spop, batch);

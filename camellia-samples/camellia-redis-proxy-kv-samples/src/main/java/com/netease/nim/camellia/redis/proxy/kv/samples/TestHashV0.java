@@ -269,6 +269,30 @@ public class TestHashV0 {
             }
 
             template.del(key);
+            {
+                Long hset1 = template.hset(key, "f1", "v1");
+                assertEquals(hset1, 1L);
+
+                Long hset2 = template.hset(key, "f2", "v2");
+                assertEquals(hset2, 1L);
+
+                Long hset3 = template.hset(key, "f3", "v3");
+                assertEquals(hset3, 1L);
+
+                Map<String, String> map = template.hgetAll(key);
+                assertEquals(map.size(), 3);
+
+                template.hdel(key, "f1", "f2");
+                template.hdel(key, "f1", "f3");
+
+                String type = template.type(key);
+                assertEquals(type, "none");
+
+                String v = template.setex(key, 10, "v");
+                assertEquals(v, "OK");
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

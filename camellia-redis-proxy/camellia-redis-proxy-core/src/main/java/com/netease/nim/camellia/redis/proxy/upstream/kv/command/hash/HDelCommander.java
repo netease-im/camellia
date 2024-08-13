@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.DeleteType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -69,7 +70,8 @@ public class HDelCommander extends Hash0Commander {
         int delCount = -1;
 
         Result result = null;
-        boolean deleteAll = false;
+        DeleteType deleteType = DeleteType.unknown;
+
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             type = KvCacheMonitor.Type.write_buffer;
@@ -84,7 +86,11 @@ public class HDelCommander extends Hash0Commander {
                 return IntegerReply.REPLY_0;
             }
             result = hashWriteBuffer.put(cacheKey, hash);
-            deleteAll = hash.isEmpty();
+            if (hash.isEmpty()) {
+                deleteType = DeleteType.delete_all;
+            } else {
+                deleteType = DeleteType.delete_someone;
+            }
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
@@ -130,7 +136,9 @@ public class HDelCommander extends Hash0Commander {
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                     if (hash.isEmpty()) {
-                        deleteAll = true;
+                        deleteType = DeleteType.delete_all;
+                    } else {
+                        deleteType = DeleteType.delete_someone;
                     }
                 }
             }
@@ -151,28 +159,41 @@ public class HDelCommander extends Hash0Commander {
             subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field.getKey());
             i++;
         }
-        if (encodeVersion == EncodeVersion.version_0) {
-            if (delCount < 0) {
+
+        if (delCount < 0) {
+            if (encodeVersion == EncodeVersion.version_0) {
                 boolean[] exists = kvClient.exists(subKeys);
                 delCount = Utils.count(exists);
             }
-            if (delCount > 0) {
-                int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
-                if (size <= 0 || deleteAll) {
-                    keyMetaServer.deleteKeyMeta(key);
-                } else {
-                    byte[] extra = BytesUtils.toBytes(size);
-                    keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                    keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        }
+
+        if (encodeVersion == EncodeVersion.version_0) {
+            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, false);
+        } else {
+            boolean checkHLen = deleteType == DeleteType.unknown;
+            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, checkHLen);
+        }
+
+        if (deleteType == DeleteType.delete_all) {
+            keyMetaServer.deleteKeyMeta(key);
+        } else {
+            if (encodeVersion == EncodeVersion.version_0) {
+                if (delCount > 0) {
+                    int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
+                    if (size <= 0) {
+                        keyMetaServer.deleteKeyMeta(key);
+                    } else {
+                        byte[] extra = BytesUtils.toBytes(size);
+                        keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+                        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                    }
                 }
             }
-            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, false);
+        }
+
+        if (encodeVersion == EncodeVersion.version_0) {
             return IntegerReply.parse(delCount);
         } else {
-            if (deleteAll) {
-                keyMetaServer.deleteKeyMeta(key);
-            }
-            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, !deleteAll);
             return IntegerReply.parse(fieldSize);
         }
     }

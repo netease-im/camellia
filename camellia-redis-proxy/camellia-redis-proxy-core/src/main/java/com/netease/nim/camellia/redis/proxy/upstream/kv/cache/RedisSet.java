@@ -34,6 +34,10 @@ public class RedisSet {
         return set.size();
     }
 
+    public boolean isEmpty() {
+        return set.isEmpty();
+    }
+
     public boolean sismeber(BytesKey bytesKey) {
         return set.contains(bytesKey);
     }

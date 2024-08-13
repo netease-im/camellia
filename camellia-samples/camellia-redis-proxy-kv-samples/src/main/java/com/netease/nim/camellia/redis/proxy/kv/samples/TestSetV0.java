@@ -144,6 +144,24 @@ public class TestSetV0 {
             }
 
             template.del(key);
+            {
+                Long sadd = template.sadd(key, "a", "b", "c");
+                assertEquals(sadd, 3L);
+
+                Set<String> smembers = template.smembers(key);
+                assertEquals(smembers.size(), 3);
+
+                template.srem(key, "a", "b");
+                template.srem(key, "c");
+
+                String type = template.type(key);
+                assertEquals(type, "none");
+
+                String v = template.setex(key, 10, "v");
+                assertEquals(v, "OK");
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();

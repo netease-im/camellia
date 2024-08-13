@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.DeleteType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
@@ -62,6 +63,7 @@ public class SRemCommander extends Set0Commander {
         Set<BytesKey> removedMembers = null;
         Result result = null;
         KvCacheMonitor.Type type = null;
+        DeleteType deleteType = DeleteType.unknown;
 
         WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
@@ -70,6 +72,11 @@ public class SRemCommander extends Set0Commander {
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
             removedMembers = set.srem(members);
             result = setWriteBuffer.put(cacheKey, set);
+            if (set.isEmpty()) {
+                deleteType = DeleteType.delete_all;
+            } else {
+                deleteType = DeleteType.delete_someone;
+            }
         }
 
         if (cacheConfig.isSetLocalCacheEnable()) {
@@ -102,6 +109,11 @@ public class SRemCommander extends Set0Commander {
                 RedisSet set = setLRUCache.getForWrite(key, cacheKey);
                 if (set != null) {
                     result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
+                    if (set.isEmpty()) {
+                        deleteType = DeleteType.delete_all;
+                    } else {
+                        deleteType = DeleteType.delete_someone;
+                    }
                 }
             }
         }
@@ -137,15 +149,26 @@ public class SRemCommander extends Set0Commander {
             }
         }
 
-        removeMembers(keyMeta, key, cacheKey, members, result);
-
         if (encodeVersion == EncodeVersion.version_0) {
-            if (removeSize > 0) {
+            removeMembers(keyMeta, key, cacheKey, members, result, false);
+        } else {
+            boolean checkSCard = deleteType == DeleteType.unknown;
+            removeMembers(keyMeta, key, cacheKey, members, result, checkSCard);
+        }
+
+        if (deleteType == DeleteType.delete_all) {
+            keyMetaServer.deleteKeyMeta(key);
+        } else {
+            if (encodeVersion == EncodeVersion.version_0) {
                 updateKeyMeta(keyMeta, key, removeSize * -1);
             }
+        }
+
+        if (encodeVersion == EncodeVersion.version_0) {
             return IntegerReply.parse(removeSize);
         } else {
             return IntegerReply.parse(size);
         }
     }
+
 }

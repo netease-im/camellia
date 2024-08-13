@@ -92,7 +92,7 @@ public abstract class Set0Commander extends Commander {
         }
     }
 
-    protected final void removeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Collection<BytesKey> members, Result result) {
+    protected final void removeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Collection<BytesKey> members, Result result, boolean checkSCard) {
         byte[][] subKeys = new byte[members.size()][];
         int i = 0;
         for (BytesKey bytesKey : members) {
@@ -104,10 +104,25 @@ public abstract class Set0Commander extends Commander {
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(cacheKey, result, () -> {
                 kvClient.batchDelete(subKeys);
+                if (checkSCard) {
+                    if (getSizeFromKv(keyMeta, key) == 0) {
+                        keyMetaServer.deleteKeyMeta(key);
+                    }
+                }
             });
         } else {
             kvClient.batchDelete(subKeys);
+            if (checkSCard) {
+                if (getSizeFromKv(keyMeta, key) == 0) {
+                    keyMetaServer.deleteKeyMeta(key);
+                }
+            }
         }
+    }
+
+    private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {
+        byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
+        return kvClient.countByPrefix(startKey, startKey, false);
     }
 
     protected final Map<BytesKey, Boolean> smismemberFromKv(KeyMeta keyMeta, byte[] key, Collection<BytesKey> members) {
@@ -145,9 +160,5 @@ public abstract class Set0Commander extends Commander {
                 keyMetaServer.deleteKeyMeta(key);
             }
         }
-    }
-
-    protected final byte[] smembersCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.smembersCacheMillis()));
     }
 }

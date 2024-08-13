@@ -389,6 +389,28 @@ public class TestZSetV0 {
             }
 
             template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("a", 1.0);
+                map1.put("b", 2.0);
+                map1.put("c", 3.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 3L);
+
+                Set<String> zrange = template.zrange(key, 0, -1);
+                assertEquals(zrange.size(), 3);
+
+                template.zrem(key, "a", "b");
+                template.zrem(key, "c");
+
+                String type = template.type(key);
+                assertEquals(type, "none");
+
+                String v = template.setex(key, 10, "v");
+                assertEquals(v, "OK");
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
