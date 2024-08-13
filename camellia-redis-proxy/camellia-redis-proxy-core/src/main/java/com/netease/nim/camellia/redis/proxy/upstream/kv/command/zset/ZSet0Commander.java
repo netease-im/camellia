@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetTuple;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -26,7 +27,7 @@ public abstract class ZSet0Commander extends Commander {
 
     protected final RedisZSet loadLRUCache(KeyMeta keyMeta, byte[] key) {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2) {
+        if (encodeVersion == EncodeVersion.version_0) {
             List<ZSetTuple> list = zrangeAllFromKv(keyMeta, key);
             Map<BytesKey, Double> memberMap = new HashMap<>(list.size());
             for (ZSetTuple tuple : list) {

@@ -268,15 +268,9 @@ public class ZAddCommander extends ZSet0Commander {
             i+=2;
         }
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> {
-                if (!list.isEmpty()) {
-                    kvClient.batchPut(list);
-                }
-            });
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
         } else {
-            if (!list.isEmpty()) {
-                kvClient.batchPut(list);
-            }
+            kvClient.batchPut(list);
         }
         if (!memberIndexCacheWriteCommands.isEmpty()) {
             List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(memberIndexCacheWriteCommands));

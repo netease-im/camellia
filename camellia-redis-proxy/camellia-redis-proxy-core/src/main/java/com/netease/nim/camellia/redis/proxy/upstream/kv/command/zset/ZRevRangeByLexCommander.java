@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -123,7 +124,7 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
             if (!kvClient.supportReverseScan()) {
                 return zrevrangeByLexVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minLex, maxLex, limit);
             }
-            return zrevrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);
+            return zrevrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
         }
 
         return ErrorReply.INTERNAL_ERROR;
@@ -142,12 +143,10 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         //
         List<ZSetTuple> list = zSet.zrevrangeByLex(minLex, maxLex, limit);
 
-        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-
         return ZSetTupleUtils.toReply(list, false);
     }
 
-    private Reply zrevrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    private Reply zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         byte[] startKey;
         if (maxLex.isMax()) {
             startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]));

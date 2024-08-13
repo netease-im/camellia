@@ -9,22 +9,16 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
  * v0 只有key-meta，value作为key-meta的extra部分
  * <p>
  * hash
- * v0 无redis缓存，且key-meta里有field-count
- * v1 无redis缓存，且key-meta里没有field-count
- * v2 v0结构，且有hgetall+hget缓存
- * v3 v1结构，且有hgetall+hget缓存
+ * v0 key-meta里有field-count
+ * v1 key-meta里没有field-count
  * <p>
  * zset
- * v0 无缓存，使用纯kv-client实现，kv-client底层有2个sub-key，一个是member-score，一个是score+member-null
- * v1 有redis缓存，kv-client底层有1个sub-key，是member-score，redis-key有1个，就是zset本身
- * v2 有redis缓存，kv-client底层有2个sub-key，一个是member-score，一个是index-member，redis-key有2个，一个是zset_with_index，一个是index
- * v3 redis同时做storage和缓存，kv-client底层有1个sub-key，就是index-member，redis-key有2个，storage是zset_with_index，cache是index
+ * v0 kv-client底层有2个sub-key，一个是member-score，一个是score+member-null
+ * v1 redis同时做storage和缓存，kv-client底层有1个sub-key，就是index-member，redis-key有2个，storage是zset_with_index，cache是index
  * <p>
  * set
- * v0 无redis缓存，且key-meta里有member-size
- * v1 无redis缓存，且key-meta里有member-size
- * v2 v0结构，且有redis缓存
- * v3 v1结构，且有redis缓存
+ * v0 key-meta里有member-size
+ * v1 key-meta里没有member-size
  * <p>
  * Created by caojiajun on 2024/4/11
  */
@@ -70,6 +64,12 @@ public enum EncodeVersion {
     }
 
     public static EncodeVersion getByValue(byte value) {
+        if (value == 0) {
+            return EncodeVersion.version_0;
+        }
+        if (value == 1) {
+            return EncodeVersion.version_1;
+        }
         return array[value];
     }
 }

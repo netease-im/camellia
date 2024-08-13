@@ -8,6 +8,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetTuple;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetWithScoresUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -123,7 +125,7 @@ public class ZRevRankCommander extends ZSet0Commander {
                 }
                 return toReply(zSet.zrevrank(member), withScores);
             } else {
-                return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
+                return ErrorReply.NOT_SUPPORT;
             }
         }
     }

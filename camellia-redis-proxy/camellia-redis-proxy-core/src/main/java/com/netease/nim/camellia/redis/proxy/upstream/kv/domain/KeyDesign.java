@@ -83,16 +83,6 @@ public class KeyDesign {
         return BytesUtils.merge(cachePrefix, key, Utils.stringToBytes(String.valueOf(version)));
     }
 
-    public byte[] hashFieldCacheKey(KeyMeta keyMeta, byte[] key, byte[] field) {
-        long version = keyMeta.getKeyVersion();
-        key = BytesUtils.merge(HASH_TAG_LEFT, key, HASH_TAG_RIGHT);
-        byte[] data = BytesUtils.merge(cachePrefix, key, Utils.stringToBytes(String.valueOf(version)));
-        if (field.length > 0) {
-            data = BytesUtils.merge(data, field);
-        }
-        return data;
-    }
-
     public byte[] zsetMemberIndexCacheKey(KeyMeta keyMeta, byte[] key, Index index) {
         long version = keyMeta.getKeyVersion();
         key = BytesUtils.merge(HASH_TAG_LEFT, key, HASH_TAG_RIGHT);

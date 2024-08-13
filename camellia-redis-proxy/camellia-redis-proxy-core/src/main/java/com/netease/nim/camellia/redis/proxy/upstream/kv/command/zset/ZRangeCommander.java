@@ -10,17 +10,15 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetTuple;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetTupleUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetWithScoresUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,7 +26,7 @@ import java.util.List;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeCommander extends ZRange0Commander {
+public class ZRangeCommander extends ZRangeByRank0Commander {
 
     public ZRangeCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -107,7 +105,8 @@ public class ZRangeCommander extends ZRange0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrangeVersion0(keyMeta, key, start, stop, withScores);
+            List<ZSetTuple> list = zrangeByRankVersion0(keyMeta, key, start, stop, withScores);
+            return ZSetTupleUtils.toReply(list, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -116,56 +115,5 @@ public class ZRangeCommander extends ZRange0Commander {
         }
 
         return ErrorReply.INTERNAL_ERROR;
-    }
-
-    private Reply zrangeVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
-        int size = BytesUtils.toInt(keyMeta.getExtra());
-        ZSetRank zSetRank = new ZSetRank(start, stop, size);
-        if (zSetRank.isEmptyRank()) {
-            return MultiBulkReply.EMPTY;
-        }
-        start = zSetRank.getStart();
-        stop = zSetRank.getStop();
-
-        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
-        List<ZSetTuple> list = zrange0(key, startKey, startKey, start, stop, withScores);
-
-        return ZSetTupleUtils.toReply(list, withScores);
-    }
-
-    private List<ZSetTuple> zrange0(byte[] key, byte[] startKey, byte[] prefix, int start, int stop, boolean withScores) {
-        int targetSize = stop - start;
-        List<ZSetTuple> list = new ArrayList<>();
-        int scanBatch = kvConfig.scanBatch();
-        int count = 0;
-        while (true) {
-            int limit = Math.min(targetSize - list.size(), scanBatch);
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
-            if (scan.isEmpty()) {
-                return list;
-            }
-            for (KeyValue keyValue : scan) {
-                if (keyValue == null || keyValue.getValue() == null) {
-                    continue;
-                }
-                startKey = keyValue.getKey();
-                if (count >= start) {
-                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
-                    if (withScores) {
-                        double score = Utils.bytesToDouble(keyValue.getValue());
-                        list.add(new ZSetTuple(new BytesKey(member), score));
-                    } else {
-                        list.add(new ZSetTuple(new BytesKey(member), null));
-                    }
-                }
-                if (count >= stop) {
-                    return list;
-                }
-                count++;
-            }
-            if (scan.size() < limit) {
-                return list;
-            }
-        }
     }
 }

@@ -95,6 +95,7 @@ public class ZMScoreCommander extends ZSet0Commander {
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return zmscoreFromKv(keyMeta, key, members);

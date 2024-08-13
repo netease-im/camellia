@@ -10,16 +10,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,7 +23,7 @@ import java.util.List;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeByScoreCommander extends ZRange0Commander {
+public class ZRangeByScoreCommander extends ZRangeByScore0Commander {
 
     public ZRangeByScoreCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -111,9 +107,11 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
+            List<ZSetTuple> list = zrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
+            return ZSetTupleUtils.toReply(list, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -122,55 +120,6 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
         }
 
         return ErrorReply.INTERNAL_ERROR;
-    }
-
-    private Reply zrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
-        byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
-        byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
-        int batch = kvConfig.scanBatch();
-        int count = 0;
-        List<ZSetTuple> result = new ArrayList<>(limit.getCount() < 0 ? 16 : Math.min(limit.getCount(), 100));
-        while (true) {
-            if (limit.getCount() > 0) {
-                batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
-            }
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.ASC, false);
-            if (list.isEmpty()) {
-                break;
-            }
-            for (KeyValue keyValue : list) {
-                if (keyValue == null) {
-                    continue;
-                }
-                startKey = keyValue.getKey();
-                if (keyValue.getValue() == null) {
-                    continue;
-                }
-                double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
-                boolean pass = ZSetScoreUtils.checkScore(score, minScore, maxScore);
-                if (!pass) {
-                    continue;
-                }
-                if (count >= limit.getOffset()) {
-                    byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
-                    ZSetTuple tuple;
-                    if (withScores) {
-                        tuple = new ZSetTuple(new BytesKey(member), score);
-                    } else {
-                        tuple = new ZSetTuple(new BytesKey(member), null);
-                    }
-                    result.add(tuple);
-                    if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
-                        break;
-                    }
-                }
-                count ++;
-            }
-            if (list.size() < batch) {
-                break;
-            }
-        }
-        return ZSetTupleUtils.toReply(result, withScores);
     }
 
 }

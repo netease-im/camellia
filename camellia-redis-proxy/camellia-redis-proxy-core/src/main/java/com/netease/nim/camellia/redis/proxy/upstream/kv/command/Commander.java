@@ -18,7 +18,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -28,10 +27,10 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class Commander {
 
-    protected final KVClient kvClient;
-    protected final KeyDesign keyDesign;
+    public final KVClient kvClient;
+    public final KeyDesign keyDesign;
+    public final KvConfig kvConfig;
     protected final CacheConfig cacheConfig;
-    protected final KvConfig kvConfig;
     protected final KeyMetaServer keyMetaServer;
     protected final RedisTemplate cacheRedisTemplate;
     protected final RedisTemplate storageRedisTemplate;

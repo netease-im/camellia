@@ -10,16 +10,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,7 +23,7 @@ import java.util.List;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeByLexCommander extends ZRange0Commander {
+public class ZRangeByLexCommander extends ZRangeByLex0Commander {
 
     public ZRangeByLexCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -119,59 +115,11 @@ public class ZRangeByLexCommander extends ZRange0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrangeByLexVersion0OrVersion2(keyMeta, key, minLex, maxLex, limit);
+            List<ZSetTuple> tuples = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
+            return ZSetTupleUtils.toReply(tuples, false);
         }
 
         return ErrorReply.INTERNAL_ERROR;
-    }
-
-    private Reply zrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
-        byte[] startKey;
-        if (minLex.isMin()) {
-            startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
-        } else {
-            startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, minLex.getLex());
-        }
-        byte[] endKey;
-        if (maxLex.isMax()) {
-            endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]));
-        } else {
-            if (maxLex.isExcludeLex()) {
-                endKey = keyDesign.zsetMemberSubKey1(keyMeta, key, maxLex.getLex());
-            } else {
-                endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, maxLex.getLex()));
-            }
-        }
-        List<ZSetTuple> list = new ArrayList<>();
-        int scanBatch = kvConfig.scanBatch();
-        int count = 0;
-        while (true) {
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, scanBatch, Sort.ASC, !minLex.isExcludeLex());
-            if (scan.isEmpty()) {
-                return ZSetTupleUtils.toReply(list, false);
-            }
-            for (KeyValue keyValue : scan) {
-                if (keyValue == null || keyValue.getValue() == null) {
-                    continue;
-                }
-                startKey = keyValue.getKey();
-                byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
-                boolean pass = ZSetLexUtil.checkLex(member, minLex, maxLex);
-                if (!pass) {
-                    continue;
-                }
-                if (count >= limit.getOffset()) {
-                    list.add(new ZSetTuple(new BytesKey(member), null));
-                }
-                if (limit.getCount() > 0 && list.size() >= limit.getCount()) {
-                    return ZSetTupleUtils.toReply(list, false);
-                }
-                count++;
-            }
-            if (scan.size() < scanBatch) {
-                return ZSetTupleUtils.toReply(list, false);
-            }
-        }
     }
 
 }

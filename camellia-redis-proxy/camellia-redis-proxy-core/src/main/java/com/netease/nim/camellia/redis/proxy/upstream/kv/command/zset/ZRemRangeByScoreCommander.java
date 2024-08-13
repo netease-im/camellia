@@ -12,16 +12,13 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +27,7 @@ import java.util.Map;
  * <p>
  * Created by caojiajun on 2024/5/8
  */
-public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
+public class ZRemRangeByScoreCommander extends ZRangeByScore0Commander {
 
 
     public ZRemRangeByScoreCommander(CommanderConfig commanderConfig) {
@@ -77,16 +74,16 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
 
         KvCacheMonitor.Type type = null;
 
-        Map<BytesKey, Double> localCacheResult = null;
+        Map<BytesKey, Double> removedMap = null;
         Result result = null;
 
         WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
         if (bufferValue != null) {
             RedisZSet zSet = bufferValue.getValue();
-            localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
+            removedMap = zSet.zremrangeByScore(minScore, maxScore);
             type = KvCacheMonitor.Type.write_buffer;
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
-            if (localCacheResult != null && localCacheResult.isEmpty()) {
+            if (removedMap != null && removedMap.isEmpty()) {
                 return IntegerReply.REPLY_0;
             }
             result = zsetWriteBuffer.put(cacheKey, zSet);
@@ -95,20 +92,20 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            if (localCacheResult == null) {
-                localCacheResult = zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
-                if (localCacheResult != null) {
+            if (removedMap == null) {
+                removedMap = zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
+                if (removedMap != null) {
                     type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
-                if (localCacheResult != null && localCacheResult.isEmpty()) {
+                if (removedMap != null && removedMap.isEmpty()) {
                     return IntegerReply.REPLY_0;
                 }
             } else {
                 zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
             }
 
-            if (localCacheResult == null) {
+            if (removedMap == null) {
                 boolean hotKey = zSetLRUCache.isHotKey(key);
                 if (hotKey) {
                     RedisZSet zSet = loadLRUCache(keyMeta, key);
@@ -119,8 +116,8 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
                         //
                         zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
                         //
-                        localCacheResult = zSet.zremrangeByScore(minScore, maxScore);
-                        if (localCacheResult != null && localCacheResult.isEmpty()) {
+                        removedMap = zSet.zremrangeByScore(minScore, maxScore);
+                        if (removedMap != null && removedMap.isEmpty()) {
                             return IntegerReply.REPLY_0;
                         }
                     }
@@ -145,79 +142,17 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByScore(keyMeta, key, cacheKey, minScore, maxScore, localCacheResult, result);
+            if (removedMap == null) {
+                List<ZSetTuple> list = zrangeByScoreVersion0(keyMeta, key, minScore, maxScore, ZSetLimit.NO_LIMIT, true);
+                removedMap = ZSetTupleUtils.toMap(list);
+            }
+            return zremVersion0(keyMeta, key, cacheKey, removedMap, result);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, cacheKey, objects, redisCommand(), localCacheResult, result);
+            return zremrangeVersion1(keyMeta, key, cacheKey, objects, redisCommand(), removedMap, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
-    }
-
-    private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore,
-                                   Map<BytesKey, Double> localCacheResult, Result result) {
-        if (localCacheResult != null) {
-            int size = BytesUtils.toInt(keyMeta.getExtra());
-            byte[][] deleteStoreKeys = new byte[localCacheResult.size()*2][];
-            int i = 0;
-            for (Map.Entry<BytesKey, Double> entry : localCacheResult.entrySet()) {
-                deleteStoreKeys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());
-                deleteStoreKeys[i+1] = keyDesign.zsetMemberSubKey2(keyMeta, key, entry.getKey().getKey(), BytesUtils.toBytes(entry.getValue()));
-                i+=2;
-            }
-
-            if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(deleteStoreKeys));
-            } else {
-                kvClient.batchDelete(deleteStoreKeys);
-            }
-
-            size = size - localCacheResult.size();
-            updateKeyMeta(keyMeta, key, size);
-            return IntegerReply.parse(localCacheResult.size());
-        }
-
-        byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
-        byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
-        int batch = kvConfig.scanBatch();
-        List<byte[]> toDeleteKeys = new ArrayList<>();
-        int count = 0;
-        while (true) {
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.ASC, false);
-            if (list.isEmpty()) {
-                break;
-            }
-            for (KeyValue keyValue : list) {
-                if (keyValue == null) {
-                    continue;
-                }
-                startKey = keyValue.getKey();
-                if (keyValue.getValue() == null) {
-                    continue;
-                }
-                double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
-                boolean pass = ZSetScoreUtils.checkScore(score, minScore, maxScore);
-                if (!pass) {
-                    continue;
-                }
-                toDeleteKeys.add(keyValue.getKey());
-                byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
-                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-                toDeleteKeys.add(subKey1);
-                count ++;
-            }
-            if (list.size() < batch) {
-                break;
-            }
-        }
-        if (!toDeleteKeys.isEmpty()) {
-            kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
-            int size = BytesUtils.toInt(keyMeta.getExtra());
-            size = size - count;
-            updateKeyMeta(keyMeta, key, size);
-            return IntegerReply.parse(count);
-        }
-        return IntegerReply.REPLY_0;
     }
 }

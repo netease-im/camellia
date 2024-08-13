@@ -67,11 +67,14 @@ public class ZCardCommander extends Commander {
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
+        if (encodeVersion == EncodeVersion.version_0) {
+            return IntegerReply.parse(BytesUtils.toInt(keyMeta.getExtra()));
+        }
         if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
             return sync(storageRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCARD.raw(), cacheKey})));
-        } else {
-            return IntegerReply.parse(BytesUtils.toInt(keyMeta.getExtra()));
         }
+        return ErrorReply.INTERNAL_ERROR;
     }
 }

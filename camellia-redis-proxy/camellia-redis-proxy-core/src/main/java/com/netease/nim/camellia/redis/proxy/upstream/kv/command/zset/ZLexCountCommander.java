@@ -10,13 +10,14 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetLex;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetLexUtil;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.ScriptReplyUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 import java.util.List;
@@ -56,6 +57,7 @@ public class ZLexCountCommander extends ZSet0Commander {
         }
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
         if (encodeVersion == EncodeVersion.version_1) {
             return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
         }
@@ -116,13 +118,13 @@ public class ZLexCountCommander extends ZSet0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return IntegerReply.parse(zrangeByLexFromKv(keyMeta, key, minLex, maxLex));
+            return IntegerReply.parse(zLexCountFromKv(keyMeta, key, minLex, maxLex));
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private int zrangeByLexFromKv(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex) {
+    private int zLexCountFromKv(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex) {
         byte[] startKey;
         if (minLex.isMin()) {
             startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
