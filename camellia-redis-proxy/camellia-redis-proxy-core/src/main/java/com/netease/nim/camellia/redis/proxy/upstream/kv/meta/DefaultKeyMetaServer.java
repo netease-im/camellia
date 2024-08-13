@@ -142,56 +142,6 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     }
 
     @Override
-    public boolean existsKeyMeta(byte[] key) {
-        WriteBufferValue<KeyMeta> writeBufferValue = writeBuffer.get(key);
-        if (writeBufferValue != null) {
-            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), "existsKeyMeta");
-            KeyMeta keyMeta = writeBufferValue.getValue();
-            if (keyMeta == null) {
-                return false;
-            }
-            if (!keyMeta.isExpire()) {
-                return true;
-            } else {
-                deleteKeyMeta(key);
-                return false;
-            }
-        }
-
-        if (cacheConfig.isMetaLocalCacheEnable()) {
-            ValueWrapper<KeyMeta> valueWrapper = keyMetaLRUCache.get(key);
-            if (valueWrapper != null) {
-                KeyMeta keyMeta = valueWrapper.get();
-                if (keyMeta == null) {
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), "existsKeyMeta");
-                    return false;
-                }
-                if (!keyMeta.isExpire()) {
-                    KvCacheMonitor.localCache(cacheConfig.getNamespace(), "existsKeyMeta");
-                    return true;
-                } else {
-                    deleteKeyMeta(key);
-                    return false;
-                }
-            }
-        }
-
-        byte[] metaKey = keyDesign.metaKey(key);
-        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "existsKeyMeta");
-        KeyValue keyValue = kvClient.get(metaKey);
-        if (keyValue == null || keyValue.getValue() == null) {
-            return false;
-        }
-        KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
-        if (keyMeta == null || keyMeta.isExpire()) {
-            kvClient.delete(metaKey);
-            KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     public void checkKeyMetaExpired(byte[] key) {
         byte[] metaKey = keyDesign.metaKey(key);
         KeyValue keyValue = kvClient.get(metaKey);

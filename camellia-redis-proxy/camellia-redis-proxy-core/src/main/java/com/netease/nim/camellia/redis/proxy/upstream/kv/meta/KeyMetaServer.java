@@ -26,12 +26,6 @@ public interface KeyMetaServer {
      */
     void deleteKeyMeta(byte[] key);
 
-    /**
-     * exists key-meta
-     * @param key key
-     * @return true/false
-     */
-    boolean existsKeyMeta(byte[] key);
 
     /**
      * check key-meta, if key-meta expired, will delete
