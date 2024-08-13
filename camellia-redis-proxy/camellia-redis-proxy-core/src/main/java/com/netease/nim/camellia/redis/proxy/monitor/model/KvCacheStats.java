@@ -13,6 +13,7 @@ public class KvCacheStats {
     private double writeBufferHit;
     private double localCacheHit;
     private double redisCacheHit;
+    private double storageHit;
 
     public String getNamespace() {
         return namespace;
@@ -84,5 +85,13 @@ public class KvCacheStats {
 
     public void setRedisCacheHit(double redisCacheHit) {
         this.redisCacheHit = redisCacheHit;
+    }
+
+    public double getStorageHit() {
+        return storageHit;
+    }
+
+    public void setStorageHit(double storageHit) {
+        this.storageHit = storageHit;
     }
 }

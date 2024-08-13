@@ -328,6 +328,7 @@ public class StatsJsonConverter {
             kvStatsJson.put("writeBufferHit", kvCacheStats.getWriteBufferHit());
             kvStatsJson.put("localCacheHit", kvCacheStats.getLocalCacheHit());
             kvStatsJson.put("redisCacheHit", kvCacheStats.getRedisCacheHit());
+            kvStatsJson.put("storageHit", kvCacheStats.getStorageHit());
             kvCacheStatsJsonArray.add(kvStatsJson);
         }
         monitorJson.put("kvCacheStats", kvCacheStatsJsonArray);

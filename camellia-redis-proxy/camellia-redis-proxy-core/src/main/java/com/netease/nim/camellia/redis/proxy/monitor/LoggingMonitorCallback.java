@@ -132,10 +132,10 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("====kv.cache.stats====");
             List<KvCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
             for (KvCacheStats kvCacheStats : kvCacheStatsList) {
-                logger.info("namespace={},operation={},writeBuffer={},local={},redis={},store={},writeBufferHit={},localCacheHit={},redisCacheHit={}",
+                logger.info("namespace={},operation={},writeBuffer={},local={},redis={},store={},writeBufferHit={},localCacheHit={},redisCacheHit={},storageHit={}",
                         kvCacheStats.getNamespace(), kvCacheStats.getOperation(),
                         kvCacheStats.getWriteBuffer(), kvCacheStats.getLocal(), kvCacheStats.getRedis(), kvCacheStats.getStore(),
-                        kvCacheStats.getWriteBufferHit(), kvCacheStats.getLocalCacheHit(), kvCacheStats.getRedisCacheHit());
+                        kvCacheStats.getWriteBufferHit(), kvCacheStats.getLocalCacheHit(), kvCacheStats.getRedisCacheHit(), kvCacheStats.getStorageHit());
             }
 
             logger.info("====kv.executor.stats====");

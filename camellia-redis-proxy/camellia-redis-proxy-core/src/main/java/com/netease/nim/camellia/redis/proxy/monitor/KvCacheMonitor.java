@@ -104,9 +104,11 @@ public class KvCacheMonitor {
                     double writeBufferHit = writeBuffer * 1.0 / total;
                     double localCacheHit = local * 1.0 / total;
                     double redisCacheHit = redis * 1.0 / total;
+                    double storageHit = store * 1.0 / total;
                     stats.setWriteBufferHit(writeBufferHit);
                     stats.setLocalCacheHit(localCacheHit);
                     stats.setRedisCacheHit(redisCacheHit);
+                    stats.setStorageHit(storageHit);
                 }
                 list.add(stats);
             }
