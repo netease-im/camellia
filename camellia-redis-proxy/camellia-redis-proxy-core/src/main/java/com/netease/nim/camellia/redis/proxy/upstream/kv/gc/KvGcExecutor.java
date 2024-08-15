@@ -31,10 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2024/4/22
@@ -42,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class KvGcExecutor {
     private static final Logger logger = LoggerFactory.getLogger(KvGcExecutor.class);
 
+    private final String namespace;
     private final KVClient kvClient;
     private final KeyDesign keyDesign;
     private final KvConfig kvConfig;
@@ -49,9 +47,9 @@ public class KvGcExecutor {
     private final ThreadPoolExecutor submitExecutor;
     private final ScheduledThreadPoolExecutor scheduleExecutor;
     private RedisTemplate redisTemplate;
-    private long lastGcTime = 0;
 
     public KvGcExecutor(KVClient kvClient, KeyDesign keyDesign, KvConfig kvConfig) {
+        this.namespace = Utils.bytesToString(keyDesign.getNamespace());
         this.kvClient = kvClient;
         this.keyDesign = keyDesign;
         this.kvConfig = kvConfig;
@@ -89,19 +87,27 @@ public class KvGcExecutor {
                 }
 
                 int gcScheduleIntervalMinute = ProxyDynamicConf.getInt("kv.gc.schedule.interval.minute", 24 * 60);
+                long lastGcTime = KvGcEnv.getLastGcTime(namespace);
                 if (System.currentTimeMillis() - lastGcTime < gcScheduleIntervalMinute*60*1000L) {
                     return;
                 }
+
+                if (!KvGcEnv.acquireGcLock(namespace)) {
+                    return;
+                }
+
                 boolean scanMetaKeysSuccess = true;
                 if (!kvClient.supportTTL()) {
                     scanMetaKeysSuccess = scanMetaKeys();
                 }
                 boolean scanSubKeysSuccess = scanSubKeys();
                 if (scanMetaKeysSuccess && scanSubKeysSuccess) {
-                    lastGcTime = System.currentTimeMillis();
+                    KvGcEnv.updateGcTime(namespace, System.currentTimeMillis());
                 }
             } catch (Throwable e) {
                 logger.error("gc schedule error", e);
+            } finally {
+                KvGcEnv.release(namespace);
             }
         }, 60, 60, TimeUnit.SECONDS);
     }
@@ -123,8 +129,6 @@ public class KvGcExecutor {
         }
     }
 
-    private byte[] metaKeyScanStartKey = null;
-
     private boolean scanMetaKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan meta keys start");
@@ -132,7 +136,7 @@ public class KvGcExecutor {
         long deleteMetaKeys = 0;
         try {
             byte[] metaPrefix = keyDesign.getMetaPrefix();
-            byte[] startKey = metaKeyScanStartKey;
+            byte[] startKey = KvGcEnv.getMetaKeyScanStartKey(namespace);
             if (startKey == null) {
                 startKey = metaPrefix;
             }
@@ -140,7 +144,7 @@ public class KvGcExecutor {
             while (true) {
                 List<KeyValue> scan = kvClient.scanByPrefix(startKey, metaPrefix, limit, Sort.ASC, false);
                 if (scan.isEmpty()) {
-                    metaKeyScanStartKey = null;
+                    KvGcEnv.updateMetaKeyScanStartKey(namespace, null);
                     break;
                 }
                 for (KeyValue keyValue : scan) {
@@ -175,11 +179,11 @@ public class KvGcExecutor {
                     }
                 }
                 if (scan.size() < limit) {
-                    metaKeyScanStartKey = null;
+                    KvGcEnv.updateMetaKeyScanStartKey(namespace, null);
                     break;
                 }
                 if (!checkInScheduleGcTime()) {
-                    metaKeyScanStartKey = startKey;
+                    KvGcEnv.updateMetaKeyScanStartKey(namespace, startKey);
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
@@ -200,8 +204,6 @@ public class KvGcExecutor {
         }
     }
 
-    private final byte[][] subKeyScanStartKey = new byte[3][];
-
     private boolean scanSubKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan sub keys start");
@@ -217,7 +219,7 @@ public class KvGcExecutor {
             prefixList.add(keyDesign.getSubKeyPrefix2());
             prefixList.add(keyDesign.getSubIndexKeyPrefix());
             for (int i=0; i<prefixList.size(); i++) {
-                byte[] prefix = subKeyScanStartKey[i];
+                byte[] prefix = KvGcEnv.getSubKeyScanStartKey(namespace, i);
                 if (prefix == null) {
                     prefix = prefixList.get(i);
                 }
@@ -226,7 +228,7 @@ public class KvGcExecutor {
                 while (true) {
                     List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
                     if (scan.isEmpty()) {
-                        subKeyScanStartKey[i] = null;
+                        KvGcEnv.setSubKeyScanStartKey(namespace, i, null);
                         break;
                     }
                     List<byte[]> toDeleteKeys = new ArrayList<>();
@@ -245,11 +247,11 @@ public class KvGcExecutor {
                         KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), toDeleteKeys.size());
                     }
                     if (scan.size() < limit) {
-                        subKeyScanStartKey[i] = null;
+                        KvGcEnv.setSubKeyScanStartKey(namespace, i, null);
                         break;
                     }
                     if (!checkInScheduleGcTime()) {
-                        subKeyScanStartKey[i] = startKey;
+                        KvGcEnv.setSubKeyScanStartKey(namespace, i, startKey);
                         break;
                     }
                     TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
