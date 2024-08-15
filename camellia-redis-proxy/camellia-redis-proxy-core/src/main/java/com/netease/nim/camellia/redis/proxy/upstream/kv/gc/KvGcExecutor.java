@@ -23,6 +23,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
@@ -127,6 +128,7 @@ public class KvGcExecutor {
     private boolean scanMetaKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan meta keys start");
+        long time = TimeCache.currentMillis;
         long deleteMetaKeys = 0;
         try {
             byte[] metaPrefix = keyDesign.getMetaPrefix();
@@ -181,6 +183,10 @@ public class KvGcExecutor {
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
+                if (TimeCache.currentMillis - time > 60*1000L) {
+                    logger.info("scan meta keys doing, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+                    time = TimeCache.currentMillis;
+                }
             }
             if (checkInScheduleGcTime()) {
                 logger.info("scan meta keys end, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
@@ -199,6 +205,7 @@ public class KvGcExecutor {
     private boolean scanSubKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan sub keys start");
+        long time = TimeCache.currentMillis;
         long deleteSubKeys = 0;
         try {
             ConcurrentLinkedHashMap<CacheKey, KeyStatus> cacheMap = new ConcurrentLinkedHashMap.Builder<CacheKey, KeyStatus>()
@@ -246,6 +253,10 @@ public class KvGcExecutor {
                         break;
                     }
                     TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
+                    if (TimeCache.currentMillis - time > 60*1000L) {
+                        logger.info("scan sub keys doing, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+                        time = TimeCache.currentMillis;
+                    }
                 }
             }
             cacheMap.clear();
