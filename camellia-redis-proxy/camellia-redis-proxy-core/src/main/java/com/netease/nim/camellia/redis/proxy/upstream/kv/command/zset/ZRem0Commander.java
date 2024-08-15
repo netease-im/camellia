@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetIndexLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Created by caojiajun on 2024/5/8
  */
-public abstract class ZRem0Commander extends ZRange0Commander {
+public abstract class ZRem0Commander extends ZSet0Commander {
 
     public ZRem0Commander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -49,8 +50,10 @@ public abstract class ZRem0Commander extends ZRange0Commander {
     protected final Reply zremrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, RedisCommand redisCommand,
                                             Map<BytesKey, Double> removedMap, Result result) {
         Set<BytesKey> removedMembers;
+        boolean membersIndex = false;
         if (removedMap == null) {
             removedMembers = zremrangeMembers(cacheKey, objects, redisCommand);
+            membersIndex = true;
         } else {
             removedMembers = removedMap.keySet();
         }
@@ -58,7 +61,7 @@ public abstract class ZRem0Commander extends ZRange0Commander {
             ErrorLogCollector.collect(ZRem0Commander.class, "zremrangeMembers error");
             return ErrorReply.INTERNAL_ERROR;
         }
-        return zremVersion1(keyMeta, key, cacheKey, removedMembers, result);
+        return zremVersion1(keyMeta, key, cacheKey, removedMembers, membersIndex, result);
     }
 
     private Set<BytesKey> zremrangeMembers(byte[] cacheKey, byte[][] objects, RedisCommand redisCommand) {
@@ -95,7 +98,7 @@ public abstract class ZRem0Commander extends ZRange0Commander {
         return null;
     }
 
-    protected final Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> removedMembers, Result result) {
+    protected final Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> removedMembers, boolean membersIndex, Result result) {
         int size = removedMembers.size();
         List<byte[]> deleteSubKeys = new ArrayList<>(size);
 
@@ -110,11 +113,21 @@ public abstract class ZRem0Commander extends ZRange0Commander {
             List<byte[]> deleteCacheKeys = new ArrayList<>(size + 1);
             deleteCacheKeys.add(RedisCommand.DEL.raw());
             for (BytesKey member : removedMembers) {
-                Index index = Index.fromRaw(member.getKey());
+                Index index;
+                if (membersIndex) {
+                    index = Index.fromRef(member.getKey());
+                } else {
+                    index = Index.fromRaw(member.getKey());
+                }
                 zremCmd[i] = index.getRef();
                 if (index.isIndex()) {
                     deleteSubKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
                     deleteCacheKeys.add(keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index));
+                    //
+                    if (cacheConfig.isZSetLocalCacheEnable()) {
+                        ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
+                        lruCache.remove(key, cacheKey, new BytesKey(index.getRef()));
+                    }
                 }
                 i++;
             }

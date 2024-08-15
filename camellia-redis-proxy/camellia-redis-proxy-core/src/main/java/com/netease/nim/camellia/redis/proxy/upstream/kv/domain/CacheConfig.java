@@ -1,10 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.KeyMetaLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +22,7 @@ public class CacheConfig {
     private final HashLRUCache hashLRUCache;
     private final ZSetLRUCache zSetLRUCache;
     private final SetLRUCache setLRUCache;
+    private final ZSetIndexLRUCache zSetIndexLRUCache;
 
     public CacheConfig(String namespace) {
         this.namespace = namespace;
@@ -36,6 +34,7 @@ public class CacheConfig {
         this.hashLRUCache = new HashLRUCache(namespace);
         this.keyMetaLRUCache = new KeyMetaLRUCache(namespace);
         this.zSetLRUCache = new ZSetLRUCache(namespace);
+        this.zSetIndexLRUCache = new ZSetIndexLRUCache(namespace);
         this.setLRUCache = new SetLRUCache(namespace);
         ProxyDynamicConf.registerCallback(this::initCacheConfig);
     }
@@ -62,6 +61,9 @@ public class CacheConfig {
             this.zsetLocalCacheEnable = zsetLocalCacheEnable;
             if (!zsetLocalCacheEnable && zSetLRUCache != null) {
                 zSetLRUCache.clear();
+            }
+            if (!zsetLocalCacheEnable && zSetIndexLRUCache != null) {
+                zSetIndexLRUCache.clear();
             }
             logger.info("kv.zset.local.cache.enable = {}", zsetLocalCacheEnable);
         }
@@ -111,12 +113,12 @@ public class CacheConfig {
         return setLRUCache;
     }
 
-    public long cacheTimeoutMillis() {
-        return RedisKvConf.getLong(namespace, "kv.cache.timeout.millis", 2000L);
+    public ZSetIndexLRUCache getZSetIndexLRUCache() {
+        return zSetIndexLRUCache;
     }
 
-    public long smembersCacheMillis() {
-        return RedisKvConf.getLong(namespace, "kv.cache.smembers.cache.millis", 5*60*1000L);
+    public long cacheTimeoutMillis() {
+        return RedisKvConf.getLong(namespace, "kv.cache.timeout.millis", 2000L);
     }
 
     public long zsetMemberCacheMillis() {

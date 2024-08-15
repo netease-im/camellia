@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.NoOpResult;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetIndexLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
@@ -262,6 +263,11 @@ public class ZAddCommander extends ZSet0Commander {
                 list.add(new KeyValue(indexSubKey, member));
                 byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                 memberIndexCacheWriteCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
+                //
+                if (cacheConfig.isZSetLocalCacheEnable()) {
+                    ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
+                    lruCache.put(key, cacheKey, new BytesKey(index.getRef()), member);
+                }
             }
             rewriteCmd[i] = Utils.doubleToBytes(entry.getValue());
             rewriteCmd[i+1] = index.getRef();
@@ -290,10 +296,6 @@ public class ZAddCommander extends ZSet0Commander {
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
             keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         }
-    }
-
-    private byte[] zsetMemberCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
     }
 
 }

@@ -128,7 +128,7 @@ public class ZRemCommander extends ZRem0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremVersion1(keyMeta, key, cacheKey, members, result);
+            return zremVersion1(keyMeta, key, cacheKey, members, false, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;

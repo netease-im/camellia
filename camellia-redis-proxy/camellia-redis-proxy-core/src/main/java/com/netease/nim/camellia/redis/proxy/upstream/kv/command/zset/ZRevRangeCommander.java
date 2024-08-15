@@ -32,7 +32,7 @@ import java.util.List;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRevRangeCommander extends ZRange0Commander {
+public class ZRevRangeCommander extends ZSet0Commander {
 
     public ZRevRangeCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);

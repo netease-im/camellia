@@ -28,7 +28,7 @@ import java.util.List;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRevRangeByScoreCommander extends ZRange0Commander {
+public class ZRevRangeByScoreCommander extends ZSet0Commander {
 
     public ZRevRangeByScoreCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);

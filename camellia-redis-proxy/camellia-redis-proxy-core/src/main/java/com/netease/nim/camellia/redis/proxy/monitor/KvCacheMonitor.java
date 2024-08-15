@@ -45,6 +45,14 @@ public class KvCacheMonitor {
         counter.localCache.increment();
     }
 
+    public static void localCache(String namespace, String operation, long add) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) {
+            return;
+        }
+        Counter counter = CamelliaMapUtils.computeIfAbsent(map, namespace + "|" + operation, s -> new Counter());
+        counter.localCache.add(add);
+    }
+
     public static void redisCache(String namespace, String operation) {
         if (!ProxyMonitorCollector.isMonitorEnable()) {
             return;
