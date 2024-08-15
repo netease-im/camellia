@@ -147,7 +147,7 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
         int size = BytesUtils.toInt(keyMeta.getExtra());
         ZSetRank rank = new ZSetRank(start, stop, size);
         if (rank.isEmptyRank()) {
-            return MultiBulkReply.EMPTY;
+            return IntegerReply.REPLY_0;
         }
         start = rank.getStart();
         stop = rank.getStop();
