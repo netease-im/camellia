@@ -229,7 +229,7 @@ public class RedisKvClient implements IUpstreamClient {
         CacheConfig cacheConfig = new CacheConfig(namespace);
 
         RedisTemplate cacheRedisTemplate = initRedisTemplate("kv.redis.cache");
-        RedisTemplate storageRedisTemplate = initRedisTemplate("kv.redis.storage");
+        RedisTemplate storageRedisTemplate = initRedisTemplate("kv.redis.store");
 
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, keyDesign, gcExecutor, cacheConfig);
 
