@@ -269,7 +269,7 @@ public class KvGcExecutor {
             }
             return true;
         } catch (Throwable e) {
-            logger.error("scan sub keys error, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+            logger.error("scan sub keys error, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys, e);
             return false;
         }
     }

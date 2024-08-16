@@ -11,11 +11,13 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-#  cluster-mode-enable: true
-#  config:
-#    "proxy.cluster.mode.nodes": "10.242.171.218:6381@16381"
-#    "proxy.cluster.mode.current.node.host": "10.242.171.218"
-#    "proxy.cluster.mode.command.move.always": true
+  cluster-mode-enable: true
+  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusProxyClusterModeProvider
+  config:
+    "cluster.mode.consensus.leader.selector.class.name": "com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector"
+    "proxy.cluster.mode.command.move.always": true
+    "redis.consensus.leader.selector.redis.key": "c667ae51-e558-e1b6-e96b-ffb21fafbc0a"
+    "redis.consensus.leader.selector.redis.url": "redis://@127.0.0.1:6379"
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
