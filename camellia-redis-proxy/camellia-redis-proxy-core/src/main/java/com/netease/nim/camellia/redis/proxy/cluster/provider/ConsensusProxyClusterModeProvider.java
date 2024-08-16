@@ -81,15 +81,27 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         logger.info("current node is leader");
         ProxyClusterSlotMap oldSlotMap = leaderSelector.getSlotMap();
         logger.info("get slot map from leader selector storage, slot-map = {}", oldSlotMap);
-        ProxyClusterSlotMap newSlotMap;
+        ProxyClusterSlotMap newSlotMap = null;
         if (oldSlotMap == null) {
             newSlotMap = initSlotMap();
             logger.info("init slot map, slot-map = {}", newSlotMap);
         } else {
-            newSlotMap = checkAndUpdateSlotMap(oldSlotMap);
-            logger.info("check slot map from leader selector storage, slot-map = {}", oldSlotMap);
+            try {
+                logger.info("check slot map from leader selector storage start, slot-map = {}", oldSlotMap);
+                newSlotMap = checkAndUpdateSlotMap(oldSlotMap);
+                if (newSlotMap == null) {
+                    newSlotMap = oldSlotMap;
+                }
+                logger.info("check slot map from leader selector storage end, slot-map = {}", newSlotMap);
+            } catch (Exception e) {
+                logger.error("check slot map from leader selector storage error, slot-map = {}", oldSlotMap, e);
+            }
+            if (newSlotMap == null) {
+                newSlotMap = initSlotMap();
+                logger.warn("init slot map for old slot map not available, slot-map = {}", newSlotMap);
+            }
         }
-        updateSlotMap(oldSlotMap, newSlotMap, "initLeader");
+        updateSlotMap(oldSlotMap, newSlotMap, "initLeader", true);
     }
 
     private void initFollower() {
@@ -107,7 +119,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             }
             break;
         }
-        updateSlotMap(this.slotMap, newSlotMap, "initFollower");
+        updateSlotMap(this.slotMap, newSlotMap, "initFollower", false);
     }
 
     private void sleep(long ms) {
@@ -243,7 +255,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         ProxyClusterSlotMap slotMap = ProxyClusterSlotMap.parseString(string);
         ProxyClusterSlotMap newSlotMap = ProxyClusterSlotMapUtils.localSlotMap(current(), slotMap);
         String reason = "leader-notify-new-slot-map|leader=" + leader + "|requestId=" + requestId;
-        updateSlotMap(this.slotMap, newSlotMap, reason);
+        updateSlotMap(this.slotMap, newSlotMap, reason, false);
         return StatusReply.OK;
     }
 
@@ -253,7 +265,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             try {
                 executor.submit(() -> {
                     ProxyClusterSlotMap newSlotMap = getSlotMapFromLeader();
-                    updateSlotMap(slotMap, newSlotMap, "heartbeat-md5-check|leader=" + leader);
+                    updateSlotMap(slotMap, newSlotMap, "heartbeat-md5-check|leader=" + leader, false);
                 });
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
@@ -299,6 +311,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             Set<ProxyNode> checkNodes = new HashSet<>();
             checkNodes.addAll(currentOnlineNodes);
             checkNodes.addAll(pendingNodes());
+            checkNodes.add(current());
 
             List<ProxyNode> offlineNodes = new ArrayList<>();
             List<ProxyNode> onlineNodes = new ArrayList<>();
@@ -376,7 +389,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             return;
         }
 
-        updateSlotMap(this.slotMap, newSlotMap, "newSlotMap");
+        updateSlotMap(this.slotMap, newSlotMap, "newSlotMap", false);
 
         String requestId = UUID.randomUUID().toString();
 
@@ -414,7 +427,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         }
     }
 
-    private void updateSlotMap(ProxyClusterSlotMap oldSlotMap, ProxyClusterSlotMap newSlotMap, String reason) {
+    private void updateSlotMap(ProxyClusterSlotMap oldSlotMap, ProxyClusterSlotMap newSlotMap, String reason, boolean forceSave) {
         lock.lock();
         try {
             if (newSlotMap == null) {
@@ -422,7 +435,9 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 return;
             }
             if (oldSlotMap != null && oldSlotMap.getMd5().equals(newSlotMap.getMd5())) {
-                return;
+                if (!forceSave && this.slotMap != null) {
+                    return;
+                }
             }
             this.slotMap = ProxyClusterSlotMapUtils.localSlotMap(current(), newSlotMap);
             if (currentNodeLeader()) {
