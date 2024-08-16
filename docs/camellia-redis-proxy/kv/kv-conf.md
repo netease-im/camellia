@@ -43,39 +43,46 @@ kv.hash.key.meta.version=0
 #支持0、1
 #支持不重启动态修改
 kv.zset.key.meta.version=0
+#支持0、1
+#支持不重启动态修改
+kv.set.key.meta.version=0
 
-#key-meta是否支持redis缓存，默认true
-#不支持动态修改，启动后不变
-kv.key.meta.cache.enable=true
 
 #本地lru缓存开关，默认true
 #支持不重启动态修改
 kv.key.mete.local.cache.enable=true
 kv.hash.local.cache.enable=true
 kv.zset.local.cache.enable=true
+kv.set.local.cache.enable=true
 
 #本地lru缓存的容量（key的数量），建议参考jvm堆内存和key大小后配置一个合适的值
 #支持不重启动态修改
 kv.key.meta.lru.cache.capacity=500000
-kv.hash.lru.cache.capacity=1000000
-kv.zset.lru.cache.capacity=1000000
+kv.hash.lru.cache.capacity=100000
+kv.zset.lru.cache.capacity=100000
+kv.zset.index.lru.cache.capacity=100000
+kv.set.lru.cache.capacity=100000
 
 #write-buffer的开关，默认true
 #支持不重启动态修改
 kv.write.buffer.key.meta.enable=true
 kv.write.buffer.hash.enable=true
 kv.write.buffer.zset.enable=true
+kv.write.buffer.set.enable=true
 
 #write-buffer的容量
 #支持不重启动态修改
 kv.write.buffer.key.meta.max.size=100000
 kv.write.buffer.hash.max.size=100000
 kv.write.buffer.zset.max.size=100000
+kv.write.buffer.set.max.size=100000
 
 ##gc
 #支持不重启动态修改
 kv.gc.schedule.enable=true
 kv.gc.schedule.interval.minute=1440
 kv.gc.schedule.time.range=01:30-05:30
-
+#如果设置遗下两个参数，则会通过redis锁来保证同一个周期内，只有1个节点执行gc操作
+kv.gc.lock.redis.url=redis://@127.0.0.1:6379
+kv.gc.lock.redis.key=f3a9d0ae-343b-aac0-9a6b-31b55b71b55a
 ```

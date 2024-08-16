@@ -46,7 +46,7 @@ public class HashLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.hash.lru.cache.capacity", 100_0000);
+        int capacity = RedisKvConf.getInt(namespace, "kv.hash.lru.cache.capacity", 10_0000);
         if (this.capacity != capacity) {
             if (this.localCache == null) {
                 this.localCache = new SlotLRUCache<>(capacity);

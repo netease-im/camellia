@@ -40,7 +40,7 @@ public class KeyMetaLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.key.meta.lru.cache.capacity", 500000);
+        int capacity = RedisKvConf.getInt(namespace, "kv.key.meta.lru.cache.capacity", 50_0000);
         if (this.capacity != capacity) {
             if (localCache == null) {
                 this.localCache = new SlotLRUCache<>(capacity);
