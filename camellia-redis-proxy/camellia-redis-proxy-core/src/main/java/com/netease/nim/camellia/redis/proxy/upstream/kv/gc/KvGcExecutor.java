@@ -134,6 +134,7 @@ public class KvGcExecutor {
         logger.info("scan meta keys start");
         long time = TimeCache.currentMillis;
         long deleteMetaKeys = 0;
+        int scanKeys = 0;
         try {
             byte[] metaPrefix = keyDesign.getMetaPrefix();
             byte[] startKey = KvGcEnv.getMetaKeyScanStartKey(namespace);
@@ -149,12 +150,29 @@ public class KvGcExecutor {
                 }
                 for (KeyValue keyValue : scan) {
                     startKey = keyValue.getKey();
-                    KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
+                    scanKeys ++;
+                    KeyMeta keyMeta;
+                    try {
+                        keyMeta = KeyMeta.fromBytes(keyValue.getValue());
+                    } catch (Exception e) {
+                        logger.error("gc decode key meta value error, will delete kv = {}", keyValue, e);
+                        kvClient.delete(keyValue.getKey());
+                        TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
+                        continue;
+                    }
                     if (keyMeta == null) {
                         continue;
                     }
                     if (keyMeta.isExpire()) {
-                        byte[] key = keyDesign.decodeKeyByMetaKey(startKey);
+                        byte[] key;
+                        try {
+                            key = keyDesign.decodeKeyByMetaKey(startKey);
+                        } catch (Exception e) {
+                            logger.error("gc decode key meta error, will delete kv = {}", keyValue, e);
+                            kvClient.delete(keyValue.getKey());
+                            TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
+                            continue;
+                        }
                         if (key != null && keyMeta.getKeyType() != KeyType.string) {
                             deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyDesign, kvConfig));
                         }
@@ -188,18 +206,22 @@ public class KvGcExecutor {
                 }
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                 if (TimeCache.currentMillis - time > 60*1000L) {
-                    logger.info("scan meta keys doing, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+                    logger.info("scan meta keys doing, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                            System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
                     time = TimeCache.currentMillis;
                 }
             }
             if (checkInScheduleGcTime()) {
-                logger.info("scan meta keys end, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+                logger.info("scan meta keys end, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                        System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
             } else {
-                logger.info("scan meta keys end for not in schedule gc time, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+                logger.info("scan meta keys end for not in schedule gc time, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                        System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
             }
             return true;
         } catch (Throwable e) {
-            logger.error("scan meta keys error, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys, e);
+            logger.error("scan meta keys error, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                    System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys, e);
             return false;
         }
     }
@@ -209,6 +231,7 @@ public class KvGcExecutor {
         logger.info("scan sub keys start");
         long time = TimeCache.currentMillis;
         long deleteSubKeys = 0;
+        int scanKeys = 0;
         try {
             ConcurrentLinkedHashMap<CacheKey, KeyStatus> cacheMap = new ConcurrentLinkedHashMap.Builder<CacheKey, KeyStatus>()
                     .initialCapacity(10000)
@@ -234,8 +257,17 @@ public class KvGcExecutor {
                     List<byte[]> toDeleteKeys = new ArrayList<>();
                     for (KeyValue keyValue : scan) {
                         startKey = keyValue.getKey();
-                        byte[] key = keyDesign.decodeKeyBySubKey(startKey);
-                        long keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
+                        scanKeys ++;
+                        byte[] key;
+                        long keyVersion;
+                        try {
+                            key = keyDesign.decodeKeyBySubKey(startKey);
+                            keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
+                        } catch (Exception e) {
+                            logger.error("gc decode sub key error, will delete kv = {}", keyValue, e);
+                            TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
+                            continue;
+                        }
                         KeyStatus keyStatus = checkExpireOrNotExists(cacheMap, key, keyVersion);
                         if (keyStatus == KeyStatus.NOT_EXISTS || keyStatus == KeyStatus.EXPIRE) {
                             toDeleteKeys.add(keyValue.getKey());
@@ -256,20 +288,23 @@ public class KvGcExecutor {
                     }
                     TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                     if (TimeCache.currentMillis - time > 60*1000L) {
-                        logger.info("scan sub keys doing, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+                        logger.info("scan sub keys doing, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
                         time = TimeCache.currentMillis;
                     }
                 }
             }
             cacheMap.clear();
             if (checkInScheduleGcTime()) {
-                logger.info("scan sub keys end, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+                logger.info("scan sub keys end, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                        System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
             } else {
-                logger.info("scan sub keys end for not in schedule gc time, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+                logger.info("scan sub keys end for not in schedule gc time, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                        System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
             }
             return true;
         } catch (Throwable e) {
-            logger.error("scan sub keys error, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys, e);
+            logger.error("scan sub keys error, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                    System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys, e);
             return false;
         }
     }
