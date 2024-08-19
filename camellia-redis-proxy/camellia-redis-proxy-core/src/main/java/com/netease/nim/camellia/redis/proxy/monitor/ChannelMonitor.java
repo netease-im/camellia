@@ -25,6 +25,7 @@ public class ChannelMonitor {
      * The channel map aims to record all {@link ChannelInfo} objects.
      */
     private static final ConcurrentHashMap<String, ChannelInfo> map = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, ChannelInfo> idMap = new ConcurrentHashMap<>();
     /**
      * 多租户{@link ChannelInfo} map
      * <p>
@@ -40,6 +41,7 @@ public class ChannelMonitor {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {
                 map.put(channelInfo.getConsid(), channelInfo);
+                idMap.put(channelInfo.getId(), channelInfo);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
@@ -53,7 +55,8 @@ public class ChannelMonitor {
     public static void remove(ChannelInfo channelInfo) {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {
-                map.remove(channelInfo.getConsid(), channelInfo);
+                map.remove(channelInfo.getConsid());
+                idMap.remove(channelInfo.getId());
                 Long bid = channelInfo.getBid();
                 String bgroup = channelInfo.getBgroup();
                 if (bid != null && bgroup != null) {
@@ -78,6 +81,10 @@ public class ChannelMonitor {
 
     public static ChannelInfo getChannel(String consid) {
         return map.get(consid);
+    }
+
+    public static ChannelInfo getChannelById(long id) {
+        return idMap.get(id);
     }
 
     public static Set<ChannelInfo> getChannelMap(long bid, String bgroup) {

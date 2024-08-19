@@ -5,10 +5,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -26,44 +23,86 @@ public class ClientCommandUtil {
     public static Reply invokeClientCommand(ChannelInfo channelInfo, Command command) {
         try {
             byte[][] objects = command.getObjects();
-            if (objects.length == 2) {
-                boolean getname = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.GETNAME.name());
-                if (getname) {
-                    if (channelInfo != null) {
-                        String clientName = channelInfo.getClientName();
-                        return new StatusReply(clientName);
+            if (objects.length < 2) {
+                ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error");
+                return ErrorReply.SYNTAX_ERROR;
+            }
+            String section = Utils.bytesToString(objects[1]);
+
+            if (section.equalsIgnoreCase(RedisKeyword.GETNAME.name())) {
+                if (channelInfo != null) {
+                    String clientName = channelInfo.getClientName();
+                    return new StatusReply(clientName);
+                }
+            } else if (section.equalsIgnoreCase(RedisKeyword.INFO.name())) {
+                if (channelInfo != null) {
+                    return new BulkReply(Utils.stringToBytes(clientInfo(channelInfo)));
+                }
+            } else if (section.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+                return new BulkReply(Utils.stringToBytes(clientList()));
+            } else if (section.equalsIgnoreCase(RedisKeyword.SETNAME.name())) {
+                if (objects.length != 3) {
+                    ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, arg = " + section);
+                    return ErrorReply.SYNTAX_ERROR;
+                }
+                String clienName = Utils.bytesToString(objects[2]);
+                if (channelInfo == null) {
+                    ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, channel info null");
+                    return ErrorReply.SYNTAX_ERROR;
+                }
+                boolean success = updateClientName(channelInfo, clienName);
+                if (!success) {
+                    return ErrorReply.REPEAT_OPERATION;
+                }
+                return StatusReply.OK;
+            } else if (section.equalsIgnoreCase(RedisKeyword.KILL.name())) {
+                if (objects.length != 4) {
+                    ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, arg = " + section);
+                    return ErrorReply.SYNTAX_ERROR;
+                }
+                String type = Utils.bytesToString(objects[2]);
+                String target = Utils.bytesToString(objects[3]);
+                if (type.equalsIgnoreCase("ADDR")) {
+                    int count = 0;
+                    Map<String, ChannelInfo> channelMap = ChannelMonitor.getChannelMap();
+                    for (ChannelInfo info : channelMap.values()) {
+                        if (target.equalsIgnoreCase(info.getAddr()) && !info.getConsid().equalsIgnoreCase(channelInfo.getConsid())) {
+                            logger.warn("kill client by ADDR, id = {}, addr = {}, laddr = {}, consid = {}", info.getId(), info.getAddr(), info.getLAddr(), info.getConsid());
+                            info.getCtx().close();
+                            count ++;
+                        }
                     }
-                }
-                boolean info = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.INFO.name());
-                if (info) {
-                    if (channelInfo != null) {
-                        return new BulkReply(Utils.stringToBytes(clientInfo(channelInfo)));
+                    return IntegerReply.parse(count);
+                } else if (type.equalsIgnoreCase("LADDR")) {
+                    int count = 0;
+                    Map<String, ChannelInfo> channelMap = ChannelMonitor.getChannelMap();
+                    for (ChannelInfo info : channelMap.values()) {
+                        if (target.equalsIgnoreCase(info.getLAddr()) && !info.getConsid().equalsIgnoreCase(channelInfo.getConsid())) {
+                            logger.warn("kill client by LADDR, id = {}, addr = {}, laddr = {}, consid = {}", info.getId(), info.getAddr(), info.getLAddr(), info.getConsid());
+                            info.getCtx().close();
+                            count ++;
+                        }
                     }
-                }
-                boolean list = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.LIST.name());
-                if (list) {
-                    return new BulkReply(Utils.stringToBytes(clientList()));
-                }
-            } else if (objects.length == 3) {
-                boolean setname = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.SETNAME.name());
-                if (setname) {
-                    String clienName = Utils.bytesToString(objects[2]);
-                    if (channelInfo == null) {
-                        ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, channel info null");
+                    return IntegerReply.parse(count);
+                } else if (type.equalsIgnoreCase("ID")) {
+                    ChannelInfo info;
+                    try {
+                        info = ChannelMonitor.getChannelById(Long.parseLong(target));
+                    } catch (NumberFormatException e) {
+                        ErrorLogCollector.collect(ClientCommandUtil.class, "client kill id command syntax error, id = " + target);
                         return ErrorReply.SYNTAX_ERROR;
                     }
-                    boolean success = updateClientName(channelInfo, clienName);
-                    if (!success) {
-                        return ErrorReply.REPEAT_OPERATION;
+                    if (info != null && !info.getConsid().equalsIgnoreCase(channelInfo.getConsid())) {
+                        logger.warn("kill client by ID, id = {}, addr = {}, laddr = {}, consid = {}", info.getId(), info.getAddr(), info.getLAddr(), info.getConsid());
+                        info.getCtx().close();
+                        return IntegerReply.REPLY_1;
                     }
-                    return StatusReply.OK;
+                    return IntegerReply.REPLY_0;
                 }
+                ErrorLogCollector.collect(ClientCommandUtil.class, "client kill command syntax error, type = " + type);
+                return ErrorReply.SYNTAX_ERROR;
             }
-            if (objects.length >= 2) {
-                ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, arg = " + Utils.bytesToString(objects[1]));
-            } else {
-                ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error");
-            }
+            ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, arg = " + Utils.bytesToString(objects[1]));
             return ErrorReply.SYNTAX_ERROR;
         } catch (Exception e) {
             ErrorLogCollector.collect(ClientCommandUtil.class, "invokeClientCommand error", e);
@@ -72,26 +111,23 @@ public class ClientCommandUtil {
     }
 
     public static boolean updateClientName(ChannelInfo channelInfo, String clientName) {
-        if (channelInfo.getClientName() != null) {
+        Long bid = ProxyUtil.parseBid(clientName);
+        String bgroup = ProxyUtil.parseBgroup(clientName);
+        if (bid == null && bgroup == null) {
+            channelInfo.setClientName(clientName);
+            return true;
+        }
+        //如果通过client name来设置bid/bgroup，则不允许修改
+        String oldClientName = channelInfo.getClientName();
+        Long oldBid = ProxyUtil.parseBid(oldClientName);
+        String oldBgroup = ProxyUtil.parseBgroup(oldClientName);
+        if (oldBid != null && oldBgroup != null) {
             return false;
         }
         channelInfo.setClientName(clientName);
-        if (channelInfo.getBid() == null) {//只有没有设置过bid/bgroup，才能通过client setname来设置bid/bgroup
-            setBidAndBGroup(channelInfo, clientName);
-        }
+        channelInfo.setBid(bid);
+        channelInfo.setBgroup(bgroup);
         return true;
-    }
-
-    private static void setBidAndBGroup(ChannelInfo channelInfo, String clienName) {
-        Long bid = ProxyUtil.parseBid(clienName);
-        String bgroup = ProxyUtil.parseBgroup(clienName);
-        if (bid != null && bgroup != null) {
-            channelInfo.setBid(bid);
-            channelInfo.setBgroup(bgroup);
-            if (logger.isDebugEnabled()) {
-                logger.debug("channel init with bid/bgroup = {}/{}, consid = {} by client name", bid, bgroup, channelInfo.getConsid());
-            }
-        }
     }
 
     private static String clientList() {
