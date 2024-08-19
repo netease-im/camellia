@@ -54,10 +54,6 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
-        if (encodeVersion == EncodeVersion.version_1) {
-            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
-        }
-
         ZSetLex minLex;
         ZSetLex maxLex;
         ZSetLimit limit;
@@ -117,6 +113,24 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             List<ZSetTuple> tuples = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
             return ZSetTupleUtils.toReply(tuples, false);
+        }
+
+        if (encodeVersion == EncodeVersion.version_1) {
+            RedisZSet zSet = loadLRUCache(keyMeta, key);
+            if (zSet != null) {
+                if (cacheConfig.isZSetLocalCacheEnable()) {
+                    //
+                    ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    //
+                }
+
+                List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
+
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                return ZSetTupleUtils.toReply(list, false);
+            }
         }
 
         return ErrorReply.INTERNAL_ERROR;

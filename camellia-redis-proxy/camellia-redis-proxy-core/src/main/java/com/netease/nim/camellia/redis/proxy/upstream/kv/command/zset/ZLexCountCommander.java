@@ -58,10 +58,6 @@ public class ZLexCountCommander extends ZSet0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
-        if (encodeVersion == EncodeVersion.version_1) {
-            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
-        }
-
         ZSetLex minLex;
         ZSetLex maxLex;
         try {
@@ -119,6 +115,24 @@ public class ZLexCountCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return IntegerReply.parse(zLexCountFromKv(keyMeta, key, minLex, maxLex));
+        }
+
+        if (encodeVersion == EncodeVersion.version_1) {
+            RedisZSet zSet = loadLRUCache(keyMeta, key);
+            if (zSet != null) {
+                if (cacheConfig.isZSetLocalCacheEnable()) {
+                    ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+                    //
+                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    //
+                }
+
+                int zcount = zSet.zlexcount(minLex, maxLex);
+
+                KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                return IntegerReply.parse(zcount);
+            }
         }
 
         return ErrorReply.INTERNAL_ERROR;

@@ -62,10 +62,6 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
-        if (encodeVersion == EncodeVersion.version_1) {
-            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
-        }
-
         ZSetLex minLex;
         ZSetLex maxLex;
         try {
@@ -161,6 +157,26 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
                 }
             }
             return zremVersion0(keyMeta, key, cacheKey, removedMembers, result);
+        }
+
+        if (encodeVersion == EncodeVersion.version_1) {
+            if (removedMembers == null) {
+                RedisZSet zSet = loadLRUCache(keyMeta, key);
+                if (zSet != null) {
+                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+
+                    if (cacheConfig.isZSetLocalCacheEnable()) {
+                        ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+                        //
+                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        //
+                    }
+                    removedMembers = zSet.zremrangeByLex(minLex, maxLex);
+                } else {
+                    return ErrorReply.INTERNAL_ERROR;
+                }
+            }
+            return zremVersion1(keyMeta, key, cacheKey, removedMembers.keySet(), false, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
