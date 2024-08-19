@@ -20,6 +20,10 @@ public class DecoratorKVClient implements KVClient {
     }
 
     @Override
+    public void init(String namespace) {
+    }
+
+    @Override
     public boolean supportTTL() {
         return kvClient.supportTTL();
     }

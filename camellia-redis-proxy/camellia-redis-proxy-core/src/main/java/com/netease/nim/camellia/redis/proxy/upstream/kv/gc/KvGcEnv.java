@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.gc;
 
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.ProxyCurrentNodeInfo;
@@ -184,6 +185,8 @@ public class KvGcEnv {
         }
     }
 
+    private static final byte[] SCRIPT = SafeEncoder.encode("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('expire', KEYS[1], ARGV[2]) else return 0 end");
+
     private static boolean lock(String redisKey) {
         try {
             ProxyNode current = ProxyCurrentNodeInfo.current();
@@ -205,7 +208,13 @@ public class KvGcEnv {
                 if (lockedNode == null) {
                     return false;
                 }
-                return lockedNode.equals(current);
+                if (lockedNode.equals(current)) {
+                    byte[][] args3 = new byte[][]{RedisCommand.EVAL.raw(), SCRIPT, Utils.stringToBytes("1"), Utils.stringToBytes(redisKey),
+                            Utils.stringToBytes(current.toString()), Utils.stringToBytes(String.valueOf(60))};
+                    Command command3 = new Command(args3);
+                    sendCommand(command3);
+                    return true;
+                }
             }
             return false;
         } catch (Exception e) {

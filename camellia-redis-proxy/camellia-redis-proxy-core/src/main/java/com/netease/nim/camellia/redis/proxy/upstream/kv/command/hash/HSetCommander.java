@@ -81,7 +81,7 @@ public class HSetCommander extends Hash0Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            EncodeVersion encodeVersion = keyDesign.hashKeyMetaVersion();
+            EncodeVersion encodeVersion = keyDesign.hashEncodeVersion();
             if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
                 int count = fieldMap.size();
                 byte[] extra = BytesUtils.toBytes(count);

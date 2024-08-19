@@ -1,12 +1,14 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.MD5Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 
@@ -14,6 +16,8 @@ import java.nio.charset.StandardCharsets;
  * Created by caojiajun on 2024/4/7
  */
 public class KeyDesign {
+
+    private static final Logger logger = LoggerFactory.getLogger(KeyDesign.class);
 
     private static final byte[] HASH_TAG_LEFT = "{".getBytes(StandardCharsets.UTF_8);
     private static final byte[] HASH_TAG_RIGHT = "}".getBytes(StandardCharsets.UTF_8);
@@ -34,6 +38,8 @@ public class KeyDesign {
         this.subKey2Prefix = BytesUtils.merge("k#".getBytes(StandardCharsets.UTF_8), namespace);
         this.indexKeyPrefix = BytesUtils.merge("i#".getBytes(StandardCharsets.UTF_8), namespace);
         this.prefixLen = subKeyPrefix.length + 8;
+        reload();
+        ProxyDynamicConf.registerCallback(this::reload);
     }
 
     public byte[] getNamespace() {
@@ -231,36 +237,66 @@ public class KeyDesign {
     // encode version
     //
 
-    public EncodeVersion hashKeyMetaVersion() {
-        int version = ProxyDynamicConf.getInt("kv.hash.key.meta.version", 0);
-        if (version == 0) {
-            return EncodeVersion.version_0;
-        } else if (version == 1) {
-            return EncodeVersion.version_1;
-        } else {
-            throw new KvException("ERR illegal key meta version");
+    private EncodeVersion hashKeyMetaVersion;
+    private EncodeVersion zsetKeyMetaVersion;
+    private EncodeVersion setKeyMetaVersion;
+
+    private void reload() {
+        int hash = RedisKvConf.getInt(Utils.bytesToString(namespace), "kv.hash.encode.version", 0);
+        if (hashKeyMetaVersion == null || hash != hashKeyMetaVersion.getValue()) {
+            if (hash == 0) {
+                hashKeyMetaVersion = EncodeVersion.version_0;
+            } else if (hash == 1) {
+                hashKeyMetaVersion = EncodeVersion.version_1;
+            } else {
+                logger.warn("illegal hash encode version, namespace = {}", Utils.bytesToString(namespace));
+                if (hashKeyMetaVersion == null) {
+                    hashKeyMetaVersion = EncodeVersion.version_0;
+                }
+            }
+            logger.info("hash encode version = {}, namespace = {}", hashKeyMetaVersion, Utils.bytesToString(namespace));
+        }
+        //
+        int zset = RedisKvConf.getInt(Utils.bytesToString(namespace), "kv.zset.encode.version", 0);
+        if (zsetKeyMetaVersion == null || zset != zsetKeyMetaVersion.getValue()) {
+            if (zset == 0) {
+                zsetKeyMetaVersion = EncodeVersion.version_0;
+            } else if (zset == 1) {
+                zsetKeyMetaVersion = EncodeVersion.version_1;
+            } else {
+                logger.warn("illegal zset encode version, namespace = {}", Utils.bytesToString(namespace));
+                if (zsetKeyMetaVersion == null) {
+                    zsetKeyMetaVersion = EncodeVersion.version_0;
+                }
+            }
+            logger.info("zset encode version = {}, namespace = {}", zsetKeyMetaVersion, Utils.bytesToString(namespace));
+        }
+        //
+        int set = RedisKvConf.getInt(Utils.bytesToString(namespace), "kv.set.encode.version", 0);
+        if (setKeyMetaVersion == null || set != setKeyMetaVersion.getValue()) {
+            if (set == 0) {
+                setKeyMetaVersion = EncodeVersion.version_0;
+            } else if (set == 1) {
+                setKeyMetaVersion = EncodeVersion.version_1;
+            } else {
+                logger.warn("illegal set encode version, namespace = {}", Utils.bytesToString(namespace));
+                if (setKeyMetaVersion == null) {
+                    setKeyMetaVersion = EncodeVersion.version_0;
+                }
+            }
+            logger.info("set encode version = {}, namespace = {}", setKeyMetaVersion, Utils.bytesToString(namespace));
         }
     }
 
-    public EncodeVersion zsetKeyMetaVersion() {
-        int version = ProxyDynamicConf.getInt("kv.zset.key.meta.version", 0);
-        if (version == 0) {
-            return EncodeVersion.version_0;
-        } else if (version == 1) {
-            return EncodeVersion.version_1;
-        } else {
-            throw new KvException("ERR illegal key meta version");
-        }
+    public EncodeVersion hashEncodeVersion() {
+        return hashKeyMetaVersion;
     }
 
-    public EncodeVersion setKeyMetaVersion() {
-        int version = ProxyDynamicConf.getInt("kv.set.key.meta.version", 0);
-        if (version == 0) {
-            return EncodeVersion.version_0;
-        } else if (version == 1) {
-            return EncodeVersion.version_1;
-        } else {
-            throw new KvException("ERR illegal key meta version");
-        }
+    public EncodeVersion zsetEncodeVersion() {
+        return zsetKeyMetaVersion;
+    }
+
+    public EncodeVersion setEncodeVersion() {
+        return setKeyMetaVersion;
     }
 }

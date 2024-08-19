@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.kv.obkv;
 
 import com.alipay.oceanbase.hbase.OHTableClient;
 import com.alipay.oceanbase.hbase.constants.OHConstants;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -31,15 +31,16 @@ public class OBKVHBaseClient implements KVClient {
     private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
     private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
 
-    private final OHTableClient tableClient;
+    private OHTableClient tableClient;
 
-    public OBKVHBaseClient() {
+    @Override
+    public void init(String namespace) {
         try {
-            String fullUserName = ProxyDynamicConf.getString("kv.obkv.full.user.name", null);
-            String paramUrl = ProxyDynamicConf.getString("kv.obkv.param.url", null);
-            String password = ProxyDynamicConf.getString("kv.obkv.password", null);
-            String sysUserName = ProxyDynamicConf.getString("kv.obkv.sys.user.name", null);
-            String sysPassword = ProxyDynamicConf.getString("kv.obkv.sys.password", null);
+            String fullUserName = RedisKvConf.getString(namespace, "kv.obkv.full.user.name", null);
+            String paramUrl = RedisKvConf.getString(namespace, "kv.obkv.param.url", null);
+            String password = RedisKvConf.getString(namespace, "kv.obkv.password", null);
+            String sysUserName = RedisKvConf.getString(namespace, "kv.obkv.sys.user.name", null);
+            String sysPassword = RedisKvConf.getString(namespace, "kv.obkv.sys.password", null);
 
             Configuration conf = new Configuration();
             conf.set(OHConstants.HBASE_OCEANBASE_PARAM_URL, paramUrl);
@@ -48,12 +49,13 @@ public class OBKVHBaseClient implements KVClient {
             conf.set(OHConstants.HBASE_OCEANBASE_SYS_USER_NAME, sysUserName);
             conf.set(OHConstants.HBASE_OCEANBASE_SYS_PASSWORD, sysPassword);
 
-            String tableName = ProxyDynamicConf.getString("kv.obkv.table.name", "camellia_kv");
+            String tableName = RedisKvConf.getString(namespace, "kv.obkv.table.name", "camellia_kv");
 
             tableClient = new OHTableClient(tableName, conf);
             tableClient.init();
+            logger.info("OHTableClient init success, namespace = {}, tableName = {}", namespace, tableName);
         } catch (Exception e) {
-            logger.error("OHTableClient init error", e);
+            logger.error("OHTableClient init error, namespace = {}", namespace, e);
             throw new KvException(e);
         }
     }

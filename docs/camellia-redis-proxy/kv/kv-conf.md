@@ -38,14 +38,14 @@ kv.redis.store.url=redis://@127.0.0.1:6379
 kv.redis.cache.url=redis://@127.0.0.1:6379
 
 #支持0、1
-#支持不重启动态修改
-kv.hash.key.meta.version=0
+#支持不重启动态修改，仅对新key有效
+kv.hash.encode.version=0
 #支持0、1
-#支持不重启动态修改
-kv.zset.key.meta.version=0
+#支持不重启动态修改，仅对新key有效
+kv.zset.encode.version=0
 #支持0、1
-#支持不重启动态修改
-kv.set.key.meta.version=0
+#支持不重启动态修改，仅对新key有效
+kv.set.encode.version=0
 
 
 #本地lru缓存开关，默认true

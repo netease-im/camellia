@@ -212,10 +212,11 @@ public class RedisKvClient implements IUpstreamClient {
     private Commanders initCommanders() {
         KVClient kvClient = initKVClient();
         try {
+            kvClient.init(namespace);
             //get for check and warm
             kvClient.get(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            logger.error("kv client get error", e);
+            logger.error("kv client get error, namespace = {}", namespace, e);
             throw new KvException(e);
         }
         kvClient = new DecoratorKVClient(kvClient);

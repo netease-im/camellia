@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.kv.tikv;
 
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -24,17 +24,19 @@ public class TiKVClient implements KVClient {
 
     private static final Logger logger = LoggerFactory.getLogger(TiKVClient.class);
 
-    private final RawKVClient tikvClient;
+    private RawKVClient tikvClient;
 
-    public TiKVClient() {
+    @Override
+    public void init(String namespace) {
         try {
-            String string = ProxyDynamicConf.getString("kv.tikv.pd.address", null);
+            String string = RedisKvConf.getString(namespace, "kv.tikv.pd.address", null);
             TiConfiguration conf = TiConfiguration.createRawDefault(string);
             conf.setWarmUpEnable(false);
             TiSession session = TiSession.create(conf);
             tikvClient = session.createRawClient();
+            logger.info("TiKVClient init success, namespace = {}, pd.address = {}", namespace, string);
         } catch (Exception e) {
-            logger.error("TiKVClient init error", e);
+            logger.error("TiKVClient init error, namespace = {}", namespace, e);
             throw new KvException(e);
         }
     }

@@ -63,7 +63,7 @@ public class ZAddCommander extends ZSet0Commander {
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         EncodeVersion encodeVersion;
         if (keyMeta == null) {
-            encodeVersion = keyDesign.zsetKeyMetaVersion();
+            encodeVersion = keyDesign.zsetEncodeVersion();
             if (encodeVersion == EncodeVersion.version_0) {
                 byte[] extra = BytesUtils.toBytes(memberSize);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.zset, System.currentTimeMillis(), -1, extra);

@@ -60,7 +60,7 @@ public class HSetNxCommander extends Hash0Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            EncodeVersion encodeVersion = keyDesign.hashKeyMetaVersion();
+            EncodeVersion encodeVersion = keyDesign.hashEncodeVersion();
             if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
                 byte[] extra = BytesUtils.toBytes(1);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);

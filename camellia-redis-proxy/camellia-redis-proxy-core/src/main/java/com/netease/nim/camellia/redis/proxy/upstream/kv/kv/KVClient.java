@@ -7,6 +7,8 @@ import java.util.List;
  */
 public interface KVClient {
 
+    void init(String namespace);
+
     /**
      * check support ttl for put
      * @return true/false

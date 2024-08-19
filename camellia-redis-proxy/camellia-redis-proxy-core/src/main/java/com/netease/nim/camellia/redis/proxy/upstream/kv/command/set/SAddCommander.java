@@ -59,7 +59,7 @@ public class SAddCommander extends Set0Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            EncodeVersion encodeVersion = keyDesign.setKeyMetaVersion();
+            EncodeVersion encodeVersion = keyDesign.setEncodeVersion();
             if (encodeVersion == EncodeVersion.version_0) {
                 int count = memberSet.size();
                 byte[] extra = BytesUtils.toBytes(count);
