@@ -324,6 +324,102 @@ public class TestZSetV1 {
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
+                map1.put("a", 1.0);
+                map1.put("b", 2.0);
+                map1.put("c", 3.0);
+                map1.put("d", 4.0);
+                map1.put("e", 5.0);
+                map1.put("f", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+                Long zcount = template.zlexcount(key, "(a", "[d");
+                assertEquals(zcount, 3L);
+                template.zremrangeByScore(key, 1, 3);
+                Long zcount1 = template.zlexcount(key, "-", "(e");
+                assertEquals(zcount1, 1L);
+            }
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("v1", 1.0);
+                map1.put("v2", 2.0);
+                map1.put("v3", 3.0);
+                map1.put("v4", 4.0);
+                map1.put("v5", 5.0);
+                map1.put("v6", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+            }
+            {
+                Long zcard = template.zcard(key);
+                assertEquals(zcard, 6L);
+            }
+            {
+                Map<String, Double> map2 = new HashMap<>();
+                map2.put("v6", 6.0);
+                map2.put("v7", 7.0);
+                Long zadd = template.zadd(key, map2);
+                assertEquals(zadd, 1L);
+            }
+            {
+                Set<String> strings = template.zrangeByLex(key, "[v2", "[v5");
+                assertEquals(strings.size(), 4);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v5");
+            }
+            {
+                Set<String> strings = template.zrangeByLex(key, "-", "+");
+                assertEquals(strings.size(), 7);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v1");
+                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v5");
+                assertEquals(iterator.next(), "v6");
+                assertEquals(iterator.next(), "v7");
+            }
+            {
+                Set<String> strings = template.zrevrangeByLex(key, "+", "-");
+                assertEquals(strings.size(), 7);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v7");
+                assertEquals(iterator.next(), "v6");
+                assertEquals(iterator.next(), "v5");
+                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), "v1");
+            }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("v1", 1.0);
+                map1.put("v2", 2.0);
+                map1.put("v3", 3.0);
+                map1.put("v4", 4.0);
+                map1.put("v5", 5.0);
+                map1.put("v6", 6.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 6L);
+
+                Set<String> strings = template.zrangeByLex(key, "[v1", "(v3");
+                assertEquals(strings.size(), 2);
+                Iterator<String> iterator = strings.iterator();
+                assertEquals(iterator.next(), "v1");
+                assertEquals(iterator.next(), "v2");
+
+                Long zremrange = template.zremrangeByLex(key, "(v1", "(v3");
+                assertEquals(zremrange, 1L);
+            }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
                 map1.put(a, 1.0);
                 map1.put(b, 2.0);
                 map1.put(c, 3.0);
