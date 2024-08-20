@@ -39,16 +39,6 @@ public enum KeyType {
 * 只有key-meta，没有sub-key
 * 没有专门的缓存结构，依赖于key-meta本身的缓存
 
-| command |                                                                                                                                 info |
-|:-------:|-------------------------------------------------------------------------------------------------------------------------------------:|
-|  setex  |                                                                                                            `SETEX key seconds value` |
-| psetex  |                                                                                                      `PSETEX key milliseconds value` | 
-|   set   | `SET key value [NX \| XX] [GET] [EX seconds \| PX milliseconds \| EXAT unix-time-seconds \| PXAT unix-time-milliseconds \| KEEPTTL]` |
-|   get   |                                                                                                                            `GET key` |
-|  mget   |                                                                                                                 `MGET key [key ...]` |
-|  mset   |                                                                                                     `MSET key value [key value ...]` |
-|  setnx  |                                                                                                                    `SETNX key value` |
-| strlen  |                                                                                                                         `STRLEN key` |
 
 ## hash数据结构
 
@@ -159,10 +149,11 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 |:------------------------------------------:|:----------:|------------:|
 | c# + namespace + key + key-version + index |   string   |      member |
 
-* encode-version固定为3，key-type固定为3
+* encode-version固定为1，key-type固定为3
 * 依赖redis做复杂的zset操作
 * redis里可以只存部分数据，对于kv只有get/put/delete，没有scan操作
 * redis-index-zset-store-key不属于cache，属于storage，需要确保storage部分redis内存足够，否则可能被驱逐
+* 在这个编码下，lex相关的命令（如zlexcount、zrangebylex等），需要先把所有元素load到本地内存中，再执行操作
 
 
 ## set数据结构

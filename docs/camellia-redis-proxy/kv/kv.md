@@ -36,7 +36,7 @@
 具体见：[kv-tikv-conf](kv-tikv-conf.md)
 
 ### obkv配置
-具体见：[kv-tikv-conf](kv-obkv-conf.md)
+具体见：[kv-obkv-conf](kv-obkv-conf.md)
 
 ## 支持的command列表
 

@@ -17,6 +17,7 @@ camellia-redis-proxy:
   cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusProxyClusterModeProvider
   config:
     "proxy.cluster.mode.command.move.always": true
+    "cluster.mode.consensus.leader.selector.class.name": "com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector"
     "redis.consensus.leader.selector.redis.url": "redis://@127.0.0.1:6379"
     "redis.consensus.leader.selector.redis.key": "xxxxx" 
   plugins:
@@ -82,7 +83,7 @@ kv.write.buffer.set.max.size=100000
 kv.gc.schedule.enable=true
 kv.gc.schedule.interval.minute=1440
 kv.gc.schedule.time.range=01:30-05:30
-#如果设置遗下两个参数，则会通过redis锁来保证同一个周期内，只有1个节点执行gc操作
+#如果设置以下两个参数，则会通过redis锁来保证同一个周期内，只有1个节点执行gc操作
 kv.gc.lock.redis.url=redis://@127.0.0.1:6379
 kv.gc.lock.redis.key=f3a9d0ae-343b-aac0-9a6b-31b55b71b55a
 ```

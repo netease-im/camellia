@@ -982,22 +982,22 @@ public class CamelliaDelayQueueServer {
     }
 
     //string
-    public String checkExpireLockKey(String topic) {
+    private String checkExpireLockKey(String topic) {
         return CacheUtil.buildCacheKey("camellia_delay_queue_check_expire", serverConfig.getNamespace(), topic, "~lock");
     }
 
     //string
-    public String checkTriggerLockKey(String topic) {
+    private String checkTriggerLockKey(String topic) {
         return CacheUtil.buildCacheKey("camellia_delay_queue_check_trigger", serverConfig.getNamespace(), topic, "~lock");
     }
 
     //string
-    public String checkTimeoutLockKey(String topic) {
+    private String checkTimeoutLockKey(String topic) {
         return CacheUtil.buildCacheKey("camellia_delay_queue_check_timeout", serverConfig.getNamespace(), topic, "~lock");
     }
 
     //string
-    public String checkActiveLockKey(String topic) {
+    private String checkActiveLockKey(String topic) {
         return CacheUtil.buildCacheKey("camellia_delay_queue_check_active", serverConfig.getNamespace(), topic, "~lock");
     }
 
