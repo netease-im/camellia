@@ -72,6 +72,7 @@ public class KvGcExecutor {
             }
         }
         KvExecutorMonitor.register("gc-" + kvConfig.getNamespace(), deleteExecutor);
+        logger.info("kv gc executor init success, namespace = {}", namespace);
     }
 
     public void start() {
@@ -119,7 +120,7 @@ public class KvGcExecutor {
             }
             submitExecutor.submit(() -> {
                 try {
-                    deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyDesign, kvConfig));
+                    deleteExecutor.submit(key, new SubKeyDeleteTask(key, namespace, keyMeta, kvClient, keyDesign, kvConfig));
                 } catch (Exception e) {
                     logger.warn("execute sub key delete task error, ex = {}", e.toString());
                 }
@@ -131,7 +132,7 @@ public class KvGcExecutor {
 
     private boolean scanMetaKeys() {
         long startTime = System.currentTimeMillis();
-        logger.info("scan meta keys start");
+        logger.info("scan meta keys start, namespace = {}", namespace);
         long time = TimeCache.currentMillis;
         long deleteMetaKeys = 0;
         int scanKeys = 0;
@@ -155,7 +156,7 @@ public class KvGcExecutor {
                     try {
                         keyMeta = KeyMeta.fromBytes(keyValue.getValue());
                     } catch (Exception e) {
-                        logger.error("gc decode key meta value error, will delete kv = {}", keyValue, e);
+                        logger.error("gc decode key meta value error, namespace = {}, will delete kv = {}", namespace, keyValue, e);
                         kvClient.delete(keyValue.getKey());
                         TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                         continue;
@@ -168,13 +169,13 @@ public class KvGcExecutor {
                         try {
                             key = keyDesign.decodeKeyByMetaKey(startKey);
                         } catch (Exception e) {
-                            logger.error("gc decode key meta error, will delete kv = {}", keyValue, e);
+                            logger.error("gc decode key meta error, namespace = {}, will delete kv = {}", namespace, keyValue, e);
                             kvClient.delete(keyValue.getKey());
                             TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                             continue;
                         }
                         if (key != null && keyMeta.getKeyType() != KeyType.string) {
-                            deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyDesign, kvConfig));
+                            deleteExecutor.submit(key, new SubKeyDeleteTask(key, namespace, keyMeta, kvClient, keyDesign, kvConfig));
                         }
                         if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
                             kvClient.checkAndDelete(startKey, keyValue.getValue());
@@ -185,7 +186,7 @@ public class KvGcExecutor {
                             try {
                                 Reply reply = redisTemplate.sendCleanExpiredKeyMetaInKv(keyDesign.getNamespace(), key, kvConfig.gcCleanExpiredKeyMetaTimeoutMillis());
                                 if (reply instanceof ErrorReply) {
-                                    logger.error("send clean expired key meta in kv failed, reply = {}", ((ErrorReply) reply).getError());
+                                    logger.error("send clean expired key meta in kv failed, namespace = {}, reply = {}", namespace, ((ErrorReply) reply).getError());
                                 } else {
                                     deleteMetaKeys++;
                                     KvGcMonitor.deleteMetaKeys(Utils.bytesToString(keyDesign.getNamespace()), 1);
@@ -206,29 +207,29 @@ public class KvGcExecutor {
                 }
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                 if (TimeCache.currentMillis - time > 60*1000L) {
-                    logger.info("scan meta keys doing, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
-                            System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
+                    logger.info("scan meta keys doing, namespace = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                            namespace, System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
                     time = TimeCache.currentMillis;
                 }
             }
             if (checkInScheduleGcTime()) {
-                logger.info("scan meta keys end, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
-                        System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
+                logger.info("scan meta keys end, namespace = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                        namespace, System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
             } else {
-                logger.info("scan meta keys end for not in schedule gc time, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
-                        System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
+                logger.info("scan meta keys end for not in schedule gc time, namespace = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                        namespace, System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
             }
             return true;
         } catch (Throwable e) {
-            logger.error("scan meta keys error, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
-                    System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys, e);
+            logger.error("scan meta keys error, namespace = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                    namespace, System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys, e);
             return false;
         }
     }
 
     private boolean scanSubKeys() {
         long startTime = System.currentTimeMillis();
-        logger.info("scan sub keys start");
+        logger.info("scan sub keys start, namespace = {}", namespace);
         long time = TimeCache.currentMillis;
         long deleteSubKeys = 0;
         int scanKeys = 0;
@@ -264,7 +265,7 @@ public class KvGcExecutor {
                             key = keyDesign.decodeKeyBySubKey(startKey);
                             keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
                         } catch (Exception e) {
-                            logger.error("gc decode sub key error, will delete kv = {}", keyValue, e);
+                            logger.error("gc decode sub key error, namespace = {}, will delete kv = {}", namespace, keyValue, e);
                             TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                             continue;
                         }
@@ -288,23 +289,24 @@ public class KvGcExecutor {
                     }
                     TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                     if (TimeCache.currentMillis - time > 60*1000L) {
-                        logger.info("scan sub keys doing, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
+                        logger.info("scan sub keys doing, namespace = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                                namespace, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
                         time = TimeCache.currentMillis;
                     }
                 }
             }
             cacheMap.clear();
             if (checkInScheduleGcTime()) {
-                logger.info("scan sub keys end, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
-                        System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
+                logger.info("scan sub keys end, namespace = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                        namespace, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
             } else {
-                logger.info("scan sub keys end for not in schedule gc time, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
-                        System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
+                logger.info("scan sub keys end for not in schedule gc time, namespace = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                        namespace, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
             }
             return true;
         } catch (Throwable e) {
-            logger.error("scan sub keys error, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
-                    System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys, e);
+            logger.error("scan sub keys error, namespace = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                    namespace, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys, e);
             return false;
         }
     }
@@ -412,13 +414,15 @@ public class KvGcExecutor {
 
     private static class SubKeyDeleteTask implements Runnable {
         private final byte[] key;
+        private final String namespace;
         private final KeyMeta keyMeta;
         private final KVClient kvClient;
         private final KeyDesign keyDesign;
         private final KvConfig kvConfig;
 
-        public SubKeyDeleteTask(byte[] key, KeyMeta keyMeta, KVClient kvClient, KeyDesign keyDesign, KvConfig kvConfig) {
+        public SubKeyDeleteTask(byte[] key, String namespace, KeyMeta keyMeta, KVClient kvClient, KeyDesign keyDesign, KvConfig kvConfig) {
             this.key = key;
+            this.namespace = namespace;
             this.keyMeta = keyMeta;
             this.kvClient = kvClient;
             this.keyDesign = keyDesign;
@@ -438,11 +442,11 @@ public class KvGcExecutor {
                     count = clearSetSubKeys();
                 }
                 if (logger.isDebugEnabled()) {
-                    logger.debug("sub key delete, count = {}", count);
+                    logger.debug("sub key delete, namespace = {}, count = {}", namespace, count);
                 }
                 KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), count);
             } catch (Exception e) {
-                logger.warn("add delete task error, ex = {}", e.toString());
+                logger.warn("add delete task error, namespace = {}, ex = {}", namespace, e.toString());
             }
         }
 

@@ -30,7 +30,6 @@ import java.util.Map;
 public class HSetNxCommander extends Hash0Commander {
 
     private static final int cache_miss = 0;
-    private static final int cache_hit_exist = 1;
     private static final int cache_hit_not_exists = 2;
 
     public HSetNxCommander(CommanderConfig commanderConfig) {
@@ -61,7 +60,7 @@ public class HSetNxCommander extends Hash0Commander {
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
             EncodeVersion encodeVersion = keyDesign.hashEncodeVersion();
-            if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+            if (encodeVersion == EncodeVersion.version_0) {
                 byte[] extra = BytesUtils.toBytes(1);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);
             } else if (encodeVersion == EncodeVersion.version_1) {

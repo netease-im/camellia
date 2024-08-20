@@ -18,7 +18,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -29,21 +28,6 @@ import java.util.*;
  */
 public class HSetCommander extends Hash0Commander {
 
-    private static final byte[] script = ("local ret1 = '1';\n" +
-            "local ret2 = '1';\n" +
-            "local ret3 = '1';\n" +
-            "local arg1 = redis.call('exists', KEYS[1]);\n" +
-            "if tonumber(arg1) == 1 then\n" +
-            "\tret1 = '2';\n" +
-            "\tret2 = redis.call('hset', KEYS[1], ARGV[1], ARGV[2]);\n" +
-            "end\n" +
-            "local arg2 = redis.call('pttl', KEYS[2]);\n" +
-            "if tonumber(arg2) > 0 then\n" +
-            "\tret3 = '2';\n" +
-            "\tredis.call('psetex', KEYS[2], arg2, ARGV[2]);\n" +
-            "end\n" +
-            "return {ret1, ret2, ret3};").getBytes(StandardCharsets.UTF_8);
-    private static final byte[] two = "2".getBytes(StandardCharsets.UTF_8);
 
     public HSetCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -82,7 +66,7 @@ public class HSetCommander extends Hash0Commander {
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
             EncodeVersion encodeVersion = keyDesign.hashEncodeVersion();
-            if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+            if (encodeVersion == EncodeVersion.version_0) {
                 int count = fieldMap.size();
                 byte[] extra = BytesUtils.toBytes(count);
                 keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);

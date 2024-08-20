@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,75 +19,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class RedisTemplate {
 
-    private static final byte[] zero = "0".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] one = "1".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] two = "2".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] three = "3".getBytes(StandardCharsets.UTF_8);
-
     private final UpstreamRedisClientTemplate template;
 
     public RedisTemplate(UpstreamRedisClientTemplate template) {
         this.template = template;
     }
 
-
-    public Command luaCommand(byte[] script, byte[][] keys, byte[][] args) {
-        int length = keys.length;
-        byte[][] cmd = new byte[3 + keys.length + args.length][];
-        cmd[0] = RedisCommand.EVAL.raw();
-        cmd[1] = script;
-        if (length == 0) {
-            cmd[2] = zero;
-        } else if (length == 1) {
-            cmd[2] = one;
-        } else if (length == 2) {
-            cmd[2] = two;
-        } else if (length == 3) {
-            cmd[2] = three;
-        } else {
-            cmd[2] = String.valueOf(length).getBytes(StandardCharsets.UTF_8);
-        }
-        int index = 3;
-        for (byte[] key : keys) {
-            cmd[index] = key;
-            index ++;
-        }
-        for (byte[] arg : args) {
-            cmd[index] = arg;
-            index ++;
-        }
-        return new Command(cmd);
-    }
-
-    public CompletableFuture<Reply> sendLua(byte[] script, byte[][] keys, byte[][] args) {
-        return sendCommand(luaCommand(script, keys, args));
-    }
-
     public CompletableFuture<Reply> sendDel(byte[] key) {
         return sendCommand(new Command(new byte[][]{RedisCommand.DEL.raw(), key}));
     }
 
-    public CompletableFuture<Reply> sendDel(byte[]... key) {
-        byte[][] cmd = new byte[key.length + 1][];
-        cmd[0] = RedisCommand.DEL.raw();
-        System.arraycopy(key, 0, cmd, 1, key.length);
-        return sendCommand(new Command(cmd));
-    }
-
     public CompletableFuture<Reply> sendPExpire(byte[] key, long pexpire) {
         return sendCommand(new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), key, Utils.stringToBytes(String.valueOf(pexpire))}));
-    }
-
-    public CompletableFuture<Reply> sendExists(byte[] key) {
-        return sendCommand(new Command(new byte[][]{RedisCommand.EXISTS.raw(), key}));
-    }
-
-    public CompletableFuture<Reply> sendGet(byte[] key) {
-        return sendCommand(new Command(new byte[][]{RedisCommand.GET.raw(), key}));
-    }
-
-    public CompletableFuture<Reply> sendPSetEx(byte[] key, long expireMillis, byte[] value) {
-        return sendCommand(new Command(new byte[][]{RedisCommand.PSETEX.raw(), key, Utils.stringToBytes(String.valueOf(expireMillis)), value}));
     }
 
     public Reply sendCleanExpiredKeyMetaInKv(byte[] namespace, byte[] key, long timeoutMillis) {
@@ -111,7 +53,7 @@ public class RedisTemplate {
         if (futures.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Reply> replies = new ArrayList<>();
+        List<Reply> replies = new ArrayList<>(futures.size());
         for (CompletableFuture<Reply> future : futures) {
             Reply reply = sync(future, timeoutMillis);
             replies.add(reply);
