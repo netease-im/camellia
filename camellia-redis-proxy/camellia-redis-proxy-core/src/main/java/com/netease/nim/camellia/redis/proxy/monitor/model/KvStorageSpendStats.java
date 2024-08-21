@@ -4,6 +4,7 @@ package com.netease.nim.camellia.redis.proxy.monitor.model;
  * Created by caojiajun on 2022/9/16
  */
 public class KvStorageSpendStats {
+    private String namespace;
     private String name;
     private String method;
     private long count;
@@ -15,6 +16,14 @@ public class KvStorageSpendStats {
     private double spendMsP95;
     private double spendMsP99;
     private double spendMsP999;
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
 
     public String getName() {
         return name;

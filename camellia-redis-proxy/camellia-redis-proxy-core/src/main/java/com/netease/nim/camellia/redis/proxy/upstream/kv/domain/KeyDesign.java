@@ -30,13 +30,13 @@ public class KeyDesign {
     private final byte[] subKey2Prefix;
     private final byte[] indexKeyPrefix;
 
-    public KeyDesign(byte[] namespace) {
-        this.namespace = namespace;
-        this.metaPrefix = BytesUtils.merge("m#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.cachePrefix = BytesUtils.merge("c#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.subKeyPrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.subKey2Prefix = BytesUtils.merge("k#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.indexKeyPrefix = BytesUtils.merge("i#".getBytes(StandardCharsets.UTF_8), namespace);
+    public KeyDesign(String namespace) {
+        this.namespace = namespace.getBytes(StandardCharsets.UTF_8);
+        this.metaPrefix = BytesUtils.merge("m#".getBytes(StandardCharsets.UTF_8), this.namespace);
+        this.cachePrefix = BytesUtils.merge("c#".getBytes(StandardCharsets.UTF_8), this.namespace);
+        this.subKeyPrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), this.namespace);
+        this.subKey2Prefix = BytesUtils.merge("k#".getBytes(StandardCharsets.UTF_8), this.namespace);
+        this.indexKeyPrefix = BytesUtils.merge("i#".getBytes(StandardCharsets.UTF_8), this.namespace);
         this.prefixLen = subKeyPrefix.length + 8;
         reload();
         ProxyDynamicConf.registerCallback(this::reload);

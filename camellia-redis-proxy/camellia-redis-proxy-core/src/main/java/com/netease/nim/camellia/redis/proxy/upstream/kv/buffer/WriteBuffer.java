@@ -57,7 +57,7 @@ public class WriteBuffer<T> {
     private void rebuild() {
         int maxWriteBufferSize = RedisKvConf.getInt(namespace, "kv.write.buffer." + name + ".max.size", 100000);
         if (this.maxWriteBufferSize != maxWriteBufferSize) {
-            logger.info("kv.write.buffer.{}.max.size = {}", name, maxWriteBufferSize);
+            logger.info("kv.write.buffer.{}.max.size = {}, namespace = {}", name, maxWriteBufferSize, namespace);
             this.maxWriteBufferSize = maxWriteBufferSize;
         }
     }

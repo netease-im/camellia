@@ -219,9 +219,9 @@ public class RedisKvClient implements IUpstreamClient {
             logger.error("kv client get error, namespace = {}", namespace, e);
             throw new KvException(e);
         }
-        kvClient = new DecoratorKVClient(kvClient);
+        kvClient = new DecoratorKVClient(namespace, kvClient);
 
-        KeyDesign keyDesign = new KeyDesign(namespace.getBytes(StandardCharsets.UTF_8));
+        KeyDesign keyDesign = new KeyDesign(namespace);
         KvConfig kvConfig = new KvConfig(namespace);
 
         KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyDesign, kvConfig);

@@ -46,7 +46,7 @@ public class CacheConfig {
             if (!metaLocalCacheEnable && keyMetaLRUCache != null) {
                 keyMetaLRUCache.clear();
             }
-            logger.info("kv.key.meta.local.cache.enable = {}", metaLocalCacheEnable);
+            logger.info("kv.key.meta.local.cache.enable = {}, namespace = {}", metaLocalCacheEnable, namespace);
         }
         boolean hashLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.hash.local.cache.enable", true);
         if ((this.hashLocalCacheEnable && !hashLocalCacheEnable) || (!this.hashLocalCacheEnable && hashLocalCacheEnable)) {
@@ -54,7 +54,7 @@ public class CacheConfig {
             if (!hashLocalCacheEnable && hashLRUCache != null) {
                 hashLRUCache.clear();
             }
-            logger.info("kv.hash.local.cache.enable = {}", hashLocalCacheEnable);
+            logger.info("kv.hash.local.cache.enable = {}, namespace = {}", hashLocalCacheEnable, namespace);
         }
         boolean zsetLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.zset.local.cache.enable", true);
         if ((this.zsetLocalCacheEnable && !zsetLocalCacheEnable) || (!this.zsetLocalCacheEnable && zsetLocalCacheEnable)) {
@@ -65,7 +65,7 @@ public class CacheConfig {
             if (!zsetLocalCacheEnable && zSetIndexLRUCache != null) {
                 zSetIndexLRUCache.clear();
             }
-            logger.info("kv.zset.local.cache.enable = {}", zsetLocalCacheEnable);
+            logger.info("kv.zset.local.cache.enable = {}, namespace = {}", zsetLocalCacheEnable, namespace);
         }
         boolean setLocalCacheEnable = RedisKvConf.getBoolean(namespace, "kv.set.local.cache.enable", true);
         if ((this.setLocalCacheEnable && !setLocalCacheEnable) || (!this.setLocalCacheEnable && setLocalCacheEnable)) {
@@ -73,7 +73,7 @@ public class CacheConfig {
             if (!setLocalCacheEnable && setLRUCache != null) {
                 setLRUCache.clear();
             }
-            logger.info("kv.set.local.cache.enable = {}", setLocalCacheEnable);
+            logger.info("kv.set.local.cache.enable = {}, namespace = {}", setLocalCacheEnable, namespace);
         }
     }
 

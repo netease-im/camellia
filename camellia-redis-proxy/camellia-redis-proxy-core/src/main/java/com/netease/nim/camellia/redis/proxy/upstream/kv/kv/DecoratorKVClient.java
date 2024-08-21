@@ -11,10 +11,12 @@ import java.util.List;
  */
 public class DecoratorKVClient implements KVClient {
 
+    private final String namespace;
     private final KVClient kvClient;
     private final String name;
 
-    public DecoratorKVClient(KVClient kvClient) {
+    public DecoratorKVClient(String namespace, KVClient kvClient) {
+        this.namespace = namespace;
         this.kvClient = kvClient;
         this.name = kvClient.getClass().getSimpleName();
     }
@@ -36,7 +38,7 @@ public class DecoratorKVClient implements KVClient {
                 kvClient.put(key, value, ttl);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "putWithTTL", spend);
+                KvStorageMonitor.update(namespace, name, "putWithTTL", spend);
             }
         } else {
             kvClient.put(key, value, ttl);
@@ -51,7 +53,7 @@ public class DecoratorKVClient implements KVClient {
                 kvClient.put(key, value);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "put", spend);
+                KvStorageMonitor.update(namespace, name, "put", spend);
             }
         } else {
             kvClient.put(key, value);
@@ -70,7 +72,7 @@ public class DecoratorKVClient implements KVClient {
                 kvClient.batchPut(list);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, method, spend);
+                KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
             kvClient.batchPut(list);
@@ -85,7 +87,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.get(key);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "get", spend);
+                KvStorageMonitor.update(name, namespace, "get", spend);
             }
         } else {
             return kvClient.get(key);
@@ -100,7 +102,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.exists(key);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "exists", spend);
+                KvStorageMonitor.update(namespace, name, "exists", spend);
             }
         } else {
             return kvClient.exists(key);
@@ -119,7 +121,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.exists(keys);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, method, spend);
+                KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
             return kvClient.exists(keys);
@@ -138,7 +140,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.batchGet(keys);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, method, spend);
+                KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
             return kvClient.batchGet(keys);
@@ -153,7 +155,7 @@ public class DecoratorKVClient implements KVClient {
                 kvClient.delete(key);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "delete", spend);
+                KvStorageMonitor.update(namespace, name, "delete", spend);
             }
         } else {
             kvClient.delete(key);
@@ -172,7 +174,7 @@ public class DecoratorKVClient implements KVClient {
                 kvClient.batchDelete(keys);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, method, spend);
+                KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
             kvClient.batchDelete(keys);
@@ -192,7 +194,7 @@ public class DecoratorKVClient implements KVClient {
                 kvClient.checkAndDelete(key, value);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "checkAndDelete", spend);
+                KvStorageMonitor.update(namespace, name, "checkAndDelete", spend);
             }
         } else {
             kvClient.checkAndDelete(key, value);
@@ -212,7 +214,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.scanByPrefix(startKey, prefix, limit, sort, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "scanByPrefix", spend);
+                KvStorageMonitor.update(namespace, name, "scanByPrefix", spend);
             }
         } else {
             return kvClient.scanByPrefix(startKey, prefix, limit, sort, includeStartKey);
@@ -227,7 +229,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.countByPrefix(startKey, prefix, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "countByPrefix", spend);
+                KvStorageMonitor.update(namespace, name, "countByPrefix", spend);
             }
         } else {
             return kvClient.countByPrefix(startKey, prefix, includeStartKey);
@@ -242,7 +244,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.scanByStartEnd(startKey, endKey, limit, sort, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "scanByStartEnd", spend);
+                KvStorageMonitor.update(namespace, name, "scanByStartEnd", spend);
             }
         } else {
             return kvClient.scanByStartEnd(startKey, endKey, limit, sort, includeStartKey);
@@ -257,7 +259,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.countByStartEnd(startKey, endKey, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, "countByStartEnd", spend);
+                KvStorageMonitor.update(namespace, name, "countByStartEnd", spend);
             }
         } else {
             return kvClient.countByStartEnd(startKey, endKey, includeStartKey);

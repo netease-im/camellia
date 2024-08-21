@@ -161,8 +161,8 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("====kv.storage.stats====");
             List<KvStorageSpendStats> kvStorageSpendStatsList = stats.getKvStorageSpendStatsList();
             for (KvStorageSpendStats kvStorageSpendStats : kvStorageSpendStatsList) {
-                logger.info("name={},method={},count={},avgSpendMs={},maxSpendMs={},spendMsP50={},spendMsP75={},spendMsP90={},spendMsP95={},spendMsP99={},spendMsP999={}",
-                        kvStorageSpendStats.getName(), kvStorageSpendStats.getMethod(),
+                logger.info("namespace={},name={},method={},count={},avgSpendMs={},maxSpendMs={},spendMsP50={},spendMsP75={},spendMsP90={},spendMsP95={},spendMsP99={},spendMsP999={}",
+                        kvStorageSpendStats.getNamespace(), kvStorageSpendStats.getName(), kvStorageSpendStats.getMethod(),
                         kvStorageSpendStats.getCount(), kvStorageSpendStats.getAvgSpendMs(), kvStorageSpendStats.getMaxSpendMs(), kvStorageSpendStats.getSpendMsP50(),
                         kvStorageSpendStats.getSpendMsP75(), kvStorageSpendStats.getSpendMsP90(), kvStorageSpendStats.getSpendMsP95(),
                         kvStorageSpendStats.getSpendMsP99(), kvStorageSpendStats.getSpendMsP999());

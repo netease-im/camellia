@@ -24,8 +24,8 @@ public class KvStorageMonitor {
     private static final ConcurrentHashMap<String, LongAdder> spendTotalMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, QuantileCollector> quantileMap = new ConcurrentHashMap<>();
 
-    public static void update(String name, String method, long spend) {
-        String key = name + "|" + method;
+    public static void update(String namespace, String name, String method, long spend) {
+        String key = namespace + "|" + name + "|" + method;
         try {
             CamelliaMapUtils.computeIfAbsent(spendCountMap, key, k -> new LongAdder()).increment();
             CamelliaMapUtils.computeIfAbsent(spendTotalMap, key, k -> new LongAdder()).add(spend);
@@ -47,8 +47,9 @@ public class KvStorageMonitor {
             for (Map.Entry<String, LongAdder> entry : spendCountMap.entrySet()) {
                 String key = entry.getKey();
                 String[] split = key.split("\\|");
-                String name = split[0];
-                String method = split[1];
+                String namespace = split[0];
+                String name = split[1];
+                String method = split[2];
                 long count = entry.getValue().sumThenReset();
                 if (count == 0) continue;
                 double avgSpendMs = 0;
@@ -59,6 +60,7 @@ public class KvStorageMonitor {
                     avgSpendMs = sum / (1000000.0 * count);
                 }
                 KvStorageSpendStats stats = new KvStorageSpendStats();
+                stats.setNamespace(namespace);
                 stats.setName(name);
                 stats.setMethod(method);
                 stats.setCount(count);

@@ -374,6 +374,7 @@ public class StatsJsonConverter {
         for (KvStorageSpendStats spendStats : kvStorageSpendStatsList) {
             JSONObject json = new JSONObject();
             json.put("name", spendStats.getName());
+            json.put("namespace", spendStats.getNamespace());
             json.put("method", spendStats.getMethod());
             json.put("count", spendStats.getCount());
             json.put("avgSpendMs", spendStats.getAvgSpendMs());
