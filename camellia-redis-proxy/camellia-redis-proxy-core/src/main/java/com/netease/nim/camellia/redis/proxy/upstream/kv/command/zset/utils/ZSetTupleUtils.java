@@ -3,9 +3,10 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class ZSetTupleUtils {
             int i = 0;
             for (ZSetTuple tuple : list) {
                 replies[i] = new BulkReply(tuple.getMember().getKey());
-                replies[i+1] = new BulkReply(Utils.doubleToBytes(tuple.getScore()));
+                replies[i+1] = new BulkReply(String.valueOf(BigDecimal.valueOf(tuple.getScore())).getBytes(StandardCharsets.UTF_8));
                 i+=2;
             }
         } else {
