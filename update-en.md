@@ -3,15 +3,24 @@
 # 1.2.29（2024/08/xx）
 ### add
 * camellia-redis-proxy, kv, support `set` commands, include `sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
+* camellia-redis-proxy，kv, support configure different kv store on different namespace
+* camellia-redis-proxy，kv, support use redis to elect a leader node to schedule gc
+* camellia-redis-proxy，support  `client kill id xxx`、`client kill addr xxx`、`client kill laddr xxx` command
 * camellia-redis-client, support smismember method（camellia-redis3）
 * camellia-redis-client，method of eval and executeWrite support MultiWriteType
 
 ### update
+* camellia-redis-proxy，kv, remove encode2/encode3 in hash/zset simplify code
 * camellia-redis-proxy，kv, upgrade obkv-hbase-client version, support reverse scan
+* camellia-redis-proxy，kv, modify config key of encode version
+* camellia-redis-proxy，kv, enhance monitor
+* camellia-redis-proxy，kv, optimize lru cache of zset, optimize lru cache build
+* camellia-redis-proxy-bootstrap support use maven profile to compile different function
 * reactor multi-write code, include camellia-redis-client、camellia-hbase-client、camellia-feign-client
 
 ### fix
-* none
+* camellia-redis-proxy，kv, zset score field format in scientific notation
+* camellia-redis-proxy，cluster-mode-2, new leader do not flush slot-map to storage in some scene
 
 
 # 1.2.28（2024/07/29）

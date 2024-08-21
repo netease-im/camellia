@@ -3,15 +3,24 @@
 # 1.2.29（2024/08/xx）
 ### 新增
 * camellia-redis-proxy，kv模块，新增支持set相关命令，包括：`sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
+* camellia-redis-proxy，kv模块，支持根据不同的namespace配置不同的kv后端
+* camellia-redis-proxy，kv模块，支持通过redis选举一个节点执行gc，从而不需要单独启动一个节点执行gc
+* camellia-redis-proxy，新增 `client kill id xxx`、`client kill addr xxx`、`client kill laddr xxx` 命令的支持
 * camellia-redis-client，新增smismember方法的支持（camellia-redis3）
 * camellia-redis-client，eval命令和executeWrite命令，支持不同类型的MultiWriteType
 
 ### 更新
+* camellia-redis-proxy，kv模块，移除了hash和zset的encode-version为2和3的实现，简化了代码结构
 * camellia-redis-proxy，kv模块，升级了obkv-hbase-client的版本，支持反向scan，从而优化了zset反向查询相关命令的性能
+* camellia-redis-proxy，kv模块，调整了encode-version等部分配置的配置key
+* camellia-redis-proxy，kv模块，增强了监控相关的功能
+* camellia-redis-proxy，kv模块，优化了zset的lru cache的性能，优化了lru cache重建的逻辑
+* camellia-redis-proxy-bootstrap支持使用maven profile来编译不同的功能
 * 重构了multi-write相关的代码，涉及camellia-redis-client、camellia-hbase-client、camellia-feign-client
 
 ### fix
-* 无
+* camellia-redis-proxy，kv模块，zset的score字段返回时使用了科学计数法的问题
+* camellia-redis-proxy，cluster-mode-2，部分场景下重新选主后，新的leader没有把slot-map刷新到storage
 
 
 # 1.2.28（2024/07/29）
