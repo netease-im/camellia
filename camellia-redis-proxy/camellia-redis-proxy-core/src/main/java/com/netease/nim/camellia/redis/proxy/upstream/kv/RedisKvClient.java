@@ -205,7 +205,7 @@ public class RedisKvClient implements IUpstreamClient {
     }
 
     private KVClient initKVClient() {
-        String className = ProxyDynamicConf.getString("kv.client.class.name", null);
+        String className = RedisKvConf.getString(namespace, "kv.client.class.name", null);
         return (KVClient) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
     }
 
