@@ -125,10 +125,11 @@ public class ZCountCommander extends ZSet0Commander {
     private int zcountFromKv(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore) {
         byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
+        byte[] prefix = keyDesign.subKeyPrefix2(keyMeta, key);
         int batch = kvConfig.scanBatch();
         int count = 0;
         while (true) {
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.ASC, false);
+            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.ASC, false);
             if (list.isEmpty()) {
                 break;
             }

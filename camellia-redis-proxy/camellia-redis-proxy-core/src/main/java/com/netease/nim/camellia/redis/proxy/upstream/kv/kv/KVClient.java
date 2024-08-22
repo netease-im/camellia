@@ -119,19 +119,21 @@ public interface KVClient {
      * scan k-v list with start and end
      * @param startKey start key
      * @param endKey end key
+     * @param prefix prefix
      * @param limit limit
      * @param sort sort
      * @param includeStartKey include start key
      * @return k-v list
      */
-    List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey);
+    List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey);
 
     /**
      * count key count with start and end
      * @param startKey start key
      * @param endKey end key
+     * @param prefix prefix
      * @param includeStartKey include start key
      * @return count
      */
-    long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey);
+    long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey);
 }

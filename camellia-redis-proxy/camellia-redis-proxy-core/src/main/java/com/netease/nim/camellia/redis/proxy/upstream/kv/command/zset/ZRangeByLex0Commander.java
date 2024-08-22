@@ -40,11 +40,13 @@ public abstract class ZRangeByLex0Commander extends ZRem0Commander {
                 endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, maxLex.getLex()));
             }
         }
+        byte[] prefix = keyDesign.subKeyPrefix(keyMeta, key);
+        //
         List<ZSetTuple> list = new ArrayList<>();
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
         while (true) {
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, scanBatch, Sort.ASC, !minLex.isExcludeLex());
+            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, scanBatch, Sort.ASC, !minLex.isExcludeLex());
             if (scan.isEmpty()) {
                 return list;
             }

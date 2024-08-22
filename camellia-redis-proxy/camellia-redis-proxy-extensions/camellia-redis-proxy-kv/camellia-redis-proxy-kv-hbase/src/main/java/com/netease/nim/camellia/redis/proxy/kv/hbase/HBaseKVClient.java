@@ -332,7 +332,7 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
@@ -346,6 +346,9 @@ public class HBaseKVClient implements KVClient {
                     byte[] row = result.getRow();
                     if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
+                    }
+                    if (!BytesUtils.startWith(row, prefix)) {
+                        break;
                     }
                     byte[] key = result.getRow();
                     byte[] value = result.getValue(cf, column);
@@ -363,7 +366,7 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey) {
+    public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
@@ -375,6 +378,9 @@ public class HBaseKVClient implements KVClient {
                     byte[] row = result.getRow();
                     if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
+                    }
+                    if (!BytesUtils.startWith(row, prefix)) {
+                        break;
                     }
                     count ++;
                 }

@@ -87,7 +87,7 @@ public class DecoratorKVClient implements KVClient {
                 return kvClient.get(key);
             } finally {
                 long spend = System.nanoTime() - start;
-                KvStorageMonitor.update(name, namespace, "get", spend);
+                KvStorageMonitor.update(namespace, name, "get", spend);
             }
         } else {
             return kvClient.get(key);
@@ -237,32 +237,32 @@ public class DecoratorKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.scanByStartEnd(startKey, endKey, limit, sort, includeStartKey);
+                return kvClient.scanByStartEnd(startKey, endKey, prefix, limit, sort, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "scanByStartEnd", spend);
             }
         } else {
-            return kvClient.scanByStartEnd(startKey, endKey, limit, sort, includeStartKey);
+            return kvClient.scanByStartEnd(startKey, endKey, prefix, limit, sort, includeStartKey);
         }
     }
 
     @Override
-    public long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey) {
+    public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.countByStartEnd(startKey, endKey, includeStartKey);
+                return kvClient.countByStartEnd(startKey, endKey, prefix, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "countByStartEnd", spend);
             }
         } else {
-            return kvClient.countByStartEnd(startKey, endKey, includeStartKey);
+            return kvClient.countByStartEnd(startKey, endKey, prefix, includeStartKey);
         }
     }
 }

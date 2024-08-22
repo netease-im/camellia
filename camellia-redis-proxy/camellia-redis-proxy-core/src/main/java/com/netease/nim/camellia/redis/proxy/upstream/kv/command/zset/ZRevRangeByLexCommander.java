@@ -177,6 +177,8 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
                 endKey = BytesUtils.lastBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, minLex.getLex()));
             }
         }
+        byte[] prefix = keyDesign.subKeyPrefix(keyMeta, key);
+        //
         List<ZSetTuple> result = new ArrayList<>(limit.getCount() < 0 ? 16 : Math.min(limit.getCount(), 100));
         int batch = kvConfig.scanBatch();
         int count = 0;
@@ -184,7 +186,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
             if (limit.getCount() > 0) {
                 batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
             }
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.DESC, !maxLex.isExcludeLex());
+            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, !maxLex.isExcludeLex());
             if (scan.isEmpty()) {
                 return ZSetTupleUtils.toReply(result, false);
             }

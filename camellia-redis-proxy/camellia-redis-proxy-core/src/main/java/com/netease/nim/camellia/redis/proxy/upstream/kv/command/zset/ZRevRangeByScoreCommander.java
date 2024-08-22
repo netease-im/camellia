@@ -147,6 +147,7 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
     private Reply zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
         byte[] startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         byte[] endKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
+        byte[] prefix = keyDesign.subKeyPrefix2(keyMeta, key);
         int batch = kvConfig.scanBatch();
         int count = 0;
         List<ZSetTuple> result = new ArrayList<>(limit.getCount() < 0 ? 16 : Math.min(limit.getCount(), 100));
@@ -154,7 +155,7 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
             if (limit.getCount() > 0) {
                 batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
             }
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.DESC, !maxScore.isExcludeScore());
+            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, !maxScore.isExcludeScore());
             if (list.isEmpty()) {
                 break;
             }

@@ -235,7 +235,7 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Iterator<Kvrpcpb.KvPair> iterator = tikvClient.scan0(ByteString.copyFrom(startKey), ByteString.copyFrom(endKey), limit);
             List<KeyValue> list = new ArrayList<>();
@@ -244,6 +244,9 @@ public class TiKVClient implements KVClient {
                 byte[] byteArray = kvPair.getKey().toByteArray();
                 if (!includeStartKey && Arrays.equals(startKey, byteArray)) {
                     continue;
+                }
+                if (!BytesUtils.startWith(byteArray, prefix)) {
+                    break;
                 }
                 list.add(toKeyValue(kvPair));
                 if (list.size() >= limit) {
@@ -258,7 +261,7 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey) {
+    public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         try {
             List<Kvrpcpb.KvPair> scan = tikvClient.scan(ByteString.copyFrom(startKey), ByteString.copyFrom(endKey), true);
             long count = 0;
@@ -266,6 +269,9 @@ public class TiKVClient implements KVClient {
                 byte[] byteArray = kvPair.getKey().toByteArray();
                 if (!includeStartKey && Arrays.equals(startKey, byteArray)) {
                     continue;
+                }
+                if (!BytesUtils.startWith(byteArray, prefix)) {
+                    break;
                 }
                 count ++;
             }

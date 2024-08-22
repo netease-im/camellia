@@ -101,6 +101,7 @@ public abstract class ZSet0Commander extends Commander {
                 list.add(new ZSetTuple(new BytesKey(member), Utils.bytesToDouble(keyValue.getValue())));
                 startKey = keyValue.getKey();
                 if (list.size() >= zsetMaxSize) {
+                    ErrorLogCollector.collect(ZSet0Commander.class, "zset.size exceed " + zsetMaxSize + ", key = " + Utils.bytesToString(key));
                     break;
                 }
             }
