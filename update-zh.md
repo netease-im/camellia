@@ -3,6 +3,7 @@
 # 1.2.29（2024/08/xx）
 ### 新增
 * camellia-redis-proxy，kv模块，新增支持set相关命令，包括：`sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
+* camellia-redis-proxy，kv模块，新增支持scan命令
 * camellia-redis-proxy，kv模块，支持根据不同的namespace配置不同的kv后端
 * camellia-redis-proxy，kv模块，支持通过redis选举一个节点执行gc，从而不需要单独启动一个节点执行gc
 * camellia-redis-proxy，新增 `client kill id xxx`、`client kill addr xxx`、`client kill laddr xxx` 命令的支持
@@ -15,6 +16,7 @@
 * camellia-redis-proxy，kv模块，调整了encode-version等部分配置的配置key
 * camellia-redis-proxy，kv模块，增强了监控相关的功能
 * camellia-redis-proxy，kv模块，优化了zset的lru cache的性能，优化了lru cache重建的逻辑
+* camellia-redis-proxy，kv模块，更新了kv-client的scanByStartEnd和countByStartEnd方法的定义，增加了prefix参数
 * camellia-redis-proxy-bootstrap支持使用maven profile来编译不同的功能
 * 重构了multi-write相关的代码，涉及camellia-redis-client、camellia-hbase-client、camellia-feign-client
 

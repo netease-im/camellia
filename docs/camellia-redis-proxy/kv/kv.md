@@ -54,6 +54,7 @@
 |       pttl       |                                                       `PTTL key` |
 |    expiretime    |                                                 `EXPIRETIME key` |
 |   pexpiretime    |                                                `PEXPIRETIME key` |
+|       scan       |          `SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]` |
 |       hset       |                         `HSET key field value [field value ...]` |
 |      hmset       |                        `HMSET key field value [field value ...]` |
 |       hget       |                                                 `HGET key field` |

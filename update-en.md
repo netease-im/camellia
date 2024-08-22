@@ -3,6 +3,7 @@
 # 1.2.29（2024/08/xx）
 ### add
 * camellia-redis-proxy, kv, support `set` commands, include `sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
+* camellia-redis-proxy, kv, support `scan` command
 * camellia-redis-proxy，kv, support configure different kv store on different namespace
 * camellia-redis-proxy，kv, support use redis to elect a leader node to schedule gc
 * camellia-redis-proxy，support  `client kill id xxx`、`client kill addr xxx`、`client kill laddr xxx` command
@@ -15,6 +16,7 @@
 * camellia-redis-proxy，kv, modify config key of encode version
 * camellia-redis-proxy，kv, enhance monitor
 * camellia-redis-proxy，kv, optimize lru cache of zset, optimize lru cache build
+* camellia-redis-proxy，kv, update kv-client scanByStartEnd and countByStartEnd method
 * camellia-redis-proxy-bootstrap support use maven profile to compile different function
 * reactor multi-write code, include camellia-redis-client、camellia-hbase-client、camellia-feign-client
 
