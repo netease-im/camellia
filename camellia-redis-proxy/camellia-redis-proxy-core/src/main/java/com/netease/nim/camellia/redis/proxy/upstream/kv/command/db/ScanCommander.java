@@ -2,16 +2,21 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.db;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.db.utils.ScanParam;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.db.utils.ScanParamUtil;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +30,33 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class ScanCommander extends Commander {
 
-    private final ConcurrentLinkedHashMap<Integer, byte[]> cursorCache = new ConcurrentLinkedHashMap.Builder<Integer, byte[]>()
-            .initialCapacity(10000)
-            .maximumWeightedCapacity(10000)
-            .build();
+    private static final Logger logger = LoggerFactory.getLogger(ScanCommander.class);
 
     private static final BulkReply completeCursor = new BulkReply(Utils.stringToBytes("0"));
 
+    private final String namespace;
+    private final ConcurrentLinkedHashMap<Integer, byte[]> cursorCache;
+    private int capacity;
+
     public ScanCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
+        this.namespace = commanderConfig.getCacheConfig().getNamespace();
+        this.capacity = RedisKvConf.getInt(namespace, "kv.scan.cursor.cache.capacity", 10000);
+        this.cursorCache = new ConcurrentLinkedHashMap.Builder<Integer, byte[]>()
+                .initialCapacity(capacity)
+                .maximumWeightedCapacity(capacity)
+                .build();
+        logger.info("scan cursor cache init, namespace = {}, capacity = {}", namespace, capacity);
+        ProxyDynamicConf.registerCallback(this::rebuild);
+    }
+
+    private void rebuild() {
+        int capacity = RedisKvConf.getInt(namespace, "kv.scan.cursor.cache.capacity", 10000);
+        if (capacity != this.capacity) {
+            cursorCache.setCapacity(capacity);
+            this.capacity = capacity;
+            logger.info("scan cursor cache update, namespace = {}, capacity = {}", namespace, capacity);
+        }
     }
 
     @Override
@@ -55,6 +78,7 @@ public class ScanCommander extends Commander {
         if (cursor != 0) {
             startKey = cursorCache.get(cursor);
             if (startKey == null) {
+                ErrorLogCollector.collect(ScanCommander.class, "scan cursor not found in cache");
                 return ErrorReply.SYNTAX_ERROR;
             }
         } else {
