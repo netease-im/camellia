@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by caojiajun on 2024/4/17
@@ -56,6 +57,7 @@ public class RedisKvClient implements IUpstreamClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisKvClient.class);
 
     private MpscSlotHashExecutor executor;
+    private ThreadPoolExecutor scanCommandExecutor;
     private final Resource resource;
     private final String namespace;
     private Commanders commanders;
@@ -111,6 +113,7 @@ public class RedisKvClient implements IUpstreamClient {
     @Override
     public void start() {
         this.executor = KvExecutors.getInstance().getCommandExecutor();
+        this.scanCommandExecutor = KvExecutors.getInstance().getScanCommandExecutor();
         this.commanders = initCommanders();
         logger.info("RedisKvClient start success, resource = {}", getResource());
     }
@@ -125,8 +128,30 @@ public class RedisKvClient implements IUpstreamClient {
             } else {
                 future.complete(ErrorReply.argNumWrong(redisCommand));
             }
+        } else if (redisCommand == RedisCommand.SCAN) {
+            sendScanCommand(command, future);
         } else {
             future.complete(ErrorReply.NOT_SUPPORT);
+        }
+    }
+
+    private void sendScanCommand(Command command, CompletableFuture<Reply> future) {
+        try {
+            scanCommandExecutor.submit(() -> {
+                try {
+                    Reply reply = commanders.execute(command);
+                    if (reply == null) {
+                        ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
+                    }
+                    future.complete(reply);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+            });
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
+            future.complete(ErrorReply.TOO_BUSY);
         }
     }
 

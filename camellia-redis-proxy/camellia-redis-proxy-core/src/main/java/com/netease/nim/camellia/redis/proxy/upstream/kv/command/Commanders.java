@@ -37,6 +37,7 @@ public class Commanders {
         initCommander(new PExpireAtCommander(commanderConfig));
         initCommander(new ExpireTimeCommander(commanderConfig));
         initCommander(new PExpireTimeCommander(commanderConfig));
+        initCommander(new ScanCommander(commanderConfig));
 
         //string
         initCommander(new GetCommander(commanderConfig));

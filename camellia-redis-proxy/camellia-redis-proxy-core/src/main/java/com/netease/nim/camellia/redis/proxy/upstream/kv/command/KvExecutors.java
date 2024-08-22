@@ -16,6 +16,10 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by caojiajun on 2024/4/17
  */
@@ -27,6 +31,7 @@ public class KvExecutors {
 
     private final MpscSlotHashExecutor commandExecutor;
     private final MpscSlotHashExecutor asyncWriteExecutor;
+    private final ThreadPoolExecutor scanCommandExecutor;
 
     private KvExecutors() {
         EventLoopGroup eventLoopGroup;
@@ -54,8 +59,15 @@ public class KvExecutors {
         asyncWriteExecutor = new MpscSlotHashExecutor("kv-async-write-executor", threads2, queueSize2, new MpscSlotHashExecutor.AbortPolicy());
         logger.info("KvAsyncWriteExecutor init success, threads = {}, queueSize = {}", threads2, queueSize2);
 
+        int threads3 = ProxyDynamicConf.getInt("kv.scan.command.executor.threads", Math.max(SysUtils.getCpuNum() / 2, 4));
+        int queueSize3 = ProxyDynamicConf.getInt("kv.scan.command.executor.queue.size", 10240);
+        scanCommandExecutor = new ThreadPoolExecutor(threads3, threads3, 0, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>(queueSize3), new DefaultThreadFactory("kv-scan-command"), new ThreadPoolExecutor.AbortPolicy());
+        logger.info("KvScanCommandExecutor init success, threads = {}, queueSize = {}", threads3, queueSize3);
+
         KvExecutorMonitor.register("command", commandExecutor);
         KvExecutorMonitor.register("async-write", asyncWriteExecutor);
+        KvExecutorMonitor.register("scan-command", scanCommandExecutor);
     }
 
     public static KvExecutors getInstance() {
@@ -75,5 +87,9 @@ public class KvExecutors {
 
     public MpscSlotHashExecutor getAsyncWriteExecutor() {
         return asyncWriteExecutor;
+    }
+
+    public ThreadPoolExecutor getScanCommandExecutor() {
+        return scanCommandExecutor;
     }
 }
