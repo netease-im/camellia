@@ -6,6 +6,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.HashMap;
@@ -41,11 +43,13 @@ public abstract class Hash0Commander extends Commander {
                 byte[] field = keyDesign.decodeHashFieldBySubKey(keyValue.getKey(), key);
                 map.put(new BytesKey(field), keyValue.getValue());
                 startKey = keyValue.getKey();
-                if (map.size() >= hashMaxSize) {
-                    break;
-                }
             }
             if (scan.size() < limit) {
+                break;
+            }
+            //
+            if (map.size() >= hashMaxSize) {
+                ErrorLogCollector.collect(Hash0Commander.class, "redis.hash.size exceed " + hashMaxSize + ", key = " + Utils.bytesToString(key));
                 break;
             }
         }

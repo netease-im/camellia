@@ -100,12 +100,13 @@ public abstract class ZSet0Commander extends Commander {
                 byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                 list.add(new ZSetTuple(new BytesKey(member), Utils.bytesToDouble(keyValue.getValue())));
                 startKey = keyValue.getKey();
-                if (list.size() >= zsetMaxSize) {
-                    ErrorLogCollector.collect(ZSet0Commander.class, "zset.size exceed " + zsetMaxSize + ", key = " + Utils.bytesToString(key));
-                    break;
-                }
             }
             if (scan.size() < limit) {
+                break;
+            }
+            //
+            if (list.size() >= zsetMaxSize) {
+                ErrorLogCollector.collect(ZSet0Commander.class, "redis.zset.size exceed " + zsetMaxSize + ", key = " + Utils.bytesToString(key));
                 break;
             }
         }

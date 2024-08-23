@@ -4,10 +4,13 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash.Hash0Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
@@ -41,11 +44,13 @@ public abstract class Set0Commander extends Commander {
                 byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
                 set.add(new BytesKey(member));
                 startKey = keyValue.getKey();
-                if (set.size() >= setMaxSize) {
-                    break;
-                }
             }
             if (scan.size() < limit) {
+                break;
+            }
+            //
+            if (set.size() >= setMaxSize) {
+                ErrorLogCollector.collect(Hash0Commander.class, "redis.set.size exceed " + setMaxSize + ", key = " + Utils.bytesToString(key));
                 break;
             }
         }
