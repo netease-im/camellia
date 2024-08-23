@@ -73,4 +73,10 @@ public class ZSetIndexLRUCache {
     public void clear() {
         localCache.clear();
     }
+
+    public long estimateSize() {
+        long estimateSize = 0;
+        estimateSize += localCache.estimateSize();
+        return estimateSize;
+    }
 }

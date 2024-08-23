@@ -97,4 +97,11 @@ public class KeyMetaLRUCache {
         nullCache.clear();
     }
 
+    public long estimateSize() {
+        long estimateSize = 0;
+        estimateSize += localCache.estimateSize();
+        estimateSize += nullCache.size() * 12;
+        return estimateSize;
+    }
+
 }

@@ -7,12 +7,16 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/8/5
  */
-public class RedisSet {
+public class RedisSet implements EstimateSizeValue {
 
     private final Set<BytesKey> set;
+    private long estimateSize = 0;
 
     public RedisSet(Set<BytesKey> members) {
         this.set = members;
+        for (BytesKey member : members) {
+            estimateSize += member.getKey().length;
+        }
     }
 
     public RedisSet duplicate() {
@@ -25,6 +29,8 @@ public class RedisSet {
             boolean add = set.add(member);
             if (!add) {
                 existsMember.add(member);
+            } else {
+                estimateSize += member.getKey().length;
             }
         }
         return existsMember;
@@ -83,6 +89,7 @@ public class RedisSet {
             boolean remove = set.remove(member);
             if (remove) {
                 result.add(member);
+                estimateSize -= member.getKey().length;
             }
         }
         return result;
@@ -103,10 +110,16 @@ public class RedisSet {
             iterator.remove();
             members.add(next);
             size ++;
+            estimateSize -= next.getKey().length;
             if (size >= count) {
                 break;
             }
         }
         return members;
+    }
+
+    @Override
+    public long estimateSize() {
+        return set.size() * 8L + (estimateSize < 0 ? 0 : estimateSize);
     }
 }

@@ -5,6 +5,8 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.tools.utils.MathUtil;
 
+import java.util.Map;
+
 
 /**
  * Created by caojiajun on 2024/6/12
@@ -63,5 +65,41 @@ public class SlotLRUCache<V> {
         for (ConcurrentLinkedHashMap<BytesKey, V> subMap : array) {
             subMap.setCapacity(capacity / segmentSize);
         }
+    }
+
+    public long size() {
+        long estimateSize = 0;
+        for (ConcurrentLinkedHashMap<BytesKey, V> map : array) {
+            estimateSize += map.size();
+        }
+        return estimateSize;
+    }
+
+    public long estimateSize() {
+        long estimateSize = 0;
+        for (ConcurrentLinkedHashMap<BytesKey, V> map : array) {
+            estimateSize += map.size() * 8L;
+            for (Map.Entry<BytesKey, V> entry : map.entrySet()) {
+                estimateSize += entry.getKey().getKey().length;
+                V value = entry.getValue();
+                if (value instanceof EstimateSizeValue) {
+                    long size = ((EstimateSizeValue) value).estimateSize();
+                    estimateSize += size < 0 ? 0 : size;
+                } else if (value instanceof BytesKey) {
+                    estimateSize += ((BytesKey) value).getKey().length;
+                } else if (value instanceof Boolean) {
+                    estimateSize += 4;
+                } else if (value instanceof Integer) {
+                    estimateSize += 4;
+                } else if (value instanceof Long) {
+                    estimateSize += 8;
+                } else if (value instanceof Double) {
+                    estimateSize += 8;
+                } else {
+                    estimateSize += 4;
+                }
+            }
+        }
+        return estimateSize;
     }
 }

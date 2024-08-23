@@ -3,8 +3,15 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/4/8
@@ -12,6 +19,8 @@ import org.slf4j.LoggerFactory;
 public class CacheConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
+
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("kv-lru-cache-estimate-size"));
 
     private final String namespace;
     private boolean metaLocalCacheEnable;
@@ -37,6 +46,39 @@ public class CacheConfig {
         this.zSetIndexLRUCache = new ZSetIndexLRUCache(namespace);
         this.setLRUCache = new SetLRUCache(namespace);
         ProxyDynamicConf.registerCallback(this::initCacheConfig);
+        scheduler.scheduleAtFixedRate(this::lruCacheEstimateSize, 10, 10, TimeUnit.SECONDS);
+    }
+
+    private long lastCheckLruCacheEstimateSizeTime = 0;
+
+    private void lruCacheEstimateSize() {
+        try {
+            int intervalSeconds = RedisKvConf.getInt(namespace, "kv.lru.cache.estimate.size.interval.seconds", 60);
+            if (intervalSeconds < 0) {
+                return;
+            }
+            if (TimeCache.currentMillis - lastCheckLruCacheEstimateSizeTime < intervalSeconds * 1000L) {
+                return;
+            }
+            lastCheckLruCacheEstimateSizeTime = TimeCache.currentMillis;
+            long keyMetaLRUCacheEstimateSize = keyMetaLRUCache.estimateSize();
+            long hashLRUCacheEstimateSize = hashLRUCache.estimateSize();
+            long setLRUCacheEstimateSize = setLRUCache.estimateSize();
+            long zSetLRUCacheEstimateSize = zSetLRUCache.estimateSize();
+            long zSetIndexLRUCacheEstimateSize = zSetIndexLRUCache.estimateSize();
+            logger.info("lru.cache.estimate.size, namespace = {}, type = key.meta, size = {}",
+                    namespace, Utils.humanReadableByteCountBin(keyMetaLRUCacheEstimateSize));
+            logger.info("lru.cache.estimate.size, namespace = {}, type = hash, size = {}",
+                    namespace, Utils.humanReadableByteCountBin(hashLRUCacheEstimateSize));
+            logger.info("lru.cache.estimate.size, namespace = {}, type = set, size = {}",
+                    namespace, Utils.humanReadableByteCountBin(setLRUCacheEstimateSize));
+            logger.info("lru.cache.estimate.size, namespace = {}, type = zset, size = {}",
+                    namespace, Utils.humanReadableByteCountBin(zSetLRUCacheEstimateSize));
+            logger.info("lru.cache.estimate.size, namespace = {}, type = zset.index, size = {}",
+                    namespace, Utils.humanReadableByteCountBin(zSetIndexLRUCacheEstimateSize));
+        } catch (Exception e) {
+            logger.error("lru cache estimate size error", e);
+        }
     }
 
     private void initCacheConfig() {

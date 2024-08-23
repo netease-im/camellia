@@ -1,19 +1,19 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 
 
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.EstimateSizeValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 
 /**
  * key-meta
  * Created by caojiajun on 2024/4/7
  */
-public class KeyMeta {
+public class KeyMeta implements EstimateSizeValue {
     private final EncodeVersion encodeVersion;
     private final KeyType keyType;
     private final long keyVersion;
     private final long expireTime;
     private final byte[] extra;
-    private byte[] raw;
 
     public KeyMeta(EncodeVersion encodeVersion, KeyType keyType, long keyVersion, long expireTime) {
         this(encodeVersion, keyType, keyVersion, expireTime, null);
@@ -47,10 +47,6 @@ public class KeyMeta {
         return extra;
     }
 
-    private void setRaw(byte[] raw) {
-        this.raw = raw;
-    }
-
     public final boolean isExpire() {
         if (expireTime < 0) {
             return false;
@@ -59,9 +55,6 @@ public class KeyMeta {
     }
 
     public final byte[] toBytes() {
-        if (raw != null) {
-            return raw;
-        }
         byte[] flag = new byte[2];
         flag[0] = encodeVersion.getValue();
         flag[1] = keyType.getValue();
@@ -69,7 +62,6 @@ public class KeyMeta {
         if (extra != null && extra.length > 0) {
             data = BytesUtils.merge(data, extra);
         }
-        this.raw = data;
         return data;
     }
 
@@ -89,8 +81,15 @@ public class KeyMeta {
             extra = new byte[raw.length - 18];
             System.arraycopy(raw, 18, extra, 0, extra.length);
         }
-        KeyMeta keyMeta = new KeyMeta(encodeVersion, keyType, keyVersion, expireTime, extra);
-        keyMeta.setRaw(raw);
-        return keyMeta;
+        return new KeyMeta(encodeVersion, keyType, keyVersion, expireTime, extra);
+    }
+
+    @Override
+    public long estimateSize() {
+        long estimateSize = 32;
+        if (extra != null) {
+            estimateSize += extra.length;
+        }
+        return estimateSize;
     }
 }

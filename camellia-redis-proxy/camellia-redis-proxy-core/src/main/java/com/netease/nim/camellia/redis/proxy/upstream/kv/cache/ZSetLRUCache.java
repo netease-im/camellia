@@ -188,4 +188,12 @@ public class ZSetLRUCache {
     public void clear() {
         localCache.clear();
     }
+
+    public long estimateSize() {
+        long estimateSize = 0;
+        estimateSize += localCache.estimateSize();
+        estimateSize += localCacheForWrite.estimateSize();
+        estimateSize += hotKeyCalculator.estimateSize();
+        return estimateSize;
+    }
 }

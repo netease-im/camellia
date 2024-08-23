@@ -10,11 +10,16 @@ import java.util.Map;
 /**
  * Created by caojiajun on 2024/6/5
  */
-public class RedisHash {
+public class RedisHash implements EstimateSizeValue {
     private final Map<BytesKey, byte[]> map;
+    private long estimateSize = 0;
 
     public RedisHash(Map<BytesKey, byte[]> map) {
         this.map = map;
+        for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
+            estimateSize += entry.getKey().getKey().length;
+            estimateSize += entry.getValue().length;
+        }
     }
 
     public RedisHash duplicate() {
@@ -25,15 +30,26 @@ public class RedisHash {
         Map<BytesKey, byte[]> existsMap = new HashMap<>();
         for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
             byte[] put = map.put(entry.getKey(), entry.getValue());
+            estimateSize += entry.getValue().length;
             if (put != null) {
                 existsMap.put(entry.getKey(), put);
+                estimateSize -= put.length;
+            } else {
+                estimateSize += entry.getKey().getKey().length;
             }
         }
         return existsMap;
     }
 
     public byte[] hset(BytesKey field, byte[] value) {
-        return map.put(field, value);
+        byte[] oldValue = map.put(field, value);
+        estimateSize += value.length;
+        if (oldValue != null) {
+            estimateSize -= oldValue.length;
+        } else {
+            estimateSize += field.getKey().length;
+        }
+        return oldValue;
     }
 
     public Map<BytesKey, byte[]> hdel(Collection<BytesKey> fields) {
@@ -42,6 +58,8 @@ public class RedisHash {
             byte[] remove = map.remove(field);
             if (remove != null) {
                 deleteMap.put(field, remove);
+                estimateSize -= field.getKey().length;
+                estimateSize -= remove.length;
             }
         }
         return deleteMap;
@@ -79,4 +97,8 @@ public class RedisHash {
         return map;
     }
 
+    @Override
+    public long estimateSize() {
+        return map.size() * 8L + (estimateSize < 0 ? 0 : estimateSize);
+    }
 }

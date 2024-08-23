@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/5/31
  */
-public class RedisZSet {
+public class RedisZSet implements EstimateSizeValue {
 
     private static final Comparator<BytesKey> rankComparator = (o1, o2) -> BytesUtils.compare(o1.getKey(), o2.getKey());
     private static final Comparator<ZSetTuple> scoreComparator = (o1, o2) -> {
@@ -27,11 +27,15 @@ public class RedisZSet {
     private final TreeMap<BytesKey, Double> memberMap = new TreeMap<>(rankComparator);
     private final TreeSet<ZSetTuple> scoreSet = new TreeSet<>(scoreComparator);
 
+    private long estimateSize = 0;
+
     public RedisZSet(Map<BytesKey, Double> memberMap) {
         List<ZSetTuple> list = new ArrayList<>(memberMap.size());
         for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
             ZSetTuple zSetTuple = new ZSetTuple(entry.getKey(), entry.getValue());
             list.add(zSetTuple);
+            estimateSize += entry.getKey().getKey().length;
+            estimateSize += 8;
         }
         this.memberMap.putAll(memberMap);
         this.scoreSet.addAll(list);
@@ -47,6 +51,9 @@ public class RedisZSet {
             Double put = memberMap.put(entry.getKey(), entry.getValue());
             if (put != null) {
                 existsMap.put(entry.getKey(), put);
+            } else {
+                estimateSize += 8;
+                estimateSize += entry.getKey().getKey().length;
             }
             ZSetTuple zSetTuple = new ZSetTuple(entry.getKey(), entry.getValue());
             scoreSet.remove(zSetTuple);
@@ -256,6 +263,9 @@ public class RedisZSet {
                 //
                 ZSetTuple tuple = new ZSetTuple(bytesKey, remove);
                 scoreSet.remove(tuple);
+                //
+                estimateSize -= bytesKey.getKey().length;
+                estimateSize -= 8;
             }
         }
         return map;
@@ -330,6 +340,14 @@ public class RedisZSet {
         for (ZSetTuple tuple : list) {
             memberMap.remove(tuple.getMember());
             scoreSet.remove(tuple);
+            //
+            estimateSize -= tuple.getMember().getKey().length;
+            estimateSize -= 8;
         }
+    }
+
+    @Override
+    public long estimateSize() {
+        return memberMap.size() * 16L + (estimateSize < 0 ? 0 : estimateSize);
     }
 }
