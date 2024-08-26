@@ -15,11 +15,12 @@ public class MiscTest {
 
     public static void main(String[] args) {
         String url = "redis://pass123@127.0.0.1:6381";
-//        String url = "redis-cluster://7aab8fcd9@10.189.31.11:6382,10.189.31.13:6382";
+//        String url = "redis-cluster://a32a36cb1753@10.59.135.153:6380,10.59.135.154:6380";//v0
+//        String url = "redis-cluster://dde946f2933e@10.59.135.153:6380,10.59.135.154:6380";//v1
 //        String url = "redis://@127.0.0.1:6379";
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
-                .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000000))
-                .jedisClusterFactory(new JedisClusterFactory.DefaultJedisClusterFactory(new JedisPoolConfig(), 6000000, 6000000, 5))
+                .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000))
+                .jedisClusterFactory(new JedisClusterFactory.DefaultJedisClusterFactory(new JedisPoolConfig(), 6000, 6000, 5))
                 .build();
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, ResourceTableUtil.simpleTable(new Resource(url)));
 

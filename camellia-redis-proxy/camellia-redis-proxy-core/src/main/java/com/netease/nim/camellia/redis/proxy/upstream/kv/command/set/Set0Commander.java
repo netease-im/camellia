@@ -38,47 +38,53 @@ public abstract class Set0Commander extends Commander {
         while (true) {
             List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
-                break;
+                return set;
             }
             for (KeyValue keyValue : scan) {
+                if (keyValue == null || keyValue.getKey() == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
                 byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
                 set.add(new BytesKey(member));
-                startKey = keyValue.getKey();
             }
             if (scan.size() < limit) {
-                break;
+                return set;
             }
             //
             if (set.size() >= setMaxSize) {
                 ErrorLogCollector.collect(Hash0Commander.class, "redis.set.size exceed " + setMaxSize + ", key = " + Utils.bytesToString(key));
-                break;
+                return set;
             }
         }
-        return set;
     }
 
     protected final Set<BytesKey> srandmemberFromKv(KeyMeta keyMeta, byte[] key, int count) {
-        Set<BytesKey> set = new HashSet<>();
+        Set<BytesKey> result = new HashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
+        int limit;
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, count, Sort.ASC, false);
+            limit = Math.min(kvConfig.scanBatch(), count - result.size());
+            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
-                break;
+                return result;
             }
             for (KeyValue keyValue : scan) {
-                byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
-                set.add(new BytesKey(member));
+                if (keyValue == null || keyValue.getKey() == null) {
+                    continue;
+                }
                 startKey = keyValue.getKey();
-                if (set.size() >= count) {
-                    break;
+                byte[] member = keyDesign.decodeSetMemberBySubKey(keyValue.getKey(), key);
+                result.add(new BytesKey(member));
+                if (result.size() >= count) {
+                    return result;
                 }
             }
-            if (scan.size() < count) {
-                break;
+            if (scan.size() < limit) {
+                return result;
             }
         }
-        return set;
     }
 
     protected final void writeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> memberSet, Result result) {

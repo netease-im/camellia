@@ -441,10 +441,11 @@ public class TestZSetV1 {
 
             template.del(key);
             {
+                String prefix = "asasasasas11111asasasasas11111asasasasas11111asasasasas11111asasasasas11111asasasasas11111asasasasas11111-";
                 for (int count = 99; count < 202; count ++) {
                     template.del(key);
                     for (int i = 0; i < count; i++) {
-                        Long zadd = template.zadd(key, i + 1000, "m-" + i);
+                        Long zadd = template.zadd(key, i + 1000, prefix + i);
                         assertEquals(zadd, 1L);
                     }
                     Set<String> zrange = template.zrange(key, 0, -1);
@@ -456,7 +457,7 @@ public class TestZSetV1 {
 
                     Set<String> strings1 = template.zrangeByScore(key, 0, System.currentTimeMillis() + 1000, 0, 1);
                     assertEquals(strings1.size(), 1);
-                    assertEquals(strings1.iterator().next(), "m-0");
+                    assertEquals(strings1.iterator().next(), prefix + "0");
 
                     Set<String> zrevrange = template.zrevrange(key, 0, -1);
                     assertEquals(zrevrange.size(), count);
@@ -466,7 +467,7 @@ public class TestZSetV1 {
 
                     Set<String> strings3 = template.zrevrangeByScore(key, System.currentTimeMillis() + 1000, 0, 0, 1);
                     assertEquals(strings3.size(), 1);
-                    assertEquals(strings3.iterator().next(), "m-" + (count - 1));
+                    assertEquals(strings3.iterator().next(), prefix + (count - 1));
 
                     Set<String> strings4 = template.zrangeByLex(key, "-", "+");
                     assertEquals(strings4.size(), count);

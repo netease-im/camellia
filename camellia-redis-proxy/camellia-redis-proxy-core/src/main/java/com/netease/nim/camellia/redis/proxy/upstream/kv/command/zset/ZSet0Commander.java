@@ -94,23 +94,25 @@ public abstract class ZSet0Commander extends Commander {
         while (true) {
             List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
-                break;
+                return list;
             }
             for (KeyValue keyValue : scan) {
+                if (keyValue == null || keyValue.getKey() == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
                 byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                 list.add(new ZSetTuple(new BytesKey(member), Utils.bytesToDouble(keyValue.getValue())));
-                startKey = keyValue.getKey();
             }
             if (scan.size() < limit) {
-                break;
+                return list;
             }
             //
             if (list.size() >= zsetMaxSize) {
                 ErrorLogCollector.collect(ZSet0Commander.class, "redis.zset.size exceed " + zsetMaxSize + ", key = " + Utils.bytesToString(key));
-                break;
+                return list;
             }
         }
-        return list;
     }
 
     protected final byte[] zsetMemberCacheMillis() {

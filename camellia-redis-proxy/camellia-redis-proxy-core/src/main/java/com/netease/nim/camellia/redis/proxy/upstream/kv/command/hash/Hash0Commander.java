@@ -37,22 +37,24 @@ public abstract class Hash0Commander extends Commander {
         while (true) {
             List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
-                break;
+                return map;
             }
             for (KeyValue keyValue : scan) {
+                if (keyValue == null || keyValue.getKey() == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
                 byte[] field = keyDesign.decodeHashFieldBySubKey(keyValue.getKey(), key);
                 map.put(new BytesKey(field), keyValue.getValue());
-                startKey = keyValue.getKey();
             }
             if (scan.size() < limit) {
-                break;
+                return map;
             }
             //
             if (map.size() >= hashMaxSize) {
                 ErrorLogCollector.collect(Hash0Commander.class, "redis.hash.size exceed " + hashMaxSize + ", key = " + Utils.bytesToString(key));
-                break;
+                return map;
             }
         }
-        return map;
     }
 }
