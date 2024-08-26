@@ -117,7 +117,8 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
             if (!kvClient.supportReverseScan()) {
                 return zrevrangeByScoreVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minScore, maxScore, limit, withScores);
             }
-            return zrevrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
+            List<ZSetTuple> result = zrevrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
+            return ZSetTupleUtils.toReply(result, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -144,20 +145,28 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
         return ZSetTupleUtils.toReply(list, withScores);
     }
 
-    private Reply zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
+    private List<ZSetTuple> zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
         byte[] startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         byte[] endKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] prefix = keyDesign.subKeyPrefix2(keyMeta, key);
         int batch = kvConfig.scanBatch();
         int count = 0;
+        int loop = 0;
+        boolean includeStartKey;
         List<ZSetTuple> result = new ArrayList<>(limit.getCount() < 0 ? 16 : Math.min(limit.getCount(), 100));
         while (true) {
             if (limit.getCount() > 0) {
                 batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
             }
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, !maxScore.isExcludeScore());
+            if (loop == 0) {
+                includeStartKey = !maxScore.isExcludeScore();
+            } else {
+                includeStartKey = false;
+            }
+            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, includeStartKey);
+            loop ++;
             if (list.isEmpty()) {
-                break;
+                return result;
             }
             for (KeyValue keyValue : list) {
                 if (keyValue == null) {
@@ -182,16 +191,15 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
                     }
                     result.add(tuple);
                     if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
-                        break;
+                        return result;
                     }
                 }
                 count ++;
             }
             if (list.size() < batch) {
-                break;
+                return result;
             }
         }
-        return ZSetTupleUtils.toReply(result, withScores);
     }
 
 }

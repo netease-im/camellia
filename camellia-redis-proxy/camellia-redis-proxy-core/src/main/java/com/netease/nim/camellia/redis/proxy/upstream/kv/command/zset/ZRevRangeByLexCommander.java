@@ -120,7 +120,8 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
             if (!kvClient.supportReverseScan()) {
                 return zrevrangeByLexVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minLex, maxLex, limit);
             }
-            return zrevrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
+            List<ZSetTuple> list = zrevrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
+            return ZSetTupleUtils.toReply(list, false);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -160,7 +161,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
         return ZSetTupleUtils.toReply(list, false);
     }
 
-    private Reply zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    private List<ZSetTuple> zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         byte[] startKey;
         if (maxLex.isMax()) {
             startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]));
@@ -182,13 +183,21 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
         List<ZSetTuple> result = new ArrayList<>(limit.getCount() < 0 ? 16 : Math.min(limit.getCount(), 100));
         int batch = kvConfig.scanBatch();
         int count = 0;
+        int loop = 0;
+        boolean includeStartKey;
         while (true) {
             if (limit.getCount() > 0) {
                 batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
             }
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, !maxLex.isExcludeLex());
+            if (loop == 0) {
+                includeStartKey = !maxLex.isExcludeLex();
+            } else {
+                includeStartKey = false;
+            }
+            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, includeStartKey);
+            loop ++;
             if (scan.isEmpty()) {
-                return ZSetTupleUtils.toReply(result, false);
+                return result;
             }
             for (KeyValue keyValue : scan) {
                 if (keyValue == null || keyValue.getValue() == null) {
@@ -204,12 +213,12 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
                     result.add(new ZSetTuple(new BytesKey(member), null));
                 }
                 if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
-                    return ZSetTupleUtils.toReply(result, false);
+                    return result;
                 }
                 count++;
             }
             if (scan.size() < batch) {
-                return ZSetTupleUtils.toReply(result, false);
+                return result;
             }
         }
     }

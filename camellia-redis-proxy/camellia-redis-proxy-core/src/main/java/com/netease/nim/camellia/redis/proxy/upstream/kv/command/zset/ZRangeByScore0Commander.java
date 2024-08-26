@@ -38,7 +38,7 @@ public abstract class ZRangeByScore0Commander extends ZRem0Commander {
             }
             List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.ASC, false);
             if (list.isEmpty()) {
-                break;
+                return result;
             }
             for (KeyValue keyValue : list) {
                 if (keyValue == null) {
@@ -63,15 +63,14 @@ public abstract class ZRangeByScore0Commander extends ZRem0Commander {
                     }
                     result.add(tuple);
                     if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
-                        break;
+                        return result;
                     }
                 }
                 count ++;
             }
             if (list.size() < batch) {
-                break;
+                return result;
             }
         }
-        return result;
     }
 }

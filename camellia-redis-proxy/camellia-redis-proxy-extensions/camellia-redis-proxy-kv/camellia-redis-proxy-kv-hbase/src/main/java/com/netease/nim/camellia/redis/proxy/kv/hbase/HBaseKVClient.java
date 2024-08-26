@@ -275,7 +275,7 @@ public class HBaseKVClient implements KVClient {
         try {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
-            scan.setCaching(limit);
+            scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
             scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = template.scan(tableName, scan)) {
@@ -337,7 +337,7 @@ public class HBaseKVClient implements KVClient {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
-            scan.setCaching(limit);
+            scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
             scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = template.scan(tableName, scan)) {

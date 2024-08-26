@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public abstract class ZRangeByLex0Commander extends ZRem0Commander {
         super(commanderConfig);
     }
 
-    protected final List<ZSetTuple> zrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    protected final List<ZSetTuple> zrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit, boolean withScores) {
         byte[] startKey;
         if (minLex.isMin()) {
             startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
@@ -42,13 +43,21 @@ public abstract class ZRangeByLex0Commander extends ZRem0Commander {
         }
         byte[] prefix = keyDesign.subKeyPrefix(keyMeta, key);
         //
-        List<ZSetTuple> list = new ArrayList<>();
+        List<ZSetTuple> result = new ArrayList<>();
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
+        int loop = 0;
+        boolean includeStartKey;
         while (true) {
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, scanBatch, Sort.ASC, !minLex.isExcludeLex());
+            if (loop == 0) {
+                includeStartKey = !minLex.isExcludeLex();
+            } else {
+                includeStartKey = false;
+            }
+            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, scanBatch, Sort.ASC, includeStartKey);
+            loop ++;
             if (scan.isEmpty()) {
-                return list;
+                return result;
             }
             for (KeyValue keyValue : scan) {
                 if (keyValue == null || keyValue.getValue() == null) {
@@ -61,15 +70,20 @@ public abstract class ZRangeByLex0Commander extends ZRem0Commander {
                     continue;
                 }
                 if (count >= limit.getOffset()) {
-                    list.add(new ZSetTuple(new BytesKey(member), null));
-                }
-                if (limit.getCount() > 0 && list.size() >= limit.getCount()) {
-                    return list;
+                    if (withScores) {
+                        double score = Utils.bytesToDouble(keyValue.getValue());
+                        result.add(new ZSetTuple(new BytesKey(member), score));
+                    } else {
+                        result.add(new ZSetTuple(new BytesKey(member), null));
+                    }
+                    if (limit.getCount() > 0 && result.size() >= limit.getCount()) {
+                        return result;
+                    }
                 }
                 count++;
             }
             if (scan.size() < scanBatch) {
-                return list;
+                return result;
             }
         }
     }

@@ -34,16 +34,19 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
 
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
-        int targetSize = stop - start;
+        int targetSize = stop - start + 1;
 
-        List<ZSetTuple> list = new ArrayList<>();
+        List<ZSetTuple> result = new ArrayList<>(targetSize);
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
         while (true) {
-            int limit = Math.min(targetSize - list.size(), scanBatch);
+            if (result.size() >= targetSize) {
+                return result;
+            }
+            int limit = Math.min(targetSize - result.size(), scanBatch);
             List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
-                return list;
+                return result;
             }
             for (KeyValue keyValue : scan) {
                 if (keyValue == null || keyValue.getValue() == null) {
@@ -54,18 +57,18 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
                     byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                     if (withScores) {
                         double score = Utils.bytesToDouble(keyValue.getValue());
-                        list.add(new ZSetTuple(new BytesKey(member), score));
+                        result.add(new ZSetTuple(new BytesKey(member), score));
                     } else {
-                        list.add(new ZSetTuple(new BytesKey(member), null));
+                        result.add(new ZSetTuple(new BytesKey(member), null));
                     }
                 }
                 if (count >= stop) {
-                    return list;
+                    return result;
                 }
                 count++;
             }
             if (scan.size() < limit) {
-                return list;
+                return result;
             }
         }
     }

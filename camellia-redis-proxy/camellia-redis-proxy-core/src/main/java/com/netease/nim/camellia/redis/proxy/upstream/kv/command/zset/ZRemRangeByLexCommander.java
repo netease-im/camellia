@@ -151,7 +151,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             if (removedMembers == null) {
                 removedMembers = new HashMap<>();
-                List<ZSetTuple> list = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, ZSetLimit.NO_LIMIT);
+                List<ZSetTuple> list = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, ZSetLimit.NO_LIMIT, true);
                 for (ZSetTuple tuple : list) {
                     removedMembers.put(tuple.getMember(), tuple.getScore());
                 }

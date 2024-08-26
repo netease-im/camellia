@@ -111,7 +111,7 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            List<ZSetTuple> tuples = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
+            List<ZSetTuple> tuples = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit, false);
             return ZSetTupleUtils.toReply(tuples, false);
         }
 

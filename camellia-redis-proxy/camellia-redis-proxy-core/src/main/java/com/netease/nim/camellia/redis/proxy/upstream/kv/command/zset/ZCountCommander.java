@@ -131,7 +131,7 @@ public class ZCountCommander extends ZSet0Commander {
         while (true) {
             List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.ASC, false);
             if (list.isEmpty()) {
-                break;
+                return count;
             }
             for (KeyValue keyValue : list) {
                 if (keyValue == null) {
@@ -149,9 +149,8 @@ public class ZCountCommander extends ZSet0Commander {
                 count ++;
             }
             if (list.size() < batch) {
-                break;
+                return count;
             }
         }
-        return count;
     }
 }

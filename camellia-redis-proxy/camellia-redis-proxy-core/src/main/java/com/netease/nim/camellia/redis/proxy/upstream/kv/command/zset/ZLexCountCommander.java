@@ -159,10 +159,18 @@ public class ZLexCountCommander extends ZSet0Commander {
         //
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
+        int loop = 0;
+        boolean includeStartKey;
         while (true) {
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, scanBatch, Sort.ASC, !minLex.isExcludeLex());
+            if (loop == 0) {
+                includeStartKey = !minLex.isExcludeLex();
+            } else {
+                includeStartKey = false;
+            }
+            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, scanBatch, Sort.ASC, includeStartKey);
+            loop ++;
             if (scan.isEmpty()) {
-                break;
+                return count;
             }
             for (KeyValue keyValue : scan) {
                 if (keyValue == null || keyValue.getValue() == null) {
@@ -177,9 +185,8 @@ public class ZLexCountCommander extends ZSet0Commander {
                 count++;
             }
             if (scan.size() < scanBatch) {
-                break;
+                return count;
             }
         }
-        return count;
     }
 }

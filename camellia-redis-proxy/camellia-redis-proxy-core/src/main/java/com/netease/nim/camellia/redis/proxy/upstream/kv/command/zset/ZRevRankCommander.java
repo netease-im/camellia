@@ -116,14 +116,16 @@ public class ZRevRankCommander extends ZSet0Commander {
 
     private Reply zrevrank(KeyMeta keyMeta, byte[] key, byte[] cacheKey, BytesKey member, boolean withScores) {
         if (kvClient.supportReverseScan()) {
-            return toReply(zrevrankFromKv(keyMeta, key, member), withScores);
+            Pair<Integer, ZSetTuple> result = zrevrankFromKv(keyMeta, key, member);
+            return toReply(result, withScores);
         } else {
             RedisZSet zSet = loadLRUCache(keyMeta, key);
             if (zSet != null) {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     cacheConfig.getZSetLRUCache().putZSetForRead(key, cacheKey, zSet);
                 }
-                return toReply(zSet.zrevrank(member), withScores);
+                Pair<Integer, ZSetTuple> result = zSet.zrevrank(member);
+                return toReply(result, withScores);
             } else {
                 return ErrorReply.NOT_SUPPORT;
             }

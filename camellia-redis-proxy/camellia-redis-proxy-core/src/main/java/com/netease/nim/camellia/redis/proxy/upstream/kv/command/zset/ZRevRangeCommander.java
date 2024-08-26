@@ -157,7 +157,7 @@ public class ZRevRangeCommander extends ZSet0Commander {
     }
 
     private List<ZSetTuple> zrevrange0(byte[] key, byte[] startKey, byte[] prefix, int start, int stop, boolean withScores) {
-        int targetSize = stop - start;
+        int targetSize = stop - start + 1;
         List<ZSetTuple> list = new ArrayList<>();
         int scanBatch = kvConfig.scanBatch();
         int count = 0;

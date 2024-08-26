@@ -217,7 +217,7 @@ public class OBKVHBaseClient implements KVClient {
         try {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
-            scan.setCaching(limit);
+            scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
             scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
@@ -279,7 +279,7 @@ public class OBKVHBaseClient implements KVClient {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
-            scan.setCaching(limit);
+            scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
             scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
