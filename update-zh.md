@@ -22,6 +22,7 @@
 
 ### fix
 * camellia-redis-proxy，kv模块，zset的score字段返回时使用了科学计数法的问题
+* camellia-redis-proxy，kv模块，zset的zrevrangebyscore方法，某些case下死循环
 * camellia-redis-proxy，cluster-mode-2，部分场景下重新选主后，新的leader没有把slot-map刷新到storage
 
 

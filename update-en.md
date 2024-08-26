@@ -22,6 +22,7 @@
 
 ### fix
 * camellia-redis-proxy，kv, zset score field format in scientific notation
+* camellia-redis-proxy，kv, zset zrevrangebyscore in endless loop
 * camellia-redis-proxy，cluster-mode-2, new leader do not flush slot-map to storage in some scene
 
 
