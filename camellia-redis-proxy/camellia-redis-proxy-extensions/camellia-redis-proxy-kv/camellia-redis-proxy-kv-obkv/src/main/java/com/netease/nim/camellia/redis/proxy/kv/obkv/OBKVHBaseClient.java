@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,6 +220,11 @@ public class OBKVHBaseClient implements KVClient {
             scan.setStartRow(startKey);
             scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
+            if (sort == Sort.ASC) {
+                scan.setStopRow(BytesUtils.nextBytes(prefix));
+            } else {
+                scan.setStopRow(BytesUtils.lastBytes(prefix));
+            }
             scan.setReversed(sort != Sort.ASC);
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
@@ -252,6 +258,8 @@ public class OBKVHBaseClient implements KVClient {
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setSmall(true);
+            scan.setStopRow(BytesUtils.nextBytes(prefix));
+            scan.setFilter(new KeyOnlyFilter());
             int count = 0;
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 for (Result result : scanner) {
@@ -314,6 +322,7 @@ public class OBKVHBaseClient implements KVClient {
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
             scan.setSmall(true);
+            scan.setFilter(new KeyOnlyFilter());
             int count = 0;
             try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 for (Result result : scanner) {
