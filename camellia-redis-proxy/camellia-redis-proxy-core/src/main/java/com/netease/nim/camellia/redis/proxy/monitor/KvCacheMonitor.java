@@ -108,16 +108,15 @@ public class KvCacheMonitor {
                 stats.setRedis(redis);
                 stats.setStore(store);
                 long total = writeBuffer + local + redis + store;
-                if (total > 0) {
-                    double writeBufferHit = writeBuffer * 1.0 / total;
-                    double localCacheHit = local * 1.0 / total;
-                    double redisCacheHit = redis * 1.0 / total;
-                    double storageHit = store * 1.0 / total;
-                    stats.setWriteBufferHit(writeBufferHit);
-                    stats.setLocalCacheHit(localCacheHit);
-                    stats.setRedisCacheHit(redisCacheHit);
-                    stats.setStorageHit(storageHit);
-                }
+                if (total <= 0) continue;
+                double writeBufferHit = writeBuffer * 1.0 / total;
+                double localCacheHit = local * 1.0 / total;
+                double redisCacheHit = redis * 1.0 / total;
+                double storageHit = store * 1.0 / total;
+                stats.setWriteBufferHit(writeBufferHit);
+                stats.setLocalCacheHit(localCacheHit);
+                stats.setRedisCacheHit(redisCacheHit);
+                stats.setStorageHit(storageHit);
                 list.add(stats);
             }
         } catch (Exception e) {
