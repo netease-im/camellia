@@ -49,8 +49,11 @@ public class HotKeyCalculator {
             logger.info("kv hot key calculator cache build, namespace = {}, keyType = {}, capacity = {}", namespace, keyType, capacity);
         }
 
-        int threshold = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.threshold", 2);
-        int window = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.time.window", 5000);
+        int defaultThreshold = RedisKvConf.getInt(namespace, "kv.hot.key.threshold", 2);
+        int defaultWindow = RedisKvConf.getInt(namespace, "kv.hot.key.time.window", 5000);
+
+        int threshold = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.threshold", defaultThreshold);
+        int window = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.time.window", defaultWindow);
         if (this.threshold != threshold) {
             logger.info("kv hot key calculator cache build, namespace = {}, keyType = {}, threshold = {}", namespace, keyType, threshold);
             this.threshold = threshold;
