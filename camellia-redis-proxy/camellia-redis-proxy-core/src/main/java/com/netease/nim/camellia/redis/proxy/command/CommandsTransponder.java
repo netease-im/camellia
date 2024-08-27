@@ -141,13 +141,7 @@ public class CommandsTransponder {
 
                 //不支持的命令直接返回NOT_SUPPORT
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
-                    ErrorReply errorReply;
-                    String name = command.getName();
-                    if (name != null) {
-                        errorReply = new ErrorReply("ERR proxy command '" + name + "' not support");
-                    } else {
-                        errorReply = ErrorReply.NOT_SUPPORT;
-                    }
+                    ErrorReply errorReply = Utils.commandNotSupport(redisCommand);
                     reply(channelInfo, task, redisCommand, errorReply, false);
                     ErrorLogCollector.collect(CommandsTransponder.class, "not support command = " + command.getName());
                     hasCommandsSkip = true;
@@ -292,7 +286,7 @@ public class CommandsTransponder {
 
                     //sentinel不往后发
                     if (redisCommand == RedisCommand.SENTINEL) {
-                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                        task.replyCompleted(Utils.commandNotSupport(redisCommand));
                         hasCommandsSkip = true;
                         continue;
                     }
@@ -351,7 +345,7 @@ public class CommandsTransponder {
                             CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
                             future.thenAccept(task::replyCompleted);
                         } else {
-                            task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                            task.replyCompleted(Utils.commandNotSupport(redisCommand));
                         }
                         hasCommandsSkip = true;
                         continue;

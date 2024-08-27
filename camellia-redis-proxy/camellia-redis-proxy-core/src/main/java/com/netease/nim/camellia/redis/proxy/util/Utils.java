@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -368,5 +369,15 @@ public class Utils {
         }
         value *= Long.signum(bytes);
         return String.format("%.2f%c", value / 1024.0, ci.current());
+    }
+
+    public static ErrorReply commandNotSupport(RedisCommand redisCommand) {
+        ErrorReply errorReply;
+        if (redisCommand != null) {
+            errorReply = new ErrorReply("ERR command '" + redisCommand.strRaw() + "' not support");
+        } else {
+            errorReply = ErrorReply.NOT_SUPPORT;
+        }
+        return errorReply;
     }
 }

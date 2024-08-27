@@ -174,7 +174,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             //get master addr by name
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME))) {
                 ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, sentinel command not support param = " + param);
-                return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
+                return wrapper(connection, redisCommand, Utils.commandNotSupport(redisCommand));
             }
             if (args.length < 3) {
                 return wrapper(connection, redisCommand, ErrorReply.argNumWrong(redisCommand));
@@ -211,7 +211,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             //only support +switch-master
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.MASTER_SWITCH))) {
                 ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, subscribe command not support param = " + param);
-                return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
+                return wrapper(connection, redisCommand, Utils.commandNotSupport(redisCommand));
             }
             Reply[] replies = new Reply[3];
             replies[0] = new BulkReply(Utils.stringToBytes("subscribe"));
@@ -224,7 +224,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         }
         ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, not support command = " + redisCommand);
         //other command not support
-        return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
+        return wrapper(connection, redisCommand, Utils.commandNotSupport(redisCommand));
     }
 
     /**

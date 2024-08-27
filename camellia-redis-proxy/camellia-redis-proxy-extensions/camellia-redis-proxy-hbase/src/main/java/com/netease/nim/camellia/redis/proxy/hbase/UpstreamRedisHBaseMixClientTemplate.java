@@ -135,7 +135,7 @@ public class UpstreamRedisHBaseMixClientTemplate implements IUpstreamClientTempl
             Reply reply;
             if (method == null) {
                 logger.warn("not support command = {}, return NOT_SUPPORT, consid = {}", command.getName(), channelInfo.getConsid());
-                reply = ErrorReply.NOT_SUPPORT;
+                reply = Utils.commandNotSupport(command.getRedisCommand());
             } else {
                 reply = (Reply) CommandInvokerUtil.invoke(method, command, processor);
             }

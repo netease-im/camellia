@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 
 public class ErrorReply implements Reply {
-    public static final ErrorReply NOT_SUPPORT = new ErrorReply("ERR proxy command not support");
+    public static final ErrorReply NOT_SUPPORT = new ErrorReply("ERR command not support");
 
     public static final ErrorReply NOT_AVAILABLE = new ErrorReply("ERR proxy not available");
 

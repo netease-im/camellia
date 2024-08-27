@@ -131,7 +131,7 @@ public class RedisKvClient implements IUpstreamClient {
         } else if (redisCommand == RedisCommand.SCAN) {
             sendScanCommand(command, future);
         } else {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(redisCommand));
         }
     }
 
@@ -205,7 +205,7 @@ public class RedisKvClient implements IUpstreamClient {
                 future.complete(StatusReply.OK);
             });
         } else {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(redisCommand));
         }
     }
 

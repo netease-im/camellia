@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class Commanders {
         RedisCommand redisCommand = command.getRedisCommand();
         Commander commander = map.get(redisCommand);
         if (commander == null) {
-            return ErrorReply.NOT_SUPPORT;
+            return Utils.commandNotSupport(redisCommand);
         }
         try {
             if (!commander.parse(command)) {

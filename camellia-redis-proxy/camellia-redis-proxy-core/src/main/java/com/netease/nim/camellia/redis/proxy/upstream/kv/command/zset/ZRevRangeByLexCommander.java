@@ -18,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
     private Reply zrevrangeByLexVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         RedisZSet zSet = loadLRUCache(keyMeta, key);
         if (zSet == null) {
-            return ErrorReply.NOT_SUPPORT;
+            return Utils.commandNotSupport(RedisCommand.ZREVRANGEBYLEX);
         }
         //
         if (cacheConfig.isZSetLocalCacheEnable()) {

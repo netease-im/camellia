@@ -128,7 +128,7 @@ public class ZRevRangeCommander extends ZSet0Commander {
     private Reply zrevrangeVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, boolean withScores) {
         RedisZSet zSet = loadLRUCache(keyMeta, key);
         if (zSet == null) {
-            return ErrorReply.NOT_SUPPORT;
+            return Utils.commandNotSupport(RedisCommand.ZREVRANGE);
         }
         //
         if (cacheConfig.isZSetLocalCacheEnable()) {

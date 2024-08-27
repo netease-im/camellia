@@ -18,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.ArrayList;
@@ -132,7 +133,7 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
     private Reply zrevrangeByScoreVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
         RedisZSet zSet = loadLRUCache(keyMeta, key);
         if (zSet == null) {
-            return ErrorReply.NOT_SUPPORT;
+            return Utils.commandNotSupport(RedisCommand.ZREVRANGEBYSCORE);
         }
         //
         if (cacheConfig.isZSetLocalCacheEnable()) {

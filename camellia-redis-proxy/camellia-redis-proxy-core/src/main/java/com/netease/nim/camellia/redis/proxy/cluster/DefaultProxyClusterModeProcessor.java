@@ -185,7 +185,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     public CompletableFuture<Reply> clusterCommands(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand != RedisCommand.CLUSTER) {
-            return CompletableFuture.completedFuture(ErrorReply.NOT_SUPPORT);
+            return CompletableFuture.completedFuture(Utils.commandNotSupport(redisCommand));
         }
         byte[][] objects = command.getObjects();
         if (objects.length <= 1) {
@@ -226,7 +226,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             return future;
         } else {
             ErrorLogCollector.collect(DefaultProxyClusterModeProcessor.class, "not support cluster command, arg = " + arg);
-            return CompletableFuture.completedFuture(ErrorReply.NOT_SUPPORT);
+            return CompletableFuture.completedFuture(Utils.commandNotSupport(redisCommand));
         }
     }
 

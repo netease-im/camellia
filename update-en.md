@@ -18,6 +18,7 @@
 * camellia-redis-proxy，kv, optimize lru cache of zset, optimize lru cache build
 * camellia-redis-proxy，kv, update kv-client scanByStartEnd and countByStartEnd method
 * camellia-redis-proxy，kv, optimize scanByPrefix/countByPrefix/countByStartEnd of HBaseKVClient/OBKVHBaseClient
+* camellia-redis-proxy，optimize error reply for command not support
 * camellia-redis-proxy-bootstrap support use maven profile to compile different function
 * reactor multi-write code, include camellia-redis-client、camellia-hbase-client、camellia-feign-client
 

@@ -233,7 +233,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         }
                     }
                     CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                     futureList.add(future);
                     continue;
                 }
@@ -290,7 +290,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                 if (resourceSelector.getType() == ResourceTable.Type.SHADING) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                     futureList.add(future);
                     command.getChannelInfo().clearInTransactionCommands();
                     command.getChannelInfo().setTransactionTag(false);
@@ -360,7 +360,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL
                         && proxyRouteType != ProxyRouteType.REDIS_CLUSTER) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                     futureList.add(future);
                     continue;
                 }
@@ -384,7 +384,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL
                         && proxyRouteType != ProxyRouteType.SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                     futureList.add(future);
                     continue;
                 }
@@ -530,7 +530,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
                 } else {
                     future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                 }
                 futureList.add(future);
                 continue;
@@ -556,7 +556,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     future = doRead(resource, commandFlusher, command);
                 } else {
                     future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                 }
                 futureList.add(future);
                 continue;
@@ -580,7 +580,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     future = doRead(resource, commandFlusher, command);
                 } else {
                     future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_SUPPORT);
+                    future.complete(Utils.commandNotSupport(redisCommand));
                 }
                 futureList.add(future);
                 continue;

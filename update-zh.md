@@ -18,6 +18,7 @@
 * camellia-redis-proxy，kv模块，优化了zset的lru cache的性能，优化了lru cache重建的逻辑
 * camellia-redis-proxy，kv模块，更新了kv-client的scanByStartEnd和countByStartEnd方法的定义，增加了prefix参数
 * camellia-redis-proxy，kv模块，优化了HBaseKVClient和OBKVHBaseClient的scanByPrefix/countByPrefix/countByStartEnd方法，减少无效数据扫描
+* camellia-redis-proxy，优化了命令不支持时的回包
 * camellia-redis-proxy-bootstrap支持使用maven profile来编译不同的功能
 * 重构了multi-write相关的代码，涉及camellia-redis-client、camellia-hbase-client、camellia-feign-client
 

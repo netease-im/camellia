@@ -97,7 +97,7 @@ public class ProxyCommandProcessor {
         RedisCommand redisCommand = command.getRedisCommand();
         CompletableFuture<Reply> future = new CompletableFuture<>();
         if (redisCommand != RedisCommand.PROXY) {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(redisCommand));
             return future;
         }
         final byte[][] args = command.getObjects();

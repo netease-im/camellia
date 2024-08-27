@@ -458,7 +458,7 @@ public class RedisClusterClient implements IUpstreamClient {
             channelInfo.setInTransaction(false);
             commandFlusher.flush();
         } else {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(redisCommand));
         }
     }
 
@@ -579,7 +579,7 @@ public class RedisClusterClient implements IUpstreamClient {
             }
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
         } else {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(command.getRedisCommand()));
         }
     }
 
@@ -608,7 +608,7 @@ public class RedisClusterClient implements IUpstreamClient {
             RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, node.getAddr());
             commandFlusher.sendCommand(redisConnection, command, future);
         } else {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(command.getRedisCommand()));
         }
     }
 
@@ -636,7 +636,7 @@ public class RedisClusterClient implements IUpstreamClient {
             RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, node.getAddr());
             commandFlusher.sendCommand(redisConnection, command, future);
         } else {
-            future.complete(ErrorReply.NOT_SUPPORT);
+            future.complete(Utils.commandNotSupport(command.getRedisCommand()));
         }
     }
 

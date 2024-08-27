@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.util.ParamUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
@@ -158,9 +159,9 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
             return ErrorReply.SYNTAX_ERROR;
         }
         if (nxxx != null && expx != null) {
-            return ErrorReply.NOT_SUPPORT;
+            return Utils.commandNotSupport(RedisCommand.SET);
         } else if (nxxx != null) {
-            return ErrorReply.NOT_SUPPORT;
+            return Utils.commandNotSupport(RedisCommand.SET);
         } else {
             if (expx.equalsIgnoreCase(RedisKeyword.EX.name())) {
                 String setex = stringMixClient.setex(key, Math.toIntExact(time), value1);

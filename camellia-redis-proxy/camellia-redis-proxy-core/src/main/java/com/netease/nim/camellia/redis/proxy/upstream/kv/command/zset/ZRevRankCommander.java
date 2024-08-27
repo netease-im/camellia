@@ -127,7 +127,7 @@ public class ZRevRankCommander extends ZSet0Commander {
                 Pair<Integer, ZSetTuple> result = zSet.zrevrank(member);
                 return toReply(result, withScores);
             } else {
-                return ErrorReply.NOT_SUPPORT;
+                return Utils.commandNotSupport(RedisCommand.ZREVRANK);
             }
         }
     }
