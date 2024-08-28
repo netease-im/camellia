@@ -103,6 +103,7 @@ public class OBKVHBaseClient implements KVClient {
     public KeyValue get(byte[] key) {
         try {
             Get get = new Get(key);
+            get.addFamily(cf);
             Result result = tableClient.get(get);
             if (result == null) {
                 return null;
@@ -122,6 +123,7 @@ public class OBKVHBaseClient implements KVClient {
     public boolean exists(byte[] key) {
         try {
             Get get = new Get(key);
+            get.addFamily(cf);
             return tableClient.exists(get);
         } catch (IOException e) {
             logger.error("exists error", e);
@@ -135,7 +137,9 @@ public class OBKVHBaseClient implements KVClient {
             boolean[] results = new boolean[keys.length];
             int i=0;
             for (byte[] key : keys) {
-                results[i] = tableClient.exists(new Get(key));
+                Get get = new Get(key);
+                get.addFamily(cf);
+                results[i] = tableClient.exists(get);
                 i++;
             }
             return results;
@@ -151,6 +155,7 @@ public class OBKVHBaseClient implements KVClient {
             List<Get> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
                 Get get = new Get(key);
+                get.addFamily(cf);
                 list.add(get);
             }
             List<KeyValue> keyValues = new ArrayList<>(list.size());
@@ -172,6 +177,7 @@ public class OBKVHBaseClient implements KVClient {
     public void delete(byte[] key) {
         try {
             Delete delete = new Delete(key);
+            delete.deleteFamily(cf);
             tableClient.delete(delete);
         } catch (IOException e) {
             logger.error("delete error", e);
@@ -184,7 +190,9 @@ public class OBKVHBaseClient implements KVClient {
         try {
             List<Delete> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                list.add(new Delete(key));
+                Delete delete = new Delete(key);
+                delete.deleteFamily(cf);
+                list.add(delete);
             }
             tableClient.delete(list);
         } catch (IOException e) {
@@ -201,7 +209,9 @@ public class OBKVHBaseClient implements KVClient {
     @Override
     public void checkAndDelete(byte[] key, byte[] value) {
         try {
-            tableClient.checkAndDelete(key, cf, column, value, new Delete(key));
+            Delete delete = new Delete(key);
+            delete.deleteFamily(cf);
+            tableClient.checkAndDelete(key, cf, column, value, delete);
         } catch (IOException e) {
             logger.error("checkAndDelete error", e);
             throw new KvException(e);
@@ -217,6 +227,7 @@ public class OBKVHBaseClient implements KVClient {
     public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
+            scan.addFamily(cf);
             scan.setStartRow(startKey);
             scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
@@ -256,6 +267,7 @@ public class OBKVHBaseClient implements KVClient {
     public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
+            scan.addFamily(cf);
             scan.setStartRow(startKey);
             scan.setSmall(true);
             scan.setStopRow(BytesUtils.nextBytes(prefix));
@@ -285,6 +297,7 @@ public class OBKVHBaseClient implements KVClient {
     public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
+            scan.addFamily(cf);
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
             scan.setCaching(includeStartKey ? limit : (limit + 1));
@@ -319,6 +332,7 @@ public class OBKVHBaseClient implements KVClient {
     public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
+            scan.addFamily(cf);
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
             scan.setSmall(true);
