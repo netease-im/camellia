@@ -21,7 +21,6 @@ public enum KeyType {
 }
 ```
 
-* key-meta本身支持配置redis-cache-server，从而加快读写（可换出）
 * key-version使用创建key时的时间戳表示
 * expire-time记录key的过期时间戳，如果key没有ttl，则为-1
 * extra取决于encode-version和type，可选
@@ -37,7 +36,6 @@ public enum KeyType {
 * 只有一种编码结构，encode-version固定为0
 * key-type固定为1
 * 只有key-meta，没有sub-key
-* 没有专门的缓存结构，依赖于key-meta本身的缓存
 
 
 ## hash数据结构
