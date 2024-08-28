@@ -53,7 +53,8 @@ public abstract class ZSet0Commander extends Commander {
             Reply reply = sync(storageRedisTemplate.sendCommand(new Command(objects)));
             if (reply instanceof MultiBulkReply) {
                 //
-                reply = checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, true);
+                boolean forRead = redisCommand().getType() == RedisCommand.Type.READ;
+                reply = checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, true, forRead);
                 //
                 if (reply instanceof MultiBulkReply) {
                     Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -80,7 +81,7 @@ public abstract class ZSet0Commander extends Commander {
             return reply;
         }
         if (reply instanceof MultiBulkReply) {
-            return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores);
+            return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores, true);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
@@ -119,7 +120,7 @@ public abstract class ZSet0Commander extends Commander {
         return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
     }
 
-    protected final Reply checkReplyWithIndex(KeyMeta keyMeta, byte[] key, MultiBulkReply reply, boolean withScores) {
+    private Reply checkReplyWithIndex(KeyMeta keyMeta, byte[] key, MultiBulkReply reply, boolean withScores, boolean forRead) {
         Reply[] replies = reply.getReplies();
         int step = withScores ? 2: 1;
         int size = withScores ? replies.length/2 : replies.length;
@@ -151,7 +152,12 @@ public abstract class ZSet0Commander extends Commander {
             if (!missingMemberMap.isEmpty()) {
                 Set<BytesKey> set = new HashSet<>(missingMemberMap.keySet());
                 for (BytesKey ref : set) {
-                    byte[] raw = lruCache.get(key, cacheKey, ref);
+                    byte[] raw;
+                    if (forRead) {
+                        raw = lruCache.getForRead(key, cacheKey, ref);
+                    } else {
+                        raw = lruCache.getForWrite(key, cacheKey, ref);
+                    }
                     if (raw != null && raw.length > 0) {
                         memberMap.put(ref, raw);
                         missingMemberMap.remove(ref);
@@ -190,7 +196,11 @@ public abstract class ZSet0Commander extends Commander {
                         //
                         if (localCacheEnable) {
                             ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
-                            lruCache.put(key, cacheKey, member, raw);
+                            if (forRead) {
+                                lruCache.putForRead(key, cacheKey, member, raw);
+                            } else {
+                                lruCache.putForWrite(key, cacheKey, member, raw);
+                            }
                         }
                     }
                 }
@@ -223,7 +233,11 @@ public abstract class ZSet0Commander extends Commander {
                 //
                 if (localCacheEnable) {
                     ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
-                    lruCache.put(key, cacheKey, bytesKey, keyValue.getValue());
+                    if (forRead) {
+                        lruCache.putForRead(key, cacheKey, bytesKey, keyValue.getValue());
+                    } else {
+                        lruCache.putForWrite(key, cacheKey, bytesKey, keyValue.getValue());
+                    }
                 }
 
                 missingMemberMap.remove(bytesKey);

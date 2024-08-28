@@ -24,6 +24,7 @@ public class ZSetIndexLRUCache {
     private int capacity;
 
     private SlotLRUCache<byte[]> localCache;
+    private SlotLRUCache<byte[]> localCacheForWrite;
 
     public ZSetIndexLRUCache(String namespace) {
         this.namespace = namespace;
@@ -35,6 +36,7 @@ public class ZSetIndexLRUCache {
             List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
             for (Integer removedSlot : removedSlots) {
                 localCache.clear(removedSlot);
+                localCacheForWrite.clear(removedSlot);
             }
         });
     }
@@ -47,18 +49,49 @@ public class ZSetIndexLRUCache {
             } else {
                 this.localCache.setCapacity(capacity);
             }
+            if (this.localCacheForWrite == null) {
+                this.localCacheForWrite = new SlotLRUCache<>(capacity);
+            } else {
+                this.localCacheForWrite.setCapacity(capacity);
+            }
             logger.info("zset index lru cache build, namespace = {}, capacity = {}", namespace, capacity);
         }
         this.capacity = capacity;
     }
 
-    public byte[] get(byte[] key, byte[] cacheKey, BytesKey ref) {
+    public byte[] getForRead(byte[] key, byte[] cacheKey, BytesKey ref) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
+        byte[] bytes = localCache.get(slot, indexCacheKey);
+        if (bytes != null) {
+            return bytes;
+        }
+        bytes = localCacheForWrite.get(slot, indexCacheKey);
+        if (bytes != null) {
+            localCache.put(slot, indexCacheKey, bytes);
+            localCacheForWrite.remove(slot, indexCacheKey);
+            return bytes;
+        }
+        return null;
+    }
+
+    public byte[] getForWrite(byte[] key, byte[] cacheKey, BytesKey ref) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
+        byte[] bytes = localCacheForWrite.get(slot, indexCacheKey);
+        if (bytes != null) {
+            return bytes;
+        }
         return localCache.get(slot, indexCacheKey);
     }
 
-    public void put(byte[] key, byte[] cacheKey, BytesKey ref, byte[] raw) {
+    public void putForWrite(byte[] key, byte[] cacheKey, BytesKey ref, byte[] raw) {
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
+        localCacheForWrite.put(slot, indexCacheKey, raw);
+    }
+
+    public void putForRead(byte[] key, byte[] cacheKey, BytesKey ref, byte[] raw) {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         localCache.put(slot, indexCacheKey, raw);
@@ -68,15 +101,18 @@ public class ZSetIndexLRUCache {
         int slot = RedisClusterCRC16Utils.getSlot(key);
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         localCache.remove(slot, indexCacheKey);
+        localCacheForWrite.remove(slot, indexCacheKey);
     }
 
     public void clear() {
         localCache.clear();
+        localCacheForWrite.clear();
     }
 
     public long estimateSize() {
         long estimateSize = 0;
         estimateSize += localCache.estimateSize();
+        estimateSize += localCacheForWrite.estimateSize();
         return estimateSize;
     }
 }
