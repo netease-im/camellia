@@ -343,6 +343,83 @@ public class PrometheusMetrics {
             builder.append(prefix).append(String.format("hot_key_cache_hit{tenant=\"%s\",key=\"%s\"} %d\n", tenant, key, hitCount));
         }
 
+        //
+        List<KvCacheStats> kvCacheStatsList = stats.getKvCacheStatsList();
+        builder.append("# HELP kv_cache_stats Redis Proxy KV Cache Stats\n");
+        builder.append("# TYPE kv_cache_stats gauge\n");
+        for (KvCacheStats kvCacheStats : kvCacheStatsList) {
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"write_buffer\"} %d\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getWriteBuffer()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"write_buffer_hit\"} %f\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getWriteBufferHit()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"local\"} %d\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getLocal()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"local_cache_hit\"} %f\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getLocalCacheHit()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"redis\"} %d\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getRedis()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"redis_cache_hit\"} %f\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getRedisCacheHit()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"store\"} %d\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getStore()));
+            builder.append(prefix).append(String.format("kv_cache_stats{namespace=\"%s\",type=\"storage_hit\"} %f\n",
+                    kvCacheStats.getNamespace(), kvCacheStats.getStorageHit()));
+        }
+
+        List<KvExecutorStats> kvExecutorStatsList = stats.getKvExecutorStatsList();
+        builder.append("# HELP kv_executor_stats Redis Proxy KV Executor Stats\n");
+        builder.append("# TYPE kv_executor_stats gauge\n");
+        for (KvExecutorStats kvExecutorStats : kvExecutorStatsList) {
+            builder.append(prefix).append(String.format("kv_executor_stats{name=\"%s\"} %d\n", kvExecutorStats.getName(), kvExecutorStats.getPending()));
+        }
+
+        List<KvGcStats> kvGcStatsList = stats.getKvGcStatsList();
+        builder.append("# HELP kv_gc_stats Redis Proxy KV Gc Stats\n");
+        builder.append("# TYPE kv_gc_stats gauge\n");
+        for (KvGcStats kvGcStats : kvGcStatsList) {
+            builder.append(prefix).append(String.format("kv_gc_stats{namespace=\"%s\",type=\"deleteMetaKeys\"} %d\n",
+                    kvGcStats.getNamespace(), kvGcStats.getDeleteMetaKeys()));
+            builder.append(prefix).append(String.format("kv_gc_stats{namespace=\"%s\",type=\"deleteSubKeys\"} %d\n",
+                    kvGcStats.getNamespace(), kvGcStats.getDeleteSubKeys()));
+        }
+
+        List<KvStorageSpendStats> kvStorageSpendStatsList = stats.getKvStorageSpendStatsList();
+        builder.append("# HELP kv_storage_spend_stats Redis Proxy KV Storage Spend Stats\n");
+        builder.append("# TYPE kv_storage_spend_stats gauge\n");
+        for (KvStorageSpendStats kvStorageSpendStats : kvStorageSpendStatsList) {
+            String namespace = kvStorageSpendStats.getNamespace();
+            String name = kvStorageSpendStats.getName();
+            String method = kvStorageSpendStats.getMethod();
+            long count1 = kvStorageSpendStats.getCount();
+            double avg = kvStorageSpendStats.getAvgSpendMs();
+            double p50 = kvStorageSpendStats.getSpendMsP50();
+            double p90 = kvStorageSpendStats.getSpendMsP90();
+            double p99 = kvStorageSpendStats.getSpendMsP99();
+            double max = kvStorageSpendStats.getMaxSpendMs();
+            builder.append(prefix).append(String.format("kv_storage_spend_stats{namespace=\"%s\", name=\"%s\", method=\"%s\", type=\"count\"} %d\n", namespace, name, method, count1));
+            builder.append(prefix).append(String.format("kv_storage_spend_stats{namespace=\"%s\", name=\"%s\", method=\"%s\", type=\"avg\"} %f\n", namespace, name, method, avg));
+            builder.append(prefix).append(String.format("kv_storage_spend_stats{namespace=\"%s\", name=\"%s\", method=\"%s\", type=\"max\"} %f\n", namespace, name, method, max));
+            builder.append(prefix).append(String.format("kv_storage_spend_stats{namespace=\"%s\", name=\"%s\", method=\"%s\", type=\"p50\"} %f\n", namespace, name, method, p50));
+            builder.append(prefix).append(String.format("kv_storage_spend_stats{namespace=\"%s\", name=\"%s\", method=\"%s\", type=\"p90\"} %f\n", namespace, name, method, p90));
+            builder.append(prefix).append(String.format("kv_storage_spend_stats{namespace=\"%s\", name=\"%s\", method=\"%s\", type=\"p99\"} %f\n", namespace, name, method, p99));
+        }
+
+        List<KvWriteBufferStats> kvWriteBufferStatsList = stats.getKvWriteBufferStatsList();
+        builder.append("# HELP kv_write_buffer_stats Redis Proxy KV Write Buffer Stats\n");
+        builder.append("# TYPE kv_write_buffer_stats gauge\n");
+        for (KvWriteBufferStats kvWriteBufferStats : kvWriteBufferStatsList) {
+            builder.append(prefix).append(String.format("kv_write_buffer_stats{namespace=\"%s\", type=\"%s\", metric_type=\"cache\"} %d\n",
+                    kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getCache()));
+            builder.append(prefix).append(String.format("kv_write_buffer_stats{namespace=\"%s\", type=\"%s\", metric_type=\"start\"} %d\n",
+                    kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getStart()));
+            builder.append(prefix).append(String.format("kv_write_buffer_stats{namespace=\"%s\", type=\"%s\", metric_type=\"done\"} %d\n",
+                    kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getDone()));
+            builder.append(prefix).append(String.format("kv_write_buffer_stats{namespace=\"%s\", type=\"%s\", metric_type=\"overflow\"} %d\n",
+                    kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getOverflow()));
+            builder.append(prefix).append(String.format("kv_write_buffer_stats{namespace=\"%s\", type=\"%s\", metric_type=\"pending\"} %d\n",
+                    kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getPending()));
+        }
+
         return builder.toString();
     }
 
