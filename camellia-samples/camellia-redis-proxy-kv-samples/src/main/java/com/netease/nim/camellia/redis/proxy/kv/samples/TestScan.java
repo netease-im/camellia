@@ -43,12 +43,17 @@ public class TestScan {
                 set.add(cursor);
                 List<String> result1 = result.getResult();
                 for (String key : result1) {
-                    Set<String> zrange = template.zrange(key, 0, -1);
-                    template.zremrangeByRank(key, 0, -101);
-                    template.zrangeByScore(key, 0, System.currentTimeMillis());
-                    System.out.println("key = " + key + ",size=" + zrange.size());
-                    if (zrange.size() > 1000) {
-                        System.exit(-1);
+                    try {
+                        Set<String> zrange = template.zrange(key, 0, -1);
+                        template.zremrangeByRank(key, 0, -101);
+                        template.zrangeByScore(key, 0, System.currentTimeMillis());
+                        System.out.println("key = " + key + ",size=" + zrange.size());
+                        if (zrange.size() > 1000) {
+                            System.exit(-1);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.out.println("key=" + key);
                     }
                 }
                 template.del(result1.toArray(new String[0]));

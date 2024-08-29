@@ -166,16 +166,12 @@ public class ScanCommander extends Commander {
         }
         cursor = Math.abs(cursor);
         while (true) {
-            byte[] oldValue = cursorCache.get(cursor);
+            byte[] oldValue = cursorCache.putIfAbsent(cursor, startKey);
             if (oldValue == null) {
                 break;
             }
             cursor += ThreadLocalRandom.current().nextInt(1000);
             cursor = Math.abs(cursor);
-            oldValue = cursorCache.putIfAbsent(cursor, startKey);
-            if (oldValue == null) {
-                break;
-            }
         }
         return cursor;
     }
