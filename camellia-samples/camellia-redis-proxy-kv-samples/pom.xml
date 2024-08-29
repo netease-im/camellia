@@ -25,14 +25,19 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-proxy-kv-hbase</artifactId>
+			<artifactId>camellia-redis-proxy-kv-obkv</artifactId>
 			<version>1.2.29-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-proxy-kv-tikv</artifactId>
-			<version>1.2.29-SNAPSHOT</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.netease.nim</groupId>-->
+<!--			<artifactId>camellia-redis-proxy-kv-hbase</artifactId>-->
+<!--			<version>1.2.29-SNAPSHOT</version>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>com.netease.nim</groupId>-->
+<!--			<artifactId>camellia-redis-proxy-kv-tikv</artifactId>-->
+<!--			<version>1.2.29-SNAPSHOT</version>-->
+<!--		</dependency>-->
 	</dependencies>
 	<build>
 		<plugins>

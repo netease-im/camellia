@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.kv.obkv;
 
-import com.alipay.oceanbase.hbase.OHTableClient;
+import com.alipay.oceanbase.hbase.OHTablePool;
 import com.alipay.oceanbase.hbase.constants.OHConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
@@ -8,9 +8,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
+import org.apache.hadoop.hbase.util.PoolMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,8 @@ public class OBKVHBaseClient implements KVClient {
     private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
     private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
 
-    private OHTableClient tableClient;
+    private OHTablePool ohTablePool;
+    private String tableName;
 
     @Override
     public void init(String namespace) {
@@ -50,15 +52,31 @@ public class OBKVHBaseClient implements KVClient {
             conf.set(OHConstants.HBASE_OCEANBASE_SYS_USER_NAME, sysUserName);
             conf.set(OHConstants.HBASE_OCEANBASE_SYS_PASSWORD, sysPassword);
 
-            String tableName = RedisKvConf.getString(namespace, "kv.obkv.table.name", "camellia_kv");
+            tableName = RedisKvConf.getString(namespace, "kv.obkv.table.name", "camellia_kv");
 
-            tableClient = new OHTableClient(tableName, conf);
-            tableClient.init();
-            logger.info("OHTableClient init success, namespace = {}, tableName = {}", namespace, tableName);
+            int maxSize = RedisKvConf.getInt(namespace, "kv.obkv.max.size", SysUtils.getCpuNum() * 4 + 10);
+            PoolMap.PoolType poolType;
+            String string = RedisKvConf.getString(namespace, "kv.obkv.poolType", PoolMap.PoolType.ThreadLocal.name());
+            if (string.equalsIgnoreCase(PoolMap.PoolType.ThreadLocal.name())) {
+                poolType = PoolMap.PoolType.ThreadLocal;
+            } else if (string.equalsIgnoreCase(PoolMap.PoolType.RoundRobin.name())) {
+                poolType = PoolMap.PoolType.RoundRobin;
+            } else if (string.equalsIgnoreCase(PoolMap.PoolType.Reusable.name())) {
+                poolType = PoolMap.PoolType.Reusable;
+            } else {
+                poolType = PoolMap.PoolType.ThreadLocal;
+            }
+            ohTablePool = new OHTablePool(conf, maxSize, poolType);
+
+            logger.info("OHTableClient init success, namespace = {}, tableName = {}, poolType = {}, maxSize = {}", namespace, tableName, poolType, maxSize);
         } catch (Exception e) {
             logger.error("OHTableClient init error, namespace = {}", namespace, e);
             throw new KvException(e);
         }
+    }
+
+    private HTableInterface getTable() {
+        return ohTablePool.getTable(tableName);
     }
 
     @Override
@@ -73,10 +91,10 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public void put(byte[] key, byte[] value) {
-        try {
+        try (HTableInterface table = getTable()) {
             Put put = new Put(key);
             put.add(cf, column, value);
-            tableClient.put(put);
+            table.put(put);
         } catch (IOException e) {
             logger.error("put error", e);
             throw new KvException(e);
@@ -85,14 +103,14 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public void batchPut(List<KeyValue> list) {
-        try {
+        try (HTableInterface table = getTable()) {
             List<Put> putList = new ArrayList<>();
             for (KeyValue keyValue : list) {
                 Put put = new Put(keyValue.getKey());
                 put.add(cf, column, keyValue.getValue());
                 putList.add(put);
             }
-            tableClient.put(putList);
+            table.put(putList);
         } catch (IOException e) {
             logger.error("batchPut error", e);
             throw new KvException(e);
@@ -101,10 +119,10 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public KeyValue get(byte[] key) {
-        try {
+        try (HTableInterface table = getTable()) {
             Get get = new Get(key);
             get.addFamily(cf);
-            Result result = tableClient.get(get);
+            Result result = table.get(get);
             if (result == null) {
                 return null;
             }
@@ -121,10 +139,10 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public boolean exists(byte[] key) {
-        try {
+        try (HTableInterface table = getTable()) {
             Get get = new Get(key);
             get.addFamily(cf);
-            return tableClient.exists(get);
+            return table.exists(get);
         } catch (IOException e) {
             logger.error("exists error", e);
             throw new KvException(e);
@@ -133,13 +151,13 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public boolean[] exists(byte[]... keys) {
-        try {
+        try (HTableInterface table = getTable()) {
             boolean[] results = new boolean[keys.length];
             int i=0;
             for (byte[] key : keys) {
                 Get get = new Get(key);
                 get.addFamily(cf);
-                results[i] = tableClient.exists(get);
+                results[i] = table.exists(get);
                 i++;
             }
             return results;
@@ -151,7 +169,7 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public List<KeyValue> batchGet(byte[]... keys) {
-        try {
+        try (HTableInterface table = getTable()) {
             List<Get> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
                 Get get = new Get(key);
@@ -159,7 +177,7 @@ public class OBKVHBaseClient implements KVClient {
                 list.add(get);
             }
             List<KeyValue> keyValues = new ArrayList<>(list.size());
-            Result[] results = tableClient.get(list);
+            Result[] results = table.get(list);
             for (Result result : results) {
                 if (result == null) continue;
                 byte[] key = result.getRow();
@@ -175,10 +193,10 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public void delete(byte[] key) {
-        try {
+        try (HTableInterface table = getTable()) {
             Delete delete = new Delete(key);
             delete.deleteFamily(cf);
-            tableClient.delete(delete);
+            table.delete(delete);
         } catch (IOException e) {
             logger.error("delete error", e);
             throw new KvException(e);
@@ -187,14 +205,14 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public void batchDelete(byte[]... keys) {
-        try {
+        try (HTableInterface table = getTable()) {
             List<Delete> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
                 Delete delete = new Delete(key);
                 delete.deleteFamily(cf);
                 list.add(delete);
             }
-            tableClient.delete(list);
+            table.delete(list);
         } catch (IOException e) {
             logger.error("batchDelete error", e);
             throw new KvException(e);
@@ -208,10 +226,10 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public void checkAndDelete(byte[] key, byte[] value) {
-        try {
+        try (HTableInterface table = getTable()) {
             Delete delete = new Delete(key);
             delete.deleteFamily(cf);
-            tableClient.checkAndDelete(key, cf, column, value, delete);
+            table.checkAndDelete(key, cf, column, value, delete);
         } catch (IOException e) {
             logger.error("checkAndDelete error", e);
             throw new KvException(e);
@@ -225,7 +243,7 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
-        try {
+        try (HTableInterface table = getTable()) {
             Scan scan = new Scan();
             scan.addFamily(cf);
             scan.setStartRow(startKey);
@@ -237,7 +255,7 @@ public class OBKVHBaseClient implements KVClient {
                 scan.setStopRow(BytesUtils.lastBytes(prefix));
             }
             scan.setReversed(sort != Sort.ASC);
-            try (ResultScanner scanner = tableClient.getScanner(scan)) {
+            try (ResultScanner scanner = table.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
@@ -265,15 +283,14 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
-        try {
+        try (HTableInterface table = getTable()) {
             Scan scan = new Scan();
             scan.addFamily(cf);
             scan.setStartRow(startKey);
             scan.setSmall(true);
             scan.setStopRow(BytesUtils.nextBytes(prefix));
-            scan.setFilter(new KeyOnlyFilter());
             int count = 0;
-            try (ResultScanner scanner = tableClient.getScanner(scan)) {
+            try (ResultScanner scanner = table.getScanner(scan)) {
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
                     if (!includeStartKey && Arrays.equals(row, startKey)) {
@@ -295,7 +312,7 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
-        try {
+        try (HTableInterface table = getTable()) {
             Scan scan = new Scan();
             scan.addFamily(cf);
             scan.setStartRow(startKey);
@@ -303,7 +320,7 @@ public class OBKVHBaseClient implements KVClient {
             scan.setCaching(includeStartKey ? limit : (limit + 1));
             scan.setSmall(true);
             scan.setReversed(sort != Sort.ASC);
-            try (ResultScanner scanner = tableClient.getScanner(scan)) {
+            try (ResultScanner scanner = table.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
@@ -330,15 +347,14 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
-        try {
+        try (HTableInterface table = getTable()) {
             Scan scan = new Scan();
             scan.addFamily(cf);
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
             scan.setSmall(true);
-            scan.setFilter(new KeyOnlyFilter());
             int count = 0;
-            try (ResultScanner scanner = tableClient.getScanner(scan)) {
+            try (ResultScanner scanner = table.getScanner(scan)) {
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
                     if (!includeStartKey && Arrays.equals(row, startKey)) {
