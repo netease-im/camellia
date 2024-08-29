@@ -21,7 +21,7 @@
 		<dependency>
 			<groupId>org.tikv</groupId>
 			<artifactId>tikv-client-java</artifactId>
-			<version>3.3.0</version>
+			<version>3.3.5</version>
 		</dependency>
 	</dependencies>
 

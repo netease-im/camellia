@@ -192,6 +192,9 @@ public class TiKVClient implements KVClient {
     @Override
     public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
+            if (!includeStartKey) {
+                limit = limit + 1;
+            }
             Iterator<Kvrpcpb.KvPair> iterator = tikvClient.scan0(ByteString.copyFrom(startKey), limit);
             List<KeyValue> list = new ArrayList<>();
             while (iterator.hasNext()) {
@@ -237,6 +240,9 @@ public class TiKVClient implements KVClient {
     @Override
     public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
+            if (!includeStartKey) {
+                limit = limit + 1;
+            }
             Iterator<Kvrpcpb.KvPair> iterator = tikvClient.scan0(ByteString.copyFrom(startKey), ByteString.copyFrom(endKey), limit);
             List<KeyValue> list = new ArrayList<>();
             while (iterator.hasNext()) {
