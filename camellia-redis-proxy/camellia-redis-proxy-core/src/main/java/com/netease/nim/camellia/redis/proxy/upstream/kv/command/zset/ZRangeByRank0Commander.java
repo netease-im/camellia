@@ -40,10 +40,7 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
         while (true) {
-            if (result.size() >= targetSize) {
-                return result;
-            }
-            int limit = Math.min(targetSize - result.size(), scanBatch);
+            int limit = Math.min(stop - count + 1, scanBatch);
             List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return result;
