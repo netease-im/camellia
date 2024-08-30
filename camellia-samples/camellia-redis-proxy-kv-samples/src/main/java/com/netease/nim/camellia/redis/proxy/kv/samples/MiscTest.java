@@ -17,6 +17,7 @@ public class MiscTest {
         String url = "redis://pass123@127.0.0.1:6381";
 //        String url = "redis-cluster://c82369448cac@10.59.135.153:6380,10.59.135.154:6380";//v0
 //        String url = "redis-cluster://dde946f2933e@10.59.135.153:6380,10.59.135.154:6380";//v1
+//        String url = "redis-cluster://daeb8e001d8b@10.59.135.152:6380";//v0-obkv
 //        String url = "redis://@127.0.0.1:6379";
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
                 .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000))

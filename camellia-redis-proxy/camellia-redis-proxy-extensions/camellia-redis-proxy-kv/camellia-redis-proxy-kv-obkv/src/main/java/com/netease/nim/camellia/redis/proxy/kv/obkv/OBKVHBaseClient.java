@@ -38,13 +38,12 @@ public class OBKVHBaseClient implements KVClient {
 
     @Override
     public void init(String namespace) {
+        String paramUrl = RedisKvConf.getString(namespace, "kv.obkv.param.url", null);
+        String fullUserName = RedisKvConf.getString(namespace, "kv.obkv.full.user.name", null);
+        String password = RedisKvConf.getString(namespace, "kv.obkv.password", null);
+        String sysUserName = RedisKvConf.getString(namespace, "kv.obkv.sys.user.name", null);
+        String sysPassword = RedisKvConf.getString(namespace, "kv.obkv.sys.password", null);
         try {
-            String fullUserName = RedisKvConf.getString(namespace, "kv.obkv.full.user.name", null);
-            String paramUrl = RedisKvConf.getString(namespace, "kv.obkv.param.url", null);
-            String password = RedisKvConf.getString(namespace, "kv.obkv.password", null);
-            String sysUserName = RedisKvConf.getString(namespace, "kv.obkv.sys.user.name", null);
-            String sysPassword = RedisKvConf.getString(namespace, "kv.obkv.sys.password", null);
-
             Configuration conf = new Configuration();
             conf.set(OHConstants.HBASE_OCEANBASE_PARAM_URL, paramUrl);
             conf.set(OHConstants.HBASE_OCEANBASE_FULL_USER_NAME, fullUserName);
@@ -68,9 +67,10 @@ public class OBKVHBaseClient implements KVClient {
             }
             ohTablePool = new OHTablePool(conf, maxSize, poolType);
 
-            logger.info("OHTableClient init success, namespace = {}, tableName = {}, poolType = {}, maxSize = {}", namespace, tableName, poolType, maxSize);
-        } catch (Exception e) {
-            logger.error("OHTableClient init error, namespace = {}", namespace, e);
+            logger.info("OHTableClient init success, namespace = {}, paramUrl = {}, tableName = {}, poolType = {}, maxSize = {}",
+                    namespace, paramUrl, tableName, poolType, maxSize);
+        } catch (Throwable e) {
+            logger.error("OHTableClient init error, namespace = {}, paramUrl = {}", namespace, paramUrl, e);
             throw new KvException(e);
         }
     }

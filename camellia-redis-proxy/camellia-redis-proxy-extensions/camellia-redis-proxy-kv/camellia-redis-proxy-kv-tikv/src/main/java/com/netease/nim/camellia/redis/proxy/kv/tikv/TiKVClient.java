@@ -28,15 +28,15 @@ public class TiKVClient implements KVClient {
 
     @Override
     public void init(String namespace) {
+        String string = RedisKvConf.getString(namespace, "kv.tikv.pd.address", null);
         try {
-            String string = RedisKvConf.getString(namespace, "kv.tikv.pd.address", null);
             TiConfiguration conf = TiConfiguration.createRawDefault(string);
             conf.setWarmUpEnable(false);
             TiSession session = TiSession.create(conf);
             tikvClient = session.createRawClient();
             logger.info("TiKVClient init success, namespace = {}, pd.address = {}", namespace, string);
-        } catch (Exception e) {
-            logger.error("TiKVClient init error, namespace = {}", namespace, e);
+        } catch (Throwable e) {
+            logger.error("TiKVClient init error, namespace = {}, pd.address = {}", namespace, string, e);
             throw new KvException(e);
         }
     }

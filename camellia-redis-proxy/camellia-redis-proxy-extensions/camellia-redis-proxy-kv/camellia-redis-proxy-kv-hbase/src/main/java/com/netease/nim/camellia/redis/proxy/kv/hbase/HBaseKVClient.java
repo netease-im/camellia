@@ -46,52 +46,60 @@ public class HBaseKVClient implements KVClient {
 
     @Override
     public void init(String namespace) {
-        this.namespace = namespace;
-        //config
-        String conf = RedisKvConf.getString(namespace, "kv.store.hbase.conf", null);
-        CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
-        if (conf != null) {
-            JSONObject json = JSONObject.parseObject(conf);
-            for (Map.Entry<String, Object> entry : json.entrySet()) {
-                camelliaHBaseConf.addConf(entry.getKey(), entry.getValue().toString());
+        try {
+            this.namespace = namespace;
+            //config
+            String conf = RedisKvConf.getString(namespace, "kv.store.hbase.conf", null);
+            CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
+            if (conf != null) {
+                JSONObject json = JSONObject.parseObject(conf);
+                for (Map.Entry<String, Object> entry : json.entrySet()) {
+                    camelliaHBaseConf.addConf(entry.getKey(), entry.getValue().toString());
+                }
             }
+            CamelliaHBaseEnv hBaseEnv = new CamelliaHBaseEnv.Builder()
+                    .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
+                    .build();
+
+            //client
+            String configType = RedisKvConf.getString(namespace, "kv.store.hbase.config.type", "local");
+            if (configType.equalsIgnoreCase("local")) {
+                String string = RedisKvConf.getString(namespace, "kv.store.hbase.url", null);
+                HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(string));
+                template = new CamelliaHBaseTemplate(hBaseEnv, hBaseResource);
+                logger.info("hbase template init success, namespace = {}, resource = {}", namespace, string);
+            } else if (configType.equalsIgnoreCase("remote")) {
+                String dashboardUrl = RedisKvConf.getString(namespace, "kv.store.hbase.camellia.dashboard.url", null);
+                if (dashboardUrl == null) {
+                    throw new KvException("illegal dashboardUrl, namespace = " + namespace);
+                }
+                boolean monitorEnable = RedisKvConf.getBoolean(namespace, "kv.store.hbase.camellia.dashboard.monitor.enable", true);
+                long checkIntervalMillis = RedisKvConf.getLong(namespace, "kv.store.hbase.camellia.dashboard.check.interval.millis", 3000L);
+                long bid = RedisKvConf.getLong(namespace, "kv.store.hbase.bid", -1);
+                String bgroup = RedisKvConf.getString(namespace, "kv.store.hbase.bgroup", "default");
+                if (bid <= 0) {
+                    throw new KvException("illegal bid, namespace = " + namespace);
+                }
+                CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
+                template = new CamelliaHBaseTemplate(hBaseEnv, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
+                logger.info("hbase template init success, namespace = {}, dashboardUrl = {}, bid = {}, bgroup = {}", namespace, dashboardUrl, bid, bgroup);
+            } else {
+                throw new KvException("init hbase template error, namespace = " + namespace);
+            }
+
+            //table
+            tableName = RedisKvConf.getString(namespace, "kv.store.hbase.table.name", "camellia_kv");
+            logger.info("HBaseKVClient init success, namespace = {}, table = {}", namespace, tableName);
+
+            reloadConfig();
+            ProxyDynamicConf.registerCallback(this::reloadConfig);
+        } catch (KvException e) {
+            logger.error("HBaseKVClient init error, namespace = {}", namespace, e);
+            throw e;
+        } catch (Throwable e) {
+            logger.error("HBaseKVClient init error, namespace = {}", namespace, e);
+            throw new KvException(e);
         }
-        CamelliaHBaseEnv hBaseEnv = new CamelliaHBaseEnv.Builder()
-                .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
-                .build();
-
-        //client
-        String configType = RedisKvConf.getString(namespace, "kv.store.hbase.config.type", "local");
-        if (configType.equalsIgnoreCase("local")) {
-            String string = RedisKvConf.getString(namespace, "kv.store.hbase.url", null);
-            HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(string));
-            template = new CamelliaHBaseTemplate(hBaseEnv, hBaseResource);
-            logger.info("hbase template init success, namespace = {}, resource = {}", namespace, string);
-        } else if (configType.equalsIgnoreCase("remote")) {
-            String dashboardUrl = RedisKvConf.getString(namespace, "kv.store.hbase.camellia.dashboard.url", null);
-            if (dashboardUrl == null) {
-                throw new KvException("illegal dashboardUrl, namespace = " + namespace);
-            }
-            boolean monitorEnable = RedisKvConf.getBoolean(namespace, "kv.store.hbase.camellia.dashboard.monitor.enable", true);
-            long checkIntervalMillis = RedisKvConf.getLong(namespace, "kv.store.hbase.camellia.dashboard.check.interval.millis", 3000L);
-            long bid = RedisKvConf.getLong(namespace, "kv.store.hbase.bid", -1);
-            String bgroup = RedisKvConf.getString(namespace, "kv.store.hbase.bgroup", "default");
-            if (bid <= 0) {
-                throw new KvException("illegal bid, namespace = " + namespace);
-            }
-            CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
-            template = new CamelliaHBaseTemplate(hBaseEnv, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
-            logger.info("hbase template init success, namespace = {}, dashboardUrl = {}, bid = {}, bgroup = {}", namespace, dashboardUrl, bid, bgroup);
-        } else {
-            throw new KvException("init hbase template error, namespace = " + namespace);
-        }
-
-        //table
-        tableName = RedisKvConf.getString(namespace, "kv.store.hbase.table.name", "camellia_kv");
-        logger.info("HBaseKVClient init success, namespace = {}, table = {}", namespace, tableName);
-
-        reloadConfig();
-        ProxyDynamicConf.registerCallback(this::reloadConfig);
     }
 
     private void reloadConfig() {
