@@ -42,10 +42,10 @@ public class ZRemCommander extends ZRem0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -93,7 +93,7 @@ public class ZRemCommander extends ZRem0Commander {
             if (removedMembers == null) {
                 boolean hotKey = zSetLRUCache.isHotKey(key);
                 if (hotKey) {
-                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
                     if (zSet != null) {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -124,17 +124,17 @@ public class ZRemCommander extends ZRem0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremVersion0(keyMeta, key, cacheKey, members, removedMembers, result, type);
+            return zremVersion0(slot, keyMeta, key, cacheKey, members, removedMembers, result, type);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremVersion1(keyMeta, key, cacheKey, members, false, result);
+            return zremVersion1(slot, keyMeta, key, cacheKey, members, false, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> removedMembers,
+    private Reply zremVersion0(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> members, Map<BytesKey, Double> removedMembers,
                                Result result, KvCacheMonitor.Type type) {
         if (type != null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -149,7 +149,7 @@ public class ZRemCommander extends ZRem0Commander {
                 keys[i] = keyDesign.zsetMemberSubKey1(keyMeta, key, storeKey.getKey());
                 i++;
             }
-            List<KeyValue> keyValues = kvClient.batchGet(keys);
+            List<KeyValue> keyValues = kvClient.batchGet(slot, keys);
             for (KeyValue keyValue : keyValues) {
                 if (keyValue == null || keyValue.getValue() == null) {
                     continue;
@@ -160,7 +160,7 @@ public class ZRemCommander extends ZRem0Commander {
             }
         }
 
-        return zremVersion0(keyMeta, key, cacheKey, removedMembers, result);
+        return zremVersion0(slot, keyMeta, key, cacheKey, removedMembers, result);
     }
 
 }

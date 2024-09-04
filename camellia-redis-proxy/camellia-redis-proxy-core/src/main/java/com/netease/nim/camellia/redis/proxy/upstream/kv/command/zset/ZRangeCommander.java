@@ -44,10 +44,10 @@ public class ZRangeCommander extends ZRangeByRank0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -87,7 +87,7 @@ public class ZRangeCommander extends ZRangeByRank0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
@@ -105,13 +105,13 @@ public class ZRangeCommander extends ZRangeByRank0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            List<ZSetTuple> list = zrangeByRankVersion0(keyMeta, key, start, stop, withScores);
+            List<ZSetTuple> list = zrangeByRankVersion0(slot, keyMeta, key, start, stop, withScores);
             return ZSetTupleUtils.toReply(list, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrangeVersion1(keyMeta, key, cacheKey, objects, withScores);
+            return zrangeVersion1(slot, keyMeta, key, cacheKey, objects, withScores);
         }
 
         return ErrorReply.INTERNAL_ERROR;

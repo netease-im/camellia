@@ -33,15 +33,15 @@ public class UnlinkCommander extends Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         int ret = 0;
         if (keyMeta != null) {
-            keyMetaServer.deleteKeyMeta(key);
+            keyMetaServer.deleteKeyMeta(slot, key);
             ret = 1;
-            gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
+            gcExecutor.submitSubKeyDeleteTask(slot, key, keyMeta);
 
             KeyType keyType = keyMeta.getKeyType();
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();

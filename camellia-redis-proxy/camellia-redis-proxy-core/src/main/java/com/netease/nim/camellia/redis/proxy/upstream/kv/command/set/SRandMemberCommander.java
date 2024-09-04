@@ -38,7 +38,7 @@ public class SRandMemberCommander extends Set0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         int count = 1;
@@ -47,7 +47,7 @@ public class SRandMemberCommander extends Set0Commander {
             count = (int) Utils.bytesToNum(objects[2]);
             batch = true;
         }
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             if (batch) {
                 return MultiBulkReply.EMPTY;
@@ -82,7 +82,7 @@ public class SRandMemberCommander extends Set0Commander {
             boolean hotKey = setLRUCache.isHotKey(key);
 
             if (hotKey) {
-                set = loadLRUCache(keyMeta, key);
+                set = loadLRUCache(slot, keyMeta, key);
                 setLRUCache.putAllForRead(key, cacheKey, set);
                 //
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -93,7 +93,7 @@ public class SRandMemberCommander extends Set0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        Set<BytesKey> set = srandmemberFromKv(keyMeta, key, count);
+        Set<BytesKey> set = srandmemberFromKv(slot, keyMeta, key, count);
 
         return toReply(set, batch);
     }

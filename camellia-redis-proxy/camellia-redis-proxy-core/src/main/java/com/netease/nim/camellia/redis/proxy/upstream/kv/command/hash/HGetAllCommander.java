@@ -39,12 +39,12 @@ public class HGetAllCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
 
         //meta
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -70,7 +70,7 @@ public class HGetAllCommander extends Hash0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+        Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
             cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
         }

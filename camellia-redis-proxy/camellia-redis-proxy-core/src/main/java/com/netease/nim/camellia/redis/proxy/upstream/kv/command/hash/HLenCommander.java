@@ -38,10 +38,10 @@ public class HLenCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -51,7 +51,7 @@ public class HLenCommander extends Hash0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        Reply reply = getSizeFromCache(keyMeta, key, cacheKey);
+        Reply reply = getSizeFromCache(slot, keyMeta, key, cacheKey);
         if (reply != null) {
             return reply;
         }
@@ -61,14 +61,14 @@ public class HLenCommander extends Hash0Commander {
             return IntegerReply.parse(size);
         } else if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            long size = getSizeFromKv(keyMeta, key);
+            long size = getSizeFromKv(slot, keyMeta, key);
             return IntegerReply.parse(size);
         } else {
             return ErrorReply.INTERNAL_ERROR;
         }
     }
 
-    private Reply getSizeFromCache(KeyMeta keyMeta, byte[] key, byte[] cacheKey) {
+    private Reply getSizeFromCache(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey) {
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             RedisHash hash = writeBufferValue.getValue();
@@ -86,7 +86,7 @@ public class HLenCommander extends Hash0Commander {
             if (encodeVersion == EncodeVersion.version_1) {
                 boolean hotKey = hashLRUCache.isHotKey(key);
                 if (hotKey) {
-                    hash = loadLRUCache(keyMeta, key);
+                    hash = loadLRUCache(slot, keyMeta, key);
                     hashLRUCache.putAllForRead(key, cacheKey, hash);
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return IntegerReply.parse(hash.hlen());
@@ -96,8 +96,8 @@ public class HLenCommander extends Hash0Commander {
         return null;
     }
 
-    private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {
+    private long getSizeFromKv(int slot, KeyMeta keyMeta, byte[] key) {
         byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
-        return kvClient.countByPrefix(startKey, startKey, false);
+        return kvClient.countByPrefix(slot, startKey, startKey, false);
     }
 }

@@ -42,10 +42,10 @@ public class ZScoreCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return BulkReply.NIL_REPLY;
         }
@@ -86,7 +86,7 @@ public class ZScoreCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -105,7 +105,7 @@ public class ZScoreCommander extends ZSet0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zscoreFromKv(keyMeta, key, member);
+            return zscoreFromKv(slot, keyMeta, key, member);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -117,9 +117,9 @@ public class ZScoreCommander extends ZSet0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zscoreFromKv(KeyMeta keyMeta, byte[] key, byte[] member) {
+    private Reply zscoreFromKv(int slot, KeyMeta keyMeta, byte[] key, byte[] member) {
         byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
-        KeyValue keyValue = kvClient.get(subKey1);
+        KeyValue keyValue = kvClient.get(slot, subKey1);
         if (keyValue == null || keyValue.getValue() == null) {
             return BulkReply.NIL_REPLY;
         }

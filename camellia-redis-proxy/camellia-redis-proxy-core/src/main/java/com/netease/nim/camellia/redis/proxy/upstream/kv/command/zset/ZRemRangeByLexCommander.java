@@ -49,10 +49,10 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -116,7 +116,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
             if (removedMembers == null) {
                 boolean hotKey = zSetLRUCache.isHotKey(key);
                 if (hotKey) {
-                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
                     if (zSet != null) {
                         //
                         type = KvCacheMonitor.Type.kv_store;
@@ -151,17 +151,17 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             if (removedMembers == null) {
                 removedMembers = new HashMap<>();
-                List<ZSetTuple> list = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, ZSetLimit.NO_LIMIT, true);
+                List<ZSetTuple> list = zrangeByLexVersion0(slot, keyMeta, key, minLex, maxLex, ZSetLimit.NO_LIMIT, true);
                 for (ZSetTuple tuple : list) {
                     removedMembers.put(tuple.getMember(), tuple.getScore());
                 }
             }
-            return zremVersion0(keyMeta, key, cacheKey, removedMembers, result);
+            return zremVersion0(slot, keyMeta, key, cacheKey, removedMembers, result);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
             if (removedMembers == null) {
-                RedisZSet zSet = loadLRUCache(keyMeta, key);
+                RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
@@ -176,7 +176,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
                     return ErrorReply.INTERNAL_ERROR;
                 }
             }
-            return zremVersion1(keyMeta, key, cacheKey, removedMembers.keySet(), false, result);
+            return zremVersion1(slot, keyMeta, key, cacheKey, removedMembers.keySet(), false, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;

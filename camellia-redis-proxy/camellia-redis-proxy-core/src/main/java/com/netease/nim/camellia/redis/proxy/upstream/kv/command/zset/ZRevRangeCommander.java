@@ -50,10 +50,10 @@ public class ZRevRangeCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -93,7 +93,7 @@ public class ZRevRangeCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
@@ -112,21 +112,21 @@ public class ZRevRangeCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (!kvClient.supportReverseScan()) {
-                return zrevrangeVersion0NotSupportReverseScan(keyMeta, key, cacheKey, start, stop, withScores);
+                return zrevrangeVersion0NotSupportReverseScan(slot, keyMeta, key, cacheKey, start, stop, withScores);
             }
-            return zrevrangeVersion0(keyMeta, key, start, stop, withScores);
+            return zrevrangeVersion0(slot, keyMeta, key, start, stop, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrangeVersion1(keyMeta, key, cacheKey, objects, withScores);
+            return zrangeVersion1(slot, keyMeta, key, cacheKey, objects, withScores);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrevrangeVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, boolean withScores) {
-        RedisZSet zSet = loadLRUCache(keyMeta, key);
+    private Reply zrevrangeVersion0NotSupportReverseScan(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, boolean withScores) {
+        RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
         if (zSet == null) {
             return Utils.commandNotSupport(RedisCommand.ZREVRANGE);
         }
@@ -141,7 +141,7 @@ public class ZRevRangeCommander extends ZSet0Commander {
         return ZSetTupleUtils.toReply(list, withScores);
     }
 
-    private Reply zrevrangeVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
+    private Reply zrevrangeVersion0(int slot, KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
         int size = BytesUtils.toInt(keyMeta.getExtra());
         ZSetRank rank = new ZSetRank(start, stop, size);
         if (rank.isEmptyRank()) {
@@ -151,18 +151,18 @@ public class ZRevRangeCommander extends ZSet0Commander {
         stop = rank.getStop();
 
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
-        List<ZSetTuple> list = zrevrange0(key, BytesUtils.nextBytes(startKey), startKey, start, stop, withScores);
+        List<ZSetTuple> list = zrevrange0(slot, key, BytesUtils.nextBytes(startKey), startKey, start, stop, withScores);
 
         return ZSetTupleUtils.toReply(list, withScores);
     }
 
-    private List<ZSetTuple> zrevrange0(byte[] key, byte[] startKey, byte[] prefix, int start, int stop, boolean withScores) {
+    private List<ZSetTuple> zrevrange0(int slot, byte[] key, byte[] startKey, byte[] prefix, int start, int stop, boolean withScores) {
         List<ZSetTuple> list = new ArrayList<>();
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
         while (true) {
             int limit = Math.min(stop - count + 1, scanBatch);
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.DESC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.DESC, false);
             if (scan.isEmpty()) {
                 return list;
             }

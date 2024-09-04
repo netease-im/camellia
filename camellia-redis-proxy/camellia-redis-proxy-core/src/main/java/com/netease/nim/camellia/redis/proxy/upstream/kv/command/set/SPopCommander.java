@@ -43,7 +43,7 @@ public class SPopCommander extends Set0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         int count = 1;
@@ -52,7 +52,7 @@ public class SPopCommander extends Set0Commander {
             count = (int) Utils.bytesToNum(objects[2]);
             batch = true;
         }
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             if (batch) {
                 return MultiBulkReply.EMPTY;
@@ -105,7 +105,7 @@ public class SPopCommander extends Set0Commander {
                     type = KvCacheMonitor.Type.kv_store;
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    RedisSet set = loadLRUCache(keyMeta, key);
+                    RedisSet set = loadLRUCache(slot, keyMeta, key);
                     setLRUCache.putAllForWrite(key, cacheKey, set);
                     spop = set.spop(count);
                 }
@@ -135,21 +135,21 @@ public class SPopCommander extends Set0Commander {
         }
 
         if (spop == null) {
-            spop = srandmemberFromKv(keyMeta, key, count);
+            spop = srandmemberFromKv(slot, keyMeta, key, count);
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            removeMembers(keyMeta, key, cacheKey, spop, result, false);
+            removeMembers(slot, keyMeta, key, cacheKey, spop, result, false);
         } else {
             boolean checkSCard = deleteType == DeleteType.unknown;
-            removeMembers(keyMeta, key, cacheKey, spop, result, checkSCard);
+            removeMembers(slot, keyMeta, key, cacheKey, spop, result, checkSCard);
         }
 
         if (deleteType == DeleteType.delete_all) {
-            keyMetaServer.deleteKeyMeta(key);
+            keyMetaServer.deleteKeyMeta(slot, key);
         } else {
             if (encodeVersion == EncodeVersion.version_0) {
-                updateKeyMeta(keyMeta, key, spop.size() * -1);
+                updateKeyMeta(slot, keyMeta, key, spop.size() * -1);
             }
         }
 

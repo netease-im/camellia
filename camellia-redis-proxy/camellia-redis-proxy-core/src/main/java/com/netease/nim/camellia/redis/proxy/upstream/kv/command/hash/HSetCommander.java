@@ -48,7 +48,7 @@ public class HSetCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
 
@@ -63,7 +63,7 @@ public class HSetCommander extends Hash0Commander {
         boolean first = false;
 
         //check meta
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             EncodeVersion encodeVersion = keyDesign.hashEncodeVersion();
             if (encodeVersion == EncodeVersion.version_0) {
@@ -75,7 +75,7 @@ public class HSetCommander extends Hash0Commander {
             } else {
                 return ErrorReply.INTERNAL_ERROR;
             }
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
             first = true;
         } else {
             if (keyMeta.getKeyType() != KeyType.hash) {
@@ -126,7 +126,7 @@ public class HSetCommander extends Hash0Commander {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
-                        Map<BytesKey, byte[]> hgetall = hgetallFromKv(keyMeta, key);
+                        Map<BytesKey, byte[]> hgetall = hgetallFromKv(slot, keyMeta, key);
                         hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(hgetall));
                         existMapByCache = hashLRUCache.hset(key, cacheKey, fieldMap);
                     }
@@ -176,7 +176,7 @@ public class HSetCommander extends Hash0Commander {
                 KeyValue keyValue = new KeyValue(subKey, value);
                 list.add(keyValue);
             }
-            batchPut(cacheKey, result, list);
+            batchPut(slot, cacheKey, result, list);
             return IntegerReply.parse(fieldSize);
         }
 
@@ -195,7 +195,7 @@ public class HSetCommander extends Hash0Commander {
             }
             if (existsCount < 0) {
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-                boolean[] exists = kvClient.exists(subKeys);
+                boolean[] exists = kvClient.exists(slot, subKeys);
                 existsCount = Utils.count(exists);
             }
             int add = fieldSize - existsCount;
@@ -204,20 +204,20 @@ public class HSetCommander extends Hash0Commander {
                 size = size + add;
                 keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
                         keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size));
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
             }
-            batchPut(cacheKey, result, list);
+            batchPut(slot, cacheKey, result, list);
             return IntegerReply.parse(add);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private void batchPut(byte[] cacheKey, Result result, List<KeyValue> list) {
+    private void batchPut(int slot, byte[] cacheKey, Result result, List<KeyValue> list) {
         if (!result.isKvWriteDelayEnable()) {
-            kvClient.batchPut(list);
+            kvClient.batchPut(slot, list);
         } else {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
         }
     }
 

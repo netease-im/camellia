@@ -39,7 +39,7 @@ public class SetCommander extends Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         byte[] value = objects[2];
@@ -89,18 +89,18 @@ public class SetCommander extends Commander {
                 ErrorLogCollector.collect(SetCommander.class, "set command syntax error, nx && get");
                 return ErrorReply.SYNTAX_ERROR;
             }
-            keyMeta = keyMetaServer.getKeyMeta(key);
+            keyMeta = keyMetaServer.getKeyMeta(slot, key);
             if (keyMeta != null) {
                 return BulkReply.NIL_REPLY;
             }
         } else if (nxxx == xx) {
-            keyMeta = keyMetaServer.getKeyMeta(key);
+            keyMeta = keyMetaServer.getKeyMeta(slot, key);
             if (keyMeta == null) {
                 return BulkReply.NIL_REPLY;
             }
         }
         if (keepTtl && keyMeta == null) {
-            keyMeta = keyMetaServer.getKeyMeta(key);
+            keyMeta = keyMetaServer.getKeyMeta(slot, key);
         }
         byte[] oldValue = keyMeta == null ? null : keyMeta.getExtra();
         if (keepTtl) {
@@ -111,7 +111,7 @@ public class SetCommander extends Commander {
         } else {
             keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), -1 , value);
         }
-        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
         if (get) {
             return new BulkReply(oldValue);
         } else {

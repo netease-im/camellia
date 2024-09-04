@@ -47,10 +47,10 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -98,7 +98,7 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
@@ -116,22 +116,22 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (!kvClient.supportReverseScan()) {
-                return zrevrangeByScoreVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minScore, maxScore, limit, withScores);
+                return zrevrangeByScoreVersion0NotSupportReverseScan(slot, keyMeta, key, cacheKey, minScore, maxScore, limit, withScores);
             }
-            List<ZSetTuple> result = zrevrangeByScoreVersion0(keyMeta, key, minScore, maxScore, limit, withScores);
+            List<ZSetTuple> result = zrevrangeByScoreVersion0(slot, keyMeta, key, minScore, maxScore, limit, withScores);
             return ZSetTupleUtils.toReply(result, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.redisCache(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrangeVersion1(keyMeta, key, cacheKey, objects, withScores);
+            return zrangeVersion1(slot, keyMeta, key, cacheKey, objects, withScores);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrevrangeByScoreVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
-        RedisZSet zSet = loadLRUCache(keyMeta, key);
+    private Reply zrevrangeByScoreVersion0NotSupportReverseScan(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
+        RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
         if (zSet == null) {
             return Utils.commandNotSupport(RedisCommand.ZREVRANGEBYSCORE);
         }
@@ -146,7 +146,7 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
         return ZSetTupleUtils.toReply(list, withScores);
     }
 
-    private List<ZSetTuple> zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
+    private List<ZSetTuple> zrevrangeByScoreVersion0(int slot, KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
         byte[] startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         byte[] endKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] prefix = keyDesign.subKeyPrefix2(keyMeta, key);
@@ -164,7 +164,7 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
             } else {
                 includeStartKey = false;
             }
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, includeStartKey);
+            List<KeyValue> list = kvClient.scanByStartEnd(slot, startKey, endKey, prefix, batch, Sort.DESC, includeStartKey);
             loop ++;
             if (list.isEmpty()) {
                 return result;

@@ -35,11 +35,11 @@ public class SIsMemberCommander extends Set0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         byte[] member = objects[2];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -70,7 +70,7 @@ public class SIsMemberCommander extends Set0Commander {
             boolean hotKey = setLRUCache.isHotKey(key);
 
             if (hotKey) {
-                set = loadLRUCache(keyMeta, key);
+                set = loadLRUCache(slot, keyMeta, key);
                 setLRUCache.putAllForRead(key, cacheKey, set);
                 //
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -82,7 +82,7 @@ public class SIsMemberCommander extends Set0Commander {
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
         byte[] subKey = keyDesign.setMemberSubKey(keyMeta, key, member);
-        KeyValue keyValue = kvClient.get(subKey);
+        KeyValue keyValue = kvClient.get(slot, subKey);
         if (keyValue == null || keyValue.getKey() == null) {
             return IntegerReply.REPLY_0;
         }

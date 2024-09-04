@@ -34,11 +34,11 @@ public class ExpireCommander extends Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         long expireSeconds = Utils.bytesToNum(objects[2]);
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -68,7 +68,7 @@ public class ExpireCommander extends Commander {
         }
         keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(),
                 expireTime, keyMeta.getExtra());
-        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
         //
         KeyType keyType = keyMeta.getKeyType();
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();

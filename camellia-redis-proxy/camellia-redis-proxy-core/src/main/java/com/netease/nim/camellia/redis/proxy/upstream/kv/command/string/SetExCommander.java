@@ -34,7 +34,7 @@ public class SetExCommander extends Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         long seconds = Utils.bytesToNum(objects[2]);
@@ -42,7 +42,7 @@ public class SetExCommander extends Commander {
 
         long expireTime = System.currentTimeMillis() + seconds * 1000L;
         KeyMeta keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), expireTime, value);
-        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
         return StatusReply.OK;
     }
 }

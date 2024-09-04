@@ -23,7 +23,7 @@ public abstract class ZRangeByScore0Commander extends ZRem0Commander {
         super(commanderConfig);
     }
 
-    protected final List<ZSetTuple> zrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
+    protected final List<ZSetTuple> zrangeByScoreVersion0(int slot, KeyMeta keyMeta, byte[] key, ZSetScore minScore, ZSetScore maxScore, ZSetLimit limit, boolean withScores) {
 
         byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
@@ -36,7 +36,7 @@ public abstract class ZRangeByScore0Commander extends ZRem0Commander {
             if (limit.getCount() > 0) {
                 batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
             }
-            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.ASC, false);
+            List<KeyValue> list = kvClient.scanByStartEnd(slot, startKey, endKey, prefix, batch, Sort.ASC, false);
             if (list.isEmpty()) {
                 return result;
             }

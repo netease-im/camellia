@@ -24,7 +24,7 @@ public abstract class ZRangeByLex0Commander extends ZRem0Commander {
         super(commanderConfig);
     }
 
-    protected final List<ZSetTuple> zrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit, boolean withScores) {
+    protected final List<ZSetTuple> zrangeByLexVersion0(int slot, KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit, boolean withScores) {
         byte[] startKey;
         if (minLex.isMin()) {
             startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
@@ -54,7 +54,7 @@ public abstract class ZRangeByLex0Commander extends ZRem0Commander {
             } else {
                 includeStartKey = false;
             }
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, scanBatch, Sort.ASC, includeStartKey);
+            List<KeyValue> scan = kvClient.scanByStartEnd(slot, startKey, endKey, prefix, scanBatch, Sort.ASC, includeStartKey);
             loop ++;
             if (scan.isEmpty()) {
                 return result;

@@ -41,14 +41,34 @@ public class TiKVClient implements KVClient {
         }
     }
 
+    private byte[] encode(int slot, byte[] key) {
+        return BytesUtils.merge(BytesUtils.toBytes(slot), key);
+    }
+
+    private byte[] decode(byte[] key) {
+        if (key == null) {
+            return null;
+        }
+        if (key.length == 0) {
+            return key;
+        }
+        if (key.length < 4) {
+            throw new KvException("key.len < 4");
+        }
+        byte[] result = new byte[key.length - 4];
+        System.arraycopy(key, 4, result, 0, result.length);
+        return result;
+    }
+
     @Override
     public boolean supportTTL() {
         return true;
     }
 
     @Override
-    public void put(byte[] key, byte[] value, long ttl) {
+    public void put(int slot, byte[] key, byte[] value, long ttl) {
         try {
+            key = encode(slot, key);
             if (ttl / 1000 * 1000 < ttl) {
                 ttl = ttl / 1000 + 1;// +1 seconds
             }
@@ -60,8 +80,9 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
+    public void put(int slot, byte[] key, byte[] value) {
         try {
+            key = encode(slot, key);
             tikvClient.put(ByteString.copyFrom(key), ByteString.copyFrom(value));
         } catch (Exception e) {
             logger.error("put error", e);
@@ -70,11 +91,12 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public void batchPut(List<KeyValue> list) {
+    public void batchPut(int slot, List<KeyValue> list) {
         try {
             Map<ByteString, ByteString> map = new HashMap<>(list.size());
             for (KeyValue keyValue : list) {
-                map.put(ByteString.copyFrom(keyValue.getKey()), ByteString.copyFrom(keyValue.getValue()));
+                byte[] key = encode(slot, keyValue.getKey());
+                map.put(ByteString.copyFrom(key), ByteString.copyFrom(keyValue.getValue()));
             }
             tikvClient.batchPut(map);
         } catch (Exception e) {
@@ -84,9 +106,9 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public KeyValue get(byte[] key) {
+    public KeyValue get(int slot, byte[] key) {
         try {
-            Optional<ByteString> bytes = tikvClient.get(ByteString.copyFrom(key));
+            Optional<ByteString> bytes = tikvClient.get(ByteString.copyFrom(encode(slot, key)));
             return bytes.map(byteString -> new KeyValue(key, byteString.toByteArray())).orElse(null);
         } catch (Exception e) {
             logger.error("get error", e);
@@ -95,9 +117,9 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public boolean exists(byte[] key) {
+    public boolean exists(int slot, byte[] key) {
         try {
-            Optional<ByteString> bytes = tikvClient.get(ByteString.copyFrom(key));
+            Optional<ByteString> bytes = tikvClient.get(ByteString.copyFrom(encode(slot, key)));
             return bytes.isPresent();
         } catch (Exception e) {
             logger.error("exists error", e);
@@ -106,11 +128,11 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public boolean[] exists(byte[]... keys) {
+    public boolean[] exists(int slot, byte[]... keys) {
         try {
             List<ByteString> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                list.add(ByteString.copyFrom(key));
+                list.add(ByteString.copyFrom(encode(slot, key)));
             }
             boolean[] exists = new boolean[keys.length];
             List<Kvrpcpb.KvPair> kvPairs = tikvClient.batchGet(list);
@@ -132,11 +154,11 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> batchGet(byte[]... keys) {
+    public List<KeyValue> batchGet(int slot, byte[]... keys) {
         try {
             List<ByteString> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                list.add(ByteString.copyFrom(key));
+                list.add(ByteString.copyFrom(encode(slot, key)));
             }
             List<KeyValue> result = new ArrayList<>();
             List<Kvrpcpb.KvPair> kvPairs = tikvClient.batchGet(list);
@@ -151,9 +173,9 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public void delete(byte[] key) {
+    public void delete(int slot, byte[] key) {
         try {
-            tikvClient.delete(ByteString.copyFrom(key));
+            tikvClient.delete(ByteString.copyFrom(encode(slot, key)));
         } catch (Exception e) {
             logger.error("delete error", e);
             throw new KvException(e);
@@ -161,11 +183,11 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public void batchDelete(byte[]... keys) {
+    public void batchDelete(int slot, byte[]... keys) {
         try {
             List<ByteString> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                list.add(ByteString.copyFrom(key));
+                list.add(ByteString.copyFrom(encode(slot, key)));
             }
             tikvClient.batchDelete(list);
         } catch (Exception e) {
@@ -180,7 +202,7 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public void checkAndDelete(byte[] key, byte[] value) {
+    public void checkAndDelete(int slot, byte[] key, byte[] value) {
         throw new UnsupportedOperationException();
     }
 
@@ -190,8 +212,12 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByPrefix(int slot, byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            prefix = encode(slot, prefix);
+            //
             if (!includeStartKey) {
                 limit = limit + 1;
             }
@@ -220,8 +246,12 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+    public long countByPrefix(int slot, byte[] startKey, byte[] prefix, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            prefix = encode(slot, prefix);
+            //
             List<Kvrpcpb.KvPair> kvPairs = tikvClient.scanPrefix(ByteString.copyFrom(prefix), true);
             long count = 0;
             for (Kvrpcpb.KvPair kvPair : kvPairs) {
@@ -238,8 +268,13 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            endKey = encode(slot, endKey);
+            prefix = encode(slot, prefix);
+            //
             if (!includeStartKey) {
                 limit = limit + 1;
             }
@@ -267,8 +302,13 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
+    public long countByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            endKey = encode(slot, endKey);
+            prefix = encode(slot, prefix);
+            //
             List<Kvrpcpb.KvPair> scan = tikvClient.scan(ByteString.copyFrom(startKey), ByteString.copyFrom(endKey), true);
             long count = 0;
             for (Kvrpcpb.KvPair kvPair : scan) {
@@ -292,6 +332,6 @@ public class TiKVClient implements KVClient {
         if (kvPair == null) {
             return null;
         }
-        return new KeyValue(kvPair.getKey().toByteArray(), kvPair.getValue().toByteArray());
+        return new KeyValue(decode(kvPair.getKey().toByteArray()), kvPair.getValue().toByteArray());
     }
 }

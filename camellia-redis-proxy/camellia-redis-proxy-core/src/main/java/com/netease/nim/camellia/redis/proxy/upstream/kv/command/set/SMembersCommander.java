@@ -36,10 +36,10 @@ public class SMembersCommander extends Set0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -70,7 +70,7 @@ public class SMembersCommander extends Set0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        Set<BytesKey> set = smembersFromKv(keyMeta, key);
+        Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
 
         if (cacheConfig.isSetLocalCacheEnable()) {
             cacheConfig.getSetLRUCache().putAllForRead(key, cacheKey, new RedisSet(set));

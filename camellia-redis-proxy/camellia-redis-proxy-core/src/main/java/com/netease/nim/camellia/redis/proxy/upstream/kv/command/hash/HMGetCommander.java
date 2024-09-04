@@ -41,12 +41,12 @@ public class HMGetCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
 
         //meta
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             Reply[] replies = new Reply[objects.length - 2];
             Arrays.fill(replies, BulkReply.NIL_REPLY);
@@ -78,7 +78,7 @@ public class HMGetCommander extends Hash0Commander {
 
             boolean hotKey = hashLRUCache.isHotKey(key);
             if (hotKey) {
-                hash = loadLRUCache(keyMeta, key);
+                hash = loadLRUCache(slot, keyMeta, key);
                 hashLRUCache.putAllForRead(key, cacheKey, hash);
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply2(fields, hash.hgetAll());
@@ -94,7 +94,7 @@ public class HMGetCommander extends Hash0Commander {
             subKeys[i-2] = keyDesign.hashFieldSubKey(keyMeta, key, objects[i]);
             list.add(new BytesKey(subKeys[i-2]));
         }
-        List<KeyValue> keyValues = kvClient.batchGet(subKeys);
+        List<KeyValue> keyValues = kvClient.batchGet(slot, subKeys);
         Map<BytesKey, byte[]> map = new HashMap<>();
         for (KeyValue keyValue : keyValues) {
             map.put(new BytesKey(keyValue.getKey()), keyValue.getValue());

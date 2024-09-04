@@ -24,8 +24,8 @@ public class HMSetCommander extends HSetCommander {
     }
 
     @Override
-    protected Reply execute(Command command) {
-        Reply reply = super.execute(command);
+    protected Reply execute(int slot, Command command) {
+        Reply reply = super.execute(slot, command);
         if (reply instanceof ErrorReply) {
             return reply;
         }

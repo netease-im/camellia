@@ -47,10 +47,10 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -102,7 +102,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
@@ -119,14 +119,14 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             if (!kvClient.supportReverseScan()) {
-                return zrevrangeByLexVersion0NotSupportReverseScan(keyMeta, key, cacheKey, minLex, maxLex, limit);
+                return zrevrangeByLexVersion0NotSupportReverseScan(slot, keyMeta, key, cacheKey, minLex, maxLex, limit);
             }
-            List<ZSetTuple> list = zrevrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit);
+            List<ZSetTuple> list = zrevrangeByLexVersion0(slot, keyMeta, key, minLex, maxLex, limit);
             return ZSetTupleUtils.toReply(list, false);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            RedisZSet zSet = loadLRUCache(keyMeta, key);
+            RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
             if (zSet != null) {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
@@ -146,8 +146,8 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrevrangeByLexVersion0NotSupportReverseScan(KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
-        RedisZSet zSet = loadLRUCache(keyMeta, key);
+    private Reply zrevrangeByLexVersion0NotSupportReverseScan(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+        RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
         if (zSet == null) {
             return Utils.commandNotSupport(RedisCommand.ZREVRANGEBYLEX);
         }
@@ -162,7 +162,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
         return ZSetTupleUtils.toReply(list, false);
     }
 
-    private List<ZSetTuple> zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
+    private List<ZSetTuple> zrevrangeByLexVersion0(int slot, KeyMeta keyMeta, byte[] key, ZSetLex minLex, ZSetLex maxLex, ZSetLimit limit) {
         byte[] startKey;
         if (maxLex.isMax()) {
             startKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]));
@@ -195,7 +195,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
             } else {
                 includeStartKey = false;
             }
-            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, prefix, batch, Sort.DESC, includeStartKey);
+            List<KeyValue> scan = kvClient.scanByStartEnd(slot, startKey, endKey, prefix, batch, Sort.DESC, includeStartKey);
             loop ++;
             if (scan.isEmpty()) {
                 return result;

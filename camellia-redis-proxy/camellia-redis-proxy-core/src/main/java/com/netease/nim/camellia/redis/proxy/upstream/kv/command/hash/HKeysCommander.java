@@ -40,10 +40,10 @@ public class HKeysCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -69,7 +69,7 @@ public class HKeysCommander extends Hash0Commander {
             }
             boolean hotKey = hashLRUCache.isHotKey(key);
             if (hotKey) {
-                hash = loadLRUCache(keyMeta, key);
+                hash = loadLRUCache(slot, keyMeta, key);
                 hashLRUCache.putAllForRead(key, cacheKey, hash);
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(hash.hgetAll());
@@ -77,7 +77,7 @@ public class HKeysCommander extends Hash0Commander {
         }
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+        Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
             cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
         }

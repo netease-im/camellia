@@ -47,10 +47,10 @@ public class ZRevRankCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return BulkReply.NIL_REPLY;
         }
@@ -84,7 +84,7 @@ public class ZRevRankCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     Pair<Integer, ZSetTuple> zrank = zSet.zrevrank(member);
@@ -97,7 +97,7 @@ public class ZRevRankCommander extends ZSet0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zrevrank(keyMeta, key, cacheKey, member, withScores);
+            return zrevrank(slot, keyMeta, key, cacheKey, member, withScores);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -114,12 +114,12 @@ public class ZRevRankCommander extends ZSet0Commander {
     }
 
 
-    private Reply zrevrank(KeyMeta keyMeta, byte[] key, byte[] cacheKey, BytesKey member, boolean withScores) {
+    private Reply zrevrank(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, BytesKey member, boolean withScores) {
         if (kvClient.supportReverseScan()) {
-            Pair<Integer, ZSetTuple> result = zrevrankFromKv(keyMeta, key, member);
+            Pair<Integer, ZSetTuple> result = zrevrankFromKv(slot, keyMeta, key, member);
             return toReply(result, withScores);
         } else {
-            RedisZSet zSet = loadLRUCache(keyMeta, key);
+            RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
             if (zSet != null) {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     cacheConfig.getZSetLRUCache().putZSetForRead(key, cacheKey, zSet);
@@ -132,14 +132,14 @@ public class ZRevRankCommander extends ZSet0Commander {
         }
     }
 
-    private Pair<Integer, ZSetTuple> zrevrankFromKv(KeyMeta keyMeta, byte[] key, BytesKey member) {
+    private Pair<Integer, ZSetTuple> zrevrankFromKv(int slot, KeyMeta keyMeta, byte[] key, BytesKey member) {
         int scanBatch = kvConfig.scanBatch();
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         startKey = BytesUtils.nextBytes(startKey);
         int index = 0;
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, scanBatch, Sort.DESC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, scanBatch, Sort.DESC, false);
             if (scan.isEmpty()) {
                 return null;
             }

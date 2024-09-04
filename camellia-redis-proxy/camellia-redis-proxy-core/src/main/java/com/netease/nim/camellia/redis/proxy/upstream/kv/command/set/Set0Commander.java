@@ -24,19 +24,19 @@ public abstract class Set0Commander extends Commander {
         super(commanderConfig);
     }
 
-    protected final RedisSet loadLRUCache(KeyMeta keyMeta, byte[] key) {
-        Set<BytesKey> set = smembersFromKv(keyMeta, key);
+    protected final RedisSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
+        Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
         return new RedisSet(set);
     }
 
-    protected final Set<BytesKey> smembersFromKv(KeyMeta keyMeta, byte[] key) {
+    protected final Set<BytesKey> smembersFromKv(int slot, KeyMeta keyMeta, byte[] key) {
         Set<BytesKey> set = new HashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
         int setMaxSize = kvConfig.setMaxSize();
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return set;
             }
@@ -59,14 +59,14 @@ public abstract class Set0Commander extends Commander {
         }
     }
 
-    protected final Set<BytesKey> srandmemberFromKv(KeyMeta keyMeta, byte[] key, int count) {
+    protected final Set<BytesKey> srandmemberFromKv(int slot, KeyMeta keyMeta, byte[] key, int count) {
         Set<BytesKey> result = new HashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit;
         while (true) {
             limit = Math.min(kvConfig.scanBatch(), count - result.size());
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return result;
             }
@@ -87,7 +87,7 @@ public abstract class Set0Commander extends Commander {
         }
     }
 
-    protected final void writeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> memberSet, Result result) {
+    protected final void writeMembers(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> memberSet, Result result) {
         List<KeyValue> list = new ArrayList<>(memberSet.size());
         for (BytesKey bytesKey : memberSet) {
             byte[] member = bytesKey.getKey();
@@ -96,13 +96,13 @@ public abstract class Set0Commander extends Commander {
             list.add(keyValue);
         }
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
         } else {
-            kvClient.batchPut(list);
+            kvClient.batchPut(slot, list);
         }
     }
 
-    protected final void removeMembers(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Collection<BytesKey> members, Result result, boolean checkSCard) {
+    protected final void removeMembers(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Collection<BytesKey> members, Result result, boolean checkSCard) {
         byte[][] subKeys = new byte[members.size()][];
         int i = 0;
         for (BytesKey bytesKey : members) {
@@ -113,36 +113,36 @@ public abstract class Set0Commander extends Commander {
         }
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(cacheKey, result, () -> {
-                kvClient.batchDelete(subKeys);
+                kvClient.batchDelete(slot, subKeys);
                 if (checkSCard) {
-                    if (getSizeFromKv(keyMeta, key) == 0) {
-                        keyMetaServer.deleteKeyMeta(key);
+                    if (getSizeFromKv(slot, keyMeta, key) == 0) {
+                        keyMetaServer.deleteKeyMeta(slot, key);
                     }
                 }
             });
         } else {
-            kvClient.batchDelete(subKeys);
+            kvClient.batchDelete(slot, subKeys);
             if (checkSCard) {
-                if (getSizeFromKv(keyMeta, key) == 0) {
-                    keyMetaServer.deleteKeyMeta(key);
+                if (getSizeFromKv(slot, keyMeta, key) == 0) {
+                    keyMetaServer.deleteKeyMeta(slot, key);
                 }
             }
         }
     }
 
-    private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {
+    private long getSizeFromKv(int slot, KeyMeta keyMeta, byte[] key) {
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
-        return kvClient.countByPrefix(startKey, startKey, false);
+        return kvClient.countByPrefix(slot, startKey, startKey, false);
     }
 
-    protected final Map<BytesKey, Boolean> smismemberFromKv(KeyMeta keyMeta, byte[] key, Collection<BytesKey> members) {
+    protected final Map<BytesKey, Boolean> smismemberFromKv(int slot, KeyMeta keyMeta, byte[] key, Collection<BytesKey> members) {
         byte[][] subKeys = new byte[members.size()][];
         int i = 0;
         for (BytesKey member : members) {
             subKeys[i] = keyDesign.setMemberSubKey(keyMeta, key, member.getKey());
             i ++;
         }
-        List<KeyValue> keyValues = kvClient.batchGet(subKeys);
+        List<KeyValue> keyValues = kvClient.batchGet(slot, subKeys);
         Map<BytesKey, Boolean> map = new HashMap<>();
         for (KeyValue keyValue : keyValues) {
             if (keyValue == null || keyValue.getKey() == null) {
@@ -154,20 +154,20 @@ public abstract class Set0Commander extends Commander {
         return map;
     }
 
-    protected final void updateKeyMeta(KeyMeta keyMeta, byte[] key, int add) {
+    protected final void updateKeyMeta(int slot, KeyMeta keyMeta, byte[] key, int add) {
         if (add > 0) {
             int count = BytesUtils.toInt(keyMeta.getExtra()) + add;
             byte[] extra = BytesUtils.toBytes(count);
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
         } else if (add < 0) {
             int count = BytesUtils.toInt(keyMeta.getExtra()) + add;
             if (count > 0) {
                 byte[] extra = BytesUtils.toBytes(count);
                 keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
             } else {
-                keyMetaServer.deleteKeyMeta(key);
+                keyMetaServer.deleteKeyMeta(slot, key);
             }
         }
     }

@@ -23,19 +23,19 @@ public abstract class Hash0Commander extends Commander {
         super(commanderConfig);
     }
 
-    protected final RedisHash loadLRUCache(KeyMeta keyMeta, byte[] key) {
-        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+    protected final RedisHash loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
+        Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         return new RedisHash(map);
     }
 
-    protected final Map<BytesKey, byte[]> hgetallFromKv(KeyMeta keyMeta, byte[] key) {
+    protected final Map<BytesKey, byte[]> hgetallFromKv(int slot, KeyMeta keyMeta, byte[] key) {
         Map<BytesKey, byte[]> map = new HashMap<>();
         byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
         int hashMaxSize = kvConfig.hashMaxSize();
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return map;
             }

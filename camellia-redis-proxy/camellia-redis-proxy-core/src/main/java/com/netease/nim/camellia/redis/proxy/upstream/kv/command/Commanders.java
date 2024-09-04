@@ -11,9 +11,11 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -107,7 +109,14 @@ public class Commanders {
             if (!commander.parse(command)) {
                 return ErrorReply.argNumWrong(redisCommand);
             }
-            return commander.execute(command);
+            List<byte[]> keys = command.getKeys();
+            int slot;
+            if (keys.isEmpty()) {
+                slot = -1;
+            } else {
+                slot = RedisClusterCRC16Utils.getSlot(keys.get(0));
+            }
+            return commander.execute(slot, command);
         } catch (KvException | IllegalArgumentException e) {
             ErrorLogCollector.collect(Commanders.class, redisCommand + " execute error", e);
             String message = e.getMessage();

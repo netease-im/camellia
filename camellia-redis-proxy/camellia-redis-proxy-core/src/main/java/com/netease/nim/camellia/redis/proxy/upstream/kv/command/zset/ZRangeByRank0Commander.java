@@ -22,7 +22,7 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
         super(commanderConfig);
     }
 
-    protected final List<ZSetTuple> zrangeByRankVersion0(KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
+    protected final List<ZSetTuple> zrangeByRankVersion0(int slot, KeyMeta keyMeta, byte[] key, int start, int stop, boolean withScores) {
 
         int size = BytesUtils.toInt(keyMeta.getExtra());
         ZSetRank zSetRank = new ZSetRank(start, stop, size);
@@ -41,7 +41,7 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
         int count = 0;
         while (true) {
             int limit = Math.min(stop - count + 1, scanBatch);
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return result;
             }

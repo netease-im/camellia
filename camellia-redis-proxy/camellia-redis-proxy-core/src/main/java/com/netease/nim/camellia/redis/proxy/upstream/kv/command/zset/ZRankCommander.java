@@ -46,10 +46,10 @@ public class ZRankCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return BulkReply.NIL_REPLY;
         }
@@ -84,7 +84,7 @@ public class ZRankCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
@@ -97,7 +97,7 @@ public class ZRankCommander extends ZSet0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0) {
-            Pair<Integer, ZSetTuple> zrank = zrankFromKv(keyMeta, key, member);
+            Pair<Integer, ZSetTuple> zrank = zrankFromKv(slot, keyMeta, key, member);
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
             return toReply(zrank, withScores);
         }
@@ -115,13 +115,13 @@ public class ZRankCommander extends ZSet0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Pair<Integer, ZSetTuple> zrankFromKv(KeyMeta keyMeta, byte[] key, BytesKey member) {
+    private Pair<Integer, ZSetTuple> zrankFromKv(int slot, KeyMeta keyMeta, byte[] key, BytesKey member) {
         int scanBatch = kvConfig.scanBatch();
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int index = 0;
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, scanBatch, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, scanBatch, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return null;
             }

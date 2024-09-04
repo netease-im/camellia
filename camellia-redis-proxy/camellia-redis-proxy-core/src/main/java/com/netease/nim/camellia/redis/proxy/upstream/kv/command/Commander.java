@@ -55,7 +55,7 @@ public abstract class Commander {
 
     protected abstract boolean parse(Command command);
 
-    protected abstract Reply execute(Command command);
+    protected abstract Reply execute(int slot, Command command);
 
     protected final Reply sync(CompletableFuture<Reply> future) {
         return cacheRedisTemplate.sync(future, cacheConfig.cacheTimeoutMillis());

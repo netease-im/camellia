@@ -37,14 +37,14 @@ public class SMIsMemberCommander extends Set0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         List<BytesKey> members = new ArrayList<>();
         for (int i=2; i<objects.length; i++) {
             members.add(new BytesKey(objects[i]));
         }
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             Reply[] replies = new Reply[members.size()];
             Arrays.fill(replies, IntegerReply.REPLY_0);
@@ -77,7 +77,7 @@ public class SMIsMemberCommander extends Set0Commander {
             boolean hotKey = setLRUCache.isHotKey(key);
 
             if (hotKey) {
-                set = loadLRUCache(keyMeta, key);
+                set = loadLRUCache(slot, keyMeta, key);
                 setLRUCache.putAllForRead(key, cacheKey, set);
                 //
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -88,7 +88,7 @@ public class SMIsMemberCommander extends Set0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        Map<BytesKey, Boolean> smismember = smismemberFromKv(keyMeta, key, members);
+        Map<BytesKey, Boolean> smismember = smismemberFromKv(slot, keyMeta, key, members);
         return toReply(smismember, members);
     }
 

@@ -48,7 +48,7 @@ public class ZAddCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         Map<BytesKey, Double> memberMap = new HashMap<>();
@@ -60,7 +60,7 @@ public class ZAddCommander extends ZSet0Commander {
         int memberSize = memberMap.size();
 
         boolean first = false;
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         EncodeVersion encodeVersion;
         if (keyMeta == null) {
             encodeVersion = keyDesign.zsetEncodeVersion();
@@ -72,7 +72,7 @@ public class ZAddCommander extends ZSet0Commander {
             } else {
                 return ErrorReply.INTERNAL_ERROR;
             }
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
             first = true;
         } else {
             if (keyMeta.getKeyType() != KeyType.zset) {
@@ -121,7 +121,7 @@ public class ZAddCommander extends ZSet0Commander {
                 if (map == null) {
                     boolean hotKey = zSetLRUCache.isHotKey(key);
                     if (hotKey) {
-                        zSet = loadLRUCache(keyMeta, key);
+                        zSet = loadLRUCache(slot, keyMeta, key);
                         if (zSet != null) {
                             //
                             type = KvCacheMonitor.Type.kv_store;
@@ -155,15 +155,15 @@ public class ZAddCommander extends ZSet0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return zaddVersion0(keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result, type);
+            return zaddVersion0(slot, keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result, type);
         }
         if (encodeVersion == EncodeVersion.version_1) {
-            return zaddVersion1(keyMeta, key, cacheKey, memberSize, memberMap, result, type);
+            return zaddVersion1(slot, keyMeta, key, cacheKey, memberSize, memberMap, result, type);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zaddVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
+    private Reply zaddVersion0(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
                                Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result, KvCacheMonitor.Type type) {
         if (type == null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -181,9 +181,9 @@ public class ZAddCommander extends ZSet0Commander {
                 list.add(keyValue2);
             }
             if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
+                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
             } else {
-                kvClient.batchPut(list);
+                kvClient.batchPut(slot, list);
             }
             return IntegerReply.parse(memberSize);
         } else {
@@ -205,7 +205,7 @@ public class ZAddCommander extends ZSet0Commander {
             int existsCount = 0;
             List<byte[]> toDeleteSubKey2;
             if (existsMap == null) {
-                List<KeyValue> keyValues = kvClient.batchGet(existsKeys);
+                List<KeyValue> keyValues = kvClient.batchGet(slot, existsKeys);
                 toDeleteSubKey2 = new ArrayList<>(memberSize);
                 for (KeyValue keyValue : keyValues) {
                     if (keyValue == null) {
@@ -231,23 +231,23 @@ public class ZAddCommander extends ZSet0Commander {
             if (result.isKvWriteDelayEnable()) {
                 submitAsyncWriteTask(cacheKey, result, () -> {
                     if (!toDeleteSubKey2.isEmpty()) {
-                        kvClient.batchDelete(toDeleteSubKey2.toArray(new byte[0][0]));
+                        kvClient.batchDelete(slot, toDeleteSubKey2.toArray(new byte[0][0]));
                     }
-                    kvClient.batchPut(list);
+                    kvClient.batchPut(slot, list);
                 });
             } else {
                 if (!toDeleteSubKey2.isEmpty()) {
-                    kvClient.batchDelete(toDeleteSubKey2.toArray(new byte[0][0]));
+                    kvClient.batchDelete(slot, toDeleteSubKey2.toArray(new byte[0][0]));
                 }
-                kvClient.batchPut(list);
+                kvClient.batchPut(slot, list);
             }
             int add = memberSize - existsCount;
-            updateKeyMeta(keyMeta, key, add);
+            updateKeyMeta(slot, keyMeta, key, add);
             return IntegerReply.parse(add);
         }
     }
 
-    private Reply zaddVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Map<BytesKey, Double> memberMap, Result result, KvCacheMonitor.Type type) {
+    private Reply zaddVersion1(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, int memberSize, Map<BytesKey, Double> memberMap, Result result, KvCacheMonitor.Type type) {
         if (type == null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
@@ -276,9 +276,9 @@ public class ZAddCommander extends ZSet0Commander {
             i+=2;
         }
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(list));
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
         } else {
-            kvClient.batchPut(list);
+            kvClient.batchPut(slot, list);
         }
         if (!memberIndexCacheWriteCommands.isEmpty()) {
             List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(memberIndexCacheWriteCommands));
@@ -291,12 +291,12 @@ public class ZAddCommander extends ZSet0Commander {
         return sync(storageRedisTemplate.sendCommand(new Command(rewriteCmd)));
     }
 
-    private void updateKeyMeta(KeyMeta keyMeta, byte[] key, int add) {
+    private void updateKeyMeta(int slot, KeyMeta keyMeta, byte[] key, int add) {
         if (add > 0) {
             int count = BytesUtils.toInt(keyMeta.getExtra()) + add;
             byte[] extra = BytesUtils.toBytes(count);
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
         }
     }
 

@@ -41,10 +41,10 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -95,7 +95,7 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
@@ -111,12 +111,12 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            List<ZSetTuple> tuples = zrangeByLexVersion0(keyMeta, key, minLex, maxLex, limit, false);
+            List<ZSetTuple> tuples = zrangeByLexVersion0(slot, keyMeta, key, minLex, maxLex, limit, false);
             return ZSetTupleUtils.toReply(tuples, false);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            RedisZSet zSet = loadLRUCache(keyMeta, key);
+            RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
             if (zSet != null) {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     //

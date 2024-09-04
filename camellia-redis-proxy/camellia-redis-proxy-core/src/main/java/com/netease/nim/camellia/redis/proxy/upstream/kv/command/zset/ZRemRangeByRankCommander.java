@@ -47,10 +47,10 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -98,7 +98,7 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
             if (removedMap == null) {
                 boolean hotKey = zSetLRUCache.isHotKey(key);
                 if (hotKey) {
-                    RedisZSet zSet = loadLRUCache(keyMeta, key);
+                    RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
                     if (zSet != null) {
                         //
                         type = KvCacheMonitor.Type.kv_store;
@@ -132,17 +132,17 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
 
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByRankVersion0(keyMeta, key, cacheKey, start, stop, removedMap, result);
+            return zremrangeByRankVersion0(slot, keyMeta, key, cacheKey, start, stop, removedMap, result);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return zremrangeVersion1(keyMeta, key, cacheKey, objects, redisCommand(), removedMap, result);
+            return zremrangeVersion1(slot, keyMeta, key, cacheKey, objects, redisCommand(), removedMap, result);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByRankVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, Map<BytesKey, Double> removedMap, Result result) {
+    private Reply zremrangeByRankVersion0(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, int start, int stop, Map<BytesKey, Double> removedMap, Result result) {
 
         int size = BytesUtils.toInt(keyMeta.getExtra());
         ZSetRank rank = new ZSetRank(start, stop, size);
@@ -153,10 +153,10 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
         stop = rank.getStop();
 
         if (removedMap == null) {
-            List<ZSetTuple> list = zrangeByRankVersion0(keyMeta, key, start, stop, true);
+            List<ZSetTuple> list = zrangeByRankVersion0(slot, keyMeta, key, start, stop, true);
             removedMap = ZSetTupleUtils.toMap(list);
         }
 
-        return zremVersion0(keyMeta, key, cacheKey, removedMap, result);
+        return zremVersion0(slot, keyMeta, key, cacheKey, removedMap, result);
     }
 }

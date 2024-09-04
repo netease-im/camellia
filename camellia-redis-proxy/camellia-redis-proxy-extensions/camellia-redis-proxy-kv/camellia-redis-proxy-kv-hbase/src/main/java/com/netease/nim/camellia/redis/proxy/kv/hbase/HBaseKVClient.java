@@ -128,13 +128,14 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public void put(byte[] key, byte[] value, long ttl) {
+    public void put(int slot, byte[] key, byte[] value, long ttl) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
+    public void put(int slot, byte[] key, byte[] value) {
         try {
+            key = encode(slot, key);
             Put put = new Put(key);
             put.addColumn(cf, column, value);
             put.setDurability(durability);
@@ -145,12 +146,32 @@ public class HBaseKVClient implements KVClient {
         }
     }
 
+    private byte[] encode(int slot, byte[] key) {
+        return BytesUtils.merge(BytesUtils.toBytes(slot), key);
+    }
+
+    private byte[] decode(byte[] key) {
+        if (key == null) {
+            return null;
+        }
+        if (key.length == 0) {
+            return key;
+        }
+        if (key.length < 4) {
+            throw new KvException("key.len < 4");
+        }
+        byte[] result = new byte[key.length - 4];
+        System.arraycopy(key, 4, result, 0, result.length);
+        return result;
+    }
+
     @Override
-    public void batchPut(List<KeyValue> list) {
+    public void batchPut(int slot, List<KeyValue> list) {
         try {
             List<Put> putList = new ArrayList<>();
             for (KeyValue keyValue : list) {
-                Put put = new Put(keyValue.getKey());
+                byte[] key = encode(slot, keyValue.getKey());
+                Put put = new Put(key);
                 put.addColumn(cf, column, keyValue.getValue());
                 put.setDurability(durability);
                 putList.add(put);
@@ -163,8 +184,9 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public KeyValue get(byte[] key) {
+    public KeyValue get(int slot, byte[] key) {
         try {
+            key = encode(slot, key);
             Get get = new Get(key);
             Result result = template.get(tableName, get);
             if (result == null) {
@@ -182,8 +204,9 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public boolean exists(byte[] key) {
+    public boolean exists(int slot, byte[] key) {
         try {
+            key = encode(slot, key);
             Get get = new Get(key);
             return template.exists(tableName, get);
         } catch (Exception e) {
@@ -193,11 +216,11 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public boolean[] exists(byte[]... keys) {
+    public boolean[] exists(int slot, byte[]... keys) {
         try {
             List<Get> getList = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                getList.add(new Get(key));
+                getList.add(new Get(encode(slot, key)));
             }
             return template.existsAll(tableName, getList);
         } catch (Exception e) {
@@ -207,11 +230,11 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> batchGet(byte[]... keys) {
+    public List<KeyValue> batchGet(int slot, byte[]... keys) {
         try {
             List<Get> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                Get get = new Get(key);
+                Get get = new Get(encode(slot, key));
                 list.add(get);
             }
             List<KeyValue> keyValues = new ArrayList<>(list.size());
@@ -220,7 +243,7 @@ public class HBaseKVClient implements KVClient {
                 if (result == null) continue;
                 byte[] key = result.getRow();
                 byte[] value = result.getValue(cf, column);
-                keyValues.add(new KeyValue(key, value));
+                keyValues.add(new KeyValue(decode(key), value));
             }
             return keyValues;
         } catch (Exception e) {
@@ -230,9 +253,9 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public void delete(byte[] key) {
+    public void delete(int slot, byte[] key) {
         try {
-            Delete delete = new Delete(key);
+            Delete delete = new Delete(encode(slot, key));
             delete.setDurability(durability);
             template.delete(tableName, delete);
         } catch (Exception e) {
@@ -242,11 +265,11 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public void batchDelete(byte[]... keys) {
+    public void batchDelete(int slot, byte[]... keys) {
         try {
             List<Delete> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                Delete delete = new Delete(key);
+                Delete delete = new Delete(encode(slot, key));
                 delete.setDurability(durability);
                 list.add(delete);
             }
@@ -263,8 +286,9 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public void checkAndDelete(byte[] key, byte[] value) {
+    public void checkAndDelete(int slot, byte[] key, byte[] value) {
         try {
+            key = encode(slot, key);
             Delete delete = new Delete(key);
             delete.setDurability(durability);
             template.checkAndDelete(tableName, key, cf, column, value, delete);
@@ -280,8 +304,12 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByPrefix(int slot, byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            prefix = encode(slot, prefix);
+            //
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setCaching(includeStartKey ? limit : (limit + 1));
@@ -302,7 +330,7 @@ public class HBaseKVClient implements KVClient {
                     if (BytesUtils.startWith(row, prefix)) {
                         byte[] key = result.getRow();
                         byte[] value = result.getValue(cf, column);
-                        list.add(new KeyValue(key, value));
+                        list.add(new KeyValue(decode(key), value));
                         if (list.size() >= limit) {
                             break;
                         }
@@ -319,8 +347,12 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+    public long countByPrefix(int slot, byte[] startKey, byte[] prefix, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            prefix = encode(slot, prefix);
+            //
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setSmall(true);
@@ -348,8 +380,13 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            endKey = encode(slot, endKey);
+            prefix = encode(slot, prefix);
+            //
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);
@@ -368,7 +405,7 @@ public class HBaseKVClient implements KVClient {
                     }
                     byte[] key = result.getRow();
                     byte[] value = result.getValue(cf, column);
-                    list.add(new KeyValue(key, value));
+                    list.add(new KeyValue(decode(key), value));
                     if (list.size() >= limit) {
                         break;
                     }
@@ -382,8 +419,13 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
+    public long countByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         try {
+            //
+            startKey = encode(slot, startKey);
+            endKey = encode(slot, endKey);
+            prefix = encode(slot, prefix);
+            //
             Scan scan = new Scan();
             scan.setStartRow(startKey);
             scan.setStopRow(endKey);

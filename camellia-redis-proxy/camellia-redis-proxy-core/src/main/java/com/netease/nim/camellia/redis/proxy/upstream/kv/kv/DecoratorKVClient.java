@@ -31,37 +31,37 @@ public class DecoratorKVClient implements KVClient {
     }
 
     @Override
-    public void put(byte[] key, byte[] value, long ttl) {
+    public void put(int slot, byte[] key, byte[] value, long ttl) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                kvClient.put(key, value, ttl);
+                kvClient.put(slot, key, value, ttl);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "putWithTTL", spend);
             }
         } else {
-            kvClient.put(key, value, ttl);
+            kvClient.put(slot, key, value, ttl);
         }
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
+    public void put(int slot, byte[] key, byte[] value) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                kvClient.put(key, value);
+                kvClient.put(slot, key, value);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "put", spend);
             }
         } else {
-            kvClient.put(key, value);
+            kvClient.put(slot, key, value);
         }
     }
 
     @Override
-    public void batchPut(List<KeyValue> list) {
+    public void batchPut(int slot, List<KeyValue> list) {
         if (list.isEmpty()) {
             return;
         }
@@ -69,48 +69,48 @@ public class DecoratorKVClient implements KVClient {
             long start = System.nanoTime();
             String method = "batchPut_" + list.size();
             try {
-                kvClient.batchPut(list);
+                kvClient.batchPut(slot, list);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
-            kvClient.batchPut(list);
+            kvClient.batchPut(slot, list);
         }
     }
 
     @Override
-    public KeyValue get(byte[] key) {
+    public KeyValue get(int slot, byte[] key) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.get(key);
+                return kvClient.get(slot, key);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "get", spend);
             }
         } else {
-            return kvClient.get(key);
+            return kvClient.get(slot, key);
         }
     }
 
     @Override
-    public boolean exists(byte[] key) {
+    public boolean exists(int slot, byte[] key) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.exists(key);
+                return kvClient.exists(slot, key);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "exists", spend);
             }
         } else {
-            return kvClient.exists(key);
+            return kvClient.exists(slot, key);
         }
     }
 
     @Override
-    public boolean[] exists(byte[]... keys) {
+    public boolean[] exists(int slot, byte[]... keys) {
         if (keys.length == 0) {
             return new boolean[0];
         }
@@ -118,18 +118,18 @@ public class DecoratorKVClient implements KVClient {
             long start = System.nanoTime();
             String method = "exists_" + keys.length;
             try {
-                return kvClient.exists(keys);
+                return kvClient.exists(slot, keys);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
-            return kvClient.exists(keys);
+            return kvClient.exists(slot, keys);
         }
     }
 
     @Override
-    public List<KeyValue> batchGet(byte[]... keys) {
+    public List<KeyValue> batchGet(int slot, byte[]... keys) {
         if (keys.length == 0) {
             return Collections.emptyList();
         }
@@ -137,33 +137,33 @@ public class DecoratorKVClient implements KVClient {
             long start = System.nanoTime();
             String method = "batchGet_" + keys.length;
             try {
-                return kvClient.batchGet(keys);
+                return kvClient.batchGet(slot, keys);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
-            return kvClient.batchGet(keys);
+            return kvClient.batchGet(slot, keys);
         }
     }
 
     @Override
-    public void delete(byte[] key) {
+    public void delete(int slot, byte[] key) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                kvClient.delete(key);
+                kvClient.delete(slot, key);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "delete", spend);
             }
         } else {
-            kvClient.delete(key);
+            kvClient.delete(slot, key);
         }
     }
 
     @Override
-    public void batchDelete(byte[]... keys) {
+    public void batchDelete(int slot, byte[]... keys) {
         if (keys.length == 0) {
             return;
         }
@@ -171,13 +171,13 @@ public class DecoratorKVClient implements KVClient {
             long start = System.nanoTime();
             String method = "batchDelete_" + keys.length;
             try {
-                kvClient.batchDelete(keys);
+                kvClient.batchDelete(slot, keys);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, method, spend);
             }
         } else {
-            kvClient.batchDelete(keys);
+            kvClient.batchDelete(slot, keys);
         }
     }
 
@@ -187,17 +187,17 @@ public class DecoratorKVClient implements KVClient {
     }
 
     @Override
-    public void checkAndDelete(byte[] key, byte[] value) {
+    public void checkAndDelete(int slot, byte[] key, byte[] value) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                kvClient.checkAndDelete(key, value);
+                kvClient.checkAndDelete(slot, key, value);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "checkAndDelete", spend);
             }
         } else {
-            kvClient.checkAndDelete(key, value);
+            kvClient.checkAndDelete(slot, key, value);
         }
     }
 
@@ -207,62 +207,62 @@ public class DecoratorKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByPrefix(int slot, byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.scanByPrefix(startKey, prefix, limit, sort, includeStartKey);
+                return kvClient.scanByPrefix(slot, startKey, prefix, limit, sort, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "scanByPrefix", spend);
             }
         } else {
-            return kvClient.scanByPrefix(startKey, prefix, limit, sort, includeStartKey);
+            return kvClient.scanByPrefix(slot, startKey, prefix, limit, sort, includeStartKey);
         }
     }
 
     @Override
-    public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+    public long countByPrefix(int slot, byte[] startKey, byte[] prefix, boolean includeStartKey) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.countByPrefix(startKey, prefix, includeStartKey);
+                return kvClient.countByPrefix(slot, startKey, prefix, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "countByPrefix", spend);
             }
         } else {
-            return kvClient.countByPrefix(startKey, prefix, includeStartKey);
+            return kvClient.countByPrefix(slot, startKey, prefix, includeStartKey);
         }
     }
 
     @Override
-    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.scanByStartEnd(startKey, endKey, prefix, limit, sort, includeStartKey);
+                return kvClient.scanByStartEnd(slot, startKey, endKey, prefix, limit, sort, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "scanByStartEnd", spend);
             }
         } else {
-            return kvClient.scanByStartEnd(startKey, endKey, prefix, limit, sort, includeStartKey);
+            return kvClient.scanByStartEnd(slot, startKey, endKey, prefix, limit, sort, includeStartKey);
         }
     }
 
     @Override
-    public long countByStartEnd(byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
+    public long countByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
-                return kvClient.countByStartEnd(startKey, endKey, prefix, includeStartKey);
+                return kvClient.countByStartEnd(slot, startKey, endKey, prefix, includeStartKey);
             } finally {
                 long spend = System.nanoTime() - start;
                 KvStorageMonitor.update(namespace, name, "countByStartEnd", spend);
             }
         } else {
-            return kvClient.countByStartEnd(startKey, endKey, prefix, includeStartKey);
+            return kvClient.countByStartEnd(slot, startKey, endKey, prefix, includeStartKey);
         }
     }
 }

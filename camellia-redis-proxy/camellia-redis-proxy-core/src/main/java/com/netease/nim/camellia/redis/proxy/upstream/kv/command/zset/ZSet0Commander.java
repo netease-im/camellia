@@ -33,10 +33,10 @@ public abstract class ZSet0Commander extends Commander {
         super(commanderConfig);
     }
 
-    protected final RedisZSet loadLRUCache(KeyMeta keyMeta, byte[] key) {
+    protected final RedisZSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            List<ZSetTuple> list = zrangeAllFromKv(keyMeta, key);
+            List<ZSetTuple> list = zrangeAllFromKv(slot, keyMeta, key);
             Map<BytesKey, Double> memberMap = new HashMap<>(list.size());
             for (ZSetTuple tuple : list) {
                 memberMap.put(tuple.getMember(), tuple.getScore());
@@ -54,7 +54,7 @@ public abstract class ZSet0Commander extends Commander {
             if (reply instanceof MultiBulkReply) {
                 //
                 boolean forRead = redisCommand().getType() == RedisCommand.Type.READ;
-                reply = checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, true, forRead);
+                reply = checkReplyWithIndex(slot, keyMeta, key, (MultiBulkReply) reply, true, forRead);
                 //
                 if (reply instanceof MultiBulkReply) {
                     Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -71,7 +71,7 @@ public abstract class ZSet0Commander extends Commander {
         return null;
     }
 
-    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, boolean withScores) {
+    protected final Reply zrangeVersion1(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, boolean withScores) {
         byte[][] cmd = new byte[objects.length][];
         System.arraycopy(objects, 0, cmd, 0, objects.length);
         cmd[1] = cacheKey;
@@ -81,19 +81,19 @@ public abstract class ZSet0Commander extends Commander {
             return reply;
         }
         if (reply instanceof MultiBulkReply) {
-            return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores, true);
+            return checkReplyWithIndex(slot, keyMeta, key, (MultiBulkReply) reply, withScores, true);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final List<ZSetTuple> zrangeAllFromKv(KeyMeta keyMeta, byte[] key) {
+    protected final List<ZSetTuple> zrangeAllFromKv(int slot, KeyMeta keyMeta, byte[] key) {
         List<ZSetTuple> list = new ArrayList<>();
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
         int zsetMaxSize = kvConfig.zsetMaxSize();
         while (true) {
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return list;
             }
@@ -120,7 +120,7 @@ public abstract class ZSet0Commander extends Commander {
         return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
     }
 
-    private Reply checkReplyWithIndex(KeyMeta keyMeta, byte[] key, MultiBulkReply reply, boolean withScores, boolean forRead) {
+    private Reply checkReplyWithIndex(int slot, KeyMeta keyMeta, byte[] key, MultiBulkReply reply, boolean withScores, boolean forRead) {
         Reply[] replies = reply.getReplies();
         int step = withScores ? 2: 1;
         int size = withScores ? replies.length/2 : replies.length;
@@ -221,7 +221,7 @@ public abstract class ZSet0Commander extends Commander {
                 reverseMap.put(new BytesKey(subKey), entry.getKey());
             }
             List<Command> buildCacheCommands = new ArrayList<>(batchGetKeys.length);
-            List<KeyValue> keyValues = kvClient.batchGet(batchGetKeys);
+            List<KeyValue> keyValues = kvClient.batchGet(slot, batchGetKeys);
             for (KeyValue keyValue : keyValues) {
                 BytesKey bytesKey = reverseMap.get(new BytesKey(keyValue.getKey()));
                 memberMap.put(bytesKey, keyValue.getValue());

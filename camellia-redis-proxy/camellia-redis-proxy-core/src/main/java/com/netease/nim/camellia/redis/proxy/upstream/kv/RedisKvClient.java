@@ -239,7 +239,7 @@ public class RedisKvClient implements IUpstreamClient {
         try {
             kvClient.init(namespace);
             //get for check and warm
-            kvClient.get(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            kvClient.get(0, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
         } catch (Throwable e) {
             logger.error("kv client get error, namespace = {}", namespace, e);
             throw new KvException(e);

@@ -12,9 +12,11 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +38,8 @@ public class KvGcEnv {
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("kv-gc-lock"));
     private static final ReentrantLock lock = new ReentrantLock();
     private static final ConcurrentHashMap<String, Long> lastGcTimeMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, byte[]> metaKeyStartKeyMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, Map<Integer, byte[]>> subKeyStartKeyMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Pair<byte[], Integer>> metaKeyStartKeyMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Map<Integer, Pair<byte[], Integer>>> subKeyStartKeyMap = new ConcurrentHashMap<>();
 
     private static boolean redisEnable() {
         return redisUrl() != null && redisKey() != null;
@@ -116,11 +118,11 @@ public class KvGcEnv {
         }
     }
 
-    public static byte[] getMetaKeyScanStartKey(String namespace) {
+    public static Pair<byte[], Integer> getMetaKeyScanStartKey(String namespace) {
         try {
             if (redisEnable()) {
                 String key = redisKey() + "#" + namespace + "#metKeyScanStartKey";
-                return getK(key);
+                return toPair(getK(key));
             }
             return metaKeyStartKeyMap.get(namespace);
         } catch (Exception e) {
@@ -129,19 +131,19 @@ public class KvGcEnv {
         }
     }
 
-    public static void updateMetaKeyScanStartKey(String namespace, byte[] startKey) {
+    public static void updateMetaKeyScanStartKey(String namespace, byte[] startKey, int slot) {
         try {
             if (startKey == null) {
                 metaKeyStartKeyMap.remove(namespace);
             } else {
-                metaKeyStartKeyMap.put(namespace, startKey);
+                metaKeyStartKeyMap.put(namespace, new Pair<>(startKey, slot));
             }
             if (redisEnable()) {
                 String key = redisKey() + "#" + namespace + "#metKeyScanStartKey";
                 if (startKey == null) {
                     delK(key);
                 } else {
-                    setKv(key, startKey);
+                    setKv(key, toBytes(new Pair<>(startKey, slot)));
                 }
             }
         } catch (Exception e) {
@@ -149,35 +151,35 @@ public class KvGcEnv {
         }
     }
 
-    public static byte[] getSubKeyScanStartKey(String namespace, int index) {
+    public static Pair<byte[], Integer> getSubKeyScanStartKey(String namespace, int index) {
         try {
             if (redisEnable()) {
                 String key = redisKey() + "#" + namespace + "#subKeyScanStartKey#" + index;
-                return getK(key);
+                return toPair(getK(key));
             }
-            Map<Integer, byte[]> subMap = CamelliaMapUtils.computeIfAbsent(subKeyStartKeyMap, namespace, k -> new ConcurrentHashMap<>());
+            Map<Integer, Pair<byte[], Integer>> subMap = CamelliaMapUtils.computeIfAbsent(subKeyStartKeyMap, namespace, k -> new ConcurrentHashMap<>());
             return subMap.get(index);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            Map<Integer, byte[]> subMap = CamelliaMapUtils.computeIfAbsent(subKeyStartKeyMap, namespace, k -> new ConcurrentHashMap<>());
+            Map<Integer, Pair<byte[], Integer>> subMap = CamelliaMapUtils.computeIfAbsent(subKeyStartKeyMap, namespace, k -> new ConcurrentHashMap<>());
             return subMap.get(index);
         }
     }
 
-    public static void setSubKeyScanStartKey(String namespace, int index, byte[] startKey) {
+    public static void setSubKeyScanStartKey(String namespace, int index, byte[] startKey, int slot) {
         try {
-            Map<Integer, byte[]> subMap = CamelliaMapUtils.computeIfAbsent(subKeyStartKeyMap, namespace, k -> new ConcurrentHashMap<>());
+            Map<Integer, Pair<byte[], Integer>> subMap = CamelliaMapUtils.computeIfAbsent(subKeyStartKeyMap, namespace, k -> new ConcurrentHashMap<>());
             if (startKey == null) {
                 subMap.remove(index);
             } else {
-                subMap.put(index, startKey);
+                subMap.put(index, new Pair<>(startKey, slot));
             }
             if (redisEnable()) {
                 String key = redisKey() + "#" + namespace + "#subKey#" + index;
                 if (startKey == null) {
                     delK(key);
                 } else {
-                    setKv(key, startKey);
+                    setKv(key, toBytes(new Pair<>(startKey, slot)));
                 }
             }
         } catch (Exception e) {
@@ -270,4 +272,21 @@ public class KvGcEnv {
         return future.get(10000, TimeUnit.MILLISECONDS);
     }
 
+    private static Pair<byte[], Integer> toPair(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        int slot = BytesUtils.toInt(data);
+        byte[] bytes = new byte[data.length - 4];
+        System.arraycopy(data, 4, bytes, 0, bytes.length);
+        return new Pair<>(bytes, slot);
+    }
+
+    private static byte[] toBytes(Pair<byte[], Integer> pair) {
+        byte[] data = new byte[pair.getFirst().length + 4];
+        byte[] slot = BytesUtils.toBytes(pair.getSecond());
+        System.arraycopy(slot, 0, data, 0, slot.length);
+        System.arraycopy(pair.getFirst(), 0, data, 4, pair.getFirst().length);
+        return data;
+    }
 }

@@ -48,7 +48,7 @@ public class HSetNxCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         byte[] field = objects[2];
@@ -57,7 +57,7 @@ public class HSetNxCommander extends Hash0Commander {
         boolean first = false;
 
         //check meta
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             EncodeVersion encodeVersion = keyDesign.hashEncodeVersion();
             if (encodeVersion == EncodeVersion.version_0) {
@@ -68,7 +68,7 @@ public class HSetNxCommander extends Hash0Commander {
             } else {
                 return ErrorReply.INTERNAL_ERROR;
             }
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
             first = true;
         } else {
             if (keyMeta.getKeyType() != KeyType.hash) {
@@ -99,9 +99,9 @@ public class HSetNxCommander extends Hash0Commander {
             byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
 
             if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(subKey, value));
+                submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(slot, subKey, value));
             } else {
-                kvClient.put(subKey, value);
+                kvClient.put(slot, subKey, value);
             }
             return IntegerReply.REPLY_1;
         }
@@ -139,7 +139,7 @@ public class HSetNxCommander extends Hash0Commander {
                     type = KvCacheMonitor.Type.kv_store;
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+                    Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
                     hash = new RedisHash(map);
                     hashLRUCache.putAllForWrite(key, cacheKey, hash);
                 }
@@ -180,7 +180,7 @@ public class HSetNxCommander extends Hash0Commander {
         byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
 
         if (cacheCheck == cache_miss) {
-            KeyValue keyValue = kvClient.get(subKey);
+            KeyValue keyValue = kvClient.get(slot, subKey);
             if (keyValue != null && keyValue.getValue() != null) {
                 return IntegerReply.REPLY_0;
             }
@@ -190,19 +190,19 @@ public class HSetNxCommander extends Hash0Commander {
             int size = BytesUtils.toInt(keyMeta.getExtra());
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
                     keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size + 1));
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
         }
 
-        put(cacheKey, result, new KeyValue(subKey, value));
+        put(slot, cacheKey, result, new KeyValue(subKey, value));
 
         return IntegerReply.REPLY_1;
     }
 
-    private void put(byte[] cacheKey, Result result, KeyValue keyValue) {
+    private void put(int slot, byte[] cacheKey, Result result, KeyValue keyValue) {
         if (!result.isKvWriteDelayEnable()) {
-            kvClient.put(keyValue.getKey(), keyValue.getValue());
+            kvClient.put(slot, keyValue.getKey(), keyValue.getValue());
         } else {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(keyValue.getKey(), keyValue.getValue()));
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(slot, keyValue.getKey(), keyValue.getValue()));
         }
     }
 }

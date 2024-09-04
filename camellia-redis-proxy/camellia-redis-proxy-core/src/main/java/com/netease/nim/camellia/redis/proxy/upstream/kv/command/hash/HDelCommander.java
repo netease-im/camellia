@@ -45,10 +45,10 @@ public class HDelCommander extends Hash0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -117,7 +117,7 @@ public class HDelCommander extends Hash0Commander {
                     type = KvCacheMonitor.Type.kv_store;
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    RedisHash hash = loadLRUCache(keyMeta, key);
+                    RedisHash hash = loadLRUCache(slot, keyMeta, key);
                     hashLRUCache.putAllForWrite(key, cacheKey, hash);
                     deleteMaps = hash.hdel(fields);
                     if (deleteMaps != null && delCount < 0) {
@@ -162,30 +162,30 @@ public class HDelCommander extends Hash0Commander {
 
         if (delCount < 0) {
             if (encodeVersion == EncodeVersion.version_0) {
-                boolean[] exists = kvClient.exists(subKeys);
+                boolean[] exists = kvClient.exists(slot, subKeys);
                 delCount = Utils.count(exists);
             }
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, false);
+            batchDeleteSubKeys(slot, key, keyMeta, cacheKey, result, subKeys, false);
         } else {
             boolean checkHLen = deleteType == DeleteType.unknown;
-            batchDeleteSubKeys(key, keyMeta, cacheKey, result, subKeys, checkHLen);
+            batchDeleteSubKeys(slot, key, keyMeta, cacheKey, result, subKeys, checkHLen);
         }
 
         if (deleteType == DeleteType.delete_all) {
-            keyMetaServer.deleteKeyMeta(key);
+            keyMetaServer.deleteKeyMeta(slot, key);
         } else {
             if (encodeVersion == EncodeVersion.version_0) {
                 if (delCount > 0) {
                     int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
                     if (size <= 0) {
-                        keyMetaServer.deleteKeyMeta(key);
+                        keyMetaServer.deleteKeyMeta(slot, key);
                     } else {
                         byte[] extra = BytesUtils.toBytes(size);
                         keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                        keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
                     }
                 }
             }
@@ -198,29 +198,29 @@ public class HDelCommander extends Hash0Commander {
         }
     }
 
-    private void batchDeleteSubKeys(byte[] key, KeyMeta keyMeta, byte[] cacheKey, Result result, byte[][] subKeys, boolean checkHLen) {
+    private void batchDeleteSubKeys(int slot, byte[] key, KeyMeta keyMeta, byte[] cacheKey, Result result, byte[][] subKeys, boolean checkHLen) {
         if (!result.isKvWriteDelayEnable()) {
-            kvClient.batchDelete(subKeys);
+            kvClient.batchDelete(slot, subKeys);
             if (checkHLen) {
-                if (checkHLenZero(key, keyMeta)) {
-                    keyMetaServer.deleteKeyMeta(key);
+                if (checkHLenZero(slot, key, keyMeta)) {
+                    keyMetaServer.deleteKeyMeta(slot, key);
                 }
             }
         } else {
             submitAsyncWriteTask(cacheKey, result, () -> {
-                kvClient.batchDelete(subKeys);
+                kvClient.batchDelete(slot, subKeys);
                 if (checkHLen) {
-                    if (checkHLenZero(key, keyMeta)) {
-                        keyMetaServer.deleteKeyMeta(key);
+                    if (checkHLenZero(slot, key, keyMeta)) {
+                        keyMetaServer.deleteKeyMeta(slot, key);
                     }
                 }
             });
         }
     }
 
-    private boolean checkHLenZero(byte[] key, KeyMeta keyMeta) {
+    private boolean checkHLenZero(int slot, byte[] key, KeyMeta keyMeta) {
         byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
-        List<KeyValue> scan = kvClient.scanByPrefix(startKey, startKey, 1, Sort.ASC, false);
+        List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, startKey, 1, Sort.ASC, false);
         return scan.isEmpty();
     }
 }

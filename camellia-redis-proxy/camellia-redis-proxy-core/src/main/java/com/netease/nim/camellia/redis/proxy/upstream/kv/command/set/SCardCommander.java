@@ -37,10 +37,10 @@ public class SCardCommander extends Set0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
@@ -71,7 +71,7 @@ public class SCardCommander extends Set0Commander {
             if (encodeVersion == EncodeVersion.version_1) {
                 boolean hotKey = setLRUCache.isHotKey(key);
                 if (hotKey) {
-                    set = loadLRUCache(keyMeta, key);
+                    set = loadLRUCache(slot, keyMeta, key);
                     setLRUCache.putAllForRead(key, cacheKey, set);
                     //
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -86,15 +86,15 @@ public class SCardCommander extends Set0Commander {
 
         if (encodeVersion == EncodeVersion.version_1) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            long size = getSizeFromKv(keyMeta, key);
+            long size = getSizeFromKv(slot, keyMeta, key);
             return IntegerReply.parse(size);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {
+    private long getSizeFromKv(int slot, KeyMeta keyMeta, byte[] key) {
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
-        return kvClient.countByPrefix(startKey, startKey, false);
+        return kvClient.countByPrefix(slot, startKey, startKey, false);
     }
 }

@@ -25,7 +25,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         super(commanderConfig);
     }
 
-    protected final Reply zremVersion0(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Map<BytesKey, Double> removedMembers, Result result) {
+    protected final Reply zremVersion0(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Map<BytesKey, Double> removedMembers, Result result) {
         List<byte[]> delStoreKeys = new ArrayList<>(removedMembers.size() * 2);
         for (Map.Entry<BytesKey, Double> entry : removedMembers.entrySet()) {
             byte[] zsetMemberSubKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, entry.getKey().getKey());
@@ -35,19 +35,19 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         }
 
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(delStoreKeys.toArray(new byte[0][0])));
+            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(slot, delStoreKeys.toArray(new byte[0][0])));
         } else {
-            kvClient.batchDelete(delStoreKeys.toArray(new byte[0][0]));
+            kvClient.batchDelete(slot, delStoreKeys.toArray(new byte[0][0]));
         }
 
         int size = BytesUtils.toInt(keyMeta.getExtra());
         size = size - removedMembers.size();
-        updateKeyMeta(keyMeta, key, size);
+        updateKeyMeta(slot, keyMeta, key, size);
 
         return IntegerReply.parse(removedMembers.size());
     }
 
-    protected final Reply zremrangeVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, RedisCommand redisCommand,
+    protected final Reply zremrangeVersion1(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, byte[][] objects, RedisCommand redisCommand,
                                             Map<BytesKey, Double> removedMap, Result result) {
         Set<BytesKey> removedMembers;
         boolean membersIndex = false;
@@ -61,7 +61,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
             ErrorLogCollector.collect(ZRem0Commander.class, "zremrangeMembers error");
             return ErrorReply.INTERNAL_ERROR;
         }
-        return zremVersion1(keyMeta, key, cacheKey, removedMembers, membersIndex, result);
+        return zremVersion1(slot, keyMeta, key, cacheKey, removedMembers, membersIndex, result);
     }
 
     private Set<BytesKey> zremrangeMembers(byte[] cacheKey, byte[][] objects, RedisCommand redisCommand) {
@@ -98,7 +98,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         return null;
     }
 
-    protected final Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> removedMembers, boolean membersIndex, Result result) {
+    protected final Reply zremVersion1(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> removedMembers, boolean membersIndex, Result result) {
         int size = removedMembers.size();
         List<byte[]> deleteSubKeys = new ArrayList<>(size);
 
@@ -146,12 +146,12 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(cacheKey, result, () -> {
                 if (!deleteSubKeys.isEmpty()) {
-                    kvClient.batchDelete(deleteSubKeys.toArray(new byte[0][0]));
+                    kvClient.batchDelete(slot, deleteSubKeys.toArray(new byte[0][0]));
                 }
             });
         } else {
             if (!deleteSubKeys.isEmpty()) {
-                kvClient.batchDelete(deleteSubKeys.toArray(new byte[0][0]));
+                kvClient.batchDelete(slot, deleteSubKeys.toArray(new byte[0][0]));
             }
         }
 
@@ -169,7 +169,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
             Reply reply1 = replyList.get(1);
             if (reply1 instanceof IntegerReply) {
                 if (((IntegerReply) reply1).getInteger() == 0) {
-                    keyMetaServer.deleteKeyMeta(key);
+                    keyMetaServer.deleteKeyMeta(slot, key);
                 }
             }
             return replyList.get(0);
@@ -177,13 +177,13 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         return IntegerReply.parse(size);
     }
 
-    protected final void updateKeyMeta(KeyMeta keyMeta, byte[] key, int size) {
+    protected final void updateKeyMeta(int slot, KeyMeta keyMeta, byte[] key, int size) {
         if (size <= 0) {
-            keyMetaServer.deleteKeyMeta(key);
+            keyMetaServer.deleteKeyMeta(slot, key);
             return;
         }
         byte[] extra = BytesUtils.toBytes(size);
         keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        keyMetaServer.createOrUpdateKeyMeta(slot, key, keyMeta);
     }
 }

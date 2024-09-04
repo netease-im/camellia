@@ -14,7 +14,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,18 +37,20 @@ public class ScanCommander extends Commander {
     private static final BulkReply completeCursor = new BulkReply(Utils.stringToBytes("0"));
 
     private final String namespace;
-    private final ConcurrentLinkedHashMap<Integer, byte[]> cursorCache;
+    private final ConcurrentLinkedHashMap<Integer, Pair<byte[], Integer>> cursorCache;
     private int capacity;
+    private int maxLoop;
 
     public ScanCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
         this.namespace = commanderConfig.getCacheConfig().getNamespace();
         this.capacity = RedisKvConf.getInt(namespace, "kv.scan.cursor.cache.capacity", 10000);
-        this.cursorCache = new ConcurrentLinkedHashMap.Builder<Integer, byte[]>()
+        this.maxLoop = RedisKvConf.getInt(namespace, "kv.scan.max.loop", 5);
+        this.cursorCache = new ConcurrentLinkedHashMap.Builder<Integer, Pair<byte[], Integer>>()
                 .initialCapacity(capacity)
                 .maximumWeightedCapacity(capacity)
                 .build();
-        logger.info("scan cursor cache init, namespace = {}, capacity = {}", namespace, capacity);
+        logger.info("scan cursor cache init, namespace = {}, capacity = {}, max.loop = {}", namespace, capacity, maxLoop);
         ProxyDynamicConf.registerCallback(this::rebuild);
     }
 
@@ -56,6 +60,11 @@ public class ScanCommander extends Commander {
             cursorCache.setCapacity(capacity);
             this.capacity = capacity;
             logger.info("scan cursor cache update, namespace = {}, capacity = {}", namespace, capacity);
+        }
+        int maxLoop = RedisKvConf.getInt(namespace, "kv.scan.max.loop", 5);
+        if (maxLoop != this.maxLoop) {
+            this.maxLoop = maxLoop;
+            logger.info("scan max loop update, namespace = {}, max.loop = {}", namespace, maxLoop);
         }
     }
 
@@ -71,19 +80,22 @@ public class ScanCommander extends Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         int cursor = (int)Utils.bytesToNum(objects[1]);
-        byte[] startKey;
+
+        Pair<byte[], Integer> pair;
         if (cursor != 0) {
-            startKey = cursorCache.get(cursor);
-            if (startKey == null) {
+            pair = cursorCache.get(cursor);
+            if (pair == null) {
                 ErrorLogCollector.collect(ScanCommander.class, "scan cursor not found in cache");
                 return ErrorReply.SYNTAX_ERROR;
             }
         } else {
-            startKey = keyDesign.getMetaPrefix();
+            pair = new Pair<>(keyDesign.getMetaPrefix(), 0);
         }
+        byte[] startKey = pair.getFirst();
+        slot = pair.getSecond();
 
         ScanParam param = new ScanParam();
 
@@ -98,14 +110,20 @@ public class ScanCommander extends Commander {
         List<byte[]> result = new ArrayList<>();
         boolean complete = false;
         while (true) {
-            if (loop >= 2) {
+            if (loop >= maxLoop) {
                 break;
             }
             loop ++;
-            List<KeyValue> scan = kvClient.scanByPrefix(startKey, metaPrefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, metaPrefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
-                complete = true;
-                break;
+                if (slot == RedisClusterCRC16Utils.SLOT_SIZE - 1) {
+                    complete = true;
+                    break;
+                } else {
+                    slot++;
+                    startKey = metaPrefix;
+                    continue;
+                }
             }
             for (KeyValue keyValue : scan) {
                 startKey = keyValue.getKey();
@@ -113,7 +131,7 @@ public class ScanCommander extends Commander {
                 try {
                     keyMeta = KeyMeta.fromBytes(keyValue.getValue());
                 } catch (Exception e) {
-                    kvClient.delete(keyValue.getKey());
+                    kvClient.delete(slot, keyValue.getKey());
                     continue;
                 }
                 if (keyMeta == null) {
@@ -123,12 +141,12 @@ public class ScanCommander extends Commander {
                 try {
                     key = keyDesign.decodeKeyByMetaKey(startKey);
                 } catch (Exception e) {
-                    kvClient.delete(keyValue.getKey());
+                    kvClient.delete(slot, keyValue.getKey());
                     continue;
                 }
                 if (keyMeta.isExpire()) {
                     if (key != null) {
-                        gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
+                        gcExecutor.submitSubKeyDeleteTask(slot, key, keyMeta);
                     }
                     continue;
                 }
@@ -139,7 +157,7 @@ public class ScanCommander extends Commander {
                     }
                 }
             }
-            if (result.size() == limit) {
+            if (result.size() >= limit) {
                 break;
             }
         }
@@ -147,7 +165,7 @@ public class ScanCommander extends Commander {
         if (complete) {
             nextCursor = completeCursor;
         } else {
-            int nextCursorValue = toNumberCursor(startKey);
+            int nextCursorValue = toNumberCursor(new Pair<>(startKey, slot));
             nextCursor = new BulkReply(Utils.stringToBytes(String.valueOf(nextCursorValue)));
         }
         Reply[] replies = new Reply[result.size()];
@@ -159,14 +177,14 @@ public class ScanCommander extends Commander {
         return new MultiBulkReply(new Reply[] {nextCursor, multiBulkReply});
     }
 
-    private int toNumberCursor(byte[] startKey) {
+    private int toNumberCursor(Pair<byte[], Integer> pair) {
         int cursor = 0;
-        for (byte element : startKey) {
+        for (byte element : pair.getFirst()) {
             cursor = 31 * cursor + element;
         }
         cursor = Math.abs(cursor);
         while (true) {
-            byte[] oldValue = cursorCache.putIfAbsent(cursor, startKey);
+            Pair<byte[], Integer> oldValue = cursorCache.putIfAbsent(cursor, pair);
             if (oldValue == null) {
                 break;
             }

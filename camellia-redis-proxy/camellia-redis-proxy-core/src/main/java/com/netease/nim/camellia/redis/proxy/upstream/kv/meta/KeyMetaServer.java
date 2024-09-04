@@ -11,25 +11,25 @@ public interface KeyMetaServer {
      * @param key key
      * @return key-meta
      */
-    KeyMeta getKeyMeta(byte[] key);
+    KeyMeta getKeyMeta(int slot, byte[] key);
 
     /**
      * create or update key-meta
      * @param key key
      * @param keyMeta key-meta
      */
-    void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta);
+    void createOrUpdateKeyMeta(int slot, byte[] key, KeyMeta keyMeta);
 
     /**
      * delete key-meta
      * @param key key
      */
-    void deleteKeyMeta(byte[] key);
+    void deleteKeyMeta(int slot, byte[] key);
 
 
     /**
      * check key-meta, if key-meta expired, will delete
      * @param key key
      */
-    void checkKeyMetaExpired(byte[] key);
+    void checkKeyMetaExpired(int slot, byte[] key);
 }

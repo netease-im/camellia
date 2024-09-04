@@ -30,10 +30,10 @@ public class KvCommander extends Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[3];
-        keyMetaServer.checkKeyMetaExpired(key);
+        keyMetaServer.checkKeyMetaExpired(slot, key);
         return StatusReply.OK;
     }
 }

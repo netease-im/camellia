@@ -47,10 +47,10 @@ public class ZMScoreCommander extends ZSet0Commander {
     }
 
     @Override
-    protected Reply execute(Command command) {
+    protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
         }
@@ -85,7 +85,7 @@ public class ZMScoreCommander extends ZSet0Commander {
             boolean hotKey = zSetLRUCache.isHotKey(key);
 
             if (hotKey) {
-                zSet = loadLRUCache(keyMeta, key);
+                zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -98,7 +98,7 @@ public class ZMScoreCommander extends ZSet0Commander {
 
         if (encodeVersion == EncodeVersion.version_0) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-            return zmscoreFromKv(keyMeta, key, members);
+            return zmscoreFromKv(slot, keyMeta, key, members);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
@@ -115,12 +115,12 @@ public class ZMScoreCommander extends ZSet0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zmscoreFromKv(KeyMeta keyMeta, byte[] key, List<BytesKey> members) {
+    private Reply zmscoreFromKv(int slot, KeyMeta keyMeta, byte[] key, List<BytesKey> members) {
         List<byte[]> subKeys = new ArrayList<>(members.size());
         for (BytesKey member : members) {
             subKeys.add(keyDesign.zsetMemberSubKey1(keyMeta, key, member.getKey()));
         }
-        List<KeyValue> keyValues = kvClient.batchGet(subKeys.toArray(new byte[0][0]));
+        List<KeyValue> keyValues = kvClient.batchGet(slot, subKeys.toArray(new byte[0][0]));
         Map<BytesKey, Double> map = new HashMap<>();
         for (KeyValue keyValue : keyValues) {
             if (keyValue == null || keyValue.getValue() == null) {
