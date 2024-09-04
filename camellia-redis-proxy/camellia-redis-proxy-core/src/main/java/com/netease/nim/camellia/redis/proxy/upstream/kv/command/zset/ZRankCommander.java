@@ -73,7 +73,7 @@ public class ZRankCommander extends ZSet0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
 
             if (zSet != null) {
                 Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
@@ -86,7 +86,7 @@ public class ZRankCommander extends ZSet0Commander {
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return toReply(zrank, withScores);

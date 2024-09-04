@@ -67,18 +67,15 @@ public class SetLRUCache {
         return hotKeyCalculator.isHotKey(key);
     }
 
-    public void putAllForRead(byte[] key, byte[] cacheKey, RedisSet set) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void putAllForRead(int slot, byte[] cacheKey, RedisSet set) {
         localCache.put(slot, new BytesKey(cacheKey), set);
     }
 
-    public void putAllForWrite(byte[] key, byte[] cacheKey, RedisSet set) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void putAllForWrite(int slot, byte[] cacheKey, RedisSet set) {
         localCacheForWrite.put(slot, new BytesKey(cacheKey), set);
     }
 
-    public RedisSet getForRead(byte[] key, byte[] cacheKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public RedisSet getForRead(int slot, byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisSet set = localCache.get(slot, bytesKey);
         if (set == null) {
@@ -91,8 +88,7 @@ public class SetLRUCache {
         return set;
     }
 
-    public RedisSet getForWrite(byte[] key, byte[] cacheKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public RedisSet getForWrite(int slot, byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisSet set = localCache.get(slot, bytesKey);
         if (set == null) {
@@ -101,8 +97,7 @@ public class SetLRUCache {
         return set;
     }
 
-    public Set<BytesKey> sadd(byte[] key, byte[] cacheKey, Set<BytesKey> memberSet) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public Set<BytesKey> sadd(int slot, byte[] cacheKey, Set<BytesKey> memberSet) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisSet set = localCache.get(slot, bytesKey);
         Set<BytesKey> result = null;
@@ -116,8 +111,7 @@ public class SetLRUCache {
         return result;
     }
 
-    public Set<BytesKey> spop(byte[] key, byte[] cacheKey, int count) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public Set<BytesKey> spop(int slot, byte[] cacheKey, int count) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisSet set = localCache.get(slot, bytesKey);
         Set<BytesKey> result = null;
@@ -135,8 +129,7 @@ public class SetLRUCache {
         return result;
     }
 
-    public Set<BytesKey> srem(byte[] key, byte[] cacheKey, Collection<BytesKey> members) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public Set<BytesKey> srem(int slot, byte[] cacheKey, Collection<BytesKey> members) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisSet set = localCache.get(slot, bytesKey);
         Set<BytesKey> result = null;
@@ -150,8 +143,7 @@ public class SetLRUCache {
         return result;
     }
 
-    public void del(byte[] key, byte[] cacheKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void del(int slot, byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         localCache.remove(slot, bytesKey);
         localCacheForWrite.remove(slot, bytesKey);

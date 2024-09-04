@@ -83,7 +83,7 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
             if (removedMap == null) {
-                removedMap = zSetLRUCache.zremrangeByRank(key, cacheKey, start, stop);
+                removedMap = zSetLRUCache.zremrangeByRank(slot, cacheKey, start, stop);
                 if (removedMap != null) {
                     type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -92,7 +92,7 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
                     return IntegerReply.REPLY_0;
                 }
             } else {
-                zSetLRUCache.zremrangeByRank(key, cacheKey, start, stop);
+                zSetLRUCache.zremrangeByRank(slot, cacheKey, start, stop);
             }
 
             if (removedMap == null) {
@@ -104,7 +104,7 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
-                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        zSetLRUCache.putZSetForWrite(slot, cacheKey, zSet);
                         //
                         removedMap = zSet.zremrangeByRank(start, stop);
                         if (removedMap != null && removedMap.isEmpty()) {
@@ -115,7 +115,7 @@ public class ZRemRangeByRankCommander extends ZRangeByRank0Commander {
             }
 
             if (result == null) {
-                RedisZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
+                RedisZSet zSet = zSetLRUCache.getForWrite(slot, cacheKey);
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }

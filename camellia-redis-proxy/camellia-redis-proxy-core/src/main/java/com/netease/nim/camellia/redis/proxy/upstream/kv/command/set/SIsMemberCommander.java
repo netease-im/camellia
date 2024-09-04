@@ -59,7 +59,7 @@ public class SIsMemberCommander extends Set0Commander {
         if (cacheConfig.isSetLocalCacheEnable()) {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
 
-            RedisSet set = setLRUCache.getForRead(key, cacheKey);
+            RedisSet set = setLRUCache.getForRead(slot, cacheKey);
 
             if (set != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -71,7 +71,7 @@ public class SIsMemberCommander extends Set0Commander {
 
             if (hotKey) {
                 set = loadLRUCache(slot, keyMeta, key);
-                setLRUCache.putAllForRead(key, cacheKey, set);
+                setLRUCache.putAllForRead(slot, cacheKey, set);
                 //
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 boolean sismeber = set.sismeber(new BytesKey(member));

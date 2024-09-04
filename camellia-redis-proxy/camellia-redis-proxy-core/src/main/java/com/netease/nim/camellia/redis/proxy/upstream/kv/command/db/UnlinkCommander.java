@@ -42,12 +42,23 @@ public class UnlinkCommander extends Commander {
             keyMetaServer.deleteKeyMeta(slot, key);
             ret = 1;
             gcExecutor.submitSubKeyDeleteTask(slot, key, keyMeta);
-
+            //
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             KeyType keyType = keyMeta.getKeyType();
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+            //redis
             if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1)) {
-                byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
                 storageRedisTemplate.sendDel(cacheKey);
+            }
+            //local
+            if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {
+                cacheConfig.getZSetLRUCache().del(slot, cacheKey);
+            }
+            if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
+                cacheConfig.getHashLRUCache().del(slot, cacheKey);
+            }
+            if (keyType == KeyType.set && cacheConfig.isSetLocalCacheEnable()) {
+                cacheConfig.getSetLRUCache().del(slot, cacheKey);
             }
         }
         return IntegerReply.parse(ret);

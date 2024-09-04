@@ -45,7 +45,7 @@ public class ScanCommander extends Commander {
         super(commanderConfig);
         this.namespace = commanderConfig.getCacheConfig().getNamespace();
         this.capacity = RedisKvConf.getInt(namespace, "kv.scan.cursor.cache.capacity", 10000);
-        this.maxLoop = RedisKvConf.getInt(namespace, "kv.scan.max.loop", 5);
+        this.maxLoop = RedisKvConf.getInt(namespace, "kv.scan.max.loop", 10);
         this.cursorCache = new ConcurrentLinkedHashMap.Builder<Integer, Pair<byte[], Integer>>()
                 .initialCapacity(capacity)
                 .maximumWeightedCapacity(capacity)
@@ -61,7 +61,7 @@ public class ScanCommander extends Commander {
             this.capacity = capacity;
             logger.info("scan cursor cache update, namespace = {}, capacity = {}", namespace, capacity);
         }
-        int maxLoop = RedisKvConf.getInt(namespace, "kv.scan.max.loop", 5);
+        int maxLoop = RedisKvConf.getInt(namespace, "kv.scan.max.loop", 10);
         if (maxLoop != this.maxLoop) {
             this.maxLoop = maxLoop;
             logger.info("scan max loop update, namespace = {}, max.loop = {}", namespace, maxLoop);

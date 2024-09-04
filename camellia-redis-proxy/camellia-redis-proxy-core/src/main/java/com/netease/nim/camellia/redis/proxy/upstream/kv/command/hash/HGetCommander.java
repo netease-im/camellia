@@ -64,7 +64,7 @@ public class HGetCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            RedisHash hash = hashLRUCache.getForRead(key, cacheKey);
+            RedisHash hash = hashLRUCache.getForRead(slot, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new BulkReply(hash.hget(new BytesKey(field)));
@@ -73,7 +73,7 @@ public class HGetCommander extends Hash0Commander {
             boolean hotKey = hashLRUCache.isHotKey(key);
             if (hotKey) {
                 hash = loadLRUCache(slot, keyMeta, key);
-                hashLRUCache.putAllForRead(key, cacheKey, hash);
+                hashLRUCache.putAllForRead(slot, cacheKey, hash);
                 KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return new BulkReply(hash.hget(new BytesKey(field)));
             }

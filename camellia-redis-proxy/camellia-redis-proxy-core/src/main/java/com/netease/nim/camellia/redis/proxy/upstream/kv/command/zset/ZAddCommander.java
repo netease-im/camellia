@@ -115,9 +115,9 @@ public class ZAddCommander extends ZSet0Commander {
 
             if (first) {
                 zSet = new RedisZSet(new HashMap<>(memberMap));
-                zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                zSetLRUCache.putZSetForWrite(slot, cacheKey, zSet);
             } else {
-                Map<BytesKey, Double> map = zSetLRUCache.zadd(key, cacheKey, memberMap);
+                Map<BytesKey, Double> map = zSetLRUCache.zadd(slot, cacheKey, memberMap);
                 if (map == null) {
                     boolean hotKey = zSetLRUCache.isHotKey(key);
                     if (hotKey) {
@@ -127,7 +127,7 @@ public class ZAddCommander extends ZSet0Commander {
                             type = KvCacheMonitor.Type.kv_store;
                             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                             //
-                            zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                            zSetLRUCache.putZSetForWrite(slot, cacheKey, zSet);
                             //
                             map = zSet.zadd(memberMap);
                         }
@@ -142,7 +142,7 @@ public class ZAddCommander extends ZSet0Commander {
             }
             if (result == null) {
                 if (zSet == null) {
-                    zSet = zSetLRUCache.getForWrite(key, cacheKey);
+                    zSet = zSetLRUCache.getForWrite(slot, cacheKey);
                 }
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());

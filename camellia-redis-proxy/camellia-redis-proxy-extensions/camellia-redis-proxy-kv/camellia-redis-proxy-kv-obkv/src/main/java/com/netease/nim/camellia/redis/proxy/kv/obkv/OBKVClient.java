@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public class OBKVClient implements KVClient {
     @Override
     public void put(int slot, byte[] key, byte[] value, long ttl) {
         try {
-            Date t = new Date(System.currentTimeMillis() + ttl);
+            Date t = new Date(TimeCache.currentMillis + ttl);
             obTableClient.insertOrUpdate(tableName, new Object[]{slot, key}, new String[]{"v", "t"}, new Object[]{value, t});
         } catch (Exception e) {
             logger.error("put error", e);

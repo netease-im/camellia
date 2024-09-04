@@ -87,7 +87,7 @@ public class ZLexCountCommander extends ZSet0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
 
             if (zSet != null) {
                 int zcount = zSet.zlexcount(minLex, maxLex);
@@ -101,7 +101,7 @@ public class ZLexCountCommander extends ZSet0Commander {
                 zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     //
                     int zcount = zSet.zlexcount(minLex, maxLex);
 
@@ -123,7 +123,7 @@ public class ZLexCountCommander extends ZSet0Commander {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
                     //
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     //
                 }
 

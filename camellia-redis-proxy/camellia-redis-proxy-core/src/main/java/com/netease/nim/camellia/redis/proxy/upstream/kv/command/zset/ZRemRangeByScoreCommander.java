@@ -93,7 +93,7 @@ public class ZRemRangeByScoreCommander extends ZRangeByScore0Commander {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
             if (removedMap == null) {
-                removedMap = zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
+                removedMap = zSetLRUCache.zremrangeByScore(slot, cacheKey, minScore, maxScore);
                 if (removedMap != null) {
                     type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -102,7 +102,7 @@ public class ZRemRangeByScoreCommander extends ZRangeByScore0Commander {
                     return IntegerReply.REPLY_0;
                 }
             } else {
-                zSetLRUCache.zremrangeByScore(key, cacheKey, minScore, maxScore);
+                zSetLRUCache.zremrangeByScore(slot, cacheKey, minScore, maxScore);
             }
 
             if (removedMap == null) {
@@ -114,7 +114,7 @@ public class ZRemRangeByScoreCommander extends ZRangeByScore0Commander {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
-                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        zSetLRUCache.putZSetForWrite(slot, cacheKey, zSet);
                         //
                         removedMap = zSet.zremrangeByScore(minScore, maxScore);
                         if (removedMap != null && removedMap.isEmpty()) {
@@ -125,7 +125,7 @@ public class ZRemRangeByScoreCommander extends ZRangeByScore0Commander {
             }
 
             if (result == null) {
-                RedisZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
+                RedisZSet zSet = zSetLRUCache.getForWrite(slot, cacheKey);
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }

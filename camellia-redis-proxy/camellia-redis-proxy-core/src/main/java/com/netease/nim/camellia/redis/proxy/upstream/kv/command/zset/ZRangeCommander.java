@@ -76,7 +76,7 @@ public class ZRangeCommander extends ZRangeByRank0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
 
             if (zSet != null) {
                 List<ZSetTuple> list = zSet.zrange(start, stop);
@@ -90,7 +90,7 @@ public class ZRangeCommander extends ZRangeByRank0Commander {
                 zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     //
                     List<ZSetTuple> list = zSet.zrange(start, stop);
 

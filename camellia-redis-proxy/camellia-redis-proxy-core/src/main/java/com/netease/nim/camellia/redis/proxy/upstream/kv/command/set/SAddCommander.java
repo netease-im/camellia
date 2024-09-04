@@ -110,9 +110,9 @@ public class SAddCommander extends Set0Commander {
 
             if (first) {
                 set = new RedisSet(new HashSet<>(memberSet));
-                setLRUCache.putAllForWrite(key, cacheKey, set);
+                setLRUCache.putAllForWrite(slot, cacheKey, set);
             } else {
-                Set<BytesKey> existsSet = setLRUCache.sadd(key, cacheKey, memberSet);
+                Set<BytesKey> existsSet = setLRUCache.sadd(slot, cacheKey, memberSet);
                 if (existsSet == null) {
                     boolean hotKey = setLRUCache.isHotKey(key);
                     if (hotKey) {
@@ -122,7 +122,7 @@ public class SAddCommander extends Set0Commander {
                         //
                         set = loadLRUCache(slot, keyMeta, key);
                         //
-                        setLRUCache.putAllForWrite(key, cacheKey, set);
+                        setLRUCache.putAllForWrite(slot, cacheKey, set);
                         //
                         existsSet = set.sadd(memberSet);
                     }
@@ -137,7 +137,7 @@ public class SAddCommander extends Set0Commander {
 
             if (result == null) {
                 if (set == null) {
-                    set = setLRUCache.getForWrite(key, cacheKey);
+                    set = setLRUCache.getForWrite(slot, cacheKey);
                 }
                 if (set != null) {
                     result = setWriteBuffer.put(cacheKey, set.duplicate());

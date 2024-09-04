@@ -93,7 +93,7 @@ public class HSetNxCommander extends Hash0Commander {
 
             if (cacheConfig.isHashLocalCacheEnable()) {
                 HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-                hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             }
 
             byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
@@ -131,7 +131,7 @@ public class HSetNxCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
+            RedisHash hash = hashLRUCache.getForWrite(slot, cacheKey);
             if (hash == null) {
                 boolean hotKey = hashLRUCache.isHotKey(key);
                 if (hotKey) {
@@ -141,7 +141,7 @@ public class HSetNxCommander extends Hash0Commander {
                     //
                     Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
                     hash = new RedisHash(map);
-                    hashLRUCache.putAllForWrite(key, cacheKey, hash);
+                    hashLRUCache.putAllForWrite(slot, cacheKey, hash);
                 }
             } else {
                 type = KvCacheMonitor.Type.local_cache;
@@ -154,12 +154,12 @@ public class HSetNxCommander extends Hash0Commander {
                 } else {
                     Map<BytesKey, byte[]> fieldMap = new HashMap<>();
                     fieldMap.put(filedKey, value);
-                    hashLRUCache.hset(key, cacheKey, fieldMap);
+                    hashLRUCache.hset(slot, cacheKey, fieldMap);
                     cacheCheck = cache_hit_not_exists;
                 }
             }
             if (result == null) {
-                hash = hashLRUCache.getForWrite(key, cacheKey);
+                hash = hashLRUCache.getForWrite(slot, cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                 }

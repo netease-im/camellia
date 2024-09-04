@@ -85,7 +85,7 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
             if (zSet != null) {
                 List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -98,7 +98,7 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
                 zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
                     //
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     //
                     List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
 
@@ -121,7 +121,7 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     //
                     ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     //
                 }
 

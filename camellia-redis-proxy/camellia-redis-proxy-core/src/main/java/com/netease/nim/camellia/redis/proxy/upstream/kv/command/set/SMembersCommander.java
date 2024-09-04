@@ -59,7 +59,7 @@ public class SMembersCommander extends Set0Commander {
         if (cacheConfig.isSetLocalCacheEnable()) {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
 
-            RedisSet set = setLRUCache.getForRead(key, cacheKey);
+            RedisSet set = setLRUCache.getForRead(slot, cacheKey);
 
             if (set != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -73,7 +73,7 @@ public class SMembersCommander extends Set0Commander {
         Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
 
         if (cacheConfig.isSetLocalCacheEnable()) {
-            cacheConfig.getSetLRUCache().putAllForRead(key, cacheKey, new RedisSet(set));
+            cacheConfig.getSetLRUCache().putAllForRead(slot, cacheKey, new RedisSet(set));
         }
 
         return toReply(set);

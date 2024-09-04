@@ -116,9 +116,9 @@ public class HSetCommander extends Hash0Commander {
 
             Map<BytesKey, byte[]> existMapByCache = null;
             if (first) {
-                hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             } else {
-                existMapByCache = hashLRUCache.hset(key, cacheKey, fieldMap);
+                existMapByCache = hashLRUCache.hset(slot, cacheKey, fieldMap);
                 if (existMapByCache == null) {
                     boolean hotKey = hashLRUCache.isHotKey(key);
                     if (hotKey) {
@@ -127,8 +127,8 @@ public class HSetCommander extends Hash0Commander {
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
                         Map<BytesKey, byte[]> hgetall = hgetallFromKv(slot, keyMeta, key);
-                        hashLRUCache.putAllForWrite(key, cacheKey, new RedisHash(hgetall));
-                        existMapByCache = hashLRUCache.hset(key, cacheKey, fieldMap);
+                        hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(hgetall));
+                        existMapByCache = hashLRUCache.hset(slot, cacheKey, fieldMap);
                     }
                 } else {
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -142,7 +142,7 @@ public class HSetCommander extends Hash0Commander {
             }
 
             if (result == null) {
-                RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
+                RedisHash hash = hashLRUCache.getForWrite(slot, cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                 }

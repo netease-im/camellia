@@ -89,13 +89,13 @@ public class SPopCommander extends Set0Commander {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
 
             if (spop == null) {
-                spop = setLRUCache.spop(key, cacheKey, count);
+                spop = setLRUCache.spop(slot, cacheKey, count);
                 if (spop != null) {
                     type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 }
             } else {
-                setLRUCache.srem(key, cacheKey, spop);
+                setLRUCache.srem(slot, cacheKey, spop);
             }
 
             if (spop == null) {
@@ -106,13 +106,13 @@ public class SPopCommander extends Set0Commander {
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
                     RedisSet set = loadLRUCache(slot, keyMeta, key);
-                    setLRUCache.putAllForWrite(key, cacheKey, set);
+                    setLRUCache.putAllForWrite(slot, cacheKey, set);
                     spop = set.spop(count);
                 }
             }
 
             if (result == null) {
-                RedisSet set = setLRUCache.getForWrite(key, cacheKey);
+                RedisSet set = setLRUCache.getForWrite(slot, cacheKey);
                 if (set != null) {
                     result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
                     if (set.isEmpty()) {

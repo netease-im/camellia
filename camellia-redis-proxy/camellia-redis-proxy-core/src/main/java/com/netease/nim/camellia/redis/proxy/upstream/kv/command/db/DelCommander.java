@@ -53,13 +53,13 @@ public class DelCommander extends Commander {
             }
             //local
             if (keyType == KeyType.zset && cacheConfig.isZSetLocalCacheEnable()) {
-                cacheConfig.getZSetLRUCache().del(key, cacheKey);
+                cacheConfig.getZSetLRUCache().del(slot, cacheKey);
             }
             if (keyType == KeyType.hash && cacheConfig.isHashLocalCacheEnable()) {
-                cacheConfig.getHashLRUCache().del(key, cacheKey);
+                cacheConfig.getHashLRUCache().del(slot, cacheKey);
             }
             if (keyType == KeyType.set && cacheConfig.isSetLocalCacheEnable()) {
-                cacheConfig.getSetLRUCache().del(key, cacheKey);
+                cacheConfig.getSetLRUCache().del(slot, cacheKey);
             }
         }
         return IntegerReply.parse(ret);

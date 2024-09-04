@@ -73,7 +73,7 @@ public class ZRevRankCommander extends ZSet0Commander {
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
 
             if (zSet != null) {
                 Pair<Integer, ZSetTuple> zrank = zSet.zrevrank(member);
@@ -86,7 +86,7 @@ public class ZRevRankCommander extends ZSet0Commander {
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     Pair<Integer, ZSetTuple> zrank = zSet.zrevrank(member);
                     return toReply(zrank, withScores);
                 }
@@ -122,7 +122,7 @@ public class ZRevRankCommander extends ZSet0Commander {
             RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
             if (zSet != null) {
                 if (cacheConfig.isZSetLocalCacheEnable()) {
-                    cacheConfig.getZSetLRUCache().putZSetForRead(key, cacheKey, zSet);
+                    cacheConfig.getZSetLRUCache().putZSetForRead(slot, cacheKey, zSet);
                 }
                 Pair<Integer, ZSetTuple> result = zSet.zrevrank(member);
                 return toReply(result, withScores);

@@ -101,7 +101,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
             if (removedMembers == null) {
-                removedMembers = zSetLRUCache.zremrangeByLex(key, cacheKey, minLex, maxLex);
+                removedMembers = zSetLRUCache.zremrangeByLex(slot, cacheKey, minLex, maxLex);
                 if (removedMembers != null) {
                     type = KvCacheMonitor.Type.local_cache;
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -110,7 +110,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
                     return IntegerReply.REPLY_0;
                 }
             } else {
-                zSetLRUCache.zremrangeByLex(key, cacheKey, minLex, maxLex);
+                zSetLRUCache.zremrangeByLex(slot, cacheKey, minLex, maxLex);
             }
 
             if (removedMembers == null) {
@@ -122,7 +122,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
-                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        zSetLRUCache.putZSetForWrite(slot, cacheKey, zSet);
                         //
                         removedMembers = zSet.zremrangeByLex(minLex, maxLex);
 
@@ -133,7 +133,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
                 }
             }
             if (result == null) {
-                RedisZSet zSet = zSetLRUCache.getForWrite(key, cacheKey);
+                RedisZSet zSet = zSetLRUCache.getForWrite(slot, cacheKey);
                 if (zSet != null) {
                     result = zsetWriteBuffer.put(cacheKey, zSet.duplicate());
                 }
@@ -168,7 +168,7 @@ public class ZRemRangeByLexCommander extends ZRangeByLex0Commander {
                     if (cacheConfig.isZSetLocalCacheEnable()) {
                         ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
                         //
-                        zSetLRUCache.putZSetForWrite(key, cacheKey, zSet);
+                        zSetLRUCache.putZSetForWrite(slot, cacheKey, zSet);
                         //
                     }
                     removedMembers = zSet.zremrangeByLex(minLex, maxLex);

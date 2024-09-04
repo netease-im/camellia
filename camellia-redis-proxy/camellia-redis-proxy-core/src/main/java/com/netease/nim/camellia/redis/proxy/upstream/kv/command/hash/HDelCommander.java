@@ -96,7 +96,7 @@ public class HDelCommander extends Hash0Commander {
         if (cacheConfig.isHashLocalCacheEnable()) {
             HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
 
-            Map<BytesKey, byte[]> deleteMaps = hashLRUCache.hdel(key, cacheKey, fields);
+            Map<BytesKey, byte[]> deleteMaps = hashLRUCache.hdel(slot, cacheKey, fields);
             if (deleteMaps != null) {
                 type = KvCacheMonitor.Type.write_buffer;
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -118,7 +118,7 @@ public class HDelCommander extends Hash0Commander {
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
                     RedisHash hash = loadLRUCache(slot, keyMeta, key);
-                    hashLRUCache.putAllForWrite(key, cacheKey, hash);
+                    hashLRUCache.putAllForWrite(slot, cacheKey, hash);
                     deleteMaps = hash.hdel(fields);
                     if (deleteMaps != null && delCount < 0) {
                         delCount = deleteMaps.size();
@@ -132,7 +132,7 @@ public class HDelCommander extends Hash0Commander {
                 }
             }
             if (deleteMaps != null && result == null) {
-                RedisHash hash = hashLRUCache.getForWrite(key, cacheKey);
+                RedisHash hash = hashLRUCache.getForWrite(slot, cacheKey);
                 if (hash != null) {
                     result = hashWriteBuffer.put(cacheKey, hash.duplicate());
                     if (hash.isEmpty()) {

@@ -76,7 +76,7 @@ public class ZMScoreCommander extends ZSet0Commander {
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
 
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
             if (zSet != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(zSet.zmscore(members));
@@ -87,7 +87,7 @@ public class ZMScoreCommander extends ZSet0Commander {
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);
                 if (zSet != null) {
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     return toReply(zSet.zmscore(members));
                 }

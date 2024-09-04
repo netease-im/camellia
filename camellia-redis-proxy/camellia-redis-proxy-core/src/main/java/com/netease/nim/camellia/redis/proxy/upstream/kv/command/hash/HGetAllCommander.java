@@ -61,7 +61,7 @@ public class HGetAllCommander extends Hash0Commander {
         }
 
         if (cacheConfig.isHashLocalCacheEnable()) {
-            RedisHash hash = cacheConfig.getHashLRUCache().getForRead(key, cacheKey);
+            RedisHash hash = cacheConfig.getHashLRUCache().getForRead(slot, cacheKey);
             if (hash != null) {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(hash.hgetAll());
@@ -72,7 +72,7 @@ public class HGetAllCommander extends Hash0Commander {
 
         Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
-            cacheConfig.getHashLRUCache().putAllForRead(key, cacheKey, new RedisHash(map));
+            cacheConfig.getHashLRUCache().putAllForRead(slot, cacheKey, new RedisHash(map));
         }
         return toReply(map);
     }

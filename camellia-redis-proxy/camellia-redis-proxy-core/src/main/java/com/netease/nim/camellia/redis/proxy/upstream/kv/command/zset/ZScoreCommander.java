@@ -71,7 +71,7 @@ public class ZScoreCommander extends ZSet0Commander {
 
         if (cacheConfig.isZSetLocalCacheEnable()) {
             ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
-            RedisZSet zSet = zSetLRUCache.getForRead(key, cacheKey);
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
 
             if (zSet != null) {
                 Double zscore = zSet.zscore(new BytesKey(member));
@@ -91,7 +91,7 @@ public class ZScoreCommander extends ZSet0Commander {
                     //
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    zSetLRUCache.putZSetForRead(key, cacheKey, zSet);
+                    zSetLRUCache.putZSetForRead(slot, cacheKey, zSet);
                     Double zscore = zSet.zscore(new BytesKey(member));
                     if (zscore == null) {
                         return BulkReply.NIL_REPLY;

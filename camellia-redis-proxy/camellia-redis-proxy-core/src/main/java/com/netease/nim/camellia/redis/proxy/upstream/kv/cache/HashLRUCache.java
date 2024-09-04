@@ -67,18 +67,15 @@ public class HashLRUCache {
         return hotKeyCalculator.isHotKey(key);
     }
 
-    public void putAllForRead(byte[] key, byte[] cacheKey, RedisHash hash) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void putAllForRead(int slot, byte[] cacheKey, RedisHash hash) {
         localCache.put(slot, new BytesKey(cacheKey), hash);
     }
 
-    public void putAllForWrite(byte[] key, byte[] cacheKey, RedisHash hash) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void putAllForWrite(int slot, byte[] cacheKey, RedisHash hash) {
         localCacheForWrite.put(slot, new BytesKey(cacheKey), hash);
     }
 
-    public RedisHash getForRead(byte[] key, byte[] cacheKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public RedisHash getForRead(int slot, byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisHash hash = localCache.get(slot, bytesKey);
         if (hash == null) {
@@ -91,8 +88,7 @@ public class HashLRUCache {
         return hash;
     }
 
-    public RedisHash getForWrite(byte[] key, byte[] cacheKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public RedisHash getForWrite(int slot, byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisHash hash = localCache.get(slot, bytesKey);
         if (hash == null) {
@@ -101,8 +97,7 @@ public class HashLRUCache {
         return hash;
     }
 
-    public Map<BytesKey, byte[]> hset(byte[] key, byte[] cacheKey, Map<BytesKey, byte[]> fieldMap) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public Map<BytesKey, byte[]> hset(int slot, byte[] cacheKey, Map<BytesKey, byte[]> fieldMap) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisHash hash1 = localCacheForWrite.get(slot, bytesKey);
         Map<BytesKey, byte[]> result1 = null;
@@ -120,8 +115,7 @@ public class HashLRUCache {
         return result2;
     }
 
-    public Map<BytesKey, byte[]> hdel(byte[] key, byte[] cacheKey, Set<BytesKey> fields) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public Map<BytesKey, byte[]> hdel(int slot, byte[] cacheKey, Set<BytesKey> fields) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         RedisHash hash1 = localCacheForWrite.get(slot, bytesKey);
         Map<BytesKey, byte[]> result1 = null;
@@ -139,8 +133,7 @@ public class HashLRUCache {
         return result2;
     }
 
-    public void del(byte[] key, byte[] cacheKey) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void del(int slot, byte[] cacheKey) {
         BytesKey bytesKey = new BytesKey(cacheKey);
         localCache.remove(slot, bytesKey);
         localCacheForWrite.remove(slot, bytesKey);
