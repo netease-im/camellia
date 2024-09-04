@@ -87,3 +87,51 @@ kv.gc.schedule.time.range=01:30-05:30
 kv.gc.lock.redis.url=redis://@127.0.0.1:6379
 kv.gc.lock.redis.key=f3a9d0ae-343b-aac0-9a6b-31b55b71b55a
 ```
+
+## use hbase as kv-store 
+
+```properties
+kv.client.class.name=com.netease.nim.camellia.redis.proxy.kv.hbase.HBaseKVClient
+
+kv.store.hbase.url=hbase://127.0.0.1:2181/hbase
+kv.store.hbase.conf={"hbase.rpc.timeout":1500,"hbase.client.retries.number":2}
+kv.store.hbase.table.name=camellia_kv
+```
+
+```
+create 'camellia_kv',{NAME => 'd', VERSIONS => '1',COMPRESSION=>'SNAPPY'}
+```
+
+## use obkv as kv-store
+
+```properties
+kv.obkv.full.user.name=xxx
+kv.obkv.param.url=xxx
+kv.obkv.password=xxx
+kv.obkv.sys.user.name=xxx
+kv.obkv.sys.password=xxx
+
+kv.client.class.name=com.netease.nim.camellia.redis.proxy.kv.obkv.OBKVClient
+
+kv.obkv.table.name=camellia_kv
+
+```
+
+```
+CREATE TABLE `camellia_kv` (
+    `slot` int(9) NOT NULL,
+    `k` varbinary(1024) NOT NULL,
+    `v` varbinary(1024) NOT NULL,
+    `t` DATETIME(3),
+    PRIMARY KEY (`slot`, `k`))
+TTL (t + INTERVAL 1 SECOND)
+PARTITION BY KEY(slot) PARTITIONS 97;
+```
+
+
+## use tikv as kv-store
+
+```properties
+kv.tikv.pd.address=127.0.0.1:2379
+kv.client.class.name=com.netease.nim.camellia.redis.proxy.kv.tikv.TiKVClient
+```
