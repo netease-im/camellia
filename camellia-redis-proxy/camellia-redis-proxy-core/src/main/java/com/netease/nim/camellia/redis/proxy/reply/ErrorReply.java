@@ -41,6 +41,7 @@ public class ErrorReply implements Reply {
     public static final ErrorReply TIMEOUT = new ErrorReply("ERR command execute timeout");
     public static final ErrorReply INTERNAL_ERROR = new ErrorReply("ERR internal error");
     public static final ErrorReply WRONG_TYPE = new ErrorReply("WRONGTYPE Operation against a key holding the wrong kind of value");
+    public static final ErrorReply CROSS_SLOT_ERROR = new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
     private final String error;

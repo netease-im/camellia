@@ -140,8 +140,13 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                 if (clusterSlotMap == null) {
                     return ErrorReply.NOT_AVAILABLE;
                 }
+                int lasSlot = -1;
                 for (byte[] key : keys) {
                     int slot = RedisClusterCRC16Utils.getSlot(key);
+                    if (lasSlot != -1 && lasSlot != slot) {
+                        return ErrorReply.CROSS_SLOT_ERROR;
+                    }
+                    lasSlot = slot;
                     if (clusterSlotMap.isSlotInCurrentNode(slot)) {
                         continue;
                     }
