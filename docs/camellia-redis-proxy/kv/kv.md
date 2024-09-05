@@ -11,7 +11,7 @@
 * proxy基于伪redis-cluster模式运行，因此相同key会路由到同一个proxy节点
 * proxy内部多work-thread运行，每个命令根据key哈希到同一个work-thread运行
 * proxy本身弱状态
-* proxy依赖的服务逻辑上包括三组：key-meta-server、sub-key-server
+* proxy依赖的服务逻辑上包括：key-meta-server、sub-key-server
 * key-meta-server，用于维护key的meta信息，包括key的类型、版本、ttl等
 * sub-key-server，用于存储hash中的field等subkey
 * 部分场景下（当前仅zset），可以在sub-key-server层，混合使用redis作为storage，更适合某些业务场景
