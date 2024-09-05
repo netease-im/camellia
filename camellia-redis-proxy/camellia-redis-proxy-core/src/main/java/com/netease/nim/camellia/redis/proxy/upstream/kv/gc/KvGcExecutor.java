@@ -292,6 +292,7 @@ public class KvGcExecutor {
                             keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
                         } catch (Exception e) {
                             logger.error("gc decode sub key error, namespace = {}, will delete kv = {}", namespace, keyValue, e);
+                            kvClient.delete(slot, keyValue.getKey());
                             TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                             continue;
                         }
