@@ -99,7 +99,10 @@ OK
 参见：[quick-start-no-spring-boot](quickstart/quick-start-no-spring-boot.md)
 
 ## 如果要使用java21/spring-boot3/docker  
-参见：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)  
+参见：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+
+## 基于源码编译
+参见：[camellia-redis-proxy-bootstrap](other/camellia-redis-proxy-bootstrap.md)
 
 ## 源码解读
 具体可见：[代码结构](code/proxy-code.md)
@@ -161,7 +164,6 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 热key使用自定义转发路由的一个完整示例，具体见：[hot-key-route-rewrite-sample](other/hot-key-route-rewrite-sample.md)
 * redis和proxy混合部署时使用UpstreamAddrConverter提升服务性能的一个例子，具体见：[upstream-addr-converter](other/upstream-addr-converter.md)
 * 使用自定义分片时调整分片数量的一个思路，具体见：[custom_resharding](other/custom_resharding.md)
-* 编译camellia-redis-proxy-bootstrap，具体见：[camellia-redis-proxy-bootstrap](other/camellia-redis-proxy-bootstrap)
 * 使用etcd管理proxy配置的一个完整示例【运维实施】，具体见：[etcd-sample](other/etcd_sample.md)
 * 使用nacos管理proxy配置的一个完整示例【运维实施】，具体见：[nacos-sample](other/nacos_sample.md)
 * 使用proxy命令批量管理proxy集群配置的说明，具体见：[proxy_command](other/proxy_command.md)
