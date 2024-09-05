@@ -2,6 +2,7 @@
 
 # 1.2.29（2024/08/xx）
 ### add
+* camellia-redis-proxy，kv, refactor KVClient, add slot parameter, it's a break change
 * camellia-redis-proxy, kv, support `set` commands, include `sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
 * camellia-redis-proxy, kv, support `scan` command
 * camellia-redis-proxy，kv, support configure different kv store on different namespace
@@ -17,7 +18,8 @@
 * camellia-redis-proxy，kv, enhance monitor
 * camellia-redis-proxy，kv, optimize lru cache of zset, optimize lru cache build
 * camellia-redis-proxy，kv, update kv-client scanByStartEnd and countByStartEnd method
-* camellia-redis-proxy，kv, optimize scanByPrefix/countByPrefix/countByStartEnd of HBaseKVClient/OBKVHBaseClient
+* camellia-redis-proxy，kv, optimize scanByPrefix/countByPrefix/countByStartEnd of HBaseKVClient
+* camellia-redis-proxy，kv，upgrade tikv-client version（old version has bug)
 * camellia-redis-proxy，optimize error reply for command not support
 * camellia-redis-proxy-bootstrap support use maven profile to compile different function
 * reactor multi-write code, include camellia-redis-client、camellia-hbase-client、camellia-feign-client

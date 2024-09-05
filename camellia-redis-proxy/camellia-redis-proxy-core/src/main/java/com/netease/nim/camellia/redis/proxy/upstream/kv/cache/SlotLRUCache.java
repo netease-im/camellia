@@ -84,7 +84,9 @@ public class SlotLRUCache<V> {
                 V value = entry.getValue();
                 if (value instanceof EstimateSizeValue) {
                     long size = ((EstimateSizeValue) value).estimateSize();
-                    estimateSize += size < 0 ? 0 : size;
+                    if (size > 0) {
+                        estimateSize += size;
+                    }
                 } else if (value instanceof BytesKey) {
                     estimateSize += ((BytesKey) value).getKey().length;
                 } else if (value instanceof Boolean) {

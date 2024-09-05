@@ -56,7 +56,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         }
 
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            ValueWrapper<KeyMeta> valueWrapper = keyMetaLRUCache.get(key);
+            ValueWrapper<KeyMeta> valueWrapper = keyMetaLRUCache.get(slot, key);
             if (valueWrapper != null) {
                 KeyMeta keyMeta = valueWrapper.get();
                 if (keyMeta == null) {
@@ -79,7 +79,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         KeyValue keyValue = kvClient.get(slot, metaKey);
         if (keyValue == null || keyValue.getValue() == null) {
             if (cacheConfig.isMetaLocalCacheEnable()) {
-                keyMetaLRUCache.setNull(key);
+                keyMetaLRUCache.setNull(slot, key);
             }
             return null;
         }
@@ -88,7 +88,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             kvClient.delete(slot, metaKey);
             KvGcMonitor.deleteMetaKeys(cacheConfig.getNamespace(), 1);
             if (cacheConfig.isMetaLocalCacheEnable()) {
-                keyMetaLRUCache.setNull(key);
+                keyMetaLRUCache.setNull(slot, key);
             }
             if (keyMeta != null) {
                 gcExecutor.submitSubKeyDeleteTask(slot, key, keyMeta);
@@ -97,7 +97,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         }
 
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            keyMetaLRUCache.put(key, keyMeta);
+            keyMetaLRUCache.put(slot, key, keyMeta);
         }
         return keyMeta;
     }
@@ -108,7 +108,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            keyMetaLRUCache.put(key, keyMeta);
+            keyMetaLRUCache.put(slot, key, keyMeta);
         }
         if (!result.isKvWriteDelayEnable()) {
             put(slot, metaKey, keyMeta);
@@ -132,7 +132,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
         byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaLocalCacheEnable()) {
-            keyMetaLRUCache.remove(key);
+            keyMetaLRUCache.remove(slot, key);
         }
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(key, result, () -> {
@@ -156,7 +156,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         if (keyMeta == null || keyMeta.isExpire()) {
             kvClient.delete(slot, metaKey);
             if (cacheConfig.isMetaLocalCacheEnable()) {
-                keyMetaLRUCache.remove(key);
+                keyMetaLRUCache.remove(slot, key);
             }
         }
     }

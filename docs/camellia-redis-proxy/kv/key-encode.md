@@ -1,7 +1,9 @@
 
 # key-encode
 
-如何从kv数据结构映射到redis的复杂数据结构
+* 如何从kv数据结构映射到redis的复杂数据结构
+* 如果底层是tikv和hbase，则在key前面增加slot前缀（range分区）
+* 如果底层是obkv，则slot作为obkv-table的hash分区的分区字段，key前面不需要加slot前缀
 
 
 ## key-meta结构

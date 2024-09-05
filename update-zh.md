@@ -2,6 +2,7 @@
 
 # 1.2.29（2024/08/xx）
 ### 新增
+* camellia-redis-proxy，kv模块，重构了KVClient的接口定义，新增slot参数，底层存储编码更新（破坏性，和1.2.28不兼容），从而可以同时适配range分区和hash分区的kv存储
 * camellia-redis-proxy，kv模块，新增支持set相关命令，包括：`sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
 * camellia-redis-proxy，kv模块，新增支持scan命令
 * camellia-redis-proxy，kv模块，支持根据不同的namespace配置不同的kv后端
@@ -12,12 +13,13 @@
 
 ### 更新
 * camellia-redis-proxy，kv模块，移除了hash和zset的encode-version为2和3的实现，简化了代码结构
-* camellia-redis-proxy，kv模块，升级了obkv-hbase-client的版本，支持反向scan，从而优化了zset反向查询相关命令的性能
+* camellia-redis-proxy，kv模块，obkv直接使用ObTableClient，而非OHTableClient
 * camellia-redis-proxy，kv模块，调整了encode-version等部分配置的配置key
 * camellia-redis-proxy，kv模块，增强了监控相关的功能
 * camellia-redis-proxy，kv模块，优化了zset的lru cache的性能，优化了lru cache重建的逻辑
 * camellia-redis-proxy，kv模块，更新了kv-client的scanByStartEnd和countByStartEnd方法的定义，增加了prefix参数
-* camellia-redis-proxy，kv模块，优化了HBaseKVClient和OBKVHBaseClient的scanByPrefix/countByPrefix/countByStartEnd方法，减少无效数据扫描
+* camellia-redis-proxy，kv模块，优化了HBaseKVClient的scanByPrefix/countByPrefix/countByStartEnd方法，减少无效数据扫描
+* camellia-redis-proxy，kv模块，升级了依赖的tikv-client的版本（老版本有bug）
 * camellia-redis-proxy，优化了命令不支持时的回包
 * camellia-redis-proxy-bootstrap支持使用maven profile来编译不同的功能
 * 重构了multi-write相关的代码，涉及camellia-redis-client、camellia-hbase-client、camellia-feign-client

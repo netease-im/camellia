@@ -57,8 +57,7 @@ public class KeyMetaLRUCache {
         this.capacity = capacity;
     }
 
-    public ValueWrapper<KeyMeta> get(byte[] key) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public ValueWrapper<KeyMeta> get(int slot, byte[] key) {
         BytesKey bytesKey = new BytesKey(key);
         KeyMeta keyMeta = localCache.get(slot, bytesKey);
         if (keyMeta != null) {
@@ -71,22 +70,19 @@ public class KeyMetaLRUCache {
         return null;
     }
 
-    public void remove(byte[] key) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void remove(int slot, byte[] key) {
         BytesKey bytesKey = new BytesKey(key);
         localCache.remove(slot, bytesKey);
         nullCache.put(slot, bytesKey, Boolean.TRUE);
     }
 
-    public void put(byte[] key, KeyMeta keyMeta) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void put(int slot, byte[] key, KeyMeta keyMeta) {
         BytesKey bytesKey = new BytesKey(key);
         localCache.put(slot, bytesKey, keyMeta);
         nullCache.remove(slot, bytesKey);
     }
 
-    public void setNull(byte[] key) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void setNull(int slot, byte[] key) {
         BytesKey bytesKey = new BytesKey(key);
         localCache.remove(slot, bytesKey);
         nullCache.put(slot, bytesKey, Boolean.TRUE);
