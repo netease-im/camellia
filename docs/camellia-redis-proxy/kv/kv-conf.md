@@ -99,7 +99,7 @@ kv.store.hbase.table.name=camellia_kv
 ```
 
 ```
-create 'camellia_kv',{NAME => 'd', VERSIONS => '1',COMPRESSION=>'SNAPPY'}
+create 'camellia_kv',{NAME => 'd', VERSIONS => '1',COMPRESSION=>'SNAPPY'},{ NUMREGIONS => 20 , SPLITALGO => 'UniformSplit'}
 ```
 
 ## use obkv as kv-store
