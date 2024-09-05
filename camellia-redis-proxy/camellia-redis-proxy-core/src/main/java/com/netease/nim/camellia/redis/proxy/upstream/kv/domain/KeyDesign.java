@@ -6,7 +6,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.utils.MD5Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,7 @@ public class KeyDesign {
         this.subKeyPrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), this.namespace);
         this.subKey2Prefix = BytesUtils.merge("k#".getBytes(StandardCharsets.UTF_8), this.namespace);
         this.indexKeyPrefix = BytesUtils.merge("i#".getBytes(StandardCharsets.UTF_8), this.namespace);
-        this.prefixLen = subKeyPrefix.length + 8;
+        this.prefixLen = subKeyPrefix.length;
         reload();
         ProxyDynamicConf.registerCallback(this::reload);
     }
@@ -67,7 +66,7 @@ public class KeyDesign {
     //
 
     public byte[] metaKey(byte[] key) {
-        return BytesUtils.merge(prefix(metaPrefix, key), key);
+        return BytesUtils.merge(metaPrefix, key);
     }
 
     public byte[] decodeKeyByMetaKey(byte[] metaKey) {
@@ -103,32 +102,23 @@ public class KeyDesign {
     // sub key
     // prefix
     //
-
-    private byte[] prefix(byte[] prefix, byte[] key) {
-        byte[] array = new byte[prefix.length + 8];
-        System.arraycopy(prefix, 0, array, 0, prefix.length);
-        byte[] md5 = MD5Util.md5(key);
-        System.arraycopy(md5, 0, array, prefix.length, 8);
-        return array;
-    }
-
     public byte[] subKeyPrefix(KeyMeta keyMeta, byte[] key) {
         byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(prefix(subKeyPrefix, key), keySize, key);
+        byte[] data = BytesUtils.merge(subKeyPrefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
         return data;
     }
 
     public byte[] subKeyPrefix2(KeyMeta keyMeta, byte[] key) {
         byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(prefix(subKey2Prefix, key), keySize, key);
+        byte[] data = BytesUtils.merge(subKey2Prefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
         return data;
     }
 
     public byte[] subIndexKeyPrefix(KeyMeta keyMeta, byte[] key) {
         byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(prefix(indexKeyPrefix, key), keySize, key);
+        byte[] data = BytesUtils.merge(indexKeyPrefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
         return data;
     }

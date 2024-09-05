@@ -17,16 +17,15 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
+import com.netease.nim.camellia.tools.utils.MD5Util;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by caojiajun on 2024/4/8
@@ -34,6 +33,16 @@ import java.util.Map;
 public class HBaseKVClient implements KVClient {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseKVClient.class);
+
+    private static final byte[][] prefixCache = new byte[RedisClusterCRC16Utils.SLOT_SIZE][];
+    static {
+        for (int i = 0; i< RedisClusterCRC16Utils.SLOT_SIZE; i++) {
+            byte[] md5 = MD5Util.md5(String.valueOf(i).getBytes(StandardCharsets.UTF_8));
+            byte[] prefix = new byte[8];
+            System.arraycopy(md5, 0, prefix, 0, 8);
+            prefixCache[i] = prefix;
+        }
+    }
 
     private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
     private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
@@ -146,24 +155,7 @@ public class HBaseKVClient implements KVClient {
         }
     }
 
-    private byte[] encode(int slot, byte[] key) {
-        return BytesUtils.merge(BytesUtils.toBytes(slot), key);
-    }
 
-    private byte[] decode(byte[] key) {
-        if (key == null) {
-            return null;
-        }
-        if (key.length == 0) {
-            return key;
-        }
-        if (key.length < 4) {
-            throw new KvException("key.len < 4");
-        }
-        byte[] result = new byte[key.length - 4];
-        System.arraycopy(key, 4, result, 0, result.length);
-        return result;
-    }
 
     @Override
     public void batchPut(int slot, List<KeyValue> list) {
@@ -449,5 +441,24 @@ public class HBaseKVClient implements KVClient {
             logger.error("countByStartEnd error", e);
             throw new KvException(e);
         }
+    }
+
+    private byte[] encode(int slot, byte[] key) {
+        return BytesUtils.merge(prefixCache[slot], key);
+    }
+
+    private byte[] decode(byte[] key) {
+        if (key == null) {
+            return null;
+        }
+        if (key.length == 0) {
+            return key;
+        }
+        if (key.length < 8) {
+            throw new KvException("key.len < 8");
+        }
+        byte[] result = new byte[key.length - 8];
+        System.arraycopy(key, 8, result, 0, result.length);
+        return result;
     }
 }

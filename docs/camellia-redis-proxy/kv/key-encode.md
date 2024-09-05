@@ -2,16 +2,16 @@
 # key-encode
 
 * 如何从kv数据结构映射到redis的复杂数据结构
-* 如果底层是tikv和hbase，则在key前面增加slot前缀（range分区）
-* 如果底层是obkv，则slot作为obkv-table的hash分区的分区字段，key前面不需要加slot前缀
+* 如果底层是tikv和hbase（range分区），则在key前面增加slot前缀（对slot做md5，取前8个字节）
+* 如果底层是obkv（hash分区），则slot作为obkv-table的hash分区的分区字段，key前面不需要加slot前缀
 
 
 ## key-meta结构
 
-|                  key                  |                             value                             |
-|:-------------------------------------:|:-------------------------------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |             1-bit + 1-bit + 8-bit + 8-bit + N-bit             |
-| prefix + namespace + md5_prefix + key | encode-version + key-type + key-version + expire-time + extra |
+|           key            |                             value                             |
+|:------------------------:|:-------------------------------------------------------------:|
+|   m# + namespace + key   |             1-bit + 1-bit + 8-bit + 8-bit + N-bit             |
+| prefix + namespace + key | encode-version + key-type + key-version + expire-time + extra |
 
 ```java
 public enum KeyType {
@@ -30,10 +30,10 @@ public enum KeyType {
 
 ## string数据结构
 
-|                  key                  |                   value                   |
-|:-------------------------------------:|:-----------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit + N-bit   |
-| prefix + namespace + md5_prefix + key | 0 + 1 + key-version + expire-time + value |
+|           key            |                   value                   |
+|:------------------------:|:-----------------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit + N-bit   |
+| prefix + namespace + key | 0 + 1 + key-version + expire-time + value |
 
 * 只有一种编码结构，encode-version固定为0
 * key-type固定为1
@@ -48,10 +48,10 @@ hash数据有2种编码模式
 
 #### key-meta
 
-|                  key                  |                      value                      |
-|:-------------------------------------:|:-----------------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit      |
-| prefix + namespace + md5_prefix + key | 0 + 2 + key-version + expire-time + field-count |
+|           key            |                      value                      |
+|:------------------------:|:-----------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit      |
+| prefix + namespace + key | 0 + 2 + key-version + expire-time + field-count |
 
 #### sub-key
 
@@ -68,16 +68,16 @@ hash数据有2种编码模式
 
 #### key-meta
 
-|                  key                  |               value               |
-|:-------------------------------------:|:---------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + md5_prefix + key | 1 + 2 + key-version + expire-time |
+|           key            |               value               |
+|:------------------------:|:---------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 1 + 2 + key-version + expire-time |
 
 #### sub-key
 
-|                                 key                                  |    value    |
-|:--------------------------------------------------------------------:|:-----------:|
-| s# + namespace + md5(key)[0-8] + key.len + key + key-version + field | field-value |
+|                         key                          |    value    |
+|:----------------------------------------------------:|:-----------:|
+| s# + namespace + key.len + key + key-version + field | field-value |
 
 * encode-version固定为1，key-type固定为2
 * 因为不在key-meta中记录field-count，纯覆盖写，写入快，但是导致了hlen慢
@@ -92,20 +92,20 @@ zset有2种编码结构
 
 #### key-meta
 
-|                  key                  |                      value                       |
-|:-------------------------------------:|:------------------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + md5_prefix + key | 0 + 3 + key-version + expire-time + member-count |
+|           key            |                      value                       |
+|:------------------------:|:------------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
 
 #### sub-key
 
-|                                  key                                  | value |
-|:---------------------------------------------------------------------:|:-----:|
-| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | score |
+|                          key                          | value |
+|:-----------------------------------------------------:|:-----:|
+| s# + namespace + key.len + key + key-version + member | score |
 
-|                                      key                                      | value |
-|:-----------------------------------------------------------------------------:|:-----:|
-| k# + namespace + md5(key)[0-8] + key.len + key + key-version + score + member | null  |
+|                              key                              | value |
+|:-------------------------------------------------------------:|:-----:|
+| k# + namespace + key.len + key + key-version + score + member | null  |
 
 * encode-version固定为0，key-type固定为3
 * 不依赖任何redis
@@ -117,10 +117,10 @@ zset有2种编码结构
 
 #### key-meta
 
-|                  key                  |               value               |
-|:-------------------------------------:|:---------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + md5_prefix + key | 3 + 3 + key-version + expire-time |
+|           key            |               value               |
+|:------------------------:|:---------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 3 + 3 + key-version + expire-time |
 
 #### index
 
@@ -128,9 +128,9 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 #### sub-key
 
-|                                 key                                  | value  |
-|:--------------------------------------------------------------------:|:------:|
-| i# + namespace + md5(key)[0-8] + key.len + key + key-version + index | member |
+|                         key                          | value  |
+|:----------------------------------------------------:|:------:|
+| i# + namespace + key.len + key + key-version + index | member |
 
 * 如果member很小，则不会产生二级的index，只会在redis中写入，不会写入kv
 
@@ -164,10 +164,10 @@ set数据有2种编码模式
 
 #### key-meta
 
-|                  key                  |                      value                       |
-|:-------------------------------------:|:------------------------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + md5_prefix + key | 0 + 2 + key-version + expire-time + member-count |
+|           key            |                      value                       |
+|:------------------------:|:------------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + key | 0 + 2 + key-version + expire-time + member-count |
 
 #### sub-key
 
@@ -184,16 +184,16 @@ set数据有2种编码模式
 
 #### key-meta
 
-|                  key                  |               value               |
-|:-------------------------------------:|:---------------------------------:|
-| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + md5_prefix + key | 1 + 2 + key-version + expire-time |
+|           key            |               value               |
+|:------------------------:|:---------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 1 + 2 + key-version + expire-time |
 
 #### sub-key
 
-|                                  key                                  |    value    |
-|:---------------------------------------------------------------------:|:-----------:|
-| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | field-value |
+|                          key                          |    value    |
+|:-----------------------------------------------------:|:-----------:|
+| s# + namespace + key.len + key + key-version + member | field-value |
 
 * encode-version固定为1，key-type固定为2
 * 因为不在key-meta中记录member-count，纯覆盖写，写入快，但是导致了scard慢
