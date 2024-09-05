@@ -10,6 +10,7 @@ import redis.clients.jedis.Tuple;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by caojiajun on 2024/5/16
@@ -17,6 +18,8 @@ import java.util.*;
 public class TestZSetV0 {
 
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
+
+    private static final ThreadLocal<AtomicInteger> round = ThreadLocal.withInitial(AtomicInteger::new);
 
     public static void main(String[] args) throws Exception {
         String url = "redis://pass123@127.0.0.1:6381";
@@ -43,6 +46,8 @@ public class TestZSetV0 {
     private static final ThreadLocal<String> keyThreadLocal = new ThreadLocal<>();
 
     public static void testZSet(CamelliaRedisTemplate template) {
+
+        round.get().incrementAndGet();
 
         try {
             String key = UUID.randomUUID().toString().replace("-", "");
@@ -413,10 +418,24 @@ public class TestZSetV0 {
             {
                 for (int count = 99; count < 202; count ++) {
                     template.del(key);
+
+                    List<Map<String, Double>> list = new ArrayList<>();
+                    Map<String, Double> map = new HashMap<>();
                     for (int i = 0; i < count; i++) {
-                        Long zadd = template.zadd(key, i + 1000, "m-" + i);
-                        assertEquals(zadd, 1L);
+                        map.put("m-" + i, (double) (i + 1000));
+                        if (map.size() >= 50) {
+                            list.add(map);
+                            map = new HashMap<>();
+                        }
                     }
+                    if (!map.isEmpty()) {
+                        list.add(map);
+                    }
+                    for (Map<String, Double> doubleMap : list) {
+                        template.zadd(key, doubleMap);
+                    }
+
+
                     Set<String> zrange = template.zrange(key, 0, -1);
                     assertEquals(zrange.size(), count);
 
@@ -465,10 +484,10 @@ public class TestZSetV0 {
 
     private static void assertEquals(Object result, Object expect) {
         if (Objects.equals(result, expect)) {
-            System.out.println("SUCCESS, thread=" + Thread.currentThread().getName()
+            System.out.println("zsetv0, round=" + round.get().get() + ", SUCCESS, thread=" + Thread.currentThread().getName()
                     + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
         } else {
-            System.out.println("ERROR, expect " + expect + " but found " + result + "," +
+            System.out.println("zsetv0, round=" + round.get().get() + ", ERROR, expect " + expect + " but found " + result + "," +
                     " thread=" + Thread.currentThread().getName() + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
             throw new RuntimeException();
         }

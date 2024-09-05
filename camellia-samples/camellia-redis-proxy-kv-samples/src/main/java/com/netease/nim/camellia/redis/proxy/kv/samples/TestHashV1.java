@@ -9,6 +9,7 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by caojiajun on 2024/4/12
@@ -17,6 +18,7 @@ public class TestHashV1 {
 
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
 
+    private static final ThreadLocal<AtomicInteger> round = ThreadLocal.withInitial(AtomicInteger::new);
 
     public static void main(String[] args) {
         String url = "redis://pass123@127.0.0.1:6381";
@@ -42,6 +44,8 @@ public class TestHashV1 {
     private static final ThreadLocal<String> keyThreadLocal = new ThreadLocal<>();
 
     public static void testHash(CamelliaRedisTemplate template)  {
+
+        round.get().incrementAndGet();
 
         try {
             String key = UUID.randomUUID().toString().replace("-", "");
@@ -287,6 +291,33 @@ public class TestHashV1 {
             }
 
             template.del(key);
+            {
+                for (int i=90; i<210; i++) {
+                    template.del(key);
+                    List<Map<String, String>> list = new ArrayList<>();
+                    Map<String, String> subMap = new HashMap<>();
+                    for (int j=0; j<i; j++) {
+                        subMap.put("a" + j, "b" + j);
+                        if (subMap.size() >= 50) {
+                            list.add(subMap);
+                            subMap = new HashMap<>();
+                        }
+                    }
+                    if (!subMap.isEmpty()) {
+                        list.add(subMap);
+                    }
+                    for (Map<String, String> map : list) {
+                        template.hmset(key, map);
+                    }
+                    Map<String, String> map = template.hgetAll(key);
+                    assertEquals(map.size(), i);
+
+                    Long hlen = template.hlen(key);
+                    assertEquals(hlen, (long) i);
+                }
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
@@ -297,10 +328,10 @@ public class TestHashV1 {
 
     private static void assertEquals(Object result, Object expect) {
         if (Objects.equals(result, expect)) {
-            System.out.println("SUCCESS, thread=" + Thread.currentThread().getName()
+            System.out.println("hashv1, round=" + round.get().get() + ", SUCCESS, thread=" + Thread.currentThread().getName()
                     + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
         } else {
-            System.out.println("ERROR, expect " + expect + " but found " + result + "," +
+            System.out.println("hashv1, round=" + round.get().get() + ", ERROR, expect " + expect + " but found " + result + "," +
                     " thread=" + Thread.currentThread().getName() + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
             throw new RuntimeException();
         }

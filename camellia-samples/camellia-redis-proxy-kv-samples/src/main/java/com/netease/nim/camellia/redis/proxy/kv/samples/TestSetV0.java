@@ -9,6 +9,7 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by caojiajun on 2024/8/6
@@ -16,6 +17,7 @@ import java.util.*;
 public class TestSetV0 {
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
 
+    private static final ThreadLocal<AtomicInteger> round = ThreadLocal.withInitial(AtomicInteger::new);
 
     public static void main(String[] args) {
 //        String url = "redis://pass123@127.0.0.1:6381";
@@ -42,6 +44,8 @@ public class TestSetV0 {
     private static final ThreadLocal<String> keyThreadLocal = new ThreadLocal<>();
 
     public static void testSet(CamelliaRedisTemplate template) {
+
+        round.get().incrementAndGet();
 
         try {
             String key = UUID.randomUUID().toString().replace("-", "");
@@ -162,6 +166,33 @@ public class TestSetV0 {
             }
 
             template.del(key);
+            {
+                for (int i=90; i<210; i++) {
+                    template.del(key);
+                    List<Set<String>> list = new ArrayList<>();
+                    Set<String> set = new HashSet<>();
+                    for (int j=0; j<i; j++) {
+                        set.add("a" + j);
+                        if (set.size() >= 50) {
+                            list.add(set);
+                            set = new HashSet<>();
+                        }
+                    }
+                    if (!set.isEmpty()) {
+                        list.add(set);
+                    }
+                    for (Set<String> strings : list) {
+                        template.sadd(key, strings.toArray(new String[0]));
+                    }
+                    Set<String> smembers = template.smembers(key);
+                    assertEquals(smembers.size(), i);
+
+                    Long scard = template.scard(key);
+                    assertEquals(scard, (long) i);
+                }
+            }
+
+            template.del(key);
         } catch (Exception e) {
             System.out.println("error");
             e.printStackTrace();
@@ -172,10 +203,10 @@ public class TestSetV0 {
 
     private static void assertEquals(Object result, Object expect) {
         if (Objects.equals(result, expect)) {
-            System.out.println("SUCCESS, thread=" + Thread.currentThread().getName()
+            System.out.println("setv0, round=" + round.get().get() + ", SUCCESS, thread=" + Thread.currentThread().getName()
                     + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
         } else {
-            System.out.println("ERROR, expect " + expect + " but found " + result + "," +
+            System.out.println("setv0, round=" + round.get().get() + ", ERROR, expect " + expect + " but found " + result + "," +
                     " thread=" + Thread.currentThread().getName() + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
             throw new RuntimeException();
         }

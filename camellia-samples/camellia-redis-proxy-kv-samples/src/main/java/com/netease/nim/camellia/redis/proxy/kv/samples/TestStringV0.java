@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -21,6 +22,8 @@ import java.util.function.Supplier;
 public class TestStringV0 {
 
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
+
+    private static final ThreadLocal<AtomicInteger> round = ThreadLocal.withInitial(AtomicInteger::new);
 
     public static void main(String[] args) {
         String url = "redis://pass123@127.0.0.1:6381";
@@ -47,11 +50,13 @@ public class TestStringV0 {
 
     public static void testString(CamelliaRedisTemplate template) {
 
+        round.get().incrementAndGet();
+
         try {
             String key = UUID.randomUUID().toString().replace("-", "");
-            String key1 = UUID.randomUUID().toString().replace("-", "");
-            String key2 = UUID.randomUUID().toString().replace("-", "");
-            String key3 = UUID.randomUUID().toString().replace("-", "");
+            String key1 = "{" + key + "}" + UUID.randomUUID().toString().replace("-", "");
+            String key2 = "{" + key + "}" + UUID.randomUUID().toString().replace("-", "");
+            String key3 = "{" + key + "}" + UUID.randomUUID().toString().replace("-", "");
 
             keyThreadLocal.set(key);
 
@@ -193,10 +198,10 @@ public class TestStringV0 {
 
     private static void assertEquals(Object result, Object expect) {
         if (Objects.equals(result, expect)) {
-            System.out.println("SUCCESS, thread=" + Thread.currentThread().getName()
+            System.out.println("string, round = " + round.get().get() + ", SUCCESS, thread=" + Thread.currentThread().getName()
                     + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
         } else {
-            System.out.println("ERROR, expect " + expect + " but found " + result + "," +
+            System.out.println("string, round = " + round.get().get() + ", ERROR, expect " + expect + " but found " + result + "," +
                     " thread=" + Thread.currentThread().getName() + ", key = " + keyThreadLocal.get() + ", time = " + dataFormat.get().format(new Date()));
             throw new RuntimeException();
         }
