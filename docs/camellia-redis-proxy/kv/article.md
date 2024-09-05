@@ -222,4 +222,4 @@ proxy之前就支持伪redis-cluster模式，在之前的模式中，proxy节点
 
 
 ## 九、结论
-目前实现了string、hash、zset、zset的常用命令，已经应用于云信相关的线上服务，欢迎大家一起共建共享～
+目前实现了string、hash、zset、set的常用命令，已经应用于云信相关的线上服务，欢迎大家一起共建共享～
