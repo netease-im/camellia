@@ -4,29 +4,29 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-delay-queue-server</artifactId>
-	<version>1.2.29</version>
+	<version>1.2.30-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-delay-queue</artifactId>
-		<version>1.2.29</version>
+		<version>1.2.30-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
-			<version>1.2.29</version>
+			<version>1.2.30-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-toolkit</artifactId>
-			<version>1.2.29</version>
+			<version>1.2.30-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-delay-queue-common</artifactId>
-			<version>1.2.29</version>
+			<version>1.2.30-SNAPSHOT</version>
 		</dependency>
     </dependencies>
 	<build>
