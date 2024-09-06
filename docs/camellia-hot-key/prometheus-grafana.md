@@ -66,7 +66,7 @@ you should:
 ```
 # HELP info Hot Key Server Info
 # TYPE info gauge
-info{camellia_version="1.2.28",arch="x86_64",os_name="Mac OS X",os_version="10.16",system_load_average="4.61572265625",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="25.311-b11",jvm_info="mixed mode",java_version="1.8.0_311",} 1
+info{camellia_version="1.2.29",arch="x86_64",os_name="Mac OS X",os_version="10.16",system_load_average="4.61572265625",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="25.311-b11",jvm_info="mixed mode",java_version="1.8.0_311",} 1
 # HELP uptime Hot Key Server Uptime
 # TYPE uptime gauge
 uptime 266830678

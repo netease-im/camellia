@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.29（2024/08/xx）
+# 1.2.29（2024/09/06）
 ### 新增
 * camellia-redis-proxy，kv模块，重构了KVClient的接口定义，新增slot参数，底层存储编码更新（破坏性，和1.2.28不兼容），从而可以同时适配range分区和hash分区的kv存储
 * camellia-redis-proxy，kv模块，新增支持set相关命令，包括：`sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`

@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.29（2024/08/xx）
+# 1.2.29（2024/09/06）
 ### add
 * camellia-redis-proxy，kv, refactor KVClient, add slot parameter, it's a break change
 * camellia-redis-proxy, kv, support `set` commands, include `sadd`、`srem`、`smembers`、`spop`、`srandmember`、`sismember`、`smismember`、`scard`
