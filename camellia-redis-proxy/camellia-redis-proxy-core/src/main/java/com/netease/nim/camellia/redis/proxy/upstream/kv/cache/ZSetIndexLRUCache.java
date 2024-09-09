@@ -5,7 +5,6 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +58,7 @@ public class ZSetIndexLRUCache {
         this.capacity = capacity;
     }
 
-    public byte[] getForRead(byte[] key, byte[] cacheKey, BytesKey ref) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public byte[] getForRead(int slot, byte[] cacheKey, BytesKey ref) {
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         byte[] bytes = localCache.get(slot, indexCacheKey);
         if (bytes != null) {
@@ -75,8 +73,7 @@ public class ZSetIndexLRUCache {
         return null;
     }
 
-    public byte[] getForWrite(byte[] key, byte[] cacheKey, BytesKey ref) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public byte[] getForWrite(int slot, byte[] cacheKey, BytesKey ref) {
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         byte[] bytes = localCacheForWrite.get(slot, indexCacheKey);
         if (bytes != null) {
@@ -85,20 +82,17 @@ public class ZSetIndexLRUCache {
         return localCache.get(slot, indexCacheKey);
     }
 
-    public void putForWrite(byte[] key, byte[] cacheKey, BytesKey ref, byte[] raw) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void putForWrite(int slot, byte[] cacheKey, BytesKey ref, byte[] raw) {
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         localCacheForWrite.put(slot, indexCacheKey, raw);
     }
 
-    public void putForRead(byte[] key, byte[] cacheKey, BytesKey ref, byte[] raw) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void putForRead(int slot, byte[] cacheKey, BytesKey ref, byte[] raw) {
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         localCache.put(slot, indexCacheKey, raw);
     }
 
-    public void remove(byte[] key, byte[] cacheKey, BytesKey ref) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
+    public void remove(int slot, byte[] cacheKey, BytesKey ref) {
         BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
         localCache.remove(slot, indexCacheKey);
         localCacheForWrite.remove(slot, indexCacheKey);

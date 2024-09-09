@@ -268,7 +268,7 @@ public class ZAddCommander extends ZSet0Commander {
                 //
                 if (cacheConfig.isZSetLocalCacheEnable()) {
                     ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
-                    lruCache.putForWrite(key, cacheKey, new BytesKey(index.getRef()), member);
+                    lruCache.putForWrite(slot, cacheKey, new BytesKey(index.getRef()), member);
                 }
             }
             rewriteCmd[i] = Utils.doubleToBytes(entry.getValue());

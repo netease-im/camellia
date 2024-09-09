@@ -126,7 +126,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
                     //
                     if (cacheConfig.isZSetLocalCacheEnable()) {
                         ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
-                        lruCache.remove(key, cacheKey, new BytesKey(index.getRef()));
+                        lruCache.remove(slot, cacheKey, new BytesKey(index.getRef()));
                     }
                 }
                 i++;

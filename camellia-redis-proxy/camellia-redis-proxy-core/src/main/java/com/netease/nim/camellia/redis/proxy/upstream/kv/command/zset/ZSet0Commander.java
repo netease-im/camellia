@@ -154,9 +154,9 @@ public abstract class ZSet0Commander extends Commander {
                 for (BytesKey ref : set) {
                     byte[] raw;
                     if (forRead) {
-                        raw = lruCache.getForRead(key, cacheKey, ref);
+                        raw = lruCache.getForRead(slot, cacheKey, ref);
                     } else {
-                        raw = lruCache.getForWrite(key, cacheKey, ref);
+                        raw = lruCache.getForWrite(slot, cacheKey, ref);
                     }
                     if (raw != null && raw.length > 0) {
                         memberMap.put(ref, raw);
@@ -197,9 +197,9 @@ public abstract class ZSet0Commander extends Commander {
                         if (localCacheEnable) {
                             ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
                             if (forRead) {
-                                lruCache.putForRead(key, cacheKey, member, raw);
+                                lruCache.putForRead(slot, cacheKey, member, raw);
                             } else {
-                                lruCache.putForWrite(key, cacheKey, member, raw);
+                                lruCache.putForWrite(slot, cacheKey, member, raw);
                             }
                         }
                     }
@@ -234,9 +234,9 @@ public abstract class ZSet0Commander extends Commander {
                 if (localCacheEnable) {
                     ZSetIndexLRUCache lruCache = cacheConfig.getZSetIndexLRUCache();
                     if (forRead) {
-                        lruCache.putForRead(key, cacheKey, bytesKey, keyValue.getValue());
+                        lruCache.putForRead(slot, cacheKey, bytesKey, keyValue.getValue());
                     } else {
-                        lruCache.putForWrite(key, cacheKey, bytesKey, keyValue.getValue());
+                        lruCache.putForWrite(slot, cacheKey, bytesKey, keyValue.getValue());
                     }
                 }
 
