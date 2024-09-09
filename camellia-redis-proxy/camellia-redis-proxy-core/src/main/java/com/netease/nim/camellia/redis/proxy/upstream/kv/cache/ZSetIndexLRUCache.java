@@ -59,43 +59,43 @@ public class ZSetIndexLRUCache {
     }
 
     public byte[] getForRead(int slot, byte[] cacheKey, BytesKey ref) {
-        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
-        byte[] bytes = localCache.get(slot, indexCacheKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, BytesUtils.merge(cacheKey, ref.getKey()));
+        byte[] bytes = localCache.get(slotCacheKey);
         if (bytes != null) {
             return bytes;
         }
-        bytes = localCacheForWrite.get(slot, indexCacheKey);
+        bytes = localCacheForWrite.get(slotCacheKey);
         if (bytes != null) {
-            localCache.put(slot, indexCacheKey, bytes);
-            localCacheForWrite.remove(slot, indexCacheKey);
+            localCache.put(slotCacheKey, bytes);
+            localCacheForWrite.remove(slotCacheKey);
             return bytes;
         }
         return null;
     }
 
     public byte[] getForWrite(int slot, byte[] cacheKey, BytesKey ref) {
-        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
-        byte[] bytes = localCacheForWrite.get(slot, indexCacheKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, BytesUtils.merge(cacheKey, ref.getKey()));
+        byte[] bytes = localCacheForWrite.get(slotCacheKey);
         if (bytes != null) {
             return bytes;
         }
-        return localCache.get(slot, indexCacheKey);
+        return localCache.get(slotCacheKey);
     }
 
     public void putForWrite(int slot, byte[] cacheKey, BytesKey ref, byte[] raw) {
-        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
-        localCacheForWrite.put(slot, indexCacheKey, raw);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, BytesUtils.merge(cacheKey, ref.getKey()));
+        localCacheForWrite.put(slotCacheKey, raw);
     }
 
     public void putForRead(int slot, byte[] cacheKey, BytesKey ref, byte[] raw) {
-        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
-        localCache.put(slot, indexCacheKey, raw);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, BytesUtils.merge(cacheKey, ref.getKey()));
+        localCache.put(slotCacheKey, raw);
     }
 
     public void remove(int slot, byte[] cacheKey, BytesKey ref) {
-        BytesKey indexCacheKey = new BytesKey(BytesUtils.merge(cacheKey, ref.getKey()));
-        localCache.remove(slot, indexCacheKey);
-        localCacheForWrite.remove(slot, indexCacheKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, BytesUtils.merge(cacheKey, ref.getKey()));
+        localCache.remove(slotCacheKey);
+        localCacheForWrite.remove(slotCacheKey);
     }
 
     public void clear() {

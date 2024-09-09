@@ -67,43 +67,45 @@ public class SetLRUCache {
     }
 
     public void putAllForRead(int slot, byte[] cacheKey, RedisSet set) {
-        localCache.put(slot, new BytesKey(cacheKey), set);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCache.put(slotCacheKey, set);
     }
 
     public void putAllForWrite(int slot, byte[] cacheKey, RedisSet set) {
-        localCacheForWrite.put(slot, new BytesKey(cacheKey), set);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCacheForWrite.put(slotCacheKey, set);
     }
 
     public RedisSet getForRead(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisSet set = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisSet set = localCache.get(slotCacheKey);
         if (set == null) {
-            set = localCacheForWrite.get(slot, bytesKey);
+            set = localCacheForWrite.get(slotCacheKey);
             if (set != null) {
-                localCache.put(slot, bytesKey, set);
-                localCacheForWrite.remove(slot, bytesKey);
+                localCache.put(slotCacheKey, set);
+                localCacheForWrite.remove(slotCacheKey);
             }
         }
         return set;
     }
 
     public RedisSet getForWrite(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisSet set = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisSet set = localCache.get(slotCacheKey);
         if (set == null) {
-            set = localCacheForWrite.get(slot, bytesKey);
+            set = localCacheForWrite.get(slotCacheKey);
         }
         return set;
     }
 
     public Set<BytesKey> sadd(int slot, byte[] cacheKey, Set<BytesKey> memberSet) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisSet set = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisSet set = localCache.get(slotCacheKey);
         Set<BytesKey> result = null;
         if (set != null) {
             result = set.sadd(memberSet);
         }
-        set = localCacheForWrite.get(slot, bytesKey);
+        set = localCacheForWrite.get(slotCacheKey);
         if (set != null) {
             result = set.sadd(memberSet);
         }
@@ -111,13 +113,13 @@ public class SetLRUCache {
     }
 
     public Set<BytesKey> spop(int slot, byte[] cacheKey, int count) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisSet set = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisSet set = localCache.get(slotCacheKey);
         Set<BytesKey> result = null;
         if (set != null) {
             result = set.spop(count);
         }
-        set = localCacheForWrite.get(slot, bytesKey);
+        set = localCacheForWrite.get(slotCacheKey);
         if (set != null) {
             if (result != null) {
                 set.srem(result);
@@ -129,13 +131,13 @@ public class SetLRUCache {
     }
 
     public Set<BytesKey> srem(int slot, byte[] cacheKey, Collection<BytesKey> members) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisSet set = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisSet set = localCache.get(slotCacheKey);
         Set<BytesKey> result = null;
         if (set != null) {
             result = set.srem(members);
         }
-        set = localCacheForWrite.get(slot, bytesKey);
+        set = localCacheForWrite.get(slotCacheKey);
         if (set != null) {
             result = set.srem(members);
         }
@@ -143,9 +145,9 @@ public class SetLRUCache {
     }
 
     public void del(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        localCache.remove(slot, bytesKey);
-        localCacheForWrite.remove(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCache.remove(slotCacheKey);
+        localCacheForWrite.remove(slotCacheKey);
     }
 
     public void clear() {

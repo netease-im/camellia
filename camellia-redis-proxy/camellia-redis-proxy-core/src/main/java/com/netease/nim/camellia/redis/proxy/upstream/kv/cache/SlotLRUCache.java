@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class SlotLRUCache<V> {
 
-    private final ConcurrentLinkedHashMap<BytesKey, V>[] array;
+    private final ConcurrentLinkedHashMap<SlotCacheKey, V>[] array;
     private final int segmentSize;
     private final boolean is2Power;
 
@@ -22,7 +22,7 @@ public class SlotLRUCache<V> {
         is2Power = MathUtil.is2Power(segmentSize);
         array = new ConcurrentLinkedHashMap[segmentSize];
         for (int i = 0; i< segmentSize; i++) {
-            ConcurrentLinkedHashMap<BytesKey, V> subMap = new ConcurrentLinkedHashMap.Builder<BytesKey, V>()
+            ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = new ConcurrentLinkedHashMap.Builder<SlotCacheKey, V>()
                     .initialCapacity(capacity / segmentSize)
                     .maximumWeightedCapacity(capacity / segmentSize)
                     .build();
@@ -30,46 +30,46 @@ public class SlotLRUCache<V> {
         }
     }
 
-    public V get(int slot, BytesKey cacheKey) {
-        int index = MathUtil.mod(is2Power, slot, segmentSize);
-        ConcurrentLinkedHashMap<BytesKey, V> subMap = array[index];
+    public V get(SlotCacheKey cacheKey) {
+        int index = MathUtil.mod(is2Power, cacheKey.getSlot(), segmentSize);
+        ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
         return subMap.get(cacheKey);
     }
 
 
-    public void put(int slot, BytesKey cacheKey, V value) {
-        int index = MathUtil.mod(is2Power, slot, segmentSize);
-        ConcurrentLinkedHashMap<BytesKey, V> subMap = array[index];
+    public void put(SlotCacheKey cacheKey, V value) {
+        int index = MathUtil.mod(is2Power, cacheKey.getSlot(), segmentSize);
+        ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
         subMap.put(cacheKey, value);
     }
 
-    public void remove(int slot, BytesKey cacheKey) {
-        int index = MathUtil.mod(is2Power, slot, segmentSize);
-        ConcurrentLinkedHashMap<BytesKey, V> subMap = array[index];
+    public void remove(SlotCacheKey cacheKey) {
+        int index = MathUtil.mod(is2Power, cacheKey.getSlot(), segmentSize);
+        ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
         subMap.remove(cacheKey);
     }
 
     public void clear() {
-        for (ConcurrentLinkedHashMap<BytesKey, V> subMap : array) {
+        for (ConcurrentLinkedHashMap<SlotCacheKey, V> subMap : array) {
             subMap.clear();
         }
     }
 
     public void clear(int slot) {
         int index = MathUtil.mod(is2Power, slot, segmentSize);
-        ConcurrentLinkedHashMap<BytesKey, V> subMap = array[index];
-        subMap.clear();
+        ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
+        subMap.entrySet().removeIf(entry -> entry.getKey().getSlot() == slot);
     }
 
     public void setCapacity(int capacity) {
-        for (ConcurrentLinkedHashMap<BytesKey, V> subMap : array) {
+        for (ConcurrentLinkedHashMap<SlotCacheKey, V> subMap : array) {
             subMap.setCapacity(capacity / segmentSize);
         }
     }
 
     public long size() {
         long estimateSize = 0;
-        for (ConcurrentLinkedHashMap<BytesKey, V> map : array) {
+        for (ConcurrentLinkedHashMap<SlotCacheKey, V> map : array) {
             estimateSize += map.size();
         }
         return estimateSize;
@@ -77,9 +77,9 @@ public class SlotLRUCache<V> {
 
     public long estimateSize() {
         long estimateSize = 0;
-        for (ConcurrentLinkedHashMap<BytesKey, V> map : array) {
-            estimateSize += map.size() * 8L;
-            for (Map.Entry<BytesKey, V> entry : map.entrySet()) {
+        for (ConcurrentLinkedHashMap<SlotCacheKey, V> map : array) {
+            estimateSize += map.size() * 12L;
+            for (Map.Entry<SlotCacheKey, V> entry : map.entrySet()) {
                 estimateSize += entry.getKey().getKey().length;
                 V value = entry.getValue();
                 if (value instanceof EstimateSizeValue) {

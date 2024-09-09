@@ -68,42 +68,45 @@ public class ZSetLRUCache {
     }
 
     public void putZSetForWrite(int slot, byte[] cacheKey, RedisZSet zSet) {
-        localCacheForWrite.put(slot, new BytesKey(cacheKey), zSet);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCacheForWrite.put(slotCacheKey, zSet);
     }
 
     public void putZSetForRead(int slot, byte[] cacheKey, RedisZSet zSet) {
-        localCache.put(slot, new BytesKey(cacheKey), zSet);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCache.put(slotCacheKey, zSet);
     }
 
     public RedisZSet getForRead(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisZSet zSet = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         if (zSet == null) {
-            zSet = localCacheForWrite.get(slot, bytesKey);
+            zSet = localCacheForWrite.get(slotCacheKey);
             if (zSet != null) {
-                localCache.put(slot, bytesKey, zSet);
-                localCacheForWrite.remove(slot, bytesKey);
+                localCache.put(slotCacheKey, zSet);
+                localCacheForWrite.remove(slotCacheKey);
             }
         }
         return zSet;
     }
 
     public RedisZSet getForWrite(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisZSet zSet = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         if (zSet == null) {
-            zSet = localCacheForWrite.get(slot, bytesKey);
+            zSet = localCacheForWrite.get(slotCacheKey);
         }
         return zSet;
     }
 
     public Map<BytesKey, Double> zadd(int slot, byte[] cacheKey, Map<BytesKey, Double> map) {
-        RedisZSet zSet = localCache.get(slot, new BytesKey(cacheKey));
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         Map<BytesKey, Double> result = null;
         if (zSet != null) {
             result = zSet.zadd(map);
         }
-        zSet = localCacheForWrite.get(slot, new BytesKey(cacheKey));
+        zSet = localCacheForWrite.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zadd(map);
         }
@@ -111,13 +114,13 @@ public class ZSetLRUCache {
     }
 
     public Map<BytesKey, Double> zrem(int slot, byte[] cacheKey, Collection<BytesKey> members) {
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
         Map<BytesKey, Double> result = null;
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zrem(members);
         }
-        zSet = localCacheForWrite.get(slot, bytesKey);
+        zSet = localCacheForWrite.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zrem(members);
         }
@@ -125,13 +128,13 @@ public class ZSetLRUCache {
     }
 
     public Map<BytesKey, Double> zremrangeByRank(int slot, byte[] cacheKey, int start, int stop) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
         Map<BytesKey, Double> result = null;
-        RedisZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zremrangeByRank(start, stop);
         }
-        zSet = localCacheForWrite.get(slot, bytesKey);
+        zSet = localCacheForWrite.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zremrangeByRank(start, stop);
         }
@@ -139,14 +142,13 @@ public class ZSetLRUCache {
     }
 
     public Map<BytesKey, Double> zremrangeByScore(int slot, byte[] cacheKey, ZSetScore minScore, ZSetScore maxScore) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
         Map<BytesKey, Double> result = null;
-
-        RedisZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zremrangeByScore(minScore, maxScore);
         }
-        zSet = localCacheForWrite.get(slot, bytesKey);
+        zSet = localCacheForWrite.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zremrangeByScore(minScore, maxScore);
         }
@@ -154,14 +156,13 @@ public class ZSetLRUCache {
     }
 
     public Map<BytesKey, Double> zremrangeByLex(int slot, byte[] cacheKey, ZSetLex minLex, ZSetLex maxLex) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
         Map<BytesKey, Double> result = null;
-
-        RedisZSet zSet = localCache.get(slot, bytesKey);
+        RedisZSet zSet = localCache.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zremrangeByLex(minLex, maxLex);
         }
-        zSet = localCacheForWrite.get(slot, bytesKey);
+        zSet = localCacheForWrite.get(slotCacheKey);
         if (zSet != null) {
             result = zSet.zremrangeByLex(minLex, maxLex);
         }
@@ -169,9 +170,9 @@ public class ZSetLRUCache {
     }
 
     public void del(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        localCache.remove(slot, bytesKey);
-        localCacheForWrite.remove(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCache.remove(slotCacheKey);
+        localCacheForWrite.remove(slotCacheKey);
     }
 
     public void clear() {

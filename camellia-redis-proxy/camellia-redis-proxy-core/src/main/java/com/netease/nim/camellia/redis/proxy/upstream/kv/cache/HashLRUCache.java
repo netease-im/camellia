@@ -67,43 +67,45 @@ public class HashLRUCache {
     }
 
     public void putAllForRead(int slot, byte[] cacheKey, RedisHash hash) {
-        localCache.put(slot, new BytesKey(cacheKey), hash);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCache.put(slotCacheKey, hash);
     }
 
     public void putAllForWrite(int slot, byte[] cacheKey, RedisHash hash) {
-        localCacheForWrite.put(slot, new BytesKey(cacheKey), hash);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCacheForWrite.put(slotCacheKey, hash);
     }
 
     public RedisHash getForRead(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisHash hash = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisHash hash = localCache.get(slotCacheKey);
         if (hash == null) {
-            hash = localCacheForWrite.get(slot, bytesKey);
+            hash = localCacheForWrite.get(slotCacheKey);
             if (hash != null) {
-                localCache.put(slot, bytesKey, hash);
-                localCacheForWrite.remove(slot, bytesKey);
+                localCache.put(slotCacheKey, hash);
+                localCacheForWrite.remove(slotCacheKey);
             }
         }
         return hash;
     }
 
     public RedisHash getForWrite(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisHash hash = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisHash hash = localCache.get(slotCacheKey);
         if (hash == null) {
-            hash = localCacheForWrite.get(slot, bytesKey);
+            hash = localCacheForWrite.get(slotCacheKey);
         }
         return hash;
     }
 
     public Map<BytesKey, byte[]> hset(int slot, byte[] cacheKey, Map<BytesKey, byte[]> fieldMap) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisHash hash1 = localCacheForWrite.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisHash hash1 = localCacheForWrite.get(slotCacheKey);
         Map<BytesKey, byte[]> result1 = null;
         if (hash1 != null) {
             result1 = hash1.hset(fieldMap);
         }
-        RedisHash hash2 = localCache.get(slot, bytesKey);
+        RedisHash hash2 = localCache.get(slotCacheKey);
         Map<BytesKey, byte[]> result2 = null;
         if (hash2 != null) {
             result2 = hash2.hset(fieldMap);
@@ -115,13 +117,13 @@ public class HashLRUCache {
     }
 
     public Map<BytesKey, byte[]> hdel(int slot, byte[] cacheKey, Set<BytesKey> fields) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        RedisHash hash1 = localCacheForWrite.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        RedisHash hash1 = localCacheForWrite.get(slotCacheKey);
         Map<BytesKey, byte[]> result1 = null;
         if (hash1 != null) {
             result1 = hash1.hdel(fields);
         }
-        RedisHash hash2 = localCache.get(slot, bytesKey);
+        RedisHash hash2 = localCache.get(slotCacheKey);
         Map<BytesKey, byte[]> result2 = null;
         if (hash2 != null) {
             result2 = hash2.hdel(fields);
@@ -133,9 +135,9 @@ public class HashLRUCache {
     }
 
     public void del(int slot, byte[] cacheKey) {
-        BytesKey bytesKey = new BytesKey(cacheKey);
-        localCache.remove(slot, bytesKey);
-        localCacheForWrite.remove(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, cacheKey);
+        localCache.remove(slotCacheKey);
+        localCacheForWrite.remove(slotCacheKey);
     }
 
     public void clear() {

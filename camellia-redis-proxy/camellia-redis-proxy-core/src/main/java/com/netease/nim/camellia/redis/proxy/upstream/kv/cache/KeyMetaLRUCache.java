@@ -5,8 +5,6 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
-import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,12 +56,12 @@ public class KeyMetaLRUCache {
     }
 
     public ValueWrapper<KeyMeta> get(int slot, byte[] key) {
-        BytesKey bytesKey = new BytesKey(key);
-        KeyMeta keyMeta = localCache.get(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, key);
+        KeyMeta keyMeta = localCache.get(slotCacheKey);
         if (keyMeta != null) {
             return () -> keyMeta;
         }
-        Boolean bool = nullCache.get(slot, bytesKey);
+        Boolean bool = nullCache.get(slotCacheKey);
         if (bool != null) {
             return () -> null;
         }
@@ -71,21 +69,21 @@ public class KeyMetaLRUCache {
     }
 
     public void remove(int slot, byte[] key) {
-        BytesKey bytesKey = new BytesKey(key);
-        localCache.remove(slot, bytesKey);
-        nullCache.put(slot, bytesKey, Boolean.TRUE);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, key);
+        localCache.remove(slotCacheKey);
+        nullCache.put(slotCacheKey, Boolean.TRUE);
     }
 
     public void put(int slot, byte[] key, KeyMeta keyMeta) {
-        BytesKey bytesKey = new BytesKey(key);
-        localCache.put(slot, bytesKey, keyMeta);
-        nullCache.remove(slot, bytesKey);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, key);
+        localCache.put(slotCacheKey, keyMeta);
+        nullCache.remove(slotCacheKey);
     }
 
     public void setNull(int slot, byte[] key) {
-        BytesKey bytesKey = new BytesKey(key);
-        localCache.remove(slot, bytesKey);
-        nullCache.put(slot, bytesKey, Boolean.TRUE);
+        SlotCacheKey slotCacheKey = new SlotCacheKey(slot, key);
+        localCache.remove(slotCacheKey);
+        nullCache.put(slotCacheKey, Boolean.TRUE);
     }
 
     public void clear() {
