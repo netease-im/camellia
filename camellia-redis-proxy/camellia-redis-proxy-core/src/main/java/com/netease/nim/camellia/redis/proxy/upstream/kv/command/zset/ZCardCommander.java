@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -36,6 +37,47 @@ public class ZCardCommander extends Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length == 2;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return IntegerReply.REPLY_0;
+        }
+        if (keyMeta.getKeyType() != KeyType.zset) {
+            return ErrorReply.WRONG_TYPE;
+        }
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisZSet zSet = bufferValue.getValue();
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return IntegerReply.parse(zSet.zcard());
+        }
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
+            if (zSet != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return IntegerReply.parse(zSet.zcard());
+            }
+        }
+
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
+        if (encodeVersion == EncodeVersion.version_0) {
+            return IntegerReply.parse(BytesUtils.toInt(keyMeta.getExtra()));
+        }
+
+        return null;
     }
 
     @Override

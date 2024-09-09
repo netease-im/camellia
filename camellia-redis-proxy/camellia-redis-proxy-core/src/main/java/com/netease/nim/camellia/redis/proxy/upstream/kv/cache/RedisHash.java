@@ -6,15 +6,16 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by caojiajun on 2024/6/5
  */
 public class RedisHash implements EstimateSizeValue {
-    private final Map<BytesKey, byte[]> map;
+    private final ConcurrentHashMap<BytesKey, byte[]> map;
     private long estimateSize = 0;
 
-    public RedisHash(Map<BytesKey, byte[]> map) {
+    public RedisHash(ConcurrentHashMap<BytesKey, byte[]> map) {
         this.map = map;
         for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
             estimateSize += entry.getKey().getKey().length;
@@ -23,7 +24,7 @@ public class RedisHash implements EstimateSizeValue {
     }
 
     public RedisHash duplicate() {
-        return new RedisHash(new HashMap<>(map));
+        return new RedisHash(new ConcurrentHashMap<>(map));
     }
 
     public Map<BytesKey, byte[]> hset(Map<BytesKey, byte[]> fieldMap) {

@@ -21,6 +21,7 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * HSETNX key field value
@@ -81,7 +82,7 @@ public class HSetNxCommander extends Hash0Commander {
         BytesKey filedKey = new BytesKey(field);
 
         if (first) {
-            Map<BytesKey, byte[]> fieldMap = new HashMap<>();
+            ConcurrentHashMap<BytesKey, byte[]> fieldMap = new ConcurrentHashMap<>();
             fieldMap.put(new BytesKey(field), value);
             Result result = hashWriteBuffer.put(cacheKey, new RedisHash(fieldMap));
 
@@ -93,13 +94,13 @@ public class HSetNxCommander extends Hash0Commander {
 
             if (cacheConfig.isHashLocalCacheEnable()) {
                 HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new ConcurrentHashMap<>(fieldMap)));
             }
 
             byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
 
             if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(slot, subKey, value));
+                submitAsyncWriteTask(slot, result, () -> kvClient.put(slot, subKey, value));
             } else {
                 kvClient.put(slot, subKey, value);
             }
@@ -139,7 +140,7 @@ public class HSetNxCommander extends Hash0Commander {
                     type = KvCacheMonitor.Type.kv_store;
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
+                    ConcurrentHashMap<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
                     hash = new RedisHash(map);
                     hashLRUCache.putAllForWrite(slot, cacheKey, hash);
                 }
@@ -202,7 +203,7 @@ public class HSetNxCommander extends Hash0Commander {
         if (!result.isKvWriteDelayEnable()) {
             kvClient.put(slot, keyValue.getKey(), keyValue.getValue());
         } else {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.put(slot, keyValue.getKey(), keyValue.getValue()));
+            submitAsyncWriteTask(slot, result, () -> kvClient.put(slot, keyValue.getKey(), keyValue.getValue()));
         }
     }
 }

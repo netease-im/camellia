@@ -13,6 +13,7 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by caojiajun on 2024/5/15
@@ -24,12 +25,12 @@ public abstract class Hash0Commander extends Commander {
     }
 
     protected final RedisHash loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
-        Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
+        ConcurrentHashMap<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         return new RedisHash(map);
     }
 
-    protected final Map<BytesKey, byte[]> hgetallFromKv(int slot, KeyMeta keyMeta, byte[] key) {
-        Map<BytesKey, byte[]> map = new HashMap<>();
+    protected final ConcurrentHashMap<BytesKey, byte[]> hgetallFromKv(int slot, KeyMeta keyMeta, byte[] key) {
+        ConcurrentHashMap<BytesKey, byte[]> map = new ConcurrentHashMap<>();
         byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();

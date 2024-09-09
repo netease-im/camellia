@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -33,10 +34,25 @@ public class GetCommander extends Commander {
     }
 
     @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        return execute0(valueWrapper.get());
+    }
+
+    @Override
     protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
+        return execute0(keyMeta);
+    }
+
+    private Reply execute0(KeyMeta keyMeta) {
         if (keyMeta == null) {
             return BulkReply.NIL_REPLY;
         }

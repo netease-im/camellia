@@ -118,7 +118,7 @@ public class KvGcExecutor {
             }
             submitExecutor.submit(() -> {
                 try {
-                    deleteExecutor.submit(key, new SubKeyDeleteTask(slot, key, namespace, keyMeta, kvClient, keyDesign, kvConfig));
+                    deleteExecutor.submit(slot, new SubKeyDeleteTask(slot, key, namespace, keyMeta, kvClient, keyDesign, kvConfig));
                 } catch (Exception e) {
                     logger.warn("execute sub key delete task error, ex = {}", e.toString());
                 }
@@ -186,7 +186,7 @@ public class KvGcExecutor {
                             continue;
                         }
                         if (key != null && keyMeta.getKeyType() != KeyType.string) {
-                            deleteExecutor.submit(key, new SubKeyDeleteTask(slot, key, namespace, keyMeta, kvClient, keyDesign, kvConfig));
+                            deleteExecutor.submit(slot, new SubKeyDeleteTask(slot, key, namespace, keyMeta, kvClient, keyDesign, kvConfig));
                         }
                         if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
                             kvClient.checkAndDelete(slot, startKey, keyValue.getValue());

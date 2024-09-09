@@ -181,7 +181,7 @@ public class ZAddCommander extends ZSet0Commander {
                 list.add(keyValue2);
             }
             if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
+                submitAsyncWriteTask(slot, result, () -> kvClient.batchPut(slot, list));
             } else {
                 kvClient.batchPut(slot, list);
             }
@@ -229,7 +229,7 @@ public class ZAddCommander extends ZSet0Commander {
                 }
             }
             if (result.isKvWriteDelayEnable()) {
-                submitAsyncWriteTask(cacheKey, result, () -> {
+                submitAsyncWriteTask(slot, result, () -> {
                     if (!toDeleteSubKey2.isEmpty()) {
                         kvClient.batchDelete(slot, toDeleteSubKey2.toArray(new byte[0][0]));
                     }
@@ -276,7 +276,7 @@ public class ZAddCommander extends ZSet0Commander {
             i+=2;
         }
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
+            submitAsyncWriteTask(slot, result, () -> kvClient.batchPut(slot, list));
         } else {
             kvClient.batchPut(slot, list);
         }

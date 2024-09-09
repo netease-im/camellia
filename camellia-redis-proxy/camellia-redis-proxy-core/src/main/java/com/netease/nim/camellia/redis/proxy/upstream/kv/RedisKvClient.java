@@ -20,10 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBuffer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.KvExecutors;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
@@ -35,10 +32,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
-import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +55,7 @@ public class RedisKvClient implements IUpstreamClient {
     private final Resource resource;
     private final String namespace;
     private Commanders commanders;
+    private boolean runToCompletionEnable;
 
     public RedisKvClient(RedisKvResource resource) {
         this.resource = resource;
@@ -102,7 +97,7 @@ public class RedisKvClient implements IUpstreamClient {
                 List<byte[]> keys = command.getKeys();
                 if (keys.size() == 1) {
                     byte[] key = keys.get(0);
-                    sendCommand(key, command, future);
+                    sendCommand(redisCommand, key, command, future);
                 } else {
                     sendMultiKeyCommand(redisCommand, command, future);
                 }
@@ -115,7 +110,48 @@ public class RedisKvClient implements IUpstreamClient {
         this.executor = KvExecutors.getInstance().getCommandExecutor();
         this.scanCommandExecutor = KvExecutors.getInstance().getScanCommandExecutor();
         this.commanders = initCommanders();
+        initConf();
         logger.info("RedisKvClient start success, resource = {}", getResource());
+    }
+
+
+    private void sendCommand(RedisCommand redisCommand, byte[] key, Command command, CompletableFuture<Reply> future) {
+        try {
+            int slot = RedisClusterCRC16Utils.getSlot(key);
+            Commander commander = commanders.getCommander(redisCommand);
+            if (commander == null) {
+                future.complete(Utils.commandNotSupport(redisCommand));
+                return;
+            }
+            if (!commanders.parse(commander, command)) {
+                future.complete(ErrorReply.argNumWrong(redisCommand));
+                return;
+            }
+            if (redisCommand.getType() == RedisCommand.Type.READ) {
+                if (runToCompletionEnable && executor.canRunToCompletion(slot)) {
+                    Reply reply = commanders.runToCompletion(commander, slot, command);
+                    if (reply != null) {
+                        future.complete(reply);
+                        return;
+                    }
+                }
+            }
+            executor.submit(slot, () -> {
+                try {
+                    Reply reply = commanders.execute(commander, slot, command);
+                    if (reply == null) {
+                        ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
+                    }
+                    future.complete(reply);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+            });
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
+            future.complete(ErrorReply.TOO_BUSY);
+        }
     }
 
     private void sendNoneKeyCommand(RedisCommand redisCommand, Command command, CompletableFuture<Reply> future) {
@@ -139,7 +175,12 @@ public class RedisKvClient implements IUpstreamClient {
         try {
             scanCommandExecutor.submit(() -> {
                 try {
-                    Reply reply = commanders.execute(command);
+                    Commander commander = commanders.getCommander(RedisCommand.SCAN);
+                    if (!commanders.parse(commander, command)) {
+                        future.complete(ErrorReply.argNumWrong(RedisCommand.SCAN));
+                        return;
+                    }
+                    Reply reply = commanders.execute(commander, -1, command);
                     if (reply == null) {
                         ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
                     }
@@ -161,7 +202,7 @@ public class RedisKvClient implements IUpstreamClient {
             List<CompletableFuture<Reply>> futures = new ArrayList<>(keys.size());
             for (byte[] key : keys) {
                 CompletableFuture<Reply> f = new CompletableFuture<>();
-                sendCommand(key, new Command(new byte[][]{redisCommand.raw(), key}), f);
+                sendCommand(redisCommand, key, new Command(new byte[][]{redisCommand.raw(), key}), f);
                 futures.add(f);
             }
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
@@ -169,7 +210,7 @@ public class RedisKvClient implements IUpstreamClient {
             List<CompletableFuture<Reply>> futures = new ArrayList<>(keys.size());
             for (byte[] key : keys) {
                 CompletableFuture<Reply> f = new CompletableFuture<>();
-                sendCommand(key, new Command(new byte[][]{RedisCommand.GET.raw(), key}), f);
+                sendCommand(RedisCommand.GET, key, new Command(new byte[][]{RedisCommand.GET.raw(), key}), f);
                 futures.add(f);
             }
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
@@ -192,7 +233,7 @@ public class RedisKvClient implements IUpstreamClient {
                 byte[] key = objects[i];
                 byte[] value = objects[i+1];
                 CompletableFuture<Reply> f = new CompletableFuture<>();
-                sendCommand(key, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), f);
+                sendCommand(RedisCommand.SET, key, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), f);
                 futures.add(f);
             }
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
@@ -206,26 +247,6 @@ public class RedisKvClient implements IUpstreamClient {
             });
         } else {
             future.complete(Utils.commandNotSupport(redisCommand));
-        }
-    }
-
-    private void sendCommand(byte[] key, Command command, CompletableFuture<Reply> future) {
-        try {
-            executor.submit(key, () -> {
-                try {
-                    Reply reply = commanders.execute(command);
-                    if (reply == null) {
-                        ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
-                    }
-                    future.complete(reply);
-                } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
-                    future.complete(ErrorReply.NOT_AVAILABLE);
-                }
-            });
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
-            future.complete(ErrorReply.TOO_BUSY);
         }
     }
 
@@ -305,6 +326,19 @@ public class RedisKvClient implements IUpstreamClient {
         } else {
             throw new KvException("init redis template error");
         }
+    }
+
+    private void initConf() {
+        final String confKey = "kv.run.to.completion.enable";
+        this.runToCompletionEnable = RedisKvConf.getBoolean(namespace, confKey, true);
+        logger.info("namespace = {}, runToCompletionEnable = {}", namespace, runToCompletionEnable);
+        ProxyDynamicConf.registerCallback(() -> {
+            boolean runToCompletionEnable = RedisKvConf.getBoolean(namespace, confKey, true);
+            if (RedisKvClient.this.runToCompletionEnable != runToCompletionEnable) {
+                RedisKvClient.this.runToCompletionEnable = runToCompletionEnable;
+                logger.info("namespace = {}, runToCompletionEnable = {}", namespace, runToCompletionEnable);
+            }
+        });
     }
 
     @Override

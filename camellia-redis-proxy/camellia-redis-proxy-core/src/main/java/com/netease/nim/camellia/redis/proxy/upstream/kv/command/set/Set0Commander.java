@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
@@ -25,12 +26,12 @@ public abstract class Set0Commander extends Commander {
     }
 
     protected final RedisSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
-        Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
+        ConcurrentHashSet<BytesKey> set = smembersFromKv(slot, keyMeta, key);
         return new RedisSet(set);
     }
 
-    protected final Set<BytesKey> smembersFromKv(int slot, KeyMeta keyMeta, byte[] key) {
-        Set<BytesKey> set = new HashSet<>();
+    protected final ConcurrentHashSet<BytesKey> smembersFromKv(int slot, KeyMeta keyMeta, byte[] key) {
+        ConcurrentHashSet<BytesKey> set = new ConcurrentHashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
@@ -60,7 +61,7 @@ public abstract class Set0Commander extends Commander {
     }
 
     protected final Set<BytesKey> srandmemberFromKv(int slot, KeyMeta keyMeta, byte[] key, int count) {
-        Set<BytesKey> result = new HashSet<>();
+        Set<BytesKey> result = new ConcurrentHashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit;
@@ -96,7 +97,7 @@ public abstract class Set0Commander extends Commander {
             list.add(keyValue);
         }
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchPut(slot, list));
+            submitAsyncWriteTask(slot, result, () -> kvClient.batchPut(slot, list));
         } else {
             kvClient.batchPut(slot, list);
         }
@@ -112,7 +113,7 @@ public abstract class Set0Commander extends Commander {
             i++;
         }
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> {
+            submitAsyncWriteTask(slot, result, () -> {
                 kvClient.batchDelete(slot, subKeys);
                 if (checkSCard) {
                     if (getSizeFromKv(slot, keyMeta, key) == 0) {

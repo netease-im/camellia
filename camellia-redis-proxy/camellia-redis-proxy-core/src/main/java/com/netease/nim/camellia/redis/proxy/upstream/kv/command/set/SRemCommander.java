@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.DeleteType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
@@ -108,7 +109,7 @@ public class SRemCommander extends Set0Commander {
             if (result == null) {
                 RedisSet set = setLRUCache.getForWrite(slot, cacheKey);
                 if (set != null) {
-                    result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
+                    result = setWriteBuffer.put(cacheKey, new RedisSet(new ConcurrentHashSet<>(set.smembers())));
                     if (set.isEmpty()) {
                         deleteType = DeleteType.delete_all;
                     } else {

@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
@@ -86,7 +87,7 @@ public class SAddCommander extends Set0Commander {
         KvCacheMonitor.Type type = null;
 
         if (first) {
-            set = new RedisSet(new HashSet<>(memberSet));
+            set = new RedisSet(new ConcurrentHashSet<>(memberSet));
             result = setWriteBuffer.put(cacheKey, set);
             //
             if (result != NoOpResult.INSTANCE) {
@@ -109,7 +110,7 @@ public class SAddCommander extends Set0Commander {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
 
             if (first) {
-                set = new RedisSet(new HashSet<>(memberSet));
+                set = new RedisSet(new ConcurrentHashSet<>(memberSet));
                 setLRUCache.putAllForWrite(slot, cacheKey, set);
             } else {
                 Set<BytesKey> existsSet = setLRUCache.sadd(slot, cacheKey, memberSet);

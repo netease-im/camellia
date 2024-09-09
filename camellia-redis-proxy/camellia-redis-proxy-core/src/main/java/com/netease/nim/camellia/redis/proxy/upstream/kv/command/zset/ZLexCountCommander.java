@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetLex;
@@ -42,6 +43,65 @@ public class ZLexCountCommander extends ZSet0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length == 4;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+
+        if (keyMeta == null) {
+            return IntegerReply.REPLY_0;
+        }
+        if (keyMeta.getKeyType() != KeyType.zset) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        ZSetLex minLex;
+        ZSetLex maxLex;
+        try {
+            minLex = ZSetLex.fromLex(objects[2]);
+            maxLex = ZSetLex.fromLex(objects[3]);
+            if (minLex == null || maxLex == null) {
+                return new ErrorReply("ERR min or max not valid string range item");
+            }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ZLexCountCommander.class, "zlexcount command syntax error, illegal min/max lex");
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (minLex.isMax() || maxLex.isMin()) {
+            return IntegerReply.REPLY_0;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisZSet zSet = bufferValue.getValue();
+            int zcount = zSet.zlexcount(minLex, maxLex);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return IntegerReply.parse(zcount);
+        }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
+
+            if (zSet != null) {
+                int zcount = zSet.zlexcount(minLex, maxLex);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return IntegerReply.parse(zcount);
+            }
+        }
+
+        return null;
     }
 
     @Override

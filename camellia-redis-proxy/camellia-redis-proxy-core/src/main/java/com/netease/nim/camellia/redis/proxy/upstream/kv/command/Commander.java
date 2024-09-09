@@ -51,6 +51,15 @@ public abstract class Commander {
         this.setWriteBuffer = commanderConfig.getSetWriteBuffer();
     }
 
+    /**
+     * for read command
+     * run to completion thread
+     * only contains lru cache read
+     */
+    public Reply runToCompletion(int slot, Command command) {
+        return null;
+    }
+
     public abstract RedisCommand redisCommand();
 
     protected abstract boolean parse(Command command);
@@ -65,9 +74,9 @@ public abstract class Commander {
         return cacheRedisTemplate.sync(futures, cacheConfig.cacheTimeoutMillis());
     }
 
-    protected final void submitAsyncWriteTask(byte[] cacheKey, Result result, Runnable runnable) {
+    protected final void submitAsyncWriteTask(int slot, Result result, Runnable runnable) {
         try {
-            asyncWriteExecutor.submit(cacheKey, () -> {
+            asyncWriteExecutor.submit(slot, () -> {
                 try {
                     runnable.run();
                 } finally {

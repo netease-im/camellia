@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.*;
@@ -44,6 +45,62 @@ public class ZRevRangeByScoreCommander extends ZSet0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length >= 4;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return MultiBulkReply.EMPTY;
+        }
+        if (keyMeta.getKeyType() != KeyType.zset) {
+            return ErrorReply.WRONG_TYPE;
+        }
+        boolean withScores = ZSetWithScoresUtils.isWithScores(objects, 4);
+
+        ZSetScore maxScore;
+        ZSetScore minScore;
+        ZSetLimit limit;
+        try {
+            maxScore = ZSetScore.fromBytes(objects[2]);
+            minScore = ZSetScore.fromBytes(objects[3]);
+            limit = ZSetLimit.fromBytes(objects, 4);
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ZRevRangeByScoreCommander.class, "zrevrangebyscore command syntax error, illegal min/max/limit");
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (minScore.getScore() > maxScore.getScore()) {
+            return MultiBulkReply.EMPTY;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisZSet zSet = bufferValue.getValue();
+            List<ZSetTuple> list = zSet.zrevrangeByScore(minScore, maxScore, limit);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return ZSetTupleUtils.toReply(list, withScores);
+        }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
+
+            if (zSet != null) {
+                List<ZSetTuple> list = zSet.zrevrangeByScore(minScore, maxScore, limit);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, withScores);
+            }
+        }
+        return null;
     }
 
     @Override

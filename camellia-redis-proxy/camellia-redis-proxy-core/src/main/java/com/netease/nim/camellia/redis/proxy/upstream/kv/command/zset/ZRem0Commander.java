@@ -35,7 +35,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         }
 
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> kvClient.batchDelete(slot, delStoreKeys.toArray(new byte[0][0])));
+            submitAsyncWriteTask(slot, result, () -> kvClient.batchDelete(slot, delStoreKeys.toArray(new byte[0][0])));
         } else {
             kvClient.batchDelete(slot, delStoreKeys.toArray(new byte[0][0]));
         }
@@ -144,7 +144,7 @@ public abstract class ZRem0Commander extends ZSet0Commander {
         }
 
         if (result.isKvWriteDelayEnable()) {
-            submitAsyncWriteTask(cacheKey, result, () -> {
+            submitAsyncWriteTask(slot, result, () -> {
                 if (!deleteSubKeys.isEmpty()) {
                     kvClient.batchDelete(slot, deleteSubKeys.toArray(new byte[0][0]));
                 }

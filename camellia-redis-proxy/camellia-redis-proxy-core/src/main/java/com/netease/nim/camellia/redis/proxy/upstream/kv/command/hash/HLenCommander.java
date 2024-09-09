@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -38,6 +39,36 @@ public class HLenCommander extends Hash0Commander {
     }
 
     @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return IntegerReply.REPLY_0;
+        }
+        if (keyMeta.getKeyType() != KeyType.hash) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        Reply reply = getSizeFromCache(slot, keyMeta, key, cacheKey, false);
+        if (reply != null) {
+            return reply;
+        }
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0) {
+            int size = BytesUtils.toInt(keyMeta.getExtra());
+            return IntegerReply.parse(size);
+        }
+        return null;
+    }
+
+    @Override
     protected Reply execute(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
@@ -51,7 +82,7 @@ public class HLenCommander extends Hash0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        Reply reply = getSizeFromCache(slot, keyMeta, key, cacheKey);
+        Reply reply = getSizeFromCache(slot, keyMeta, key, cacheKey, true);
         if (reply != null) {
             return reply;
         }
@@ -68,7 +99,7 @@ public class HLenCommander extends Hash0Commander {
         }
     }
 
-    private Reply getSizeFromCache(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey) {
+    private Reply getSizeFromCache(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean checkHotKey) {
         WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
         if (writeBufferValue != null) {
             RedisHash hash = writeBufferValue.getValue();
@@ -82,14 +113,16 @@ public class HLenCommander extends Hash0Commander {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(hash.hlen());
             }
-            EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-            if (encodeVersion == EncodeVersion.version_1) {
-                boolean hotKey = hashLRUCache.isHotKey(key);
-                if (hotKey) {
-                    hash = loadLRUCache(slot, keyMeta, key);
-                    hashLRUCache.putAllForRead(slot, cacheKey, hash);
-                    KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-                    return IntegerReply.parse(hash.hlen());
+            if (checkHotKey) {
+                EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+                if (encodeVersion == EncodeVersion.version_1) {
+                    boolean hotKey = hashLRUCache.isHotKey(key);
+                    if (hotKey) {
+                        hash = loadLRUCache(slot, keyMeta, key);
+                        hashLRUCache.putAllForRead(slot, cacheKey, hash);
+                        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
+                        return IntegerReply.parse(hash.hlen());
+                    }
                 }
             }
         }

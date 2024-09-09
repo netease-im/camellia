@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -34,6 +35,50 @@ public class SCardCommander extends Set0Commander {
     @Override
     protected boolean parse(Command command) {
         return command.getObjects().length == 2;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return IntegerReply.REPLY_0;
+        }
+        if (keyMeta.getKeyType() != KeyType.set) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+        WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisSet set = bufferValue.getValue();
+            //
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return IntegerReply.parse(set.scard());
+        }
+        if (cacheConfig.isSetLocalCacheEnable()) {
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
+            RedisSet set = setLRUCache.getForRead(slot, cacheKey);
+
+            if (set != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return IntegerReply.parse(set.scard());
+            }
+        }
+
+        if (encodeVersion == EncodeVersion.version_0) {
+            return IntegerReply.parse(BytesUtils.toInt(keyMeta.getExtra()));
+        }
+
+        return null;
     }
 
     @Override

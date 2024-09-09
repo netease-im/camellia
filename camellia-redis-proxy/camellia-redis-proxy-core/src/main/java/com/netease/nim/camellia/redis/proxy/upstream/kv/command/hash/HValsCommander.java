@@ -7,12 +7,14 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * HVALS key
@@ -34,6 +36,44 @@ public class HValsCommander extends Hash0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length == 2;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return MultiBulkReply.EMPTY;
+        }
+        if (keyMeta.getKeyType() != KeyType.hash) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        if (writeBufferValue != null) {
+            RedisHash hash = writeBufferValue.getValue();
+            if (hash != null) {
+                KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply(writeBufferValue.getValue().hgetAll());
+            }
+        }
+
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+            RedisHash hash = hashLRUCache.getForRead(slot, cacheKey);
+            if (hash != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply(hash.hgetAll());
+            }
+        }
+        return null;
     }
 
     @Override
@@ -76,7 +116,7 @@ public class HValsCommander extends Hash0Commander {
         }
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
-        Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
+        ConcurrentHashMap<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
             cacheConfig.getHashLRUCache().putAllForRead(slot, cacheKey, new RedisHash(map));
         }

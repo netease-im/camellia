@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.HashLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -35,6 +36,47 @@ public class HGetCommander extends Hash0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length == 3;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        byte[] field = objects[2];
+
+        //meta
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return BulkReply.NIL_REPLY;
+        }
+        if (keyMeta.getKeyType() != KeyType.hash) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisHash> writeBufferValue = hashWriteBuffer.get(cacheKey);
+        if (writeBufferValue != null) {
+            byte[] bytes = writeBufferValue.getValue().hget(new BytesKey(field));
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return new BulkReply(bytes);
+        }
+
+        if (cacheConfig.isHashLocalCacheEnable()) {
+            HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
+
+            RedisHash hash = hashLRUCache.getForRead(slot, cacheKey);
+            if (hash != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return new BulkReply(hash.hget(new BytesKey(field)));
+            }
+        }
+
+        return null;
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetTuple;
@@ -43,6 +44,51 @@ public class ZRankCommander extends ZSet0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length == 3 || objects.length == 4;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return BulkReply.NIL_REPLY;
+        }
+        if (keyMeta.getKeyType() != KeyType.zset) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        BytesKey member = new BytesKey(objects[2]);
+        boolean withScores = ZSetWithScoresUtils.isWithScores(objects, 3);
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisZSet zSet = bufferValue.getValue();
+            Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return toReply(zrank, withScores);
+        }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
+
+            if (zSet != null) {
+                Pair<Integer, ZSetTuple> zrank = zSet.zrank(member);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return toReply(zrank, withScores);
+            }
+
+        }
+
+        return null;
     }
 
     @Override

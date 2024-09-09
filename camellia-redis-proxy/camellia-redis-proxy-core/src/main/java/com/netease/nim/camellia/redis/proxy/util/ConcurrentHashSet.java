@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import java.util.AbstractSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -11,6 +12,12 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
     private final ConcurrentHashMap<E, Boolean> map = new ConcurrentHashMap<>();
 
     public ConcurrentHashSet() {
+    }
+
+    public ConcurrentHashSet(Set<E> set) {
+        for (E e : set) {
+            map.put(e, Boolean.TRUE);
+        }
     }
 
     public int size() {

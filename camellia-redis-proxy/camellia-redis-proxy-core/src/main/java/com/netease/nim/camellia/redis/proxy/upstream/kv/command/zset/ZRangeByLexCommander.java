@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisZSet;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ZSetLRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.*;
@@ -38,6 +39,64 @@ public class ZRangeByLexCommander extends ZRangeByLex0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length >= 4;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return MultiBulkReply.EMPTY;
+        }
+        if (keyMeta.getKeyType() != KeyType.zset) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        ZSetLex minLex;
+        ZSetLex maxLex;
+        ZSetLimit limit;
+        try {
+            minLex = ZSetLex.fromLex(objects[2]);
+            maxLex = ZSetLex.fromLex(objects[3]);
+            if (minLex == null || maxLex == null) {
+                return new ErrorReply("ERR min or max not valid string range item");
+            }
+            limit = ZSetLimit.fromBytes(objects, 4);
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ZRangeByLexCommander.class, "zlrangebylex command syntax error, illegal min/max lex");
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (minLex.isMax() || maxLex.isMin()) {
+            return MultiBulkReply.EMPTY;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisZSet> bufferValue = zsetWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisZSet zSet = bufferValue.getValue();
+            List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            return ZSetTupleUtils.toReply(list, false);
+        }
+
+        if (cacheConfig.isZSetLocalCacheEnable()) {
+            ZSetLRUCache zSetLRUCache = cacheConfig.getZSetLRUCache();
+
+            RedisZSet zSet = zSetLRUCache.getForRead(slot, cacheKey);
+            if (zSet != null) {
+                List<ZSetTuple> list = zSet.zrangeByLex(minLex, maxLex, limit);
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                return ZSetTupleUtils.toReply(list, false);
+            }
+        }
+
+        return null;
     }
 
     @Override

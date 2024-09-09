@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
@@ -34,6 +35,51 @@ public class SMIsMemberCommander extends Set0Commander {
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
         return objects.length >= 3;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        List<BytesKey> members = new ArrayList<>();
+        for (int i=2; i<objects.length; i++) {
+            members.add(new BytesKey(objects[i]));
+        }
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            Reply[] replies = new Reply[members.size()];
+            Arrays.fill(replies, IntegerReply.REPLY_0);
+            return new MultiBulkReply(replies);
+        }
+        if (keyMeta.getKeyType() != KeyType.set) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisSet set = bufferValue.getValue();
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            Map<BytesKey, Boolean> smismember = set.smismember(members);
+            return toReply(smismember, members);
+        }
+        if (cacheConfig.isSetLocalCacheEnable()) {
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
+            RedisSet set = setLRUCache.getForRead(slot, cacheKey);
+
+            if (set != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                Map<BytesKey, Boolean> smismember = set.smismember(members);
+                return toReply(smismember, members);
+            }
+        }
+        return null;
     }
 
     @Override

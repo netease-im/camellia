@@ -207,7 +207,7 @@ public class HDelCommander extends Hash0Commander {
                 }
             }
         } else {
-            submitAsyncWriteTask(cacheKey, result, () -> {
+            submitAsyncWriteTask(slot, result, () -> {
                 kvClient.batchDelete(slot, subKeys);
                 if (checkHLen) {
                     if (checkHLenZero(slot, key, keyMeta)) {

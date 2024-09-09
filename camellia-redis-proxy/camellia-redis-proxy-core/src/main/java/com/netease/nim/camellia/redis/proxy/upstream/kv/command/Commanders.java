@@ -11,11 +11,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -99,25 +96,32 @@ public class Commanders {
         map.put(commander.redisCommand(), commander);
     }
 
-    public Reply execute(Command command) {
-        RedisCommand redisCommand = command.getRedisCommand();
-        Commander commander = map.get(redisCommand);
-        if (commander == null) {
-            return Utils.commandNotSupport(redisCommand);
-        }
+    public Commander getCommander(RedisCommand redisCommand) {
+        return map.get(redisCommand);
+    }
+
+    public boolean parse(Commander commander, Command command) {
+        return commander.parse(command);
+    }
+
+    public Reply runToCompletion(Commander commander, int slot, Command command) {
         try {
-            if (!commander.parse(command)) {
-                return ErrorReply.argNumWrong(redisCommand);
-            }
-            List<byte[]> keys = command.getKeys();
-            int slot;
-            if (keys.isEmpty()) {
-                slot = -1;
-            } else {
-                slot = RedisClusterCRC16Utils.getSlot(keys.get(0));
-            }
+            return commander.runToCompletion(slot, command);
+        } catch (Throwable e) {
+            return onException(command.getRedisCommand(), e);
+        }
+    }
+
+    public Reply execute(Commander commander, int slot, Command command) {
+        try {
             return commander.execute(slot, command);
-        } catch (KvException | IllegalArgumentException e) {
+        } catch (Throwable e) {
+            return onException(command.getRedisCommand(), e);
+        }
+    }
+
+    private Reply onException(RedisCommand redisCommand, Throwable e) {
+        if (e instanceof KvException || e instanceof IllegalArgumentException) {
             ErrorLogCollector.collect(Commanders.class, redisCommand + " execute error", e);
             String message = e.getMessage();
             if (message != null) {
@@ -129,9 +133,9 @@ public class Commanders {
             } else {
                 return ErrorReply.SYNTAX_ERROR;
             }
-        } catch (Throwable e) {
-            ErrorLogCollector.collect(Commanders.class, redisCommand + " execute error", e);
-            return new ErrorReply("ERR command execute error");
         }
+        ErrorLogCollector.collect(Commanders.class, redisCommand + " execute error", e);
+        return new ErrorReply("ERR command execute error");
     }
+
 }

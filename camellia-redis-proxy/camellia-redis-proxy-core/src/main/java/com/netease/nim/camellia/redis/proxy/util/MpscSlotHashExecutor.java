@@ -8,9 +8,7 @@ import org.jctools.queues.MpscBlockingConsumerArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,6 +27,8 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
     private final AtomicLong workerIdGen = new AtomicLong(1);
     private final List<WorkThread> workThreads;
     private final RejectedExecutionHandler rejectedExecutionHandler;
+
+    private final AtomicLong[] slots = new AtomicLong[RedisClusterCRC16Utils.SLOT_SIZE];
 
     public MpscSlotHashExecutor(String name, int poolSize, int queueSize) {
         this(name, poolSize, queueSize, defaultRejectedPolicy, null);
@@ -49,109 +49,41 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
         this.poolSize = poolSize;
         this.poolSizeIs2Power = MathUtil.is2Power(poolSize);
         this.rejectedExecutionHandler = rejectedExecutionHandler;
+        for (int i=0; i<slots.length; i++) {
+            slots[i] = new AtomicLong();
+        }
         logger.info("MpscSlotHashExecutor start success, name = {}, poolSize = {}, queueSize = {}", name, poolSize, queueSize);
     }
 
     /**
-     * 根据hashKey计算index
-     * @param key key
-     * @return index
-     */
-    public int hashIndex(String key) {
-        return hashIndex(key.getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * 根据hashKey计算index
-     * @param key key
-     * @return index
-     */
-    public int hashIndex(byte[] key) {
-        int slot = RedisClusterCRC16Utils.getSlot(key);
-        return MathUtil.mod(poolSizeIs2Power, slot, poolSize);
-    }
-
-    /**
      * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param key key
+     * @param slot slot
      * @param runnable 无返回结果的任务
      * @return 任务结果
      */
-    public Future<Void> submit(byte[] key, Runnable runnable) {
-        int index = hashIndex(key);
-        FutureTask<Void> task = new FutureTask<>(runnable, null);
+    public Future<Void> submit(int slot, Runnable runnable) {
+        int index = MathUtil.mod(poolSizeIs2Power, slot, poolSize);
+        SlotTask task = new SlotTask(slot, runnable);
+        AtomicLong slotCounter = slots[slot];
+        slotCounter.incrementAndGet();
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
-            rejectedExecutionHandler.rejectedExecution(task, this);
+            try {
+                rejectedExecutionHandler.rejectedExecution(task, this);
+            } finally {
+                slotCounter.decrementAndGet();
+            }
         }
         return task;
     }
 
-    /**
-     * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param key key
-     * @param runnable 无返回结果的任务
-     * @return 任务结果
-     */
-    public Future<Void> submit(String key, Runnable runnable) {
-        return submit(key.getBytes(StandardCharsets.UTF_8), runnable);
-    }
-
-    /**
-     * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param key key
-     * @param callable 有返回结果的任务
-     * @return 任务结果
-     * @param <T> 返回结果的类型
-     */
-    public <T> Future<T> submit(byte[] key, Callable<T> callable) {
-        int index = hashIndex(key);
-        FutureTask<T> task = new FutureTask<>(callable);
-        boolean success = workThreads.get(index).submit(task);
-        if (!success) {
-            rejectedExecutionHandler.rejectedExecution(task, this);
-        }
-        return task;
-    }
-
-    /**
-     * 根据hashKey选取一个固定的工作线程执行一个任务
-     * @param key key
-     * @param callable 有返回结果的任务
-     * @return 任务结果
-     * @param <T> 返回结果的类型
-     */
-    public <T> Future<T> submit(String key, Callable<T> callable) {
-        return submit(key.getBytes(StandardCharsets.UTF_8), callable);
+    public boolean canRunToCompletion(int slot) {
+        return slots[slot].get() == 0;
     }
 
     @Override
     public String getName() {
         return name;
-    }
-
-    public int getPoolSize() {
-        return poolSize;
-    }
-
-    /**
-     * 获取某个hashKey下的等待队列大小
-     * @param hashKey hashKey
-     * @return 大小
-     */
-    public int getQueueSize(String hashKey) {
-        return getQueueSize(hashKey.getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * 获取某个hashKey下的等待队列大小
-     * @param hashKey hashKey
-     * @return 大小
-     */
-    public int getQueueSize(byte[] hashKey) {
-        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
-        WorkThread workThread = workThreads.get(index);
-        return workThread.queueSize();
     }
 
     /**
@@ -191,9 +123,23 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
         }
     }
 
+    private static class SlotTask extends FutureTask<Void> {
+
+        private final int slot;
+
+        public SlotTask(int slot, Runnable runnable) {
+            super(runnable, null);
+            this.slot = slot;
+        }
+
+        public int getSlot() {
+            return slot;
+        }
+    }
+
     private static class WorkThread extends FastThreadLocalThread {
 
-        private final BlockingQueue<FutureTask<?>> queue;
+        private final BlockingQueue<SlotTask> queue;
         private final Runnable initCallback;
         private final MpscSlotHashExecutor executor;
 
@@ -204,7 +150,7 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
             this.initCallback = initCallback;
         }
 
-        public boolean submit(FutureTask<?> task) {
+        public boolean submit(SlotTask task) {
             return queue.offer(task);
         }
 
@@ -219,9 +165,13 @@ public class MpscSlotHashExecutor implements CamelliaExecutor {
             }
             while (true) {
                 try {
-                    FutureTask<?> task = queue.poll(1, TimeUnit.SECONDS);
+                    SlotTask task = queue.poll(1, TimeUnit.SECONDS);
                     if (task != null) {
-                        task.run();
+                        try {
+                            task.run();
+                        } finally {
+                            executor.slots[task.getSlot()].decrementAndGet();
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("MpscSlotHashExecutor execute task error, name = {}", executor.name, e);

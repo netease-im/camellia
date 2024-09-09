@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.WriteBufferValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.SetLRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
@@ -32,6 +33,46 @@ public class SIsMemberCommander extends Set0Commander {
     @Override
     protected boolean parse(Command command) {
         return command.getObjects().length == 3;
+    }
+
+    @Override
+    public Reply runToCompletion(int slot, Command command) {
+        byte[][] objects = command.getObjects();
+        byte[] key = objects[1];
+        byte[] member = objects[2];
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        if (valueWrapper == null) {
+            return null;
+        }
+        KeyMeta keyMeta = valueWrapper.get();
+        if (keyMeta == null) {
+            return IntegerReply.REPLY_0;
+        }
+        if (keyMeta.getKeyType() != KeyType.set) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
+
+        WriteBufferValue<RedisSet> bufferValue = setWriteBuffer.get(cacheKey);
+        if (bufferValue != null) {
+            RedisSet set = bufferValue.getValue();
+            KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
+            boolean sismeber = set.sismeber(new BytesKey(member));
+            return IntegerReply.parse(sismeber ? 1 : 0);
+        }
+        if (cacheConfig.isSetLocalCacheEnable()) {
+            SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
+
+            RedisSet set = setLRUCache.getForRead(slot, cacheKey);
+
+            if (set != null) {
+                KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
+                boolean sismeber = set.sismeber(new BytesKey(member));
+                return IntegerReply.parse(sismeber ? 1 : 0);
+            }
+        }
+        return null;
     }
 
     @Override
