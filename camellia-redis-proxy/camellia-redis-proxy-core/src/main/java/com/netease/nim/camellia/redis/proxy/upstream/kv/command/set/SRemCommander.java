@@ -16,7 +16,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.DeleteType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
@@ -109,7 +108,7 @@ public class SRemCommander extends Set0Commander {
             if (result == null) {
                 RedisSet set = setLRUCache.getForWrite(slot, cacheKey);
                 if (set != null) {
-                    result = setWriteBuffer.put(cacheKey, new RedisSet(new ConcurrentHashSet<>(set.smembers())));
+                    result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
                     if (set.isEmpty()) {
                         deleteType = DeleteType.delete_all;
                     } else {
@@ -151,10 +150,10 @@ public class SRemCommander extends Set0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            removeMembers(slot, keyMeta, key, cacheKey, members, result, false);
+            removeMembers(slot, keyMeta, key, members, result, false);
         } else {
             boolean checkSCard = deleteType == DeleteType.unknown;
-            removeMembers(slot, keyMeta, key, cacheKey, members, result, checkSCard);
+            removeMembers(slot, keyMeta, key, members, result, checkSCard);
         }
 
         if (deleteType == DeleteType.delete_all) {

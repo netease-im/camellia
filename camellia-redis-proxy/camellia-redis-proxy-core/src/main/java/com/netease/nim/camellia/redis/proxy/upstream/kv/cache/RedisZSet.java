@@ -6,8 +6,6 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.tools.utils.Pair;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Created by caojiajun on 2024/5/31
@@ -26,8 +24,8 @@ public class RedisZSet implements EstimateSizeValue {
         return BytesUtils.compare(o1.getMember().getKey(), o2.getMember().getKey());
     };
 
-    private final ConcurrentSkipListMap<BytesKey, Double> memberMap = new ConcurrentSkipListMap<>(rankComparator);
-    private final ConcurrentSkipListSet<ZSetTuple> scoreSet = new ConcurrentSkipListSet<>(scoreComparator);
+    private final TreeMap<BytesKey, Double> memberMap = new TreeMap<>(rankComparator);
+    private final TreeSet<ZSetTuple> scoreSet = new TreeSet<>(scoreComparator);
 
     private long estimateSize = 0;
 

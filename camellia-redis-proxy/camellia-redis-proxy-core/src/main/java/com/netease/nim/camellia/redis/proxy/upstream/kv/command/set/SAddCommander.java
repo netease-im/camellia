@@ -15,7 +15,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
@@ -87,7 +86,7 @@ public class SAddCommander extends Set0Commander {
         KvCacheMonitor.Type type = null;
 
         if (first) {
-            set = new RedisSet(new ConcurrentHashSet<>(memberSet));
+            set = new RedisSet(new HashSet<>(memberSet));
             result = setWriteBuffer.put(cacheKey, set);
             //
             if (result != NoOpResult.INSTANCE) {
@@ -110,7 +109,7 @@ public class SAddCommander extends Set0Commander {
             SetLRUCache setLRUCache = cacheConfig.getSetLRUCache();
 
             if (first) {
-                set = new RedisSet(new ConcurrentHashSet<>(memberSet));
+                set = new RedisSet(new HashSet<>(memberSet));
                 setLRUCache.putAllForWrite(slot, cacheKey, set);
             } else {
                 Set<BytesKey> existsSet = setLRUCache.sadd(slot, cacheKey, memberSet);
@@ -162,23 +161,23 @@ public class SAddCommander extends Set0Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return saddVersion0(slot, keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
+            return saddVersion0(slot, keyMeta, key, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
         if (encodeVersion == EncodeVersion.version_1) {
-            return saddVersion1(slot, keyMeta, key, cacheKey, first, memberSize, existsMemberSize, memberSet, result, type);
+            return saddVersion1(slot, keyMeta, key, first, memberSize, existsMemberSize, memberSet, result, type);
         }
 
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply saddVersion0(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
+    private Reply saddVersion0(int slot, KeyMeta keyMeta, byte[] key, boolean first, int memberSize,
                                int existsMemberSize, Set<BytesKey> memberSet, Result result, KvCacheMonitor.Type type) {
         if (type == null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
         if (first) {
-            writeMembers(slot, keyMeta, key, cacheKey, memberSet, result);
+            writeMembers(slot, keyMeta, key, memberSet, result);
             return IntegerReply.parse(memberSize);
         }
 
@@ -207,26 +206,26 @@ public class SAddCommander extends Set0Commander {
         updateKeyMeta(slot, keyMeta, key, add);
 
         if (add <= 0) {
-            writeMembers(slot, keyMeta, key, cacheKey, Collections.emptySet(), result);
+            writeMembers(slot, keyMeta, key, Collections.emptySet(), result);
         } else {
-            writeMembers(slot, keyMeta, key, cacheKey, memberSet, result);
+            writeMembers(slot, keyMeta, key, memberSet, result);
         }
 
         return IntegerReply.parse(memberSize - existsMemberSize);
     }
 
-    private Reply saddVersion1(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
+    private Reply saddVersion1(int slot, KeyMeta keyMeta, byte[] key, boolean first, int memberSize,
                                int existsMemberSize, Set<BytesKey> memberSet, Result result, KvCacheMonitor.Type type) {
         if (type == null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
         }
         if (first) {
-            writeMembers(slot, keyMeta, key, cacheKey, memberSet, result);
+            writeMembers(slot, keyMeta, key, memberSet, result);
         } else {
             if (memberSize == existsMemberSize) {
-                writeMembers(slot, keyMeta, key, cacheKey, Collections.emptySet(), result);
+                writeMembers(slot, keyMeta, key, Collections.emptySet(), result);
             } else {
-                writeMembers(slot, keyMeta, key, cacheKey, memberSet, result);
+                writeMembers(slot, keyMeta, key, memberSet, result);
             }
         }
         return IntegerReply.parse(memberSize);

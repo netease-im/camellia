@@ -112,7 +112,7 @@ public class SMembersCommander extends Set0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        ConcurrentHashSet<BytesKey> set = smembersFromKv(slot, keyMeta, key);
+        Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
 
         if (cacheConfig.isSetLocalCacheEnable()) {
             cacheConfig.getSetLRUCache().putAllForRead(slot, cacheKey, new RedisSet(set));

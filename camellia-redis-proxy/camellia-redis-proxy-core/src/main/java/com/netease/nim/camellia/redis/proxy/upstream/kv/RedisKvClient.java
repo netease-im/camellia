@@ -31,6 +31,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.DecoratorKVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by caojiajun on 2024/4/17
@@ -56,6 +58,7 @@ public class RedisKvClient implements IUpstreamClient {
     private final String namespace;
     private Commanders commanders;
     private boolean runToCompletionEnable;
+    private final SlotLock slotLock = new SlotLock();
 
     public RedisKvClient(RedisKvResource resource) {
         this.resource = resource;
@@ -127,18 +130,42 @@ public class RedisKvClient implements IUpstreamClient {
                 future.complete(ErrorReply.argNumWrong(redisCommand));
                 return;
             }
-            if (redisCommand.getType() == RedisCommand.Type.READ) {
-                if (runToCompletionEnable && executor.canRunToCompletion(slot)) {
-                    Reply reply = commanders.runToCompletion(commander, slot, command);
-                    if (reply != null) {
-                        future.complete(reply);
-                        return;
+            ReentrantReadWriteLock lock;
+            if (runToCompletionEnable) {
+                lock = slotLock.getLock(slot);
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+                    if (executor.canRunToCompletion(slot) && readLock.tryLock()) {
+                        Reply reply;
+                        try {
+                            reply = commanders.runToCompletion(commander, slot, command);
+                        } finally {
+                            readLock.unlock();
+                        }
+                        if (reply != null) {
+                            future.complete(reply);
+                            return;
+                        }
                     }
                 }
+            } else {
+                lock = null;
             }
             executor.submit(slot, () -> {
                 try {
-                    Reply reply = commanders.execute(commander, slot, command);
+                    ReentrantReadWriteLock.WriteLock writeLock = null;
+                    if (lock != null) {
+                        writeLock = lock.writeLock();
+                        writeLock.lock();
+                    }
+                    Reply reply;
+                    try {
+                        reply = commanders.execute(commander, slot, command);
+                    } finally {
+                        if (writeLock != null) {
+                            writeLock.unlock();
+                        }
+                    }
                     if (reply == null) {
                         ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
                     }

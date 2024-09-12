@@ -52,18 +52,34 @@ public abstract class Commander {
     }
 
     /**
-     * for read command
-     * run to completion thread
-     * only contains lru cache read
+     * for read command run to completion
+     * @param slot slot
+     * @param command command
+     * @return reply if run-to-completion success
      */
     public Reply runToCompletion(int slot, Command command) {
         return null;
     }
 
+    /**
+     * redis command of commander
+     * @return redis-command
+     */
     public abstract RedisCommand redisCommand();
 
+    /**
+     * check param
+     * @param command command
+     * @return success or fail
+     */
     protected abstract boolean parse(Command command);
 
+    /**
+     * execute command
+     * @param slot slot
+     * @param command command
+     * @return reply
+     */
     protected abstract Reply execute(int slot, Command command);
 
     protected final Reply sync(CompletableFuture<Reply> future) {

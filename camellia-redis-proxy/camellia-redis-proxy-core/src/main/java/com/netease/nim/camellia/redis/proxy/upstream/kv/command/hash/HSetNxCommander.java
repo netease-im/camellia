@@ -21,7 +21,6 @@ import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * HSETNX key field value
@@ -82,7 +81,7 @@ public class HSetNxCommander extends Hash0Commander {
         BytesKey filedKey = new BytesKey(field);
 
         if (first) {
-            ConcurrentHashMap<BytesKey, byte[]> fieldMap = new ConcurrentHashMap<>();
+            Map<BytesKey, byte[]> fieldMap = new HashMap<>();
             fieldMap.put(new BytesKey(field), value);
             Result result = hashWriteBuffer.put(cacheKey, new RedisHash(fieldMap));
 
@@ -94,7 +93,7 @@ public class HSetNxCommander extends Hash0Commander {
 
             if (cacheConfig.isHashLocalCacheEnable()) {
                 HashLRUCache hashLRUCache = cacheConfig.getHashLRUCache();
-                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new ConcurrentHashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             }
 
             byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
@@ -140,7 +139,7 @@ public class HSetNxCommander extends Hash0Commander {
                     type = KvCacheMonitor.Type.kv_store;
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    ConcurrentHashMap<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
+                    Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
                     hash = new RedisHash(map);
                     hashLRUCache.putAllForWrite(slot, cacheKey, hash);
                 }

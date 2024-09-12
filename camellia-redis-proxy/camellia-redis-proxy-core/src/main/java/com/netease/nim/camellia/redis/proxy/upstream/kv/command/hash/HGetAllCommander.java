@@ -16,7 +16,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * HGETALL key
@@ -108,7 +107,7 @@ public class HGetAllCommander extends Hash0Commander {
 
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
 
-        ConcurrentHashMap<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
+        Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         if (cacheConfig.isHashLocalCacheEnable()) {
             cacheConfig.getHashLRUCache().putAllForRead(slot, cacheKey, new RedisHash(map));
         }

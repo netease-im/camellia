@@ -9,7 +9,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
@@ -26,12 +25,12 @@ public abstract class Set0Commander extends Commander {
     }
 
     protected final RedisSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
-        ConcurrentHashSet<BytesKey> set = smembersFromKv(slot, keyMeta, key);
+        Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
         return new RedisSet(set);
     }
 
-    protected final ConcurrentHashSet<BytesKey> smembersFromKv(int slot, KeyMeta keyMeta, byte[] key) {
-        ConcurrentHashSet<BytesKey> set = new ConcurrentHashSet<>();
+    protected final Set<BytesKey> smembersFromKv(int slot, KeyMeta keyMeta, byte[] key) {
+        Set<BytesKey> set = new HashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
@@ -61,7 +60,7 @@ public abstract class Set0Commander extends Commander {
     }
 
     protected final Set<BytesKey> srandmemberFromKv(int slot, KeyMeta keyMeta, byte[] key, int count) {
-        Set<BytesKey> result = new ConcurrentHashSet<>();
+        Set<BytesKey> result = new HashSet<>();
         byte[] startKey = keyDesign.setMemberSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit;
@@ -88,7 +87,7 @@ public abstract class Set0Commander extends Commander {
         }
     }
 
-    protected final void writeMembers(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Set<BytesKey> memberSet, Result result) {
+    protected final void writeMembers(int slot, KeyMeta keyMeta, byte[] key, Set<BytesKey> memberSet, Result result) {
         List<KeyValue> list = new ArrayList<>(memberSet.size());
         for (BytesKey bytesKey : memberSet) {
             byte[] member = bytesKey.getKey();
@@ -103,7 +102,7 @@ public abstract class Set0Commander extends Commander {
         }
     }
 
-    protected final void removeMembers(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, Collection<BytesKey> members, Result result, boolean checkSCard) {
+    protected final void removeMembers(int slot, KeyMeta keyMeta, byte[] key, Collection<BytesKey> members, Result result, boolean checkSCard) {
         byte[][] subKeys = new byte[members.size()][];
         int i = 0;
         for (BytesKey bytesKey : members) {

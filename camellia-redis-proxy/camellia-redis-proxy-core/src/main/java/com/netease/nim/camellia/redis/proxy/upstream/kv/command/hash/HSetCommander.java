@@ -19,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -94,7 +93,7 @@ public class HSetCommander extends Hash0Commander {
         Result result = null;
         if (first) {
             existsCount = 0;
-            result = hashWriteBuffer.put(cacheKey, new RedisHash(new ConcurrentHashMap<>(fieldMap)));
+            result = hashWriteBuffer.put(cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             //
             if (result != NoOpResult.INSTANCE) {
                 KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), redisCommand().strRaw());
@@ -117,7 +116,7 @@ public class HSetCommander extends Hash0Commander {
 
             Map<BytesKey, byte[]> existMapByCache = null;
             if (first) {
-                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new ConcurrentHashMap<>(fieldMap)));
+                hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(new HashMap<>(fieldMap)));
             } else {
                 existMapByCache = hashLRUCache.hset(slot, cacheKey, fieldMap);
                 if (existMapByCache == null) {
@@ -127,7 +126,7 @@ public class HSetCommander extends Hash0Commander {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
-                        ConcurrentHashMap<BytesKey, byte[]> hgetall = hgetallFromKv(slot, keyMeta, key);
+                        Map<BytesKey, byte[]> hgetall = hgetallFromKv(slot, keyMeta, key);
                         hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(hgetall));
                         existMapByCache = hashLRUCache.hset(slot, cacheKey, fieldMap);
                     }

@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
-import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.*;
@@ -13,7 +12,7 @@ public class RedisSet implements EstimateSizeValue {
     private final Set<BytesKey> set;
     private long estimateSize = 0;
 
-    public RedisSet(ConcurrentHashSet<BytesKey> members) {
+    public RedisSet(Set<BytesKey> members) {
         this.set = members;
         for (BytesKey member : members) {
             estimateSize += member.getKey().length;
@@ -21,7 +20,7 @@ public class RedisSet implements EstimateSizeValue {
     }
 
     public RedisSet duplicate() {
-        return new RedisSet(new ConcurrentHashSet<>(set));
+        return new RedisSet(new HashSet<>(set));
     }
 
     public Set<BytesKey> sadd(Set<BytesKey> members) {

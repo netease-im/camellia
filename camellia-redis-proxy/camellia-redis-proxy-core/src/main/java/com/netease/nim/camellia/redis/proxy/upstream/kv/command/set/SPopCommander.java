@@ -14,10 +14,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.DeleteType;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -114,7 +114,7 @@ public class SPopCommander extends Set0Commander {
             if (result == null) {
                 RedisSet set = setLRUCache.getForWrite(slot, cacheKey);
                 if (set != null) {
-                    result = setWriteBuffer.put(cacheKey, new RedisSet(new ConcurrentHashSet<>(set.smembers())));
+                    result = setWriteBuffer.put(cacheKey, new RedisSet(new HashSet<>(set.smembers())));
                     if (set.isEmpty()) {
                         deleteType = DeleteType.delete_all;
                     } else {
@@ -139,10 +139,10 @@ public class SPopCommander extends Set0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            removeMembers(slot, keyMeta, key, cacheKey, spop, result, false);
+            removeMembers(slot, keyMeta, key, spop, result, false);
         } else {
             boolean checkSCard = deleteType == DeleteType.unknown;
-            removeMembers(slot, keyMeta, key, cacheKey, spop, result, checkSCard);
+            removeMembers(slot, keyMeta, key, spop, result, checkSCard);
         }
 
         if (deleteType == DeleteType.delete_all) {
