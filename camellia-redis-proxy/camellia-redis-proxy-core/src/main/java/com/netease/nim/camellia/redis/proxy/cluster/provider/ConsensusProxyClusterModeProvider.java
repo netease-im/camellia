@@ -394,13 +394,20 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue(json.getInteger("status"));
                 boolean online = status == ClusterModeStatus.Status.ONLINE;
                 AtomicLong count = CamelliaMapUtils.computeIfAbsent(failedNodes, node, k -> new AtomicLong());
-                count.set(0);
+                if (online) {
+                    count.set(0);
+                } else {
+                    count.set(-1);
+                }
                 return online;
             }
         } catch (Exception e) {
             logger.error("send heartbeat to follower error, follower = {}", node, e);
         }
         AtomicLong count = CamelliaMapUtils.computeIfAbsent(failedNodes, node, k -> new AtomicLong());
+        if (count.get() < 0) {
+            return false;
+        }
         count.incrementAndGet();
         if (strict) {
             return false;
