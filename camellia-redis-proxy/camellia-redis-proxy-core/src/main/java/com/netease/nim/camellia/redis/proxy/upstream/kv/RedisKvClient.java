@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeConfig;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvRunToCompletionMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -139,14 +140,19 @@ public class RedisKvClient implements IUpstreamClient {
                         Reply reply;
                         try {
                             reply = commanders.runToCompletion(commander, slot, command);
+                        } catch (Exception e) {
+                            ErrorLogCollector.collect(RedisKvClient.class, "send command run to completion error, command = " + command.getName(), e);
+                            reply = ErrorReply.INTERNAL_ERROR;
                         } finally {
                             readLock.unlock();
                         }
                         if (reply != null) {
+                            KvRunToCompletionMonitor.update(namespace, command.getName(), true);
                             future.complete(reply);
                             return;
                         }
                     }
+                    KvRunToCompletionMonitor.update(namespace, command.getName(), false);
                 }
             } else {
                 lock = null;

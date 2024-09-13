@@ -44,6 +44,7 @@ public class Stats {
     private List<KvGcStats> kvGcStatsList = new ArrayList<>();
     private List<KvWriteBufferStats> kvWriteBufferStatsList = new ArrayList<>();
     private List<KvStorageSpendStats> kvStorageSpendStatsList = new ArrayList<>();
+    private List<KvRunToCompletionStats> kvRunToCompletionStatsList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -299,5 +300,13 @@ public class Stats {
 
     public void setKvStorageSpendStatsList(List<KvStorageSpendStats> kvStorageSpendStatsList) {
         this.kvStorageSpendStatsList = kvStorageSpendStatsList;
+    }
+
+    public List<KvRunToCompletionStats> getKvRunToCompletionStatsList() {
+        return kvRunToCompletionStatsList;
+    }
+
+    public void setKvRunToCompletionStatsList(List<KvRunToCompletionStats> kvRunToCompletionStatsList) {
+        this.kvRunToCompletionStatsList = kvRunToCompletionStatsList;
     }
 }

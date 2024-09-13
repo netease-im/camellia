@@ -420,6 +420,18 @@ public class PrometheusMetrics {
                     kvWriteBufferStats.getNamespace(), kvWriteBufferStats.getType(), kvWriteBufferStats.getPending()));
         }
 
+        List<KvRunToCompletionStats> kvRunToCompletionStatsList = stats.getKvRunToCompletionStatsList();
+        builder.append("# HELP kv_run_to_completion Redis Proxy KV Run To Completion Stats\n");
+        builder.append("# TYPE kv_run_to_completion gauge\n");
+        for (KvRunToCompletionStats kvRunToCompletionStats : kvRunToCompletionStatsList) {
+            builder.append(prefix).append(String.format("kv_run_to_completion_stats{namespace=\"%s\", command=\"%s\", type=\"hit\"} %d\n",
+                    kvRunToCompletionStats.getNamespace(), kvRunToCompletionStats.getCommand(), kvRunToCompletionStats.getHit()));
+            builder.append(prefix).append(String.format("kv_run_to_completion_stats{namespace=\"%s\", command=\"%s\", type=\"not_hit\"} %d\n",
+                    kvRunToCompletionStats.getNamespace(), kvRunToCompletionStats.getCommand(), kvRunToCompletionStats.getNotHit()));
+            builder.append(prefix).append(String.format("kv_run_to_completion_stats{namespace=\"%s\", command=\"%s\", type=\"hit_rate\"} %f\n",
+                    kvRunToCompletionStats.getNamespace(), kvRunToCompletionStats.getCommand(), kvRunToCompletionStats.getHitRate()));
+        }
+
         return builder.toString();
     }
 

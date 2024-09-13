@@ -389,6 +389,19 @@ public class StatsJsonConverter {
         }
         monitorJson.put("kvStorageSpendStats", kvStorageSpendStatsJsonArray);
 
+        List<KvRunToCompletionStats> kvRunToCompletionStatsList = stats.getKvRunToCompletionStatsList();
+        JSONArray runToCompletionStatsJsonArray = new JSONArray();
+        for (KvRunToCompletionStats runToCompletionStats : kvRunToCompletionStatsList) {
+            JSONObject json = new JSONObject();
+            json.put("namespace", runToCompletionStats.getNamespace());
+            json.put("command", runToCompletionStats.getCommand());
+            json.put("hit", runToCompletionStats.getHit());
+            json.put("notHit", runToCompletionStats.getNotHit());
+            json.put("hitRate", runToCompletionStats.getHitRate());
+            runToCompletionStatsJsonArray.add(json);
+        }
+        monitorJson.put("kvRunToCompletionStats", runToCompletionStatsJsonArray);
+
         return monitorJson.toJSONString();
     }
 }

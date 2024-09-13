@@ -454,7 +454,7 @@ public class TestZSetV1 {
                     List<Map<String, Double>> list = new ArrayList<>();
                     Map<String, Double> map = new HashMap<>();
                     for (int i = 0; i < count; i++) {
-                        map.put("m-" + i, (double) (i + 1000));
+                        map.put(prefix + i, (double) (i + 1000));
                         if (map.size() >= 50) {
                             list.add(map);
                             map = new HashMap<>();

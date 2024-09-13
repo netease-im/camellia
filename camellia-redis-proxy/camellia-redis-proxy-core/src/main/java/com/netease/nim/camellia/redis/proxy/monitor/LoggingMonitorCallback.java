@@ -168,6 +168,14 @@ public class LoggingMonitorCallback implements MonitorCallback {
                         kvStorageSpendStats.getSpendMsP99(), kvStorageSpendStats.getSpendMsP999());
             }
 
+            logger.info("====kv.run.to.completion.stats====");
+            List<KvRunToCompletionStats> kvRunToCompletionStatsList = stats.getKvRunToCompletionStatsList();
+            for (KvRunToCompletionStats kvRunToCompletionStats : kvRunToCompletionStatsList) {
+                logger.info("namespace={},command={},hit={},not_hit={},hit_rate={}",
+                        kvRunToCompletionStats.getNamespace(), kvRunToCompletionStats.getCommand(),
+                        kvRunToCompletionStats.getHit(), kvRunToCompletionStats.getNotHit(), kvRunToCompletionStats.getHitRate());
+            }
+
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
