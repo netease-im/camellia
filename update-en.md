@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.30（2024/09/xx）
+# 1.2.30（2024/09/14）
 ### add
 * camellia-redis-proxy，plugin, add build-in KeyPrefixMultiWriteFunc for MultiWriteProxyPlugin, as the default config
 * camellia-redis-proxy，kv, support use run-to-completion to improve performance

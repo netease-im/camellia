@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.30（2024/09/xx）
+# 1.2.30（2024/09/14）
 ### 新增
 * camellia-redis-proxy，plugin模块，新增内置的KeyPrefixMultiWriteFunc，用于MultiWriteProxyPlugin，并作为默认值
 * camellia-redis-proxy，kv模块，支持使用run-to-completion来优化读命令的性能
