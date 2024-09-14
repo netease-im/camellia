@@ -4,7 +4,6 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
-import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.PrefixMatchHotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
@@ -30,7 +29,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String multiWriteFuncClassName = ProxyDynamicConf.getString("multi.write.func.className", PrefixMatchHotKeyCacheKeyChecker.class.getName());
+        String multiWriteFuncClassName = ProxyDynamicConf.getString("multi.write.func.class.name", KeyPrefixMultiWriteFunc.class.getName());
         this.multiWriteFunc = (MultiWriteFunc) factory.getBean(BeanInitUtils.parseClass(multiWriteFuncClassName));
         this.skipDb = ProxyDynamicConf.getBoolean("multi.write.plugin.skip.db.enable", false);
         int poolSize = ProxyDynamicConf.getInt("multi.write.executor.pool.size", Runtime.getRuntime().availableProcessors());

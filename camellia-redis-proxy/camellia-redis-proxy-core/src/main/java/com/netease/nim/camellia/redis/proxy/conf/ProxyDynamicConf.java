@@ -71,6 +71,14 @@ public class ProxyDynamicConf {
     }
 
     /**
+     * 获取所有配置
+     * @return conf
+     */
+    public static Map<String, String> getAll() {
+        return new HashMap<>(conf);
+    }
+
+    /**
      * 检查配置文件是否有变更。如果有，则重新加载，清空缓存，触发监听者的回调。因为不止一个地方调用，所以需要用CAS来防止并发。
      * Check the local configuration file for changes.
      * If so, reload, clear the cache, and trigger the callback of the listener.
