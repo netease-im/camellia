@@ -1,5 +1,19 @@
 [中文版](update-zh.md)
 
+# 1.2.30（2024/09/xx）
+### add
+* camellia-redis-proxy，plugin, add build-in KeyPrefixMultiWriteFunc for MultiWriteProxyPlugin, as the default config
+* camellia-redis-proxy，kv, support use run-to-completion to improve performance
+
+### update
+* camellia-redis-proxy，plugin, MultiWriteProxyPlugin, rename config key `multi.write.func.className` to `multi.write.func.class.name`
+* camellia-redis-proxy，kv, optimize lru cache clear on slot change
+* camellia-redis-proxy，kv, optimize ZSetIndexLRUCache slot calc
+
+### fix
+* camellia-redis-proxy, cluster, optimize cluster-mode-2 in some corner case
+
+
 # 1.2.29（2024/09/06）
 ### add
 * camellia-redis-proxy，kv, refactor KVClient, add slot parameter, it's a break change

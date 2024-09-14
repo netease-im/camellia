@@ -1,5 +1,19 @@
 [ENGLISH](update-en.md)
 
+# 1.2.30（2024/09/xx）
+### 新增
+* camellia-redis-proxy，plugin模块，新增内置的KeyPrefixMultiWriteFunc，用于MultiWriteProxyPlugin，并作为默认值
+* camellia-redis-proxy，kv模块，支持使用run-to-completion来优化读命令的性能
+
+### 更新
+* camellia-redis-proxy，plugin模块，MultiWriteProxyPlugin，配置项名称从 `multi.write.func.className` 修改为 `multi.write.func.class.name`
+* camellia-redis-proxy，kv模块，优化了节点上下线时，lru缓存的清理逻辑
+* camellia-redis-proxy，kv模块，优化了ZSetIndexLRUCache的slot计算
+
+### fix
+* camellia-redis-proxy, cluster模块，优化并修复了cluster-mode-2的一些边界场景
+
+
 # 1.2.29（2024/09/06）
 ### 新增
 * camellia-redis-proxy，kv模块，重构了KVClient的接口定义，新增slot参数，底层存储编码更新（破坏性，和1.2.28不兼容），从而可以同时适配range分区和hash分区的kv存储
