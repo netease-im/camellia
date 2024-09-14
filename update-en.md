@@ -9,6 +9,7 @@
 * camellia-redis-proxy，plugin, MultiWriteProxyPlugin, rename config key `multi.write.func.className` to `multi.write.func.class.name`
 * camellia-redis-proxy，kv, optimize lru cache clear on slot change
 * camellia-redis-proxy，kv, optimize ZSetIndexLRUCache slot calc
+* remove camellia-http-accelerate-proxy
 
 ### fix
 * camellia-redis-proxy, cluster, optimize cluster-mode-2 in some corner case

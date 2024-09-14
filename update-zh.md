@@ -9,6 +9,7 @@
 * camellia-redis-proxy，plugin模块，MultiWriteProxyPlugin，配置项名称从 `multi.write.func.className` 修改为 `multi.write.func.class.name`
 * camellia-redis-proxy，kv模块，优化了节点上下线时，lru缓存的清理逻辑
 * camellia-redis-proxy，kv模块，优化了ZSetIndexLRUCache的slot计算
+* camellia-http-accelerate-proxy，移除了本模块
 
 ### fix
 * camellia-redis-proxy, cluster模块，优化并修复了cluster-mode-2的一些边界场景
