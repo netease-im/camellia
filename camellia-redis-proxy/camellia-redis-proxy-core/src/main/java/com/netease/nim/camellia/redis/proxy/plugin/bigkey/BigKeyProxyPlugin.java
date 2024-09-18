@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.plugin.bigkey;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
@@ -15,7 +14,7 @@ public class BigKeyProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String callbackClassName = ProxyDynamicConf.getString("big.key.monitor.callback.className", DummyBigKeyMonitorCallback.class.getName());
+        String callbackClassName = BeanInitUtils.getClassName("big.key.monitor.callback", DummyBigKeyMonitorCallback.class.getName());
         Class<?> clazz = BeanInitUtils.parseClass(callbackClassName);
         BigKeyMonitorCallback callback = (BigKeyMonitorCallback) factory.getBean(clazz);
         bigKeyHunter = new BigKeyHunter(callback);

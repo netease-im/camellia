@@ -24,7 +24,7 @@ public class MonitorProxyPlugin implements ProxyPlugin {
         reloadConf();
         ProxyDynamicConf.registerCallback(this::reloadConf);
 
-        String slowCommandMonitorCallbackClassName = ProxyDynamicConf.getString("slow.command.monitor.callback.className", DummySlowCommandMonitorCallback.class.getName());
+        String slowCommandMonitorCallbackClassName = BeanInitUtils.getClassName("slow.command.monitor.callback", DummySlowCommandMonitorCallback.class.getName());
         slowCommandMonitorCallback = (SlowCommandMonitorCallback) factory.getBean(BeanInitUtils.parseClass(slowCommandMonitorCallbackClassName));
         CALLBACK_NAME = slowCommandMonitorCallback.getClass().getName();
     }

@@ -29,7 +29,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String multiWriteFuncClassName = ProxyDynamicConf.getString("multi.write.func.class.name", KeyPrefixMultiWriteFunc.class.getName());
+        String multiWriteFuncClassName = BeanInitUtils.getClassName("multi.write.func", KeyPrefixMultiWriteFunc.class.getName());
         this.multiWriteFunc = (MultiWriteFunc) factory.getBean(BeanInitUtils.parseClass(multiWriteFuncClassName));
         this.skipDb = ProxyDynamicConf.getBoolean("multi.write.plugin.skip.db.enable", false);
         int poolSize = ProxyDynamicConf.getInt("multi.write.executor.pool.size", Runtime.getRuntime().availableProcessors());

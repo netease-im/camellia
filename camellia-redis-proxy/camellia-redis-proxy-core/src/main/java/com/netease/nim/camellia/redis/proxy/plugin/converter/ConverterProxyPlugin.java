@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.plugin.converter;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
@@ -18,32 +17,32 @@ public class ConverterProxyPlugin implements ProxyPlugin {
     @Override
     public void init(ProxyBeanFactory factory) {
         ConverterConfig converterConfig = new ConverterConfig();
-        String keyConverterClassName = ProxyDynamicConf.getString("converter.key.className", null);
+        String keyConverterClassName = BeanInitUtils.getClassName("converter.key", null);
         if (keyConverterClassName != null) {
             KeyConverter keyConverter = (KeyConverter)factory.getBean(BeanInitUtils.parseClass(keyConverterClassName));
             converterConfig.setKeyConverter(keyConverter);
         }
-        String stringConverterClassName = ProxyDynamicConf.getString("converter.string.className", null);
+        String stringConverterClassName = BeanInitUtils.getClassName("converter.string", null);
         if (stringConverterClassName != null) {
             StringConverter stringConverter = (StringConverter)factory.getBean(BeanInitUtils.parseClass(stringConverterClassName));
             converterConfig.setStringConverter(stringConverter);
         }
-        String hashConverterClassName = ProxyDynamicConf.getString("converter.hash.className", null);
+        String hashConverterClassName = BeanInitUtils.getClassName("converter.hash", null);
         if (hashConverterClassName != null) {
             HashConverter hashConverter = (HashConverter)factory.getBean(BeanInitUtils.parseClass(hashConverterClassName));
             converterConfig.setHashConverter(hashConverter);
         }
-        String setConverterClassName = ProxyDynamicConf.getString("converter.set.className", null);
+        String setConverterClassName = BeanInitUtils.getClassName("converter.set", null);
         if (setConverterClassName != null) {
             SetConverter setConverter = (SetConverter)factory.getBean(BeanInitUtils.parseClass(setConverterClassName));
             converterConfig.setSetConverter(setConverter);
         }
-        String zsetConverterClassName = ProxyDynamicConf.getString("converter.zset.className", null);
+        String zsetConverterClassName = BeanInitUtils.getClassName("converter.zset", null);
         if (zsetConverterClassName != null) {
             ZSetConverter zsetConverter = (ZSetConverter)factory.getBean(BeanInitUtils.parseClass(zsetConverterClassName));
             converterConfig.setzSetConverter(zsetConverter);
         }
-        String listConverterClassName = ProxyDynamicConf.getString("converter.list.className", null);
+        String listConverterClassName = BeanInitUtils.getClassName("converter.list", null);
         if (listConverterClassName != null) {
             ListConverter listConverter = (ListConverter)factory.getBean(BeanInitUtils.parseClass(listConverterClassName));
             converterConfig.setListConverter(listConverter);

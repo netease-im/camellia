@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelUtils;
+import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -77,7 +78,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             this.currentNode = proxyNode;
             this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
             this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
-            String className = ProxyDynamicConf.getString("proxy.sentinel.mode.nodes.provider.class.name", DefaultProxySentinelModeNodesProvider.class.getName());
+            String className = BeanInitUtils.getClassName("proxy.sentinel.mode.nodes.provider", DefaultProxySentinelModeNodesProvider.class.getName());
             this.provider = ConfigInitUtil.initSentinelModeNodesProvider(className);
             this.provider.init(currentNode);
             //online nodes

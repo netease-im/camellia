@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
+import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -49,7 +50,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         initNodes(false);
         current();
         //init leader selector
-        String className = ProxyDynamicConf.getString("cluster.mode.consensus.leader.selector.class.name", RedisConsensusLeaderSelector.class.getName());
+        String className = BeanInitUtils.getClassName("cluster.mode.consensus.leader.selector", RedisConsensusLeaderSelector.class.getName());
         leaderSelector = ConfigInitUtil.initConsensusLeaderSelector(className);
         leaderSelector.init(current(), new ArrayList<>(initNodes(false)));
         //get leader

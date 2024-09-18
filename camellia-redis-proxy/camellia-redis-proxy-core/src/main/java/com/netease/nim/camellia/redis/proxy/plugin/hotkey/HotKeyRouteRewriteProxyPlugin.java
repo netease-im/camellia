@@ -21,10 +21,10 @@ public class HotKeyRouteRewriteProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String rewriteCheckerClassName = ProxyDynamicConf.getString("hot.key.route.rewriter.className", DefaultRouteRewriter.class.getName());
+        String rewriteCheckerClassName = BeanInitUtils.getClassName("hot.key.route.rewriter", DefaultRouteRewriter.class.getName());
         RouteRewriter routeRewriter = (RouteRewriter) factory.getBean(BeanInitUtils.parseClass(rewriteCheckerClassName));
 
-        String callbackClassName = ProxyDynamicConf.getString("hot.key.monitor.callback.className", DummyHotKeyMonitorCallback.class.getName());
+        String callbackClassName = BeanInitUtils.getClassName("hot.key.monitor.callback", DummyHotKeyMonitorCallback.class.getName());
         HotKeyMonitorCallback monitorCallback = (HotKeyMonitorCallback) factory.getBean(BeanInitUtils.parseClass(callbackClassName));
 
         this.rewriter = new HotKeyRouteRewriter(monitorCallback, routeRewriter);

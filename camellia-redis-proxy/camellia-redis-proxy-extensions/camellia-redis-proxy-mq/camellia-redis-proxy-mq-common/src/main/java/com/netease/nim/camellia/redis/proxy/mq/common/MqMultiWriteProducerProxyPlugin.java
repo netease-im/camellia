@@ -25,7 +25,7 @@ public class MqMultiWriteProducerProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String className = ProxyDynamicConf.getString("mq.multi.write.sender.className", null);
+        String className = BeanInitUtils.getClassName("mq.multi.write.sender", null);
         this.mqSender = (MqPackSender) factory.getBean(BeanInitUtils.parseClass(className));
         logger.info("mqSender init success, className = {}", className);
 

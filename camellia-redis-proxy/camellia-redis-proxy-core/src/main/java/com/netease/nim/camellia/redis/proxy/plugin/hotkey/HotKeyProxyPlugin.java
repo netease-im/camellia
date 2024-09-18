@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.plugin.bigkey.DummyBigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class HotKeyProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String callbackClassName = ProxyDynamicConf.getString("hot.key.monitor.callback.className", DummyHotKeyMonitorCallback.class.getName());
+        String callbackClassName = BeanInitUtils.getClassName("hot.key.monitor.callback", DummyHotKeyMonitorCallback.class.getName());
         Class<?> clazz = BeanInitUtils.parseClass(callbackClassName);
         HotKeyMonitorCallback callback = (HotKeyMonitorCallback) factory.getBean(clazz);
         manager = new HotKeyHunterManager(callback);

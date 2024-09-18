@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.plugin.hotkeycache;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
@@ -21,11 +20,11 @@ public class HotKeyCacheProxyPlugin implements ProxyPlugin {
         HotKeyCacheConfig hotKeyCacheConfig = new HotKeyCacheConfig();
 
         // Set hotKeyChecker and the default is PrefixMatchHotKeyCacheKeyChecker. Also, you can implement HotKeyCacheKeyChecker to customize a checker.
-        String hotKeyCacheKeyCheckerClassName = ProxyDynamicConf.getString("hot.key.cache.key.checker.className", PrefixMatchHotKeyCacheKeyChecker.class.getName());
+        String hotKeyCacheKeyCheckerClassName = BeanInitUtils.getClassName("hot.key.cache.key.checker", PrefixMatchHotKeyCacheKeyChecker.class.getName());
         HotKeyCacheKeyChecker hotKeyCacheKeyChecker = (HotKeyCacheKeyChecker) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheKeyCheckerClassName));
         hotKeyCacheConfig.setHotKeyCacheKeyChecker(hotKeyCacheKeyChecker);
 
-        String hotKeyCacheStatsCallbackClassName = ProxyDynamicConf.getString("hot.key.cache.stats.callback.className", DummyHotKeyCacheStatsCallback.class.getName());
+        String hotKeyCacheStatsCallbackClassName = BeanInitUtils.getClassName("hot.key.cache.stats.callback", DummyHotKeyCacheStatsCallback.class.getName());
         HotKeyCacheStatsCallback hotKeyCacheStatsCallback = (HotKeyCacheStatsCallback) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheStatsCallbackClassName));
         hotKeyCacheConfig.setHotKeyCacheStatsCallback(hotKeyCacheStatsCallback);
         manager = new HotKeyCacheManager(hotKeyCacheConfig);

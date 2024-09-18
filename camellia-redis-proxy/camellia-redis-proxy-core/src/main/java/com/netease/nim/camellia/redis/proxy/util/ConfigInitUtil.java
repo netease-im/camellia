@@ -50,7 +50,7 @@ public class ConfigInitUtil {
 
     public static ProxyNodesDiscovery initProxyNodesDiscovery(CamelliaServerProperties serverProperties,
                                                               ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
-        String className = ProxyDynamicConf.getString("proxy.nodes.discovery.className", DefaultProxyNodesDiscovery.class.getName());
+        String className = BeanInitUtils.getClassName("proxy.nodes.discovery", DefaultProxyNodesDiscovery.class.getName());
         if (className.equals(DefaultProxyNodesDiscovery.class.getName())) {
             return new DefaultProxyNodesDiscovery(proxyClusterModeProcessor, proxySentinelModeProcessor);
         } else if (className.equals(RedisProxyNodesDiscovery.class.getName())) {
