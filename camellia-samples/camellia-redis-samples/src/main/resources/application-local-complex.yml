@@ -1,7 +1,0 @@
-
-#see CamelliaRedisProperties
-camellia-redis:
-  type: local
-  local:
-    type: complex
-    json-file: resource-table.json

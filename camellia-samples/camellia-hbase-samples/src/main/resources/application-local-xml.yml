@@ -1,8 +1,0 @@
-
-#see CamelliaHBaseProperties
-camellia-hbase:
-  type: local
-  local:
-    xml:
-      xml-file: hbase.xml
-

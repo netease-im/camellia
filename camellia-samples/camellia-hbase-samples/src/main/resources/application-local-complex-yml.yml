@@ -1,9 +1,0 @@
-
-#see CamelliaHBaseProperties
-camellia-hbase:
-  type: local
-  local:
-    conf-type: yml
-    yml:
-      type: complex
-      json-file: resource-table.json

@@ -1,8 +1,0 @@
-
-#see CamelliaHBaseProperties
-camellia-hbase:
-  type: local
-  local:
-    conf-type: yml
-    yml:
-      resource: hbase://xxx1.163.org,xxx2.163.org,xxx3.163.org/hbase
