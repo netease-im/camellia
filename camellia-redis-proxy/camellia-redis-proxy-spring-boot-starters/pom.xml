@@ -15,19 +15,12 @@
 	</parent>
 
 	<modules>
-		<module>camellia-redis-proxy-hbase-spring-boot</module>
-		<module>camellia-redis-proxy-hbase-spring-boot-starter</module>
-		<module>camellia-redis-proxy-hbase-spring-boot3-starter</module>
-
-		<module>camellia-redis-proxy-nacos-spring-boot</module>
-		<module>camellia-redis-proxy-nacos-spring-boot-starter</module>
-		<module>camellia-redis-proxy-nacos-spring-boot3-starter</module>
-
 		<module>camellia-redis-proxy-spring-boot-starter</module>
 
-		<module>camellia-redis-proxy-zk-registry-spring-boot</module>
+		<module>camellia-redis-proxy-hbase-spring-boot-starter</module>
+		<module>camellia-redis-proxy-nacos-spring-boot-starter</module>
+
 		<module>camellia-redis-proxy-zk-registry-spring-boot-starter</module>
-		<module>camellia-redis-proxy-zk-registry-spring-boot3-starter</module>
 
 		<module>camellia-spring-redis-base</module>
 

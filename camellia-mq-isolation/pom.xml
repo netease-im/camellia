@@ -16,10 +16,10 @@
 
 	<modules>
 		<module>camellia-mq-isolation-core</module>
+
 		<module>camellia-mq-isolation-controller</module>
-		<module>camellia-mq-isolation-controller-spring-boot</module>
 		<module>camellia-mq-isolation-controller-spring-boot-starter</module>
-		<module>camellia-mq-isolation-controller-spring-boot3-starter</module>
+
 		<module>camellia-mq-isolation-kafka</module>
 	</modules>
 </project>

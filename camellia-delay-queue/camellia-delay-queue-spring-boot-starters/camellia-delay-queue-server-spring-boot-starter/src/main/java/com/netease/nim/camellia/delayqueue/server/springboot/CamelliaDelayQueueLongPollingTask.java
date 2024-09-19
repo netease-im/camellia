@@ -3,7 +3,6 @@ package com.netease.nim.camellia.delayqueue.server.springboot;
 import com.netease.nim.camellia.delayqueue.common.domain.CamelliaDelayMsgPullRequest;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import javax.servlet.AsyncContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**

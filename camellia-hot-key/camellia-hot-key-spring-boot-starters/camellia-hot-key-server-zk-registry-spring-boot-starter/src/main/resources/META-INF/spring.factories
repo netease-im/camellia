@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.netease.nim.camellia.redis.zk.registry.springboot.CamelliaHotKeyServerZkRegistryConfiguration

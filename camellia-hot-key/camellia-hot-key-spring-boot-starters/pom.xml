@@ -16,8 +16,6 @@
 
 	<modules>
 		<module>camellia-hot-key-server-spring-boot-starter</module>
-		<module>camellia-hot-key-server-zk-registry-spring-boot</module>
 		<module>camellia-hot-key-server-zk-registry-spring-boot-starter</module>
-		<module>camellia-hot-key-server-zk-registry-spring-boot3-starter</module>
 	</modules>
 </project>

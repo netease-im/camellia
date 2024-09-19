@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.netease.nim.camellia.id.gen.springboot.segment.CamelliaIdGenSegmentConfiguration
