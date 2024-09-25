@@ -1,5 +1,19 @@
 [中文版](update-zh.md)
 
+# 1.3.0（2024/10/xx）
+### add
+* camellia-redis-proxy, prerequisite `java_21` and `spring_boot3`
+* camellia-delay-queue, prerequisite `java_21` and `spring_boot3`
+* camellia-hot-key-server, prerequisite `java_21` and `spring_boot3`
+* camellia-id-gen-server, prerequisite `java_21` and `spring_boot3`
+
+### update
+* camellia-redis-proxy, update config key, both support `xxx.xxx.className` and `xxx.xxx.class.name`
+
+### fix
+* none
+
+
 # 1.2.30（2024/09/14）
 ### add
 * camellia-redis-proxy，plugin, add build-in KeyPrefixMultiWriteFunc for MultiWriteProxyPlugin, as the default config

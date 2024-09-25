@@ -1,5 +1,20 @@
 [ENGLISH](update-en.md)
 
+
+# 1.3.0（2024/10/xx）
+### 新增
+* camellia-redis-proxy，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
+* camellia-delay-queue，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
+* camellia-hot-key-server，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
+* camellia-id-gen-server，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
+
+### 更新
+* camellia-redis-proxy，调整了自定义实现类的配置名，同时支持 `xxx.xxx.className` 和 `xxx.xxx.class.name`
+
+### fix
+* 无
+
+
 # 1.2.30（2024/09/14）
 ### 新增
 * camellia-redis-proxy，plugin模块，新增内置的KeyPrefixMultiWriteFunc，用于MultiWriteProxyPlugin，并作为默认值
