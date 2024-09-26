@@ -12,7 +12,7 @@
 * camellia-redis-proxy，调整了自定义实现类的配置名，同时支持 `xxx.xxx.className` 和 `xxx.xxx.class.name`
 
 ### fix
-* 无
+* camellia-redis-proxy，kv模块，当key不存在时，zrem方法的返回格式错误
 
 
 # 1.2.30（2024/09/14）

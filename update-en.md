@@ -11,7 +11,7 @@
 * camellia-redis-proxy, update config key, both support `xxx.xxx.className` and `xxx.xxx.class.name`
 
 ### fix
-* none
+* camellia-redis-proxy，kv, zrem reply error when key not exists
 
 
 # 1.2.30（2024/09/14）

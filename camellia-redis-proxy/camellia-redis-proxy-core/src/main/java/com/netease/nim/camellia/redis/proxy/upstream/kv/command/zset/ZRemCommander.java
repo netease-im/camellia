@@ -47,7 +47,7 @@ public class ZRemCommander extends ZRem0Commander {
         byte[] key = objects[1];
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(slot, key);
         if (keyMeta == null) {
-            return MultiBulkReply.EMPTY;
+            return IntegerReply.REPLY_0;
         }
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
