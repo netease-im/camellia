@@ -44,7 +44,7 @@ high performance redis-proxy:
 * support multi-route-conf   
 * support ssl/tls, both client to proxy and proxy to upstream redis
 * support unix-domain-socket, both client to proxy and proxy to upstream redis
-* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [http](/docs/camellia-redis-proxy/other/http.md)
+* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [http_over_redis](/docs/camellia-redis-proxy/other/http_over_redis.md)
 * support tps/rt/big-key/hot-key/slow-command monitor  
 * support disguise as redis-cluster/redis-sentinel for high availability
 * support custom command plugin, support hot-key-cache(GET command)，support value converter and so on    
