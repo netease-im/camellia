@@ -6,10 +6,13 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientFactory;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +25,7 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
 
     private final ConcurrentHashMap<String, IUpstreamClient> clientCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Boolean> validCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastCheckValidTime = new ConcurrentHashMap<>();
 
     private final UpstreamRedisClientFactory factory;
 
@@ -33,13 +37,30 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
     }
 
     private void schedule() {
-        for (Map.Entry<String, IUpstreamClient> entry : clientCache.entrySet()) {
-            String url = entry.getKey();
-            boolean valid = entry.getValue().isValid();
-            if (!valid) {
-                logger.warn("IUpstreamClient with resource = {} not valid", url);
+        try {
+            long notActiveThresholdMs = ProxyDynamicConf.getInt("check.redis.resource.valid.not.active.threshold.seconds", 300) * 1000L;
+            Set<String> notActiveClients = new HashSet<>();
+            for (Map.Entry<String, IUpstreamClient> entry : clientCache.entrySet()) {
+                String url = entry.getKey();
+                boolean valid = entry.getValue().isValid();
+                if (!valid) {
+                    logger.warn("IUpstreamClient with resource = {} not valid", url);
+                }
+                validCache.put(url, valid);
+                Long lastCheckTime = lastCheckValidTime.get(url);
+                if (lastCheckTime != null && TimeCache.currentMillis - lastCheckTime > notActiveThresholdMs) {
+                    notActiveClients.add(url);
+                }
             }
-            validCache.put(url, valid);
+            if (!notActiveClients.isEmpty()) {
+                for (String url : notActiveClients) {
+                    clientCache.remove(url);
+                    validCache.remove(url);
+                    lastCheckValidTime.remove(url);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("ScheduledResourceChecker error", e);
         }
     }
 
@@ -51,11 +72,14 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
         boolean valid = client.isValid();
         logger.info("addResource to ScheduledResourceChecker, resource = {}, valid = {}", url, valid);
         validCache.put(url, valid);
+        lastCheckValidTime.put(url, TimeCache.currentMillis);
     }
 
     @Override
     public boolean checkValid(Resource resource) {
-        Boolean valid = validCache.get(resource.getUrl());
+        String url = resource.getUrl();
+        Boolean valid = validCache.get(url);
+        lastCheckValidTime.put(url, TimeCache.currentMillis);
         return valid == null || valid;
     }
 }
