@@ -44,12 +44,16 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
                 String url = entry.getKey();
                 boolean valid = entry.getValue().isValid();
                 if (!valid) {
-                    logger.warn("IUpstreamClient with resource = {} not valid", url);
+                    logger.warn("redis resource = {} not valid", url);
                 }
                 validCache.put(url, valid);
                 Long lastCheckTime = lastCheckValidTime.get(url);
-                if (lastCheckTime != null && TimeCache.currentMillis - lastCheckTime > notActiveThresholdMs) {
-                    notActiveClients.add(url);
+                if (lastCheckTime == null) {
+                    lastCheckValidTime.put(url, TimeCache.currentMillis);
+                } else {
+                    if (TimeCache.currentMillis - lastCheckTime > notActiveThresholdMs) {
+                        notActiveClients.add(url);
+                    }
                 }
             }
             if (!notActiveClients.isEmpty()) {
@@ -57,6 +61,7 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
                     clientCache.remove(url);
                     validCache.remove(url);
                     lastCheckValidTime.remove(url);
+                    logger.info("redis resource = {} not active, remove from check list", url);
                 }
             }
         } catch (Exception e) {
@@ -70,7 +75,7 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
         IUpstreamClient client = factory.get(url);
         clientCache.put(url, client);
         boolean valid = client.isValid();
-        logger.info("addResource to ScheduledResourceChecker, resource = {}, valid = {}", url, valid);
+        logger.info("add redis resource = {} to check list, valid = {}", url, valid);
         validCache.put(url, valid);
         lastCheckValidTime.put(url, TimeCache.currentMillis);
     }

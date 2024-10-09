@@ -464,7 +464,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     private UpstreamRedisClientTemplate initCustomInstance(long bid, String bgroup) {
         CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
         if (custom == null) return null;
-        logger.info("UpstreamRedisClientTemplate init, bid = {}, bgroup = {}", bid, bgroup);
+        logger.info("UpstreamRedisClientTemplate init custom instance, bid = {}, bgroup = {}", bid, bgroup);
         UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
         //更新的callback
         ResourceTableUpdateCallback updateCallback = template::update;
@@ -496,7 +496,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (remote == null) return null;
         boolean monitorEnable = remote.isMonitorEnable();
         long checkIntervalMillis = remote.getCheckIntervalMillis();
-        logger.info("UpstreamRedisClientTemplate init, bid = {}, bgroup = {}", bid, bgroup);
+        logger.info("UpstreamRedisClientTemplate init remote instance, bid = {}, bgroup = {}", bid, bgroup);
         return new UpstreamRedisClientTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
