@@ -73,6 +73,7 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
                 RedisProxiesDiscoveryClient.this.remove(toAddr(proxy));
             }
         });
+        super.start();
         logger.info("RedisProxiesDiscoveryClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
