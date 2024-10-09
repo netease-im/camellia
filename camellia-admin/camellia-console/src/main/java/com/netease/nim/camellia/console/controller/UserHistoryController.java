@@ -13,8 +13,6 @@ import com.netease.nim.camellia.console.service.vo.CamelliaRefHistoryListWithNum
 import com.netease.nim.camellia.console.service.vo.CamelliaTableHistoryListWithNum;
 import com.netease.nim.camellia.console.util.LogBean;
 import io.netty.util.internal.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author ChenHongliang
  */
-@Api(value = "查看用户历史操作的接口", tags = {"UserHistoryController"})
 @RestController
 @ConditionalOnClass(ConsoleProperties.class)
 @RequestMapping(value = "/camellia/console/user/history")
@@ -41,7 +38,6 @@ public class UserHistoryController {
 
 
 
-    @ApiOperation(value = "根据tid查询全量的table操作历史", notes = "需要did，tid(可不传递)，当前页和页大小")
     @GetMapping("/tableByTid")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
     public WebResult getTableByBidAndBgroup(@RequestParam Long did,
@@ -60,8 +56,6 @@ public class UserHistoryController {
 
 
 
-
-    @ApiOperation(value = "根据id查询具体的table操作历史,", notes = "需要did，table历史记录的id")
     @GetMapping("/tableById")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
     public WebResult getTableById(@RequestParam Long did,
@@ -79,7 +73,6 @@ public class UserHistoryController {
 
 
 
-    @ApiOperation(value = "根据bid、group查询全量的ref操作历史", notes = "需要did，bid,bgroup，当前页和页大小")
     @GetMapping("/refByBidAndBgroup")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
     public WebResult getAllTableRefByBidAndBgroup(@RequestParam Long did,
@@ -104,7 +97,6 @@ public class UserHistoryController {
     }
 
 
-    @ApiOperation(value = "根据id查询具体的ref操作历史,", notes = "需要did，ref历史记录的id")
     @GetMapping("/refById")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
     public WebResult getById(@RequestParam Long did,

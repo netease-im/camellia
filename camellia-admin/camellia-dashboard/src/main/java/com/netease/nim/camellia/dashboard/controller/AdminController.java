@@ -14,8 +14,6 @@ import com.netease.nim.camellia.dashboard.model.*;
 import com.netease.nim.camellia.dashboard.service.*;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import io.netty.util.internal.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +25,6 @@ import java.util.List;
 /**
  * Created by caojiajun on 2019/5/28.
  */
-@Api(value = "管理接口", tags = {"AdminController"})
 @RestController
 @ConditionalOnClass(DashboardProperties.class)
 @RequestMapping(value = "/camellia/admin")
@@ -45,7 +42,6 @@ public class AdminController {
     @Autowired
     private StatsService statsService;
 
-    @ApiOperation(value = "创建资源表", notes = "创建接口")
     @PostMapping("/createResourceTable")
     public WebResult createResourceTable(@RequestParam("detail") String detail,
                                          @RequestParam("info") String info) {
@@ -72,7 +68,6 @@ public class AdminController {
         return WebResult.success(retJson);
     }
 
-    @ApiOperation(value = "查询单个资源表", notes = "需要指定tid")
     @GetMapping("/resourceTable/{tid}")
     public WebResult getResourceTable(@PathVariable("tid") long tid) {
         LogBean.get().addProps("tid", tid);
@@ -85,7 +80,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "删除单个资源表", notes = "需要指定tid")
     @DeleteMapping("/resourceTable/{tid}")
     public WebResult deleteResourceTable(@PathVariable long tid) {
         LogBean.get().addProps("tid", tid);
@@ -93,7 +87,6 @@ public class AdminController {
         return WebResult.success();
     }
 
-    @ApiOperation(value = "获取资源表列表", notes = "全量列表，可以指定是否只返回valid的资源表")
     @GetMapping("/resourceTables")
     public WebResult getResourceTableList(@RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
         LogBean.get().addProps("onlyValid", onlyValid);
@@ -107,7 +100,6 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "获取资源表列表", notes = "全量列表，可以指定tid,是否只返回valid的资源表,info")
     @GetMapping("/resourceTablesAll")
     public WebResult getResourceTableAll(@RequestParam(value = "tid", required = false) Long tid,
                                          @RequestParam(value = "validFlag", required = false) Integer validFlag,
@@ -137,7 +129,6 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "修改资源", notes = "修改tid的table")
     @PostMapping("/changeResourceTable")
     public WebResult changeResourceTableList(@RequestParam("tid") long tid,
                                              @RequestParam("detail") String detail,
@@ -174,7 +165,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "创建或者更新资源表引用关系", notes = "资源表引用关系")
     @PostMapping("/createOrUpdateTableRef")
     public WebResult createOrUpdateTableRef(@RequestParam("bid") long bid,
                                             @RequestParam("bgroup") String bgroup,
@@ -195,7 +185,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "查询单个资源表引用关系", notes = "需要指定bid和bgroup")
     @GetMapping("/getTableRefByBidGroup")
     public WebResult getTableRef(@RequestParam("bid") long bid,
                                  @RequestParam("bgroup") String bgroup) {
@@ -211,7 +200,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "查询资源表引用关系", notes = "根据tid,bid,bgroup,validFlag,info,resourceInfo模糊搜索")
     @GetMapping("/getTableRefAll")
     public WebResult getTableRefAll(@RequestParam(value = "bid", required = false) Long bid,
                                     @RequestParam(value = "bgroup", required = false) String bgroup,
@@ -247,7 +235,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "查询某个bid下的资源表引用关系列表", notes = "需要指定bid，并可以选择是否只返回valid的")
     @GetMapping("/getTableRefsByBid")
     public WebResult getTableRefByBid(@RequestParam("bid") long bid,
                                       @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
@@ -262,7 +249,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "查询某个tid的资源表引用关系列表", notes = "需要指定tid，并可以选择是否只返回valid的")
     @GetMapping("/getTableRefsByTid")
     public WebResult getTableRefsByTid(@RequestParam("tid") long tid,
                                        @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
@@ -277,7 +263,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "查询全量的资源表引用关系列表", notes = "可以选择是否只返回valid的")
     @GetMapping("/getTableRefs")
     public WebResult getTableRefs(@RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
         LogBean.get().addProps("onlyValid", onlyValid);
@@ -290,7 +275,6 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "删除单个资源表引用关系", notes = "需要指定bid和bgroup")
     @DeleteMapping("/tableRef")
     public WebResult deleteTableRef(@RequestParam("bid") long bid,
                                     @RequestParam("bgroup") String bgroup) {
@@ -300,7 +284,6 @@ public class AdminController {
         return WebResult.success();
     }
 
-    @ApiOperation(value = "创建或者更新资源描述", notes = "需要指定资源url和描述")
     @PostMapping("/createOrUpdateResource")
     public WebResult createOrUpdateResource(@RequestParam("url") String url,
                                             @RequestParam("info") String info) {
@@ -310,14 +293,12 @@ public class AdminController {
         return WebResult.success();
     }
 
-    @ApiOperation(value = "删除单个资源", notes = "需要指定资源ID")
     @DeleteMapping("/resource")
     public WebResult deleteResource(@RequestParam("id") Long id) {
         resourceInfoService.delete(id);
         return WebResult.success();
     }
 
-    @ApiOperation(value = "获取资源全量列表", notes = "返回全量")
     @GetMapping("/resources")
     public WebResult getResourceList(@RequestParam(value = "url", required = false, defaultValue = "") String url,
                                      @RequestParam(value = "pageNum") Integer pageNum,
@@ -331,7 +312,6 @@ public class AdminController {
         return WebResult.success(resourceInfoPage);
     }
 
-    @ApiOperation(value = "用url模糊匹配url和info", notes = "返回前几个")
     @GetMapping("/resourcesQuery")
     public WebResult getResourceQuery(@RequestParam(value = "url" ) String url,
                                      @RequestParam(value = "size",defaultValue = "5") Integer size) {
@@ -345,7 +325,6 @@ public class AdminController {
 
 
 
-    @ApiOperation(value = "一个mock接口", notes = "用于在指定tid和分片key的情况下确定分片结果，使用的是默认的分片函数")
     @GetMapping("/mock")
     public WebResult mock(@RequestParam("tid") long tid,
                           @RequestParam("key") String key) throws Exception {
@@ -384,14 +363,12 @@ public class AdminController {
         throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "type wrong");
     }
 
-    @ApiOperation(value = "查询读写统计（全量）", notes = "用于查询上报的资源读写统计")
     @GetMapping("/rwStats/total")
     public WebResult rwStatsTotal() {
         RwStats stats = statsService.getStats();
         return WebResult.success(stats);
     }
 
-    @ApiOperation(value = "根据资源url查询读写统计", notes = "用于查询上报的资源读写统计，根据资源url查询")
     @GetMapping("/rwStatsByResourceUrl")
     public WebResult rwStatsByResourceUrl(@RequestParam("url") String url) {
         ResourceInfo resourceInfo = resourceInfoService.getByUrl(url);
@@ -402,7 +379,6 @@ public class AdminController {
         return WebResult.success(jsonObject);
     }
 
-    @ApiOperation(value = "根据资源id查询读写统计", notes = "用于查询上报的资源读写统计，根据资源id查询")
     @GetMapping("/rwStatsByResourceId")
     public WebResult rwStatsByResourceId(@RequestParam("id") Long id) {
         ResourceInfo resourceInfo = resourceInfoService.get(id);
@@ -413,7 +389,6 @@ public class AdminController {
         return WebResult.success(jsonObject);
     }
 
-    @ApiOperation(value = "根据bid和bgroup查询读写统计", notes = "用于查询上报的资源读写统计，根据bid和bgroup查询")
     @GetMapping("/rwStatsByBidBgroup")
     public WebResult rwStatsByBidBgroup(@RequestParam("bid") Long bid,
                                         @RequestParam("bgroup") String bgroup) {

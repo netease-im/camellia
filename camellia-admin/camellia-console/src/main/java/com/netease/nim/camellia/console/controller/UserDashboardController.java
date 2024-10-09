@@ -2,7 +2,6 @@ package com.netease.nim.camellia.console.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.netease.nim.camellia.console.annotation.ActionSecurity;
 import com.netease.nim.camellia.console.conf.ConsoleProperties;
 import com.netease.nim.camellia.console.constant.ActionRole;
@@ -28,8 +27,6 @@ import com.netease.nim.camellia.console.util.ParaCheckUtil;
 import com.netease.nim.camellia.console.util.TableCheckUtil;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import io.netty.util.internal.StringUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +40,6 @@ import java.util.List;
  *
  * @author ChenHongliang
  */
-@Api(value = "有关用户操作dashboard的接口", tags = {"UserDashboardController"})
 @RestController
 @ConditionalOnClass(ConsoleProperties.class)
 @RequestMapping(value = "/camellia/console/user/dashboard")
@@ -73,7 +69,7 @@ public class UserDashboardController {
         Integer type = transferAO.getType();
         ParaCheckUtil.checkParam(table, "table");
         ParaCheckUtil.checkParam(type, "type");
-        if (!Lists.newArrayList(0, 1).contains(type)) {
+        if (type != 0 && type != 1) {
             throw new AppException(AppCode.PARAM_WRONG, "type wrong");
         }
 
@@ -89,7 +85,6 @@ public class UserDashboardController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "根据Did获取dashboard信息", notes = "")
     @GetMapping("/byDid")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "dashboard")
     public WebResult getDashboardById(@RequestParam Long did) {
@@ -99,7 +94,6 @@ public class UserDashboardController {
     }
 
 
-    @ApiOperation(value = "获取全部有权限的dashboard", notes = "")
     @GetMapping()
     public WebResult getAllDashboard(@RequestParam(required = false) String tag, @RequestParam(required = false) Integer isUse, @RequestParam(required = false) Integer isOnline) {
         LogBean.get().addProps("isUse", isUse);
@@ -136,7 +130,6 @@ public class UserDashboardController {
     }
 
 
-    @ApiOperation(value = "获取资源表列表", notes = "全量列表，需要did，可以指定是否只返回valid的资源表")
     @GetMapping("/table")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
     public WebResult getAllTable(@RequestParam Long did,
@@ -159,7 +152,6 @@ public class UserDashboardController {
         return WebResult.success(tablePage);
     }
 
-    @ApiOperation(value = "查询单个资源表", notes = "需要指定did和tid")
     @GetMapping("/table/{tid}")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
     public WebResult getTable(@RequestParam Long did, @PathVariable Long tid) {
@@ -169,7 +161,6 @@ public class UserDashboardController {
         return WebResult.success(tableBO);
     }
 
-    @ApiOperation(value = "创建资源表", notes = "需要did,创建接口")
     @PostMapping("/createTable")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "table")
     public WebResult createResourceTable(HttpServletRequest request, @RequestBody TableAO tableAO) {
@@ -178,7 +169,7 @@ public class UserDashboardController {
         ParaCheckUtil.checkParam(tableAO.getInfo(), "info");
 
         ParaCheckUtil.checkParam(tableAO.getType(), "type");
-        if (!Lists.newArrayList(0, 1).contains(tableAO.getType())) {
+        if (tableAO.getType() != 0 && tableAO.getType() != 1) {
             throw new AppException(AppCode.PARAM_WRONG, "type wrong");
         }
 
@@ -203,7 +194,6 @@ public class UserDashboardController {
         return WebResult.success(tableBO);
     }
 
-    @ApiOperation(value = "更改资源table", notes = "需要did,tid,detail,info")
     @PostMapping("/changeTable")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "table")
     public WebResult changeResourceTable(HttpServletRequest request, @RequestBody TableAO tableAO) {
@@ -212,7 +202,7 @@ public class UserDashboardController {
         ParaCheckUtil.checkParam(tableAO.getTable(), "table");
         ParaCheckUtil.checkParam(tableAO.getInfo(), "info");
         ParaCheckUtil.checkParam(tableAO.getType(), "type");
-        if (!Lists.newArrayList(0, 1).contains(tableAO.getType())) {
+        if (tableAO.getType() != 0 && tableAO.getType() != 1) {
             throw new AppException(AppCode.PARAM_WRONG, "type wrong");
         }
         Integer type = tableAO.getType();
@@ -240,7 +230,6 @@ public class UserDashboardController {
 
     }
 
-    @ApiOperation(value = "删除单个资源表", notes = "需要指定tid")
     @DeleteMapping("/table")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "table")
     public WebResult deleteResourceTable(HttpServletRequest request, @RequestBody TableAO tableAO) {
@@ -267,7 +256,6 @@ public class UserDashboardController {
     }
 
 
-    @ApiOperation(value = "创建或者更新资源表引用关系", notes = "资源表引用关系")
     @PostMapping("/createOrUpdateTableRef")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "tableRef")
     public WebResult createOrUpdateTableRef(HttpServletRequest request, @RequestBody TableRefAO tableRefAO) {
@@ -312,7 +300,6 @@ public class UserDashboardController {
         return oldTableRef;
     }
 
-    @ApiOperation(value = "删除单个资源表引用关系", notes = "需要指定did,bid和bgroup")
     @DeleteMapping("/tableRef")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "tableRef")
     public WebResult deleteTableRef(HttpServletRequest request, @RequestBody TableRefAO tableRefAO) {
@@ -340,7 +327,6 @@ public class UserDashboardController {
     }
 
 
-    @ApiOperation(value = "查询资源表引用关系列表", notes = "分页")
     @GetMapping("/tableRef")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "tableRef")
     public WebResult getTableRef(
@@ -374,8 +360,6 @@ public class UserDashboardController {
     }
 
 
-
-    @ApiOperation(value = "获取资源全量列表", notes = "返回全量")
     @GetMapping("/resources")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "resource")
     public WebResult getResourceList(@RequestParam Long did,
@@ -393,7 +377,6 @@ public class UserDashboardController {
     }
 
 
-    @ApiOperation(value = "获取资源列表查询", notes = "默认返回前5个")
     @GetMapping("/resourcesQuery")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "resource")
     public WebResult getResourceQuery(@RequestParam Long did,
@@ -410,7 +393,6 @@ public class UserDashboardController {
     }
 
 
-    @ApiOperation(value = "创建或者更新资源描述", notes = "需要指定did,资源url和描述")
     @PostMapping("/createOrUpdateResource")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "resource")
     public WebResult createOrUpdateResource(HttpServletRequest request, @RequestBody URLAO urlao) {
@@ -435,7 +417,6 @@ public class UserDashboardController {
         return WebResult.success();
     }
 
-    @ApiOperation(value = "删除单个资源", notes = "需要指定did,资源ID")
     @DeleteMapping("/resource")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "resource")
     public WebResult deleteResource(HttpServletRequest request, @RequestBody URLAO urlao) {

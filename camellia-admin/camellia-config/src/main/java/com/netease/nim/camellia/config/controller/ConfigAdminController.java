@@ -4,7 +4,6 @@ import com.netease.nim.camellia.config.conf.LogBean;
 import com.netease.nim.camellia.config.model.*;
 import com.netease.nim.camellia.config.service.ConfigNamespaceService;
 import com.netease.nim.camellia.config.service.ConfigService;
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +14,6 @@ import java.util.Locale;
 /**
  * Created by caojiajun on 2023/3/15
  */
-@Api(value = "管理接口", tags = {"ConfigAdminController"})
 @RestController
 @RequestMapping("/camellia/config/admin")
 public class ConfigAdminController {
