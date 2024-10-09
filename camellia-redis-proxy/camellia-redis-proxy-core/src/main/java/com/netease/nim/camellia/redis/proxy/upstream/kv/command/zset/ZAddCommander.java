@@ -155,7 +155,7 @@ public class ZAddCommander extends ZSet0Commander {
         }
 
         if (encodeVersion == EncodeVersion.version_0) {
-            return zaddVersion0(slot, keyMeta, key, cacheKey, first, memberSize, memberMap, existsMap, result, type);
+            return zaddVersion0(slot, keyMeta, key, first, memberSize, memberMap, existsMap, result, type);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zaddVersion1(slot, keyMeta, key, cacheKey, memberSize, memberMap, result, type);
@@ -163,7 +163,7 @@ public class ZAddCommander extends ZSet0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zaddVersion0(int slot, KeyMeta keyMeta, byte[] key, byte[] cacheKey, boolean first, int memberSize,
+    private Reply zaddVersion0(int slot, KeyMeta keyMeta, byte[] key, boolean first, int memberSize,
                                Map<BytesKey, Double> memberMap, Map<BytesKey, Double> existsMap, Result result, KvCacheMonitor.Type type) {
         if (type == null) {
             KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
