@@ -24,6 +24,10 @@ public class ProxyCurrentNodeInfo {
                 currentNodeHost = inetAddress.getHostAddress();
             }
         }
+        int announcePort = ProxyDynamicConf.getInt("proxy.node.current.announce.port", -1);
+        if (announcePort > 0) {
+            return new ProxyNode(currentNodeHost, announcePort, GlobalRedisProxyEnv.getCport());
+        }
         return new ProxyNode(currentNodeHost, GlobalRedisProxyEnv.getPort(), GlobalRedisProxyEnv.getCport());
     }
 }
