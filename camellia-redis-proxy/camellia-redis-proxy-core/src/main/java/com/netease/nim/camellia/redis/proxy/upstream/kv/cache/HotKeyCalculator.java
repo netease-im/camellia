@@ -57,6 +57,9 @@ public class HotKeyCalculator {
         if (this.threshold != threshold) {
             logger.info("kv hot key calculator cache build, namespace = {}, keyType = {}, threshold = {}", namespace, keyType, threshold);
             this.threshold = threshold;
+            if (this.threshold < 0) {
+                cache.clear();
+            }
         }
         if (this.window != window) {
             logger.info("kv hot key calculator cache build, namespace = {}, keyType = {}, window = {}", namespace, keyType, window);
@@ -65,6 +68,9 @@ public class HotKeyCalculator {
     }
 
     public boolean isHotKey(byte[] key) {
+        if (threshold < 0) {
+            return false;
+        }
         BytesKey bytesKey = new BytesKey(key);
         Node node = CamelliaMapUtils.computeIfAbsent(cache, bytesKey, key1 -> new Node());
         if (TimeCache.currentMillis - node.time > window) {
