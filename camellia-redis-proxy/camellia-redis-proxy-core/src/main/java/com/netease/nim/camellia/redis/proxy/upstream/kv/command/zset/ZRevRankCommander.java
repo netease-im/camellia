@@ -124,7 +124,7 @@ public class ZRevRankCommander extends ZSet0Commander {
                 return toReply(zrank, withScores);
             }
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+            boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);

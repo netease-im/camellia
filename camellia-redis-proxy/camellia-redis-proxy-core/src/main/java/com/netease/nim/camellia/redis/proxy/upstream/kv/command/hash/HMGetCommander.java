@@ -125,7 +125,7 @@ public class HMGetCommander extends Hash0Commander {
                 return toReply2(fields, hash.hgetAll());
             }
 
-            boolean hotKey = hashLRUCache.isHotKey(key);
+            boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
             if (hotKey) {
                 hash = loadLRUCache(slot, keyMeta, key);
                 hashLRUCache.putAllForRead(slot, cacheKey, hash);

@@ -120,7 +120,7 @@ public class SMIsMemberCommander extends Set0Commander {
                 return toReply(smismember, members);
             }
 
-            boolean hotKey = setLRUCache.isHotKey(key);
+            boolean hotKey = setLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 set = loadLRUCache(slot, keyMeta, key);

@@ -144,7 +144,7 @@ public class ZCountCommander extends ZSet0Commander {
                 return IntegerReply.parse(zcount);
             }
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+            boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);

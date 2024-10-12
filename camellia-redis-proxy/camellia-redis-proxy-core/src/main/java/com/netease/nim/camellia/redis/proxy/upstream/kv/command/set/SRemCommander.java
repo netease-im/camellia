@@ -93,7 +93,7 @@ public class SRemCommander extends Set0Commander {
             }
 
             if (removedMembers == null) {
-                boolean hotKey = setLRUCache.isHotKey(key);
+                boolean hotKey = setLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     //
                     type = KvCacheMonitor.Type.kv_store;

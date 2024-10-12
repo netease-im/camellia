@@ -112,7 +112,7 @@ public class HGetCommander extends Hash0Commander {
                 return new BulkReply(hash.hget(new BytesKey(field)));
             }
 
-            boolean hotKey = hashLRUCache.isHotKey(key);
+            boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
             if (hotKey) {
                 hash = loadLRUCache(slot, keyMeta, key);
                 hashLRUCache.putAllForRead(slot, cacheKey, hash);

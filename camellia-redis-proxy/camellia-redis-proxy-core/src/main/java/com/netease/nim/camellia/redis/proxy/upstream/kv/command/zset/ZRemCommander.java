@@ -91,7 +91,7 @@ public class ZRemCommander extends ZRem0Commander {
             }
 
             if (removedMembers == null) {
-                boolean hotKey = zSetLRUCache.isHotKey(key);
+                boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
                     if (zSet != null) {

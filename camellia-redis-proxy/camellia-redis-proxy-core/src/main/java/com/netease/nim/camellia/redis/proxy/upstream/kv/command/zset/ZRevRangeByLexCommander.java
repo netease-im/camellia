@@ -158,7 +158,7 @@ public class ZRevRangeByLexCommander extends ZSet0Commander {
                 return ZSetTupleUtils.toReply(list, false);
             }
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+            boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);

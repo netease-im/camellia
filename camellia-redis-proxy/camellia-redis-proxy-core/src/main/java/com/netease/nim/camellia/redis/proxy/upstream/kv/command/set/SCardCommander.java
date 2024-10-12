@@ -114,7 +114,7 @@ public class SCardCommander extends Set0Commander {
             }
 
             if (encodeVersion == EncodeVersion.version_1) {
-                boolean hotKey = setLRUCache.isHotKey(key);
+                boolean hotKey = setLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     set = loadLRUCache(slot, keyMeta, key);
                     setLRUCache.putAllForRead(slot, cacheKey, set);

@@ -116,7 +116,7 @@ public class HLenCommander extends Hash0Commander {
             if (checkHotKey) {
                 EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
                 if (encodeVersion == EncodeVersion.version_1) {
-                    boolean hotKey = hashLRUCache.isHotKey(key);
+                    boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
                     if (hotKey) {
                         hash = loadLRUCache(slot, keyMeta, key);
                         hashLRUCache.putAllForRead(slot, cacheKey, hash);

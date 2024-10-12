@@ -105,7 +105,7 @@ public class HValsCommander extends Hash0Commander {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return toReply(hash.hgetAll());
             }
-            boolean hotKey = hashLRUCache.isHotKey(key);
+            boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
             if (hotKey) {
                 hash = loadLRUCache(slot, keyMeta, key);
                 hashLRUCache.putAllForRead(slot, cacheKey, hash);

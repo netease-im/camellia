@@ -134,7 +134,7 @@ public class ZScoreCommander extends ZSet0Commander {
                 }
             }
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+            boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);

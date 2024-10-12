@@ -114,7 +114,7 @@ public class SAddCommander extends Set0Commander {
             } else {
                 Set<BytesKey> existsSet = setLRUCache.sadd(slot, cacheKey, memberSet);
                 if (existsSet == null) {
-                    boolean hotKey = setLRUCache.isHotKey(key);
+                    boolean hotKey = setLRUCache.isHotKey(key, redisCommand());
                     if (hotKey) {
                         //
                         type = KvCacheMonitor.Type.kv_store;

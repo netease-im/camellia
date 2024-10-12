@@ -99,7 +99,7 @@ public class SPopCommander extends Set0Commander {
             }
 
             if (spop == null) {
-                boolean hotKey = setLRUCache.isHotKey(key);
+                boolean hotKey = setLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     //
                     type = KvCacheMonitor.Type.kv_store;

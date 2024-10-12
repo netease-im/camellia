@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
@@ -24,6 +25,8 @@ public class HotKeyCalculator {
     private final KeyType keyType;
     private ConcurrentLinkedHashMap<BytesKey, Node> cache;
     private int threshold;
+    private int readThreshold;
+    private int writeThreshold;
     private int capacity;
     private long window;
 
@@ -50,25 +53,39 @@ public class HotKeyCalculator {
         }
 
         int defaultThreshold = RedisKvConf.getInt(namespace, "kv.hot.key.threshold", 2);
+        int defaultReadThreshold = RedisKvConf.getInt(namespace, "kv.hot.key.read.threshold", -1);
+        int defaultWriteThreshold = RedisKvConf.getInt(namespace, "kv.hot.key.write.threshold", -1);
         int defaultWindow = RedisKvConf.getInt(namespace, "kv.hot.key.time.window", 5000);
 
         int threshold = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.threshold", defaultThreshold);
+        int readThreshold = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.read.threshold", defaultReadThreshold);
+        int writeThreshold = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.write.threshold", defaultWriteThreshold);
         int window = RedisKvConf.getInt(namespace, keyType + ".kv.hot.key.time.window", defaultWindow);
-        if (this.threshold != threshold) {
-            logger.info("kv hot key calculator cache build, namespace = {}, keyType = {}, threshold = {}", namespace, keyType, threshold);
+
+        if (this.threshold != threshold || this.readThreshold != readThreshold || this.writeThreshold != writeThreshold) {
+            logger.info("kv hot key calculator cache config update, namespace = {}, keyType = {}, threshold = {}, read.threshold = {}, write.threshold = {}",
+                    namespace, keyType, threshold, readThreshold, writeThreshold);
             this.threshold = threshold;
-            if (this.threshold < 0) {
+            this.readThreshold = readThreshold;
+            this.writeThreshold = writeThreshold;
+            if (this.threshold < 0 && this.writeThreshold < 0 && this.readThreshold < 0) {
                 cache.clear();
             }
         }
         if (this.window != window) {
-            logger.info("kv hot key calculator cache build, namespace = {}, keyType = {}, window = {}", namespace, keyType, window);
+            logger.info("kv hot key calculator cache config update, namespace = {}, keyType = {}, window = {}", namespace, keyType, window);
             this.window = window;
         }
     }
 
-    public boolean isHotKey(byte[] key) {
-        if (threshold < 0) {
+    public boolean isHotKey(byte[] key, RedisCommand redisCommand) {
+        int targetThreshold;
+        if (redisCommand.getType() == RedisCommand.Type.READ) {
+            targetThreshold = readThreshold < 0 ? threshold : readThreshold;
+        } else {
+            targetThreshold = writeThreshold < 0 ? threshold : writeThreshold;
+        }
+        if (targetThreshold < 0) {
             return false;
         }
         BytesKey bytesKey = new BytesKey(key);
@@ -78,7 +95,7 @@ public class HotKeyCalculator {
             node.count.set(last / 2);
             node.time = TimeCache.currentMillis;
         }
-        return node.count.incrementAndGet() > threshold;
+        return node.count.incrementAndGet() > targetThreshold;
     }
 
     public long estimateSize() {

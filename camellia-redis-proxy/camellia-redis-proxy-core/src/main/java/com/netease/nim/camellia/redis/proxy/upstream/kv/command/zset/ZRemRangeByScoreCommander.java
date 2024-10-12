@@ -106,7 +106,7 @@ public class ZRemRangeByScoreCommander extends ZRangeByScore0Commander {
             }
 
             if (removedMap == null) {
-                boolean hotKey = zSetLRUCache.isHotKey(key);
+                boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     RedisZSet zSet = loadLRUCache(slot, keyMeta, key);
                     if (zSet != null) {

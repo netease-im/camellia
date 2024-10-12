@@ -110,7 +110,7 @@ public class HExistsCommander extends Hash0Commander {
                 return IntegerReply.parse(hash.hexists(new BytesKey(field)));
             }
 
-            boolean hotKey = hashLRUCache.isHotKey(key);
+            boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 hash = loadLRUCache(slot, keyMeta, key);

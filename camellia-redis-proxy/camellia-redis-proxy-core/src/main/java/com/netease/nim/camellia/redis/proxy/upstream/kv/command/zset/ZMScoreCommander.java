@@ -126,7 +126,7 @@ public class ZMScoreCommander extends ZSet0Commander {
                 return toReply(zSet.zmscore(members));
             }
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+            boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);

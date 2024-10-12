@@ -133,7 +133,7 @@ public class ZRangeCommander extends ZRangeByRank0Commander {
                 return ZSetTupleUtils.toReply(list, withScores);
             }
 
-            boolean hotKey = zSetLRUCache.isHotKey(key);
+            boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 zSet = loadLRUCache(slot, keyMeta, key);

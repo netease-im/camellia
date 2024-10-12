@@ -120,7 +120,7 @@ public class HSetCommander extends Hash0Commander {
             } else {
                 existMapByCache = hashLRUCache.hset(slot, cacheKey, fieldMap);
                 if (existMapByCache == null) {
-                    boolean hotKey = hashLRUCache.isHotKey(key);
+                    boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
                     if (hotKey) {
                         //
                         type = KvCacheMonitor.Type.kv_store;

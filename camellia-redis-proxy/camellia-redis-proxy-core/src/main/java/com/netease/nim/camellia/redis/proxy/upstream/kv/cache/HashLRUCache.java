@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
@@ -62,8 +63,8 @@ public class HashLRUCache {
         this.capacity = capacity;
     }
 
-    public boolean isHotKey(byte[] key) {
-        return hotKeyCalculator.isHotKey(key);
+    public boolean isHotKey(byte[] key, RedisCommand redisCommand) {
+        return hotKeyCalculator.isHotKey(key, redisCommand);
     }
 
     public void putAllForRead(int slot, byte[] cacheKey, RedisHash hash) {

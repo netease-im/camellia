@@ -111,7 +111,7 @@ public class HDelCommander extends Hash0Commander {
                 return IntegerReply.REPLY_0;
             }
             if (deleteMaps == null) {
-                boolean hotKey = hashLRUCache.isHotKey(key);
+                boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     //
                     type = KvCacheMonitor.Type.kv_store;

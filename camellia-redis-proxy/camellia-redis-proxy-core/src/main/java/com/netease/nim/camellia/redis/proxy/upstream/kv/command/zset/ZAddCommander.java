@@ -119,7 +119,7 @@ public class ZAddCommander extends ZSet0Commander {
             } else {
                 Map<BytesKey, Double> map = zSetLRUCache.zadd(slot, cacheKey, memberMap);
                 if (map == null) {
-                    boolean hotKey = zSetLRUCache.isHotKey(key);
+                    boolean hotKey = zSetLRUCache.isHotKey(key, redisCommand());
                     if (hotKey) {
                         zSet = loadLRUCache(slot, keyMeta, key);
                         if (zSet != null) {

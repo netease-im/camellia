@@ -108,7 +108,7 @@ public class HStrLenCommander extends Hash0Commander {
                 KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
                 return IntegerReply.parse(hash.hstrlen(new BytesKey(field)));
             }
-            boolean hotKey = hashLRUCache.isHotKey(key);
+            boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
             if (hotKey) {
                 hash = loadLRUCache(slot, keyMeta, key);
                 hashLRUCache.putAllForRead(slot, cacheKey, hash);

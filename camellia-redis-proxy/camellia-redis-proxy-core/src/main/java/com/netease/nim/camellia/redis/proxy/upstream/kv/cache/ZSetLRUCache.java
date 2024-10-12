@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetLex;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetScore;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
@@ -63,8 +64,8 @@ public class ZSetLRUCache {
         this.capacity = capacity;
     }
 
-    public boolean isHotKey(byte[] key) {
-        return hotKeyCalculator.isHotKey(key);
+    public boolean isHotKey(byte[] key, RedisCommand redisCommand) {
+        return hotKeyCalculator.isHotKey(key, redisCommand);
     }
 
     public void putZSetForWrite(int slot, byte[] cacheKey, RedisZSet zSet) {

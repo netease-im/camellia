@@ -133,7 +133,7 @@ public class HSetNxCommander extends Hash0Commander {
 
             RedisHash hash = hashLRUCache.getForWrite(slot, cacheKey);
             if (hash == null) {
-                boolean hotKey = hashLRUCache.isHotKey(key);
+                boolean hotKey = hashLRUCache.isHotKey(key, redisCommand());
                 if (hotKey) {
                     //
                     type = KvCacheMonitor.Type.kv_store;

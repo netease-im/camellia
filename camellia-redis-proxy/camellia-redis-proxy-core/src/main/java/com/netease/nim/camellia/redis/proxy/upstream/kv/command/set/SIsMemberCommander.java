@@ -108,7 +108,7 @@ public class SIsMemberCommander extends Set0Commander {
                 return IntegerReply.parse(sismeber ? 1 : 0);
             }
 
-            boolean hotKey = setLRUCache.isHotKey(key);
+            boolean hotKey = setLRUCache.isHotKey(key, redisCommand());
 
             if (hotKey) {
                 set = loadLRUCache(slot, keyMeta, key);
