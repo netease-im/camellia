@@ -18,22 +18,22 @@ jobs:
       with:
         java-version: 21
     - name: Build with Maven
-      run: mvn -B package --file pom.xml && ls && pwd && find / -name *.jar
+      run: mvn -B package --file pom.xml && ls && pwd && find / -name cam.*.jar
 
     
-    # - name: Set up Docker Buildx
-    #   uses: docker/setup-buildx-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
       
-    # - name: Log in to Docker Hub
-    #   uses: docker/login-action@v2
-    #   with:
-    #     username: ${{ env.USERNAME }}
-    #     password: ${{ env.PASSWORD }}
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ env.USERNAME }}
+        password: ${{ env.PASSWORD }}
 
     # - name: Build and push Docker image
     #   uses: docker/build-push-action@v2
     #   with:
     #     context: .
-    #     file: ./Dockerfile
+    #     file: ./Dockerfile-nightly
     #     push: true
-    #     tags: 48n6e/rtsp-to-html:nightly
+    #     tags: ${{ env.USERNAME }}/rtsp-to-html:nightly
