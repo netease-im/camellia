@@ -6,8 +6,6 @@ ADD .  /opt/camellia
 
 RUN apt update  -y  && apt install net-tools vim  bc jq  redis-tools curl procps -y 
 
-RUN apt update  -y  && apt install dsniff -y 
-
 ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini-amd64 /usr/local/bin/tini
 
 RUN chmod +x /usr/local/bin/tini
