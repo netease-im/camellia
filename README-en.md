@@ -5,6 +5,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
  
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)
+![java_language](https://img.shields.io/badge/java--language-1.8%20%7C%2021-green.svg)
   
 ## Summary
 

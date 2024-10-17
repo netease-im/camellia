@@ -5,6 +5,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
  
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)
+![java_language](https://img.shields.io/badge/java--language-1.8%20%7C%2021-green.svg)
 
 ## 模块介绍
 
