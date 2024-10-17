@@ -30,10 +30,10 @@ jobs:
         username: ${{ env.USERNAME }}
         password: ${{ env.PASSWORD }}
 
-    # - name: Build and push Docker image
-    #   uses: docker/build-push-action@v2
-    #   with:
-    #     context: .
-    #     file: ./Dockerfile-nightly
-    #     push: true
-    #     tags: ${{ env.USERNAME }}/rtsp-to-html:nightly
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile-nightly
+        push: true
+        tags: ${{ env.USERNAME }}/camellia:nightly
