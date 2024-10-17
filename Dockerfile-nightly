@@ -4,7 +4,7 @@ WORKDIR /opt/camellia
 
 RUN mkdir -p /opt/camellia
 
-COPY camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/camellia-redis-proxy-bootstrap-.*.jar  /opt/camellia/camellia-redis-proxy-bootstrap.jar
+COPY  /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/camellia-redis-proxy-bootstrap-.*.jar  /opt/camellia/camellia-redis-proxy-bootstrap.jar
 
 RUN jar xvf camellia-redis-proxy-bootstrap.jar
 
