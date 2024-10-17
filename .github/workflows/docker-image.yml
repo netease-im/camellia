@@ -18,7 +18,7 @@ jobs:
       with:
         java-version: 21
     - name: Build with Maven
-      run: mvn -B package --file pom.xml && ls && pwd && find / -name cam.*.jar
+      run: mvn -B package --file pom.xml && ls && pwd 
 
     
     - name: Set up Docker Buildx
