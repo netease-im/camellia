@@ -2,7 +2,17 @@ FROM openjdk:21-jdk-slim
 
 WORKDIR /opt/camellia
 
-ADD .  /opt/camellia
+RUN mkdir -p /opt/camellia
+
+COPY camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/camellia-redis-proxy-bootstrap-.*.jar  /opt/camellia/camellia-redis-proxy-bootstrap.jar
+
+RUN jar xvf camellia-redis-proxy-bootstrap.jar
+
+RUN rm -rf camellia-redis-proxy-bootstrap.jar
+
+RUN echo "java -XX:+UseG1GC -Xms128m -Xmx4096m -server org.springframework.boot.loader.JarLauncher" > start.sh
+
+RUN chmod +x start.sh
 
 RUN apt update  -y  && apt install net-tools vim  bc jq  redis-tools curl procps -y 
 
