@@ -33,7 +33,7 @@ jobs:
       run: ls /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/
      
     - name: Copy jar
-      run: cp /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/camellia-redis-proxy-bootstrap-.*.jar .   
+      run: cp /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/camellia-redis-proxy-bootstrap-*.jar .   
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
