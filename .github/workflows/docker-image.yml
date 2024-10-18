@@ -29,7 +29,10 @@ jobs:
       with:
         username: ${{ env.USERNAME }}
         password: ${{ env.PASSWORD }}
-
+        
+    - name: ls
+      run: ls && pwd 
+      
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
