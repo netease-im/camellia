@@ -39,4 +39,4 @@ jobs:
         context: .
         file: ./Dockerfile-nightly
         push: true
-        tags: ${{ env.USERNAME }}/camellia:nightly
+        tags: ${{ env.USERNAME }}/camellia-redis-proxy:nightly
