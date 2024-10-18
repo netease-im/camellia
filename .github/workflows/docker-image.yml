@@ -32,6 +32,7 @@ jobs:
         
     - name: ls
       run: ls && pwd  && ls /home/runner/work/camellia/camellia/ && ls /home/runner/work/camellia/camellia/camellia-redis-proxy/ && ls /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/      
+    
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
