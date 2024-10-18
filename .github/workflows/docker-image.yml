@@ -30,8 +30,8 @@ jobs:
         username: ${{ env.USERNAME }}
         password: ${{ env.PASSWORD }}
         
-    - name: ls
-      run: ls && pwd  && ls /home/runner/work/camellia/camellia/ && ls /home/runner/work/camellia/camellia/camellia-redis-proxy/ && ls /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/      
+    - name: Copy jar
+      run: cp /home/runner/work/camellia/camellia/camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/camellia-redis-proxy-bootstrap-.*.jar .   
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
