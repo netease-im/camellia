@@ -37,6 +37,6 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./Dockerfile-nightly
+        file: ./docs/camellia-redis-proxy/deploy/docker/Dockerfile-nightly
         push: true
         tags: ${{ env.USERNAME }}/camellia-redis-proxy:nightly
