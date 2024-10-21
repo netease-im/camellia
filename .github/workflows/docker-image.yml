@@ -1,9 +1,9 @@
 name: Nightly Docker Build
 
-on: ["push"]
-  # schedule:
-  #   # Runs at midnight UTC every day
-  #   - cron: '0 0 * * *'
+on: 
+  schedule:
+    # Runs at midnight UTC every day
+    - cron: '0 0 * * *'
 env:
   USERNAME: ${{ secrets.DOCKER_USERNAME }}
   PASSWORD: ${{ secrets.DOCKER_TOKEN }}
