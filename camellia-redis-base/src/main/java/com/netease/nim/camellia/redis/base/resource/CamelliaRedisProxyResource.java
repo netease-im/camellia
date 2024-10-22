@@ -18,7 +18,7 @@ public class CamelliaRedisProxyResource extends Resource {
     }
 
     public CamelliaRedisProxyResource(String password, String proxyName, long bid, String bgroup) {
-        this(password, proxyName, bid, bgroup, -1);
+        this(password, proxyName, bid, bgroup, 0);
     }
 
     public CamelliaRedisProxyResource(String password, String proxyName, long bid, String bgroup, int db) {
