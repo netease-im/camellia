@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * ZADD key score member [score member   ...]
@@ -280,15 +281,20 @@ public class ZAddCommander extends ZSet0Commander {
         } else {
             kvClient.batchPut(slot, list);
         }
+        List<CompletableFuture<Reply>> futureList = null;
         if (!memberIndexCacheWriteCommands.isEmpty()) {
-            List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(memberIndexCacheWriteCommands));
+            futureList = cacheRedisTemplate.sendCommand(memberIndexCacheWriteCommands);
+        }
+        CompletableFuture<Reply> future = storageRedisTemplate.sendCommand(new Command(rewriteCmd));
+        if (futureList != null) {
+            List<Reply> replyList = sync(futureList);
             for (Reply reply : replyList) {
                 if (reply instanceof ErrorReply) {
                     return reply;
                 }
             }
         }
-        return sync(storageRedisTemplate.sendCommand(new Command(rewriteCmd)));
+        return sync(future);
     }
 
     private void updateKeyMeta(int slot, KeyMeta keyMeta, byte[] key, int add) {
