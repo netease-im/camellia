@@ -61,14 +61,19 @@ public class RouteService {
     }
 
     private List<MqInfo> selectMqInfo0WithCache(String namespace, String bizId) {
-        String cacheKey = CacheUtil.buildCacheKey(select_mq_info, namespace, bizId);
-        String string = template.get(cacheKey);
-        if (string == null) {
-            List<MqInfo> mqInfos = selectMqInfo0(namespace, bizId);
-            template.setex(cacheKey, config.getRouteRedisCacheSeconds(), JSONArray.toJSONString(mqInfos));
-            return mqInfos;
+        try {
+            String cacheKey = CacheUtil.buildCacheKey(select_mq_info, namespace, bizId);
+            String string = template.get(cacheKey);
+            if (string == null) {
+                List<MqInfo> mqInfos = selectMqInfo0(namespace, bizId);
+                template.setex(cacheKey, config.getRouteRedisCacheSeconds(), JSONArray.toJSONString(mqInfos));
+                return mqInfos;
+            }
+            return JSONArray.parseArray(string, MqInfo.class);
+        } catch (Exception e) {
+            logger.error("select mq info error, namespace = {}, bizId = {}", namespace, bizId, e);
+            return selectMqInfo0(namespace, bizId);
         }
-        return JSONArray.parseArray(string, MqInfo.class);
     }
 
     private void refreshCache(String namespace, String bizId) {
@@ -173,7 +178,7 @@ public class RouteService {
             }
             //没有统计数据，则走默认
             if (success + fail <= 0) {
-                return config.getLevelInfoList().get(0).getMqInfoList();
+                return config.getLevelInfoList().getFirst().getMqInfoList();
             }
             double failRate = fail / (1.0 * (success + fail));
             double spendMsAvg = spendMsAll / (success + fail);
@@ -189,9 +194,9 @@ public class RouteService {
                 return mqInfoList;
             }
             //兜底
-            return config.getLevelInfoList().get(0).getMqInfoList();
+            return config.getLevelInfoList().getFirst().getMqInfoList();
         } catch (Exception e) {
-            List<MqInfo> mqInfoList = config.getLevelInfoList().get(0).getMqInfoList();
+            List<MqInfo> mqInfoList = config.getLevelInfoList().getFirst().getMqInfoList();
             logger.error("select mq info error, namespace = {}, bizId = {}, return default config = {}", namespace, bizId, mqInfoList);
             return mqInfoList;
         }
