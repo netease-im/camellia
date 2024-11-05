@@ -530,8 +530,12 @@ public class RedisClusterClient implements IUpstreamClient {
         }
 
         if (bindConnection != null) {
-            commandFlusher.flush();
-            PubSubUtils.sendByBindConnection(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
+            if (channelInfo.isInSubscribe()) {
+                commandFlusher.flush();
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
+            } else {
+                commandFlusher.sendCommand(bindConnection, command, future);
+            }
         } else {
             int targetSlot = -1;
             if (PubSubUtils.isShardPubSub(redisCommand)) {
