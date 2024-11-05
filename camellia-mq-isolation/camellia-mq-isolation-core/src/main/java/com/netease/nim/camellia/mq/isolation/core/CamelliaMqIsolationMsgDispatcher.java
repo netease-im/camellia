@@ -78,7 +78,8 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
             MqIsolationMsgPacket packet = PacketSerializer.unmarshal(data);
             TopicInfo topicInfo = topicInfo(mqInfo, packet);
             if (!packet.getMsg().getNamespace().equals(this.namespace)) {
-                throw new IllegalArgumentException("illegal namespace, expect '" + this.namespace + "', actual '" + packet.getMsg().getNamespace() + "'");
+                logger.error("illegal namespace, expect '{}', actual '{}', please check, msg = {}",
+                        this.namespace, packet.getMsg().getNamespace(), JSONObject.toJSONString(packet.getMsg()));
             }
             //latency
             long mqLatency = startTime - packet.getMsgPushMqTime();
