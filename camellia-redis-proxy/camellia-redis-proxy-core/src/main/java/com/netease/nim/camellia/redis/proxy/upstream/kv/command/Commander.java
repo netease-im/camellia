@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
@@ -37,6 +38,8 @@ public abstract class Commander {
     protected final WriteBuffer<RedisZSet> zsetWriteBuffer;
     protected final WriteBuffer<RedisSet> setWriteBuffer;
 
+    private long cacheTimeoutMillis;
+
     public Commander(CommanderConfig commanderConfig) {
         this.kvClient = commanderConfig.getKvClient();
         this.keyDesign = commanderConfig.getKeyDesign();
@@ -49,6 +52,8 @@ public abstract class Commander {
         this.hashWriteBuffer = commanderConfig.getHashWriteBuffer();
         this.zsetWriteBuffer = commanderConfig.getZsetWriteBuffer();
         this.setWriteBuffer = commanderConfig.getSetWriteBuffer();
+        this.cacheTimeoutMillis = cacheConfig.cacheTimeoutMillis();
+        ProxyDynamicConf.registerCallback(() -> cacheTimeoutMillis = cacheConfig.cacheTimeoutMillis());
     }
 
     /**
@@ -83,11 +88,11 @@ public abstract class Commander {
     protected abstract Reply execute(int slot, Command command);
 
     protected final Reply sync(CompletableFuture<Reply> future) {
-        return cacheRedisTemplate.sync(future, cacheConfig.cacheTimeoutMillis());
+        return cacheRedisTemplate.sync(future, cacheTimeoutMillis);
     }
 
     protected final List<Reply> sync(List<CompletableFuture<Reply>> futures) {
-        return cacheRedisTemplate.sync(futures, cacheConfig.cacheTimeoutMillis());
+        return cacheRedisTemplate.sync(futures, cacheTimeoutMillis);
     }
 
     protected final void submitAsyncWriteTask(int slot, Result result, Runnable runnable) {

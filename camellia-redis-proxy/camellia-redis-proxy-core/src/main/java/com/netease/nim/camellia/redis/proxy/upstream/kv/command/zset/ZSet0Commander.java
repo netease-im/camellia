@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
@@ -29,8 +30,12 @@ import java.util.*;
  */
 public abstract class ZSet0Commander extends Commander {
 
+    private byte[] zsetMemberCacheMillis;
+
     public ZSet0Commander(CommanderConfig commanderConfig) {
         super(commanderConfig);
+        zsetMemberCacheMillis = Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
+        ProxyDynamicConf.registerCallback(() -> zsetMemberCacheMillis = Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis())));
     }
 
     protected final RedisZSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
@@ -117,7 +122,7 @@ public abstract class ZSet0Commander extends Commander {
     }
 
     protected final byte[] zsetMemberCacheMillis() {
-        return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
+        return zsetMemberCacheMillis;
     }
 
     private Reply checkReplyWithIndex(int slot, KeyMeta keyMeta, byte[] key, MultiBulkReply reply, boolean withScores, boolean forRead) {
