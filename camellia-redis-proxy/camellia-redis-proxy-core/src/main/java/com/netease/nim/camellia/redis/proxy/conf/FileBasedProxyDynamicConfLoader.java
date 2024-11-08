@@ -45,10 +45,13 @@ public class FileBasedProxyDynamicConfLoader implements WritableProxyDynamicConf
                     targetFilePath = fileInfo.getFilePath();
                 }
             }
+            boolean specificFileWritable = !Boolean.parseBoolean(initConf.get("specific.file.path.writable"));
             //dynamic specific conf
             Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf, ConfigContentType.properties);
             if (pair.getFirst() != null) {
-                targetFilePath = pair.getFirst();
+                if (specificFileWritable) {
+                    targetFilePath = pair.getFirst();
+                }
             }
             if (pair.getSecond() != null) {
                 conf.putAll(pair.getSecond());
