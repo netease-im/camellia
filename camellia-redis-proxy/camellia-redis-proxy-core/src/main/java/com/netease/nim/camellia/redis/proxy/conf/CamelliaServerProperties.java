@@ -21,6 +21,7 @@ public class CamelliaServerProperties {
     private String udsPath = "";
     private String applicationName;
     private String password;
+    private String cportPassword;
     private boolean proxyProtocolEnable = Constants.Server.proxyProtocolEnable;
     private String proxyProtocolPorts = "";
     private String proxyFrontendTlsProviderClassName = Constants.Server.proxyFrontendTlsProviderClassName;
@@ -113,6 +114,14 @@ public class CamelliaServerProperties {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getCportPassword() {
+        return cportPassword;
+    }
+
+    public void setCportPassword(String cportPassword) {
+        this.cportPassword = cportPassword;
     }
 
     public String getProxyFrontendTlsProviderClassName() {

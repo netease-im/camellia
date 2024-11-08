@@ -40,6 +40,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
     private static final ErrorReply UNKNOWN_MASTER_NAME = new ErrorReply("ERR sentinel unknown master name");
     private static final ErrorReply SENTINEL_MODE_NOT_AVAILABLE = new ErrorReply("ERR sentinel mode not available");
     private static final ErrorReply SENTINEL_MODE_NOT_ONLINE = new ErrorReply("ERR sentinel mode not online");
+    private static final ErrorReply YOU_SHOULD_USE_CPORT_PASSWORD = new ErrorReply("ERR you should use cport password to sentinel heartbeat");
     private static final String heartbeat = "heartbeat";
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("proxy-sentinel-mode-schedule"));
@@ -160,8 +161,18 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
                 return wrapper(connection, redisCommand, ErrorReply.argNumWrong(redisCommand));
             }
             String param = Utils.bytesToString(args[1]);
-            //heartbeat, skip auth
+            //heartbeat
             if (param.equalsIgnoreCase(heartbeat)) {
+                if (GlobalRedisProxyEnv.getCportPassword() != null) {
+                    //check auth
+                    if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
+                        return wrapper(connection, redisCommand, ErrorReply.NO_AUTH);
+                    }
+                    //heartbeat应该使用cport的password，如果不是，则不允许心跳
+                    if (!connection.password.equals(GlobalRedisProxyEnv.getCportPassword())) {
+                        return wrapper(connection, redisCommand, YOU_SHOULD_USE_CPORT_PASSWORD);
+                    }
+                }
                 if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
                     return wrapper(connection, redisCommand, StatusReply.OK);
                 } else {
@@ -169,7 +180,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
                 }
             }
             //check auth
-            if (requirePassword() && !connection.auth) {
+            if (requirePassword() && channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
                 return wrapper(connection, redisCommand, ErrorReply.NO_AUTH);
             }
             //get master addr by name
@@ -200,7 +211,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             return wrapper(connection, redisCommand, reply);
         }
         //check auth
-        if (requirePassword() && !connection.auth) {
+        if (requirePassword() && channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
             return wrapper(connection, redisCommand, ErrorReply.NO_AUTH);
         }
         //subscribe
@@ -263,7 +274,8 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             password = Utils.bytesToString(objects[2]);
         }
         if (checkPassword(userName, password)) {
-            connection.auth = true;
+            command.getChannelInfo().setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
+            connection.password = password;
             return StatusReply.OK;
         }
         return ErrorReply.INVALID_PASSWORD;
@@ -290,7 +302,8 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
                         return HelloCommandUtil.SETNAME_SYNTAX_ERROR;
                     }
                     if (checkPassword(userName, password)) {
-                        connection.auth = true;
+                        command.getChannelInfo().setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
+                        connection.password = password;
                         return HelloCommandUtil.helloCmdReply();
                     }
                     return ErrorReply.WRONG_PASS;
@@ -306,8 +319,16 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
 
     private boolean checkPassword(String userName, String password) {
         if (sentinelUserName == null) {
+            if (GlobalRedisProxyEnv.getCportPassword() != null && GlobalRedisProxyEnv.getCportPassword().equals(password)) {
+                return true;
+            }
             return sentinelPassword.equals(password);
         } else {
+            if (userName.equals("default")) {
+                if (GlobalRedisProxyEnv.getCportPassword() != null && GlobalRedisProxyEnv.getCportPassword().equals(password)) {
+                    return true;
+                }
+            }
             return sentinelUserName.equals(userName) && sentinelPassword.equals(password);
         }
     }
@@ -395,7 +416,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
 
     private boolean heartbeat(ProxyNode node) {
         try {
-            RedisConnection connection = RedisConnectionHub.getInstance().get(null, node.getHost(), node.getCport(), null, null);
+            RedisConnection connection = RedisConnectionHub.getInstance().get(null, node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword());
             CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.SENTINEL.raw(), Utils.stringToBytes(heartbeat));
             int timeoutSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.timeout.seconds", 20);
             Reply reply = future.get(timeoutSeconds, TimeUnit.SECONDS);
@@ -430,7 +451,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         } catch (Exception e) {
             try {
                 if (!onlineNodes.isEmpty()) {
-                    target = onlineNodes.get(0);
+                    target = onlineNodes.getFirst();
                 } else {
                     target = currentNode;
                 }
@@ -527,7 +548,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         ChannelInfo channelInfo;
         ProxyNode proxyNode;
         boolean subscribe = false;
-        boolean auth = false;
+        String password;
 
         public Connection(ChannelInfo channelInfo) {
             this.channelInfo = channelInfo;

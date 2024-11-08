@@ -83,6 +83,11 @@ public class CamelliaRedisProxyProperties {
     private int cport = -1;
 
     /**
+     * cport的password
+     */
+    private String cportPassword;
+
+    /**
      * cluster模式的实现方式，可以自定义
      */
     private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
@@ -234,6 +239,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setCport(int cport) {
         this.cport = cport;
+    }
+
+    public String getCportPassword() {
+        return cportPassword;
+    }
+
+    public void setCportPassword(String cportPassword) {
+        this.cportPassword = cportPassword;
     }
 
     public boolean isProxyProtocolEnable() {

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -148,6 +149,76 @@ public class CommandsTransponder {
                     continue;
                 }
 
+                //来自cport端口的请求
+                if (channelInfo.isFromCport()) {
+                    //quit命令直接断开连接
+                    if (redisCommand == RedisCommand.QUIT) {
+                        if (channelInfo.isInSubscribe()) {
+                            channelInfo.getCtx().close();
+                        } else {
+                            channelInfo.writeAndFlush(command, StatusReply.OK)
+                                    .addListener((ChannelFutureListener) future -> channelInfo.getCtx().channel().close());
+                        }
+                        return;
+                    }
+                    if (redisCommand == RedisCommand.AUTH) {
+                        if (sentinelModeProcessor != null) {
+                            CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
+                            if (future != null) {
+                                future.thenAccept(task::replyCompleted);
+                            }
+                        } else {
+                            Reply reply = cportAuth(command);
+                            task.replyCompleted(reply);
+                        }
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    if (GlobalRedisProxyEnv.getCportPassword() != null && channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
+                        task.replyCompleted(ErrorReply.NO_AUTH);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    if (redisCommand == RedisCommand.PING) {
+                        if (sentinelModeProcessor != null) {
+                            CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
+                            if (future != null) {
+                                future.thenAccept(task::replyCompleted);
+                            }
+                        } else {
+                            task.replyCompleted(StatusReply.PONG);
+                        }
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    //proxy命令
+                    if (redisCommand == RedisCommand.PROXY) {
+                        CompletableFuture<Reply> future = proxyCommandProcessor.process(command);
+                        future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    if (sentinelModeProcessor != null) {
+                        CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
+                        if (future != null) {
+                            future.thenAccept(task::replyCompleted);
+                        }
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    if (clusterModeProcessor != null) {
+                        if (redisCommand == RedisCommand.CLUSTER) {
+                            CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
+                            future.thenAccept(task::replyCompleted);
+                            hasCommandsSkip = true;
+                            continue;
+                        }
+                    }
+                    task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
                 //subscribe状态下，只能使用指定的命令
                 if (channelInfo.isInSubscribe()) {
                     if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.SSUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
@@ -160,26 +231,8 @@ public class CommandsTransponder {
                     }
                 }
 
-                //sentinel mode
-                if (sentinelModeProcessor != null && channelInfo.isFromCport() && redisCommand != RedisCommand.PROXY) {
-                    //other command
-                    CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
-                    if (future != null) {
-                        future.thenAccept(task::replyCompleted);
-                    }
-                    hasCommandsSkip = true;
-                    continue;
-                }
-
                 //DB类型的命令，before auth
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
-                    if (redisCommand == RedisCommand.PING) {
-                        if (channelInfo.isFromCport()) {
-                            task.replyCompleted(StatusReply.PONG);
-                            hasCommandsSkip = true;
-                            continue;
-                        }
-                    }
                     //quit命令直接断开连接
                     if (redisCommand == RedisCommand.QUIT) {
                         if (channelInfo.isInSubscribe()) {
@@ -227,15 +280,7 @@ public class CommandsTransponder {
 
                 //如果需要密码，但是没有auth，则返回NO_AUTH
                 if (authCommandProcessor.isPasswordRequired()) {
-                    boolean skipAuth = false;
-                    if (redisCommand == RedisCommand.CLUSTER) {
-                        byte[][] args = command.getObjects();
-                        skipAuth = args.length >= 2 && Utils.bytesToString(args[1]).equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name());
-                    }
-                    if (redisCommand == RedisCommand.PROXY && channelInfo.isFromCport()) {
-                        skipAuth = true;
-                    }
-                    if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK && !skipAuth) {
+                    if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
                         task.replyCompleted(ErrorReply.NO_AUTH);
                         hasCommandsSkip = true;
                         continue;
@@ -285,16 +330,8 @@ public class CommandsTransponder {
                     }
 
                     //sentinel不往后发
-                    if (redisCommand == RedisCommand.SENTINEL) {
+                    if (redisCommand == RedisCommand.SENTINEL || redisCommand == RedisCommand.PROXY) {
                         task.replyCompleted(Utils.commandNotSupport(redisCommand));
-                        hasCommandsSkip = true;
-                        continue;
-                    }
-
-                    //proxy命令
-                    if (redisCommand == RedisCommand.PROXY) {
-                        CompletableFuture<Reply> future = proxyCommandProcessor.process(command);
-                        future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;
                     }
@@ -533,6 +570,22 @@ public class CommandsTransponder {
         } catch (Exception e) {
             ErrorLogCollector.collect(CommandsTransponder.class, "flush0 commands error", e);
         }
+    }
+
+    private Reply cportAuth(Command command) {
+        if (GlobalRedisProxyEnv.getCportPassword() == null) {
+            return ErrorReply.NO_PASSWORD_SET;
+        }
+        byte[][] objects = command.getObjects();
+        if (objects.length != 2) {
+            return ErrorReply.INVALID_PASSWORD;
+        }
+        String password = Utils.bytesToString(objects[1]);
+        if (password.equals(GlobalRedisProxyEnv.getCportPassword())) {
+            command.getChannelInfo().setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
+            return StatusReply.OK;
+        }
+        return ErrorReply.INVALID_PASSWORD;
     }
 
 }

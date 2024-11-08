@@ -69,6 +69,8 @@ public class GlobalRedisProxyEnv {
     private static String udsPath;
     private static int httpPort;
 
+    private static String cportPassword;
+
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static RedisProxyEnv redisProxyEnv;
     private static ProxyDiscoveryFactory discoveryFactory;
@@ -91,6 +93,7 @@ public class GlobalRedisProxyEnv {
             GlobalRedisProxyEnv.serverProperties = serverProperties;
             GlobalRedisProxyEnv.transpondProperties = transpondProperties;
             GlobalRedisProxyEnv.nettyTransportMode = serverProperties.getNettyTransportMode();
+            GlobalRedisProxyEnv.cportPassword = serverProperties.getCportPassword();
             if (nettyTransportMode == NettyTransportMode.epoll && isEpollAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
@@ -262,6 +265,10 @@ public class GlobalRedisProxyEnv {
 
     public static int getCport() {
         return cport;
+    }
+
+    public static String getCportPassword() {
+        return cportPassword;
     }
 
     public static int getHttpPort() {

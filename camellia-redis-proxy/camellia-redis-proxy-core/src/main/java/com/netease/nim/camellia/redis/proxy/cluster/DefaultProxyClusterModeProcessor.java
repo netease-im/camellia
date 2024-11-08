@@ -18,10 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -167,7 +164,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             if (command.isBlocking()) return null;//blocking的command也别move了吧
             List<byte[]> keys = command.getKeys();
             if (keys.isEmpty()) return null;
-            byte[] key = keys.get(0);
+            byte[] key = keys.getFirst();
             int slot = RedisClusterCRC16Utils.getSlot(key);
             if (!clusterSlotMap.isSlotInCurrentNode(slot)) {
                 ProxyNode node = clusterSlotMap.getBySlot(slot);
@@ -215,6 +212,11 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
         } else if (arg.equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name())) {//camellia定义的proxy间心跳
             CompletableFuture<Reply> future = new CompletableFuture<>();
             try {
+                boolean fromCport = command.getChannelInfo().isFromCport();
+                if (!fromCport) {
+                    future.complete(ErrorReply.ILLEGAL_CLUSTER_HEATBEAT);
+                    return future;
+                }
                 heartbeatExecutor.submit(() -> {
                     try {
                         Reply reply = provider.proxyHeartbeat(command);

@@ -176,7 +176,7 @@ public class ProxyCommandProcessor {
             for (ProxyPlugin plugin : requestPlugins) {
                 requestPluginsStr.append(Utils.className(plugin, simpleClassName)).append(",");
             }
-            if (requestPluginsStr.length() > 0) {
+            if (!requestPluginsStr.isEmpty()) {
                 requestPluginsStr.deleteCharAt(requestPluginsStr.length() - 1);
             }
             builder.append("request_plugins:").append(requestPluginsStr).append("\r\n");
@@ -185,7 +185,7 @@ public class ProxyCommandProcessor {
             for (ProxyPlugin plugin : replyPlugins) {
                 replyPluginsStr.append(Utils.className(plugin, simpleClassName)).append(",");
             }
-            if (replyPluginsStr.length() > 0) {
+            if (!replyPluginsStr.isEmpty()) {
                 replyPluginsStr.deleteCharAt(replyPluginsStr.length() - 1);
             }
             builder.append("reply_plugins:").append(replyPluginsStr).append("\r\n");
@@ -365,7 +365,7 @@ public class ProxyCommandProcessor {
             if (node.getCport() <= 0) {
                 return new ErrorReply("ERR target proxy node cport disabled");
             }
-            connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, null);
+            connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword());
             CompletableFuture<Reply> future = connection.sendCommand(args);
             return future.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {

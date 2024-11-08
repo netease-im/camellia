@@ -122,7 +122,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
 
     protected final RedisConnectionAddr toAddr(ProxyNode proxyNode) {
         return CamelliaMapUtils.computeIfAbsent(addrCache, proxyNode,
-                node -> new RedisConnectionAddr(node.getHost(), node.getCport(), null, null));
+                node -> new RedisConnectionAddr(node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword()));
     }
 
 }
