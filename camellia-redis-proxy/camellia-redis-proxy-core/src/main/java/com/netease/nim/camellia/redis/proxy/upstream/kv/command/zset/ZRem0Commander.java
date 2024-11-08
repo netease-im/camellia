@@ -151,7 +151,11 @@ public abstract class ZRem0Commander extends ZSet0Commander {
             });
         } else {
             if (!deleteSubKeys.isEmpty()) {
-                kvClient.batchDelete(slot, deleteSubKeys.toArray(new byte[0][0]));
+                if (cacheConfig.isZSetVersion1KvWriteAsyncEnable()) {
+                    submitAsyncWriteTask(slot, () -> kvClient.batchDelete(slot, deleteSubKeys.toArray(new byte[0][0])));
+                } else {
+                    kvClient.batchDelete(slot, deleteSubKeys.toArray(new byte[0][0]));
+                }
             }
         }
 

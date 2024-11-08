@@ -279,7 +279,11 @@ public class ZAddCommander extends ZSet0Commander {
         if (result.isKvWriteDelayEnable()) {
             submitAsyncWriteTask(slot, result, () -> kvClient.batchPut(slot, list));
         } else {
-            kvClient.batchPut(slot, list);
+            if (cacheConfig.isZSetVersion1KvWriteAsyncEnable()) {
+                submitAsyncWriteTask(slot, () -> kvClient.batchPut(slot, list));
+            } else {
+                kvClient.batchPut(slot, list);
+            }
         }
         List<CompletableFuture<Reply>> futureList = null;
         if (!memberIndexCacheWriteCommands.isEmpty()) {

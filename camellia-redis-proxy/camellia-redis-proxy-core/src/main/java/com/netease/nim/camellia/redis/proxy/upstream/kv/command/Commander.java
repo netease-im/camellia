@@ -104,4 +104,8 @@ public abstract class Commander {
             throw e;
         }
     }
+
+    protected final void submitAsyncWriteTask(int slot, Runnable runnable) {
+        asyncWriteExecutor.submit(slot, runnable);
+    }
 }

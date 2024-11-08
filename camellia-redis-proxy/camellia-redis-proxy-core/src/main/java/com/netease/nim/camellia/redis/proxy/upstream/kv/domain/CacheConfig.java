@@ -33,6 +33,8 @@ public class CacheConfig {
     private final SetLRUCache setLRUCache;
     private final ZSetIndexLRUCache zSetIndexLRUCache;
 
+    private boolean zsetVersion1KvWriteAsyncEnable;
+
     public CacheConfig(String namespace) {
         this.namespace = namespace;
         initCacheConfig();
@@ -117,6 +119,11 @@ public class CacheConfig {
             }
             logger.info("kv.set.local.cache.enable = {}, namespace = {}", setLocalCacheEnable, namespace);
         }
+        boolean zsetVersion1KvWriteAsyncEnable = RedisKvConf.getBoolean(namespace, "kv.zset.version1.kv.async.write.enable", false);
+        if ((this.zsetVersion1KvWriteAsyncEnable && !zsetVersion1KvWriteAsyncEnable) || (!this.zsetVersion1KvWriteAsyncEnable && zsetVersion1KvWriteAsyncEnable)) {
+            this.zsetVersion1KvWriteAsyncEnable = zsetVersion1KvWriteAsyncEnable;
+            logger.info("kv.zset.version1.kv.async.write.enable = {}, namespace = {}",zsetVersion1KvWriteAsyncEnable, namespace);
+        }
     }
 
     public String getNamespace() {
@@ -137,6 +144,10 @@ public class CacheConfig {
 
     public boolean isSetLocalCacheEnable() {
         return setLocalCacheEnable;
+    }
+
+    public boolean isZSetVersion1KvWriteAsyncEnable() {
+        return zsetVersion1KvWriteAsyncEnable;
     }
 
     public KeyMetaLRUCache getKeyMetaLRUCache() {
