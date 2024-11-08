@@ -47,7 +47,8 @@ public class JsonFileBasedProxyDynamicConfLoader implements WritableProxyDynamic
                     targetFilePath = fileInfo.getFilePath();
                 }
             }
-            boolean specificFileWritable = !Boolean.parseBoolean(initConf.get("specific.file.path.writable"));
+            String v = initConf.get("specific.file.path.writable");
+            boolean specificFileWritable = v == null || Boolean.parseBoolean(v);
             //dynamic specific conf
             Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf, ConfigContentType.json);
             if (pair.getFirst() != null) {
