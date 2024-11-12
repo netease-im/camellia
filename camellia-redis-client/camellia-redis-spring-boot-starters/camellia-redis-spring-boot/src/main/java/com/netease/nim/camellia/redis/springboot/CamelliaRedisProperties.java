@@ -306,6 +306,7 @@ public class CamelliaRedisProperties {
             private int maxWaitMillis = 2000;
             private int maxAttempts = 5;
             private int timeout = 2000;
+            private int redisClusterRenewIntervalSeconds = 600;
 
             public int getMaxIdle() {
                 return maxIdle;
@@ -353,6 +354,14 @@ public class CamelliaRedisProperties {
 
             public void setTimeout(int timeout) {
                 this.timeout = timeout;
+            }
+
+            public int getRedisClusterRenewIntervalSeconds() {
+                return redisClusterRenewIntervalSeconds;
+            }
+
+            public void setRedisClusterRenewIntervalSeconds(int redisClusterRenewIntervalSeconds) {
+                this.redisClusterRenewIntervalSeconds = redisClusterRenewIntervalSeconds;
             }
         }
     }

@@ -182,8 +182,9 @@ public class CamelliaRedisConfiguration {
         JedisClusterFactory jedisClusterFactory;
         if (jedisCluster != null) {
             int timeout = jedisCluster.getTimeout();
+            int redisClusterRenewIntervalSeconds = jedisCluster.getRedisClusterRenewIntervalSeconds();
             int maxAttempts = jedisCluster.getMaxAttempts();
-            jedisClusterFactory = new JedisClusterFactory.DefaultJedisClusterFactory(jedisClusterPoolConfig(redisConf), timeout, timeout, maxAttempts);
+            jedisClusterFactory = new JedisClusterFactory.DefaultJedisClusterFactory(jedisClusterPoolConfig(redisConf), timeout, timeout, maxAttempts, redisClusterRenewIntervalSeconds);
         } else {
             jedisClusterFactory = new JedisClusterFactory.DefaultJedisClusterFactory();
         }

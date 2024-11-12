@@ -25,6 +25,7 @@ public class CamelliaRedisConstants {
         public static final int connectionTimeout = 2000;
         public static final int soTimeout = 2000;
         public static final int maxAttempts = 5;
+        public static final int redisClusterSlaveRenewIntervalSeconds = 600;
     }
 
     public static class Misc {
