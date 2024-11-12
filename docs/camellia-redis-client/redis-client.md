@@ -7,7 +7,7 @@
 * enhanced-redis-client
 * base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline
 * support client sharding/read-write-separate/double-write
-* support read from slave(redis-sentinel)
+* support read from slave(redis-sentinel/redis-cluster)
 * provide CamelliaRedisLock、CamelliaFreq utils
 
 ## 特性
@@ -16,7 +16,7 @@
 * 支持mget/mset等multiKey的命令（原生JedisCluster不支持）    
 * 支持配置客户端分片，从而可以多个redis/redis-sentinel/redis-cluster当做一个使用
 * 支持配置多读多写（如：双写/读写分离）
-* 支持透明的读redis-sentinel的从节点，并自动感知主从切换、从节点扩容、从节点宕机等
+* 支持透明的读redis-sentinel/redis-cluster的从节点，并自动感知主从切换、从节点扩容、从节点宕机等
 * 支持配置动态变更
 * 提供了一些常用的工具类，如分布式锁、计数器缓存、频控等
 * 提供了一个spring-boot-starter，快速接入

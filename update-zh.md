@@ -7,12 +7,28 @@
 * camellia-delay-queue，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
 * camellia-hot-key-server，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
 * camellia-id-gen-server，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
+* camellia-redis-client，支持透明的读取redis-cluster的从节点
+* camellia-redis-proxy，kv模块，zset使用encode-version1编码时，支持异步写入kv
+* camellia-redis-proxy，支持给cport端口增加密码，从而伪redis-sentinel模式和伪redis-cluster模式的节点心跳可以增加鉴权
+* camellia-redis-proxy，读写分离时的健康检查，支持自动移除不活跃的后端
+* camellia-redis-proxy，kv模块，支持关闭hot-key计算逻辑
+* camellia-redis-proxy，kv模块，支持对不同对namespace设置不同的hot-key配置
 
 ### 更新
 * camellia-redis-proxy，调整了自定义实现类的配置名，同时支持 `xxx.xxx.className` 和 `xxx.xxx.class.name`
+* camellia-redis-proxy，使用 `proxy config broadcast` 命令广播配置变更时，支持特定配置文件不做写覆盖
+* camellia-redis-proxy，kv模块，优化了自定义配置的读取缓存性能
+* camellia-redis-proxy，kv模块，zset使用encode-version1编码时，优化了zadd命令的性能
+* camellia-redis-proxy，`proxy` 限制为只允许通过cport访问
+* camellia-mq-isolation，当topic和namespace不匹配时，不直接抛出异常丢弃任务，而是打印日志但是继续执行任务
+* camellia-mq-isolation，优化controller执行select mq info的逻辑，当依赖redis异常时也能匹配更优结果
+* camellia-dashboard/camellia-console/camellia-config，移除swagger
 
 ### fix
 * camellia-redis-proxy，kv模块，当key不存在时，zrem方法的返回格式错误
+* camellia-redis-proxy，transanction命令中包裹publish命令时逻辑错误（当前仅当后端是redis-cluster时有异常）
+* camellia-redis-client，使用CamelliaRedisProxyResource资源类型时，db参数错误
+* camellia-redis-proxy，当后端是`redis-proxies-discovery://username:passwd@proxyName`，错误的初始化逻辑
 
 
 # 1.2.30（2024/09/14）

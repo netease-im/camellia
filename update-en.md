@@ -6,12 +6,28 @@
 * camellia-delay-queue, prerequisite `java_21` and `spring_boot3`
 * camellia-hot-key-server, prerequisite `java_21` and `spring_boot3`
 * camellia-id-gen-server, prerequisite `java_21` and `spring_boot3`
+* camellia-redis-client, support read from redis-cluster-slaves
+* camellia-redis-proxy, kv, support async write to kv when zset use encode-version1
+* camellia-redis-proxy, support add password for cport, so redis-cluster-mode/redis-sentinel-mode will heartbeat in auth
+* camellia-redis-proxy, health check support remove not active upstreams
+* camellia-redis-proxy, kv, support disable hot-key-calculator
+* camellia-redis-proxy, kv, support different hot-key-config on different namespace
 
 ### update
 * camellia-redis-proxy, update config key, both support `xxx.xxx.className` and `xxx.xxx.class.name`
+* camellia-redis-proxy, support specific config file path support set not writable on proxy command `proxy config broadcast`
+* camellia-redis-proxy, kv, optimize config cache logic
+* camellia-redis-proxy, kv, optimize zadd command in encode_version_1
+* camellia-redis-proxy, `proxy` command can only be accessed through cport
+* camellia-mq-isolation, optimize logic when namespace not match on produce/consume
+* camellia-mq-isolation, optimize default logic on select mq info when redis error
+* camellia-dashboard/camellia-console/camellia-config remove swagger
 
 ### fix
-* camellia-redis-proxy，kv, zrem reply error when key not exists
+* camellia-redis-proxy, kv, zrem reply error when key not exists
+* camellia-redis-proxy, error logic when publish command run in transaction when upstream is redis-cluster
+* camellia-redis-client, illegal db param when use CamelliaRedisProxyResource
+* camellia-redis-proxy, error init when upstream is `redis-proxies-discovery://username:passwd@proxyName`
 
 
 # 1.2.30（2024/09/14）
