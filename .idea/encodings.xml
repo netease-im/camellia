@@ -285,6 +285,24 @@
     <file url="file://$PROJECT_DIR$/camellia-redis-proxy/camellia-redis-proxy-spring-boot-starters/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-proxy/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-proxy/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-delay-queue-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-delay-queue-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-feign-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-feign-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-hot-key-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-hot-key-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-id-gen-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-id-gen-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-redis-proxy-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-redis-proxy-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-redis-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-redis-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-redis3-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-redis3-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-tools-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/camellia-tools-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-tests/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-tools/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-tools/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-zk/src/main/java" charset="UTF-8" />
