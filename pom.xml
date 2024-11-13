@@ -27,6 +27,7 @@
 		<module>camellia-zk</module>
 		<module>camellia-hot-key</module>
 		<module>camellia-http-console</module>
+		<module>camellia-tests</module>
 	</modules>
 
 	<properties>
