@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2024/11/12
@@ -21,20 +21,19 @@ public class JedisClusterSlaves {
 
     private final JedisClusterWrapper jedisCluster;
     private final RedisClusterSlavesResource resource;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     private final GenericObjectPoolConfig poolConfig;
     private final int connectionTimeout;
     private final int soTimeout;
 
+    private final ReentrantLock lock = new ReentrantLock();
+
     private boolean renewing = false;
     private Map<Integer, List<String>> slotMap = new HashMap<>();
     private Set<String> slaves = new HashSet<>();
 
-    private final Map<String, ReadOnlyJedisPool> poolMap = new HashMap<>();
-    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
-    private final ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
-
+    private Map<String, ReadOnlyJedisPool> poolMap = new HashMap<>();
 
     public JedisClusterSlaves(RedisClusterSlavesResource resource, GenericObjectPoolConfig poolConfig, int connectionTimeout, int soTimeout,
                               JedisClusterWrapper jedisCluster, ScheduledExecutorService scheduledExecutorService, int redisClusterSlaveRenewIntervalSeconds) {
@@ -44,6 +43,7 @@ public class JedisClusterSlaves {
         this.jedisCluster = jedisCluster;
         this.resource = resource;
         renew();
+        this.scheduledExecutorService = scheduledExecutorService;
         scheduledExecutorService.scheduleAtFixedRate(this::renew, redisClusterSlaveRenewIntervalSeconds, redisClusterSlaveRenewIntervalSeconds, TimeUnit.SECONDS);
     }
 
@@ -51,7 +51,7 @@ public class JedisClusterSlaves {
         if (renewing) {
             return;
         }
-        writeLock.lock();
+        lock.lock();
         try {
             if (renewing) {
                 return;
@@ -62,6 +62,7 @@ public class JedisClusterSlaves {
                 if (map == null) {
                     return;
                 }
+                Map<String, ReadOnlyJedisPool> newPoolMap = new HashMap<>();
                 Map<Integer, List<String>> newSlotMap = new HashMap<>();
                 Set<String> newSlaves = new HashSet<>();
                 for (Map.Entry<Integer, List<HostAndPort>> entry : map.entrySet()) {
@@ -75,7 +76,9 @@ public class JedisClusterSlaves {
                             if (pool == null) {
                                 pool = new ReadOnlyJedisPool(poolConfig, hostAndPort.getHost(), hostAndPort.getPort(),
                                         connectionTimeout, soTimeout, resource.getPassword(), 0, null, false, null, null, null);
-                                poolMap.put(key, pool);
+                                newPoolMap.put(key, pool);
+                            } else {
+                                newPoolMap.put(key, pool);
                             }
                             slaves.add(key);
                         }
@@ -85,86 +88,77 @@ public class JedisClusterSlaves {
                 }
                 this.slotMap = newSlotMap;
                 this.slaves = newSlaves;
+                Map<String, ReadOnlyJedisPool> oldPoolMap = this.poolMap;
+                this.poolMap = newPoolMap;
+                for (String slave : slaves) {
+                    oldPoolMap.remove(slave);
+                }
+                if (!oldPoolMap.isEmpty()) {
+                    for (Map.Entry<String, ReadOnlyJedisPool> entry : oldPoolMap.entrySet()) {
+                        scheduledExecutorService.schedule(() -> entry.getValue().close(), 60, TimeUnit.SECONDS);
+                    }
+                }
             } finally {
                 renewing = false;
             }
         } catch (Throwable e) {
             logger.error("renew error, url = {}", resource, e);
         } finally {
-            writeLock.unlock();
+            lock.unlock();
         }
     }
 
     public ReadOnlyJedisPool getPool(int slot) {
-        readLock.lock();
-        try {
-            boolean withMaster = resource.isWithMaster();
-            List<String> slaves = slotMap.get(slot);
-            if (slaves == null || slaves.isEmpty()) {
-                return null;
+        boolean withMaster = resource.isWithMaster();
+        List<String> slaves = slotMap.get(slot);
+        if (slaves == null || slaves.isEmpty()) {
+            return null;
+        }
+        if (withMaster) {
+            int index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
+            if (index == 0) {
+                return null;//master
             }
-            if (withMaster) {
-                int index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
-                if (index == 0) {
-                    return null;//master
-                }
-                String key = slaves.get(index - 1);
-                return poolMap.get(key);
-            } else {
-                if (slaves.size() == 1) {
-                    String key = slaves.get(0);
-                    return poolMap.get(key);
-                }
-                int index = ThreadLocalRandom.current().nextInt(slaves.size());
-                String key = slaves.get(index);
+            String key = slaves.get(index - 1);
+            return poolMap.get(key);
+        } else {
+            if (slaves.size() == 1) {
+                String key = slaves.get(0);
                 return poolMap.get(key);
             }
-        } finally {
-            readLock.unlock();
+            int index = ThreadLocalRandom.current().nextInt(slaves.size());
+            String key = slaves.get(index);
+            return poolMap.get(key);
         }
     }
 
     public String getSlaveNode(int slot) {
-        readLock.lock();
-        try {
-            boolean withMaster = resource.isWithMaster();
-            List<String> slaves = slotMap.get(slot);
-            if (slaves == null || slaves.isEmpty()) {
-                return null;
-            }
-            if (withMaster) {
-                int index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
-                if (index == 0) {
-                    return null;//master
-                }
-                return slaves.get(index - 1);
-            } else {
-                if (slaves.size() == 1) {
-                    return slaves.get(0);
-                }
-                int index = ThreadLocalRandom.current().nextInt(slaves.size());
-                return slaves.get(index);
-            }
-        } finally {
-            readLock.unlock();
+        boolean withMaster = resource.isWithMaster();
+        List<String> slaves = slotMap.get(slot);
+        if (slaves == null || slaves.isEmpty()) {
+            return null;
         }
+        if (withMaster) {
+            int index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
+            if (index == 0) {
+                return null;//master
+            }
+            return slaves.get(index - 1);
+        } else {
+            if (slaves.size() == 1) {
+                return slaves.get(0);
+            }
+            int index = ThreadLocalRandom.current().nextInt(slaves.size());
+            return slaves.get(index);
+        }
+
     }
 
     public ReadOnlyJedisPool getPool(String slaveNode) {
-        readLock.lock();
-        try {
-            return poolMap.get(slaveNode);
-        } finally {
-            readLock.unlock();
-        }
+        return poolMap.get(slaveNode);
     }
 
     public Set<String> getSlaves() {
-        readLock.lock();
-        try {
-            return slaves;
-        } finally {
-            readLock.unlock();
-        }
+        return slaves;
     }
 }
