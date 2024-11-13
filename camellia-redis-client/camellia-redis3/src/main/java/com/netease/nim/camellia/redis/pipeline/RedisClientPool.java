@@ -3,18 +3,19 @@ package com.netease.nim.camellia.redis.pipeline;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.*;
-import com.netease.nim.camellia.redis.base.utils.CloseUtil;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
+import com.netease.nim.camellia.redis.jediscluster.JedisClusterSlaves;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterWrapper;
+import com.netease.nim.camellia.redis.jediscluster.ReadOnlyJedisPool;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
-import redis.clients.jedis.Client;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import com.netease.nim.camellia.redis.base.utils.CloseUtil;
+import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisClusterException;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
+import redis.clients.jedis.util.JedisClusterCRC16;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,6 +63,7 @@ public interface RedisClientPool {
 
         private final Map<String, Jedis> jedisMap = new ConcurrentHashMap<>();
         private final Map<JedisPool, Jedis> jedisClusterMap = new ConcurrentHashMap<>();
+        private final Map<ReadOnlyJedisPool, Jedis> readOnlyJedisClusterMap = new ConcurrentHashMap<>();
 
         private final JedisPoolFactory jedisPoolFactory;
         private final JedisClusterFactory jedisClusterFactory;
@@ -73,7 +75,6 @@ public interface RedisClientPool {
 
         @Override
         public Client getClient(Resource resource, byte[] key) {
-
             try {
                 if (resource instanceof RedisResource) {
                     Jedis jedis1 = jedisMap.get(resource.getUrl());
@@ -142,6 +143,30 @@ public interface RedisClientPool {
                     jedis6 = jedisPoolFactory.getRedisProxiesDiscoveryJedisPool((RedisProxiesDiscoveryResource) resource).getResource();
                     jedisMap.put(resource.getUrl(), jedis6);
                     return jedis6.getClient();
+                } else if (resource instanceof RedisClusterSlavesResource) {
+                    JedisClusterSlaves jedisClusterSlaves = jedisClusterFactory.getJedisClusterSlaves((RedisClusterSlavesResource) resource);
+                    int slot = JedisClusterCRC16.getSlot(key);
+                    ReadOnlyJedisPool readOnlyJedisPool = jedisClusterSlaves.getPool(slot);
+                    Jedis jedis7;
+                    if (readOnlyJedisPool != null) {
+                        jedis7 = readOnlyJedisClusterMap.get(readOnlyJedisPool);
+                        if (jedis7 != null) {
+                            return jedis7.getClient();
+                        }
+                        jedis7 = readOnlyJedisPool.getResource();
+                        readOnlyJedisClusterMap.put(readOnlyJedisPool, jedis7);
+                    } else {
+                        JedisClusterWrapper jedisCluster = jedisClusterFactory.getJedisCluster(new RedisClusterResource(((RedisClusterSlavesResource) resource).getNodes(),
+                                ((RedisClusterSlavesResource) resource).getUserName(), ((RedisClusterSlavesResource) resource).getPassword()));
+                        JedisPool jedisPool = jedisCluster.getJedisPool(key);
+                        jedis7 = jedisClusterMap.get(jedisPool);
+                        if (jedis7 != null) {
+                            return jedis7.getClient();
+                        }
+                        jedis7 = jedisPool.getResource();
+                        jedisClusterMap.put(jedisPool, jedis7);
+                    }
+                    return jedis7.getClient();
                 }
                 throw new UnsupportedOperationException();
             } catch (Exception e) {
@@ -163,8 +188,25 @@ public interface RedisClientPool {
                     jedis = jedisPool.getResource();
                     jedisClusterMap.put(jedisPool, jedis);
                     return jedis.getClient();
+                } else if (resource instanceof RedisClusterSlavesResource) {
+                    JedisClusterSlaves jedisClusterSlaves = jedisClusterFactory.getJedisClusterSlaves((RedisClusterSlavesResource) resource);
+                    ReadOnlyJedisPool pool = jedisClusterSlaves.getPool(host + ":" + port);
+                    Jedis jedis;
+                    if (pool != null) {
+                        jedis = readOnlyJedisClusterMap.get(pool);
+                        if (jedis != null) {
+                            return jedis.getClient();
+                        }
+                        jedis = pool.getResource();
+                        readOnlyJedisClusterMap.put(pool, jedis);
+                        return jedis.getClient();
+                    } else {
+                        RedisClusterResource redisClusterResource = new RedisClusterResource(((RedisClusterSlavesResource) resource).getNodes(),
+                                ((RedisClusterSlavesResource) resource).getUserName(), ((RedisClusterSlavesResource) resource).getPassword());
+                        return getClient(redisClusterResource, host, port);
+                    }
                 }
-                throw new CamelliaRedisException("only support RedisClusterResource");
+                throw new CamelliaRedisException("only support RedisClusterResource/RedisClusterSlavesResource");
             } catch (Exception e) {
                 handlerException(resource, e);
                 throw e;
@@ -185,6 +227,12 @@ public interface RedisClientPool {
                 }
                 jedisClusterMap.clear();
             }
+            if (!readOnlyJedisClusterMap.isEmpty()) {
+                for (Map.Entry<ReadOnlyJedisPool, Jedis> entry : readOnlyJedisClusterMap.entrySet()) {
+                    CloseUtil.closeQuietly(entry.getValue());
+                }
+                readOnlyJedisClusterMap.clear();
+            }
         }
 
         @Override
@@ -193,6 +241,12 @@ public interface RedisClientPool {
                 if (e instanceof JedisMovedDataException || e instanceof JedisConnectionException || e instanceof JedisClusterException) {
                     JedisClusterWrapper jedisCluster = jedisClusterFactory.getJedisCluster((RedisClusterResource) resource);
                     jedisCluster.renewSlotCache();
+                }
+            }
+            if (resource instanceof RedisClusterSlavesResource) {
+                if (e instanceof JedisMovedDataException || e instanceof JedisConnectionException || e instanceof JedisClusterException) {
+                    JedisClusterSlaves jedisClusterSlaves = jedisClusterFactory.getJedisClusterSlaves((RedisClusterSlavesResource) resource);
+                    jedisClusterSlaves.renew();
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.ICamelliaRedis;
 import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.jedis.CamelliaJedis;
 import com.netease.nim.camellia.redis.jediscluster.CamelliaJedisCluster;
+import com.netease.nim.camellia.redis.jediscluster.CamelliaJedisClusterSlaves;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
 import com.netease.nim.camellia.redis.resource.RedisClientResourceUtil;
 
@@ -34,6 +35,8 @@ public class CamelliaRedisInitializer {
             redis = new CamelliaJedis((RedisProxiesResource) originalResource, env);
         } else if (originalResource instanceof RedisProxiesDiscoveryResource) {
             redis = new CamelliaJedis((RedisProxiesDiscoveryResource) originalResource, env);
+        } else if (originalResource instanceof RedisClusterSlavesResource) {
+            redis = new CamelliaJedisClusterSlaves((RedisClusterSlavesResource) originalResource, env);
         } else {
             throw new UnsupportedOperationException();
         }
