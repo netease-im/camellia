@@ -37,7 +37,7 @@
 
 |  后端   |    qps    |  rt-avg |   rt-p99 |  rt-p999 |   KB/sec | cpu(proxy) | cpu(kv) |
 |:-----:|:---------:|--------:|---------:|---------:|---------:|-----------:|--------:|
-| obkv  | 205027.18 | 2.43660 | 12.15900 | 18.81500 | 20017.81 |        31% |     57% |
+| obkv  | 290218.55 | 1.72102 |  8.06300 | 13.69500 | 28335.46 |        36% |     53% |
 | tikv  | 136799.62 | 3.53078 | 14.78300 | 22.01500 | 13356.42 |        33% |     15% |
 | hbase | 287964.87 | 1.72181 |  7.35900 | 14.59100 | 28115.43 |        40% |     10% |
 
@@ -52,7 +52,7 @@ hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 6380 -a
 Writing results to stdout
 [RUN #1] Preparing benchmark client...
 [RUN #1] Launching threads now...
-[RUN #1 100%, 1219 secs]  0 threads:   250000000 ops,  206804 (avg:  205034) ops/sec, 9.86MB/sec (avg: 9.77MB/sec),  1.77 (avg:  2.44) msec latency
+[RUN #1 100%, 862 secs]  0 threads:   250000000 ops,  312906 (avg:  289952) ops/sec, 14.92MB/sec (avg: 13.82MB/sec),  1.07 (avg:  1.72) msec latency
 
 5         Threads
 50        Connections per thread
@@ -63,12 +63,13 @@ ALL STATS
 ============================================================================================================================
 Type         Ops/sec    MOVED/sec      ASK/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec
 ----------------------------------------------------------------------------------------------------------------------------
-Sets       205027.18         0.00         0.00         2.43660         1.91100        12.15900        18.81500     10008.91
-Totals     205027.18         0.00         0.00         2.43660         1.91100        12.15900        18.81500     20017.81
+Sets       290218.55         0.00         0.00         1.72102         1.43900         8.06300        13.69500     14167.73
+Totals     290218.55         0.00         0.00         1.72102         1.43900         8.06300        13.69500     28335.46
 
 ```
 
 #### 压测客户端
+
 ![img.png](img.png)
 
 #### proxy
@@ -202,11 +203,10 @@ java版本：`21.0.1`
 CREATE TABLE `camellia_kv` (
     `slot` int(9) NOT NULL,
     `k` varbinary(1024) NOT NULL,
-    `v` varbinary(1024) NOT NULL,
-    `t` DATETIME(3),
+    `v` varbinary(1024) NOT NULL
     PRIMARY KEY (`slot`, `k`))
-TTL (t + INTERVAL 1 SECOND)
 PARTITION BY KEY(slot) PARTITIONS 97;
+
 ```
 
 #### hbase

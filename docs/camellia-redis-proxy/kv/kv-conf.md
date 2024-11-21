@@ -121,11 +121,14 @@ kv.obkv.table.name=camellia_kv
 CREATE TABLE `camellia_kv` (
     `slot` int(9) NOT NULL,
     `k` varbinary(1024) NOT NULL,
-    `v` varbinary(1024) NOT NULL,
-    `t` DATETIME(3),
+    `v` varbinary(1024) NOT NULL
     PRIMARY KEY (`slot`, `k`))
-TTL (t + INTERVAL 1 SECOND)
 PARTITION BY KEY(slot) PARTITIONS 97;
+
+```
+
+```
+set global binlog_row_image='minimal';
 ```
 
 
