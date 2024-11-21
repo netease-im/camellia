@@ -28,6 +28,11 @@
 
 具体见：[kv-conf](kv-conf.md)
 
+## 性能测试
+
+[set](perf/perf_set.md)   
+[get_set](perf/perf_get_set.md)   
+
 ## 支持的command列表
 
 |     command      |                                                             info |
