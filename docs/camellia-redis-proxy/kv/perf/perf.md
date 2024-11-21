@@ -13,9 +13,9 @@
 |:--------------------:|:--------:|-----------------------------------------:|
 |  memtier_benchmark   |  2.1.1   |                                          |
 | camellia-redis-proxy |  1.3.0   |                        组成redis-cluster集群 |
-|         obkv         | 4.2.1bp9 |                    租户unit  cpu72核/内存288G |
+|         obkv         | 4.2.1bp9 |               租户unit <br>  cpu72核/内存288G |
 |         tikv         |  7.5.2   | max-thread-count 32 <br> block-cache 60G |
-|        hbase         |  2.4.18  |           单台region-server配置了260g的堆内+对外内存 |
+|        hbase         |  2.4.18  |           单台region-server配置了260g的堆内+堆外内存 |
 
 ## 压测程序
 
