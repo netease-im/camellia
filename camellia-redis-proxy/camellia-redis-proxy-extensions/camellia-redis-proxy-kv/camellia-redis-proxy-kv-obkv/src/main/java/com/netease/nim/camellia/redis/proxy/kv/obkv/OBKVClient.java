@@ -1,8 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.kv.obkv;
 
 import com.alipay.oceanbase.rpc.ObTableClient;
+import com.alipay.oceanbase.rpc.filter.ObCompareOp;
+import com.alipay.oceanbase.rpc.filter.ObTableFilterList;
+import com.alipay.oceanbase.rpc.filter.ObTableValueFilter;
 import com.alipay.oceanbase.rpc.mutation.Row;
 import com.alipay.oceanbase.rpc.mutation.result.MutationResult;
+import com.alipay.oceanbase.rpc.protocol.payload.impl.execute.mutate.ObTableQueryAndMutateRequest;
 import com.alipay.oceanbase.rpc.stream.QueryResultSet;
 import com.alipay.oceanbase.rpc.table.api.TableBatchOps;
 import com.alipay.oceanbase.rpc.table.api.TableQuery;
@@ -12,7 +16,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,24 +63,18 @@ public class OBKVClient implements KVClient {
 
     @Override
     public boolean supportTTL() {
-        return true;
+        return false;
     }
 
     @Override
     public void put(int slot, byte[] key, byte[] value, long ttl) {
-        try {
-            Date t = new Date(TimeCache.currentMillis + ttl);
-            obTableClient.insertOrUpdate(tableName, new Object[]{slot, key}, new String[]{"v", "t"}, new Object[]{value, t});
-        } catch (Exception e) {
-            logger.error("put error", e);
-            throw new KvException(e);
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void put(int slot, byte[] key, byte[] value) {
         try {
-            obTableClient.insertOrUpdate(tableName, new Object[]{slot, key}, new String[]{"v", "t"}, new Object[]{value, null});
+            obTableClient.insertOrUpdate(tableName, new Object[]{slot, key}, new String[]{"v"}, new Object[]{value});
         } catch (Exception e) {
             logger.error("put error", e);
             throw new KvException(e);
@@ -89,7 +86,7 @@ public class OBKVClient implements KVClient {
         try {
             TableBatchOps batch = obTableClient.batch(tableName);
             for (KeyValue keyValue : list) {
-                batch.insertOrUpdate(new Object[]{slot, keyValue.getKey()}, new String[]{"v", "t"}, new Object[]{keyValue.getValue(), null});
+                batch.insertOrUpdate(new Object[]{slot, keyValue.getKey()}, new String[]{"v"}, new Object[]{keyValue.getValue()});
             }
             batch.execute();
         } catch (Exception e) {
@@ -219,12 +216,24 @@ public class OBKVClient implements KVClient {
 
     @Override
     public boolean supportCheckAndDelete() {
-        return false;
+        return true;
     }
 
     @Override
     public void checkAndDelete(int slot, byte[] key, byte[] value) {
-        throw new UnsupportedOperationException();
+        try {
+            TableQuery tableQuery = obTableClient.query(tableName).select("slot", "k", "v");
+            ObTableValueFilter filter1 = new ObTableValueFilter(ObCompareOp.EQ, "slot", slot);
+            ObTableValueFilter filter2 = new ObTableValueFilter(ObCompareOp.EQ, "k", key);
+            ObTableValueFilter filter3 = new ObTableValueFilter(ObCompareOp.EQ, "v", value);
+            ObTableFilterList filterList = new ObTableFilterList(ObTableFilterList.operator.AND, filter1, filter2, filter3);
+            tableQuery.setFilter(filterList);
+            ObTableQueryAndMutateRequest request = obTableClient.obTableQueryAndDelete(tableQuery);
+            obTableClient.execute(request);
+        } catch (Exception e) {
+            logger.error("checkAndDelete error", e);
+            throw new KvException(e);
+        }
     }
 
     @Override
