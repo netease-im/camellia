@@ -222,12 +222,12 @@ public class OBKVClient implements KVClient {
     @Override
     public void checkAndDelete(int slot, byte[] key, byte[] value) {
         try {
-            TableQuery tableQuery = obTableClient.query(tableName).select("slot", "k", "v");
-            ObTableValueFilter filter1 = new ObTableValueFilter(ObCompareOp.EQ, "slot", slot);
-            ObTableValueFilter filter2 = new ObTableValueFilter(ObCompareOp.EQ, "k", key);
-            ObTableValueFilter filter3 = new ObTableValueFilter(ObCompareOp.EQ, "v", value);
-            ObTableFilterList filterList = new ObTableFilterList(ObTableFilterList.operator.AND, filter1, filter2, filter3);
-            tableQuery.setFilter(filterList);
+            TableQuery tableQuery = obTableClient.query(tableName)
+                    .select("slot", "k", "v")
+                    .addScanRange(new Object[]{slot, key}, true, new Object[]{slot, key}, true)
+                    .limit(1);
+            ObTableValueFilter filter = new ObTableValueFilter(ObCompareOp.EQ, "v", value);
+            tableQuery.setFilter(filter);
             ObTableQueryAndMutateRequest request = obTableClient.obTableQueryAndDelete(tableQuery);
             obTableClient.execute(request);
         } catch (Exception e) {
