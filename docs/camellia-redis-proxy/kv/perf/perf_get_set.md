@@ -30,7 +30,7 @@
 /usr/bin/memtier_benchmark -s 10.44.40.23 -p 4380 -a ab39725fb75f --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1 
 ```
 
-* 5*50个客户端连接，每个连接发100w个set请求，累计2.5亿个请求，get和set的比例为默认的10:1
+* 5*50个客户端连接，每个连接发100w个请求，累计2.5亿个请求，get和set的比例为默认的10:1
 * key的数量为5000w，value的大小为512字节的随机字符
 * 单个proxy节点，lru-cache最多缓存600w个key
 * 也就是每个key大约会执行4.5次get，0.45次set
