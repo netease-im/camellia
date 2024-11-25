@@ -24,6 +24,7 @@
 * camellia-mq-isolation，优化controller执行select mq info的逻辑，当依赖redis异常时也能匹配更优结果
 * camellia-dashboard/camellia-console/camellia-config，移除swagger
 * camellia-redis-proxy，kv模块，修改obkv的表结构，不再使用ttl表，以便提升性能（破坏性更新）
+* camellia-core，优化ReloadableProxyFactory的reload逻辑
 
 ### fix
 * camellia-redis-proxy，kv模块，当key不存在时，zrem方法的返回格式错误

@@ -81,14 +81,18 @@ public class ReloadableProxyFactory<T> {
                     logger.info("getOrUpdate resourceTable success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}",
                             bid, bgroup, response.getMd5(), ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
                 }
-                this.response = response;
-                this.resourceSelector = new ResourceSelector(response.getResourceTable(), env);
-                this.generator = new StandardProxyGenerator<>(clazz, response.getResourceTable(), defaultResource, env);
+
+                ResourceSelector resourceSelector = new ResourceSelector(response.getResourceTable(), env);
+                StandardProxyGenerator<T> generator = new StandardProxyGenerator<>(clazz, response.getResourceTable(), defaultResource, env);
                 T proxy = generator.generate();
+
+                this.response = response;
+                this.resourceSelector = resourceSelector;
+                this.generator = generator;
+                this.proxy = proxy;
                 if (logger.isInfoEnabled()) {
                     logger.info("initOrReload success, bid = {}, bgroup = {}, proxy = {}", bid, bgroup, clazz.getName());
                 }
-                this.proxy = proxy;
             } catch (Exception e) {
                 logger.error("initOrReload error, bid = {}, bgroup = {}, clazz = {}", bid, bgroup, clazz.getName(), e);
                 if (throwError) {
