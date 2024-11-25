@@ -23,6 +23,7 @@
 * camellia-mq-isolation，当topic和namespace不匹配时，不直接抛出异常丢弃任务，而是打印日志但是继续执行任务
 * camellia-mq-isolation，优化controller执行select mq info的逻辑，当依赖redis异常时也能匹配更优结果
 * camellia-dashboard/camellia-console/camellia-config，移除swagger
+* camellia-redis-proxy，kv模块，修改obkv的表结构，不再使用ttl表，以便提升性能（破坏性更新）
 
 ### fix
 * camellia-redis-proxy，kv模块，当key不存在时，zrem方法的返回格式错误

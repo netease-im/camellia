@@ -22,6 +22,7 @@
 * camellia-mq-isolation, optimize logic when namespace not match on produce/consume
 * camellia-mq-isolation, optimize default logic on select mq info when redis error
 * camellia-dashboard/camellia-console/camellia-config remove swagger
+* camellia-redis-proxy, kv, obkv do not use ttl table for performance, it's a break change
 
 ### fix
 * camellia-redis-proxy, kv, zrem reply error when key not exists
