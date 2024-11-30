@@ -9,159 +9,133 @@
 
 ## 版本
 
-|          集群          |    版本    |                                       说明 |
-|:--------------------:|:--------:|-----------------------------------------:|
-|  memtier_benchmark   |  2.1.1   |                                          |
-| camellia-redis-proxy |  1.3.0   |                        组成redis-cluster集群 |
-|         obkv         | 4.2.1bp9 |               租户unit <br>  cpu72核/内存288G |
-|         tikv         |  7.5.2   | max-thread-count 32 <br> block-cache 60G |
-|        hbase         |  2.4.18  |           单台region-server配置了260g的堆内+堆外内存 |
+|          集群          |   版本    |                                        说明 |
+|:--------------------:|:-------:|------------------------------------------:|
+|  memtier_benchmark   |  2.1.1  |                                           |
+| camellia-redis-proxy |  1.3.0  |                         组成redis-cluster集群 |
+|         obkv         | 4.2.5.1 |                租户unit <br>  cpu72核/内存100G |
+|         tikv         |  7.5.2  | max-thread-count 72 <br> block-cache 100G |
+|        hbase         | 2.4.18  |            单台region-server配置了100g的堆内+堆外内存 |
 
 ## 压测程序
 
 ```
 ##obkv
-/usr/bin/memtier_benchmark -s 10.44.40.23 -p 6380 -a fbe086bdd54d --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1 
+/usr/bin/memtier_benchmark -s 10.44.40.23 -p 6380 -a fbe086bdd54d --cluster-mode -t 20 -c 20 -n 300000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=rrr --key-maximum=30000000 --key-minimum=1 
 
 ##tikv
-/usr/bin/memtier_benchmark -s 10.44.40.23 -p 5380 -a 648d04f8c3f9 --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1 
+/usr/bin/memtier_benchmark -s 10.44.40.23 -p 5380 -a 648d04f8c3f9 --cluster-mode -t 20 -c 20 -n 300000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=rrr --key-maximum=30000000 --key-minimum=1 
 
 ##hbase
-/usr/bin/memtier_benchmark -s 10.44.40.23 -p 4380 -a ab39725fb75f --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1 
+/usr/bin/memtier_benchmark -s 10.44.40.23 -p 4380 -a ab39725fb75f --cluster-mode -t 20 -c 20 -n 300000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=rrr --key-maximum=30000000 --key-minimum=1  
 ```
 
-* 5*50个客户端连接，每个连接发100w个请求，累计2.5亿个请求，get和set的比例为默认的10:1
-* key的数量为5000w，value的大小为512字节的随机字符
+* 读写混合场景
+* 20*20个客户端连接，每个连接发100w个请求，累计1.2亿个请求，get和set的比例为默认的10:1
+* key的数量为3000w，value的大小为512字节的随机字符
+* key的分布为高斯分布
 * 单个proxy节点，lru-cache最多缓存600w个key
-* 也就是每个key大约会执行4.5次get，0.45次set
+* 也就是每个key大约会执行3.6次get，0.36次set（高斯分布下每个key的请求次数是不一样的）
 
 ## 压测结果
 
 |  后端   |    qps    |  rt-avg |   rt-p99 |  rt-p999 |   KB/sec | cpu(proxy) | cpu(kv) |
 |:-----:|:---------:|--------:|---------:|---------:|---------:|-----------:|--------:|
-| obkv  | 402804.55 | 1.18214 |  3.66300 |  8.03100 | 69227.34 |        55% |     25% |
-| tikv  | 245247.75 | 1.98863 | 10.36700 | 16.06300 | 42148.05 |        48% |     11% |
-| hbase | 394377.43 | 1.29439 |  5.02300 |  9.98300 | 67777.76 |        54% |     10% |
+| obkv  | 532718.51 | 1.50003 |  8.76700 | 13.75900 | 82491.71 |        67% |     13% |
+| tikv  | 306750.94 | 2.54298 | 16.63900 | 26.49500 | 47499.60 |        53% |     11% |
+| hbase | 496481.53 | 1.59984 | 10.11100 | 20.60700 | 76880.44 |        63% |      8% |
 
 
 ## 压测数据明细
 
-### obkv
+### memtier_benchmark(obkv)
 
-#### memtier_benchmark
 ```
-hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 6380 -a fbe086bdd54d --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1
+hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 6380 -a fbe086bdd54d --cluster-mode -t 20 -c 20 -n 300000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=rrr --key-maximum=30000000 --key-minimum=1
 Writing results to stdout
 [RUN #1] Preparing benchmark client...
 [RUN #1] Launching threads now...
-[RUN #1 100%, 592 secs]  0 threads:   250000000 ops,  402885 (avg:  421956) ops/sec, 96.23MB/sec (avg: 70.82MB/sec),  1.15 (avg:  1.18) msec latency
+[RUN #1 100%, 225 secs]  0 threads:   120000000 ops,  715530 (avg:  532228) ops/sec, 153.56MB/sec (avg: 80.48MB/sec),  1.00 (avg:  1.50) msec latency
 
-5         Threads
-50        Connections per thread
-1000000   Requests per client
+20        Threads
+20        Connections per thread
+300000    Requests per client
 
 
 ALL STATS
 ======================================================================================================================================================
 Type         Ops/sec     Hits/sec   Misses/sec    MOVED/sec      ASK/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-Sets        36618.96          ---          ---         0.00         0.00         0.94966         0.79100         3.18300         7.26300     19910.70
-Gets       366185.59     71909.65    294275.93         0.00         0.00         1.20539         1.14300         3.71100         8.09500     49316.64
+Sets        48429.44          ---          ---         0.00         0.00         1.69197         1.07900         8.83100        13.82300     26276.56
+Gets       484289.07     78301.91    405987.16         0.00         0.00         1.48084         0.29500         8.76700        13.75900     56215.14
 Waits           0.00          ---          ---          ---          ---             ---             ---             ---             ---          ---
-Totals     402804.55     71909.65    294275.93         0.00         0.00         1.18214         1.09500         3.66300         8.03100     69227.34
+Totals     532718.51     78301.91    405987.16         0.00         0.00         1.50003         0.57500         8.76700        13.75900     82491.71
 
 ```
 
-#### 压测客户端
-
-![img_9.png](img_9.png)
-
-#### proxy
-
-![img_10.png](img_10.png)
-
-#### kv后端
-
-![img_11.png](img_11.png)
-
-### tikv
-
-#### memtier_benchmark
+### memtier_benchmark(tikv)
 
 ```
-hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 5380 -a 648d04f8c3f9 --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1
+hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 5380 -a 648d04f8c3f9 --cluster-mode -t 20 -c 20 -n 300000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=rrr --key-maximum=30000000 --key-minimum=1
 Writing results to stdout
 [RUN #1] Preparing benchmark client...
 [RUN #1] Launching threads now...
-[RUN #1 100%, 1019 secs]  0 threads:   250000000 ops,  166964 (avg:  245197) ops/sec, 40.66MB/sec (avg: 41.15MB/sec),  1.50 (avg:  1.99) msec latency
+[RUN #1 100%, 391 secs]  0 threads:   120000000 ops,  313293 (avg:  306391) ops/sec, 67.26MB/sec (avg: 46.33MB/sec),  1.28 (avg:  2.54) msec latency
 
-5         Threads
-50        Connections per thread
-1000000   Requests per client
+20        Threads
+20        Connections per thread
+300000    Requests per client
 
 
 ALL STATS
 ======================================================================================================================================================
 Type         Ops/sec     Hits/sec   Misses/sec    MOVED/sec      ASK/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-Sets        22295.47          ---          ---         0.00         0.00         1.61950         0.75900         9.66300        15.35900     12122.64
-Gets       222952.28     43780.15    179172.13         0.00         0.00         2.02554         1.48700        10.43100        16.12700     30025.42
+Sets        27886.73          ---          ---         0.00         0.00         2.95672         1.67100        17.02300        26.75100     15130.62
+Gets       278864.21     45086.10    233778.11         0.00         0.00         2.50161         0.23100        16.51100        26.49500     32368.98
 Waits           0.00          ---          ---          ---          ---             ---             ---             ---             ---          ---
-Totals     245247.75     43780.15    179172.13         0.00         0.00         1.98863         1.42300        10.36700        16.06300     42148.05
+Totals     306750.94     45086.10    233778.11         0.00         0.00         2.54298         0.65500        16.63900        26.49500     47499.60
 
 ```
 
-#### 压测客户端
-
-![img_12.png](img_12.png)
-
-#### proxy
-
-![img_13.png](img_13.png)
-
-#### kv后端
-
-![img_14.png](img_14.png)
-
-### hbase
-
-#### memtier_benchmark
+### memtier_benchmark(hbase)
 
 ```
-hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 4380 -a ab39725fb75f --cluster-mode -t 5 -c 50 -n 1000000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=2str --key-maximum=50000000 --key-minimum=1
+hzcaojiajun@nim-test-db3:~$ /usr/bin/memtier_benchmark -s 10.44.40.23 -p 4380 -a ab39725fb75f --cluster-mode -t 20 -c 20 -n 300000 --pipeline=1 --distinct-client-seed --random-data --data-size=512 --key-prefix=rrr --key-maximum=30000000 --key-minimum=1
 Writing results to stdout
 [RUN #1] Preparing benchmark client...
 [RUN #1] Launching threads now...
-[RUN #1 100%, 648 secs]  0 threads:   250000000 ops,  400352 (avg:  385636) ops/sec, 96.15MB/sec (avg: 64.72MB/sec),  1.13 (avg:  1.29) msec latency
+[RUN #1 100%, 241 secs]  0 threads:   120000000 ops,  337465 (avg:  496899) ops/sec, 72.37MB/sec (avg: 75.14MB/sec),  1.19 (avg:  1.60) msec latency
 
-5         Threads
-50        Connections per thread
-1000000   Requests per client
+20        Threads
+20        Connections per thread
+300000    Requests per client
 
 
 ALL STATS
 ======================================================================================================================================================
 Type         Ops/sec     Hits/sec   Misses/sec    MOVED/sec      ASK/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-Sets        35852.85          ---          ---         0.00         0.00         1.03282         0.79900         4.51100         9.53500     19494.14
-Gets       358524.57     70402.71    288121.86         0.00         0.00         1.32054         1.14300         5.08700         9.98300     48283.62
+Sets        45135.14          ---          ---         0.00         0.00         1.85634         1.06300        10.43100        21.50300     24489.16
+Gets       451346.39     72975.68    378370.72         0.00         0.00         1.57419         0.25500        10.11100        20.47900     52391.28
 Waits           0.00          ---          ---          ---          ---             ---             ---             ---             ---          ---
-Totals     394377.43     70402.71    288121.86         0.00         0.00         1.29439         1.09500         5.02300         9.98300     67777.76
+Totals     496481.53     72975.68    378370.72         0.00         0.00         1.59984         0.44700        10.11100        20.60700     76880.44
+
 
 ```
 
 
-#### 压测客户端
+### 压测客户端
 
-![img_15.png](img_15.png)
+![img_4.png](img_4.png)
 
-#### proxy
+### proxy
 
-![img_16.png](img_16.png)
+![img_5.png](img_5.png)
 
-#### kv后端
+### kv后端
 
-![img_17.png](img_17.png)
+![img_6.png](img_6.png)
 
 ## camellia-redis-proxy关键配置
 
@@ -213,6 +187,11 @@ CREATE TABLE `camellia_kv` (
     PRIMARY KEY (`slot`, `k`))
 PARTITION BY KEY(slot) PARTITIONS 97;
 
+```
+
+```
+set global binlog_row_image='minimal';
+alter system set kv_group_commit_batch_size = 10;
 ```
 
 #### hbase

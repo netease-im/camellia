@@ -39,12 +39,12 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
 
 ## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.2.30），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.3.0），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.2.30</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下: 

@@ -136,7 +136,7 @@ public interface ValueLoader<T> {
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-hot-key-sdk</artifactId>
-  <version>1.2.30</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 

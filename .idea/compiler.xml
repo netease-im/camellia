@@ -15,6 +15,7 @@
         <module name="camellia-id-gen-tests" />
         <module name="camellia-redis-proxy-hbase-spring-boot-starter" />
         <module name="camellia-redis-eureka-spring-boot3-starter" />
+        <module name="camellia-hot-key-common" />
         <module name="camellia-redis-proxy-kv-tikv" />
         <module name="camellia-cache-spring-boot" />
         <module name="camellia-spring-redis-zk-discovery-spring-boot-starter" />
@@ -70,6 +71,7 @@
         <module name="camellia-hbase-spring-boot-starter" />
         <module name="camellia-redis-proxy-hot-key-monitor-plugin" />
         <module name="camellia-redis-proxy-tests" />
+        <module name="camellia-hot-key-server-spring-boot-starter" />
         <module name="camellia-spring-redis3-base" />
         <module name="camellia-hot-key-discovery-eureka3" />
         <module name="camellia-mq-isolation-core" />
@@ -131,39 +133,5 @@
         <module name="camellia-id-gen-id-loader" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="camellia-cache-samples" target="1.8" />
-      <module name="camellia-cache-samples2" target="1.8" />
-      <module name="camellia-config-samples" target="1.8" />
-      <module name="camellia-console-samples" target="1.8" />
-      <module name="camellia-core-samples" target="1.8" />
-      <module name="camellia-dashboard-samples" target="1.8" />
-      <module name="camellia-delay-queue-consumer-samples" target="1.8" />
-      <module name="camellia-delay-queue-producer-samples" target="1.8" />
-      <module name="camellia-delay-queue-samples" target="1.5" />
-      <module name="camellia-delay-queue-server-samples" target="1.8" />
-      <module name="camellia-feign-samples" target="1.8" />
-      <module name="camellia-hbase-samples" target="1.8" />
-      <module name="camellia-hot-key-common" target="1.8" />
-      <module name="camellia-hot-key-samples" target="1.5" />
-      <module name="camellia-hot-key-sdk-samples" target="1.8" />
-      <module name="camellia-hot-key-server-samples" target="1.8" />
-      <module name="camellia-hot-key-server-spring-boot-starter" target="21" />
-      <module name="camellia-id-gen-segment-samples" target="1.8" />
-      <module name="camellia-id-gen-segment-spring-boot" target="1.8" />
-      <module name="camellia-id-gen-snowflake-samples" target="1.8" />
-      <module name="camellia-id-gen-snowflake-spring-boot" target="1.8" />
-      <module name="camellia-id-gen-strict-samples" target="1.8" />
-      <module name="camellia-id-gen-strict-spring-boot" target="1.8" />
-      <module name="camellia-metric-samples" target="1.8" />
-      <module name="camellia-redis-proxy-hbase-samples" target="1.8" />
-      <module name="camellia-redis-proxy-kv-samples" target="1.8" />
-      <module name="camellia-redis-proxy-samples" target="1.8" />
-      <module name="camellia-redis-samples" target="1.8" />
-      <module name="camellia-redis3-samples" target="1.8" />
-      <module name="camellia-samples" target="1.5" />
-      <module name="camellia-spring-redis-samples" target="1.8" />
-      <module name="camellia-tools-samples" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>

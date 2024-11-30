@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.3.0（2024/10/xx）
+# 1.3.0（2024/11/xx）
 ### 新增
 * camellia-redis-proxy，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变
 * camellia-delay-queue，最低java版本升级为java21，并且使用spring-boot3作为启动器，相关配套的sdk保持java8不变

@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>org.mybatis.spring.boot</groupId>
 			<artifactId>mybatis-spring-boot-starter</artifactId>
-			<version>${mybatis-spring-boot-starter.version}</version>
+			<version>${mybatis-spring-boot3-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>

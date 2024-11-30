@@ -1,11 +1,11 @@
 
 ## QuickStart
 
-download *.tar.gz（v1.2.30）：
+download *.tar.gz（v1.3.0）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.2.30/camellia-redis-proxy-1.2.30.tar.gz
-tar zxvf camellia-redis-proxy-1.2.30.tar.gz
-cd camellia-redis-proxy-1.2.30/
+wget https://github.com/netease-im/camellia/releases/download/1.3.0/camellia-redis-proxy-1.3.0.tar.gz
+tar zxvf camellia-redis-proxy-1.3.0.tar.gz
+cd camellia-redis-proxy-1.3.0/
 ```
 modify config in ./BOOT-INF/classes/
 * application.yml
@@ -19,9 +19,9 @@ prerequisite `jdk1.8.0_202`, run by:
 
 if want run by jar, you can build a jar file like this:  
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.2.30/camellia-redis-proxy-1.2.30.tar.gz
-tar zxvf camellia-redis-proxy-1.2.30.tar.gz
-cd camellia-redis-proxy-1.2.30/
+wget https://github.com/netease-im/camellia/releases/download/1.3.0/camellia-redis-proxy-1.3.0.tar.gz
+tar zxvf camellia-redis-proxy-1.3.0.tar.gz
+cd camellia-redis-proxy-1.3.0/
 jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
 ```
 then you can run like this:  

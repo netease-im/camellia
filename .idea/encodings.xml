@@ -31,8 +31,6 @@
     <file url="file://$PROJECT_DIR$/camellia-cache/camellia-cache-spring-boot3-starter/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-cache/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-cache/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-codec/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-codec/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-core/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-core/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-delay-queue/camellia-delay-queue-common/src/main/java" charset="UTF-8" />
@@ -107,8 +105,6 @@
     <file url="file://$PROJECT_DIR$/camellia-hot-key/camellia-hot-key-spring-boot-starters/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-hot-key/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-hot-key/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-http-console/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-http-console/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/camellia-id-gen-core/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/camellia-id-gen-core/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/camellia-id-gen-sdk/src/main/java" charset="UTF-8" />
@@ -133,16 +129,6 @@
     <file url="file://$PROJECT_DIR$/camellia-id-gen/camellia-id-gen-spring-boot-starters/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-controller-spring-boot-starter/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-controller-spring-boot-starter/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-controller/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-controller/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-core/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-core/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-kafka/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/camellia-mq-isolation-kafka/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-mq-isolation/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-base/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-base/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-client/camellia-redis-spring-boot-starters/camellia-redis-eureka-base/src/main/java" charset="UTF-8" />
@@ -303,10 +289,26 @@
     <file url="file://$PROJECT_DIR$/camellia-tests/camellia-tools-tests/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-tests/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-tests/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-tools/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-tools/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-zk/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/camellia-zk/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-codec/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-codec/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-http-console/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-http-console/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-controller-spring-boot-starter/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-controller-spring-boot-starter/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-controller/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-controller/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-core/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-core/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-kafka/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/camellia-mq-isolation-kafka/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-mq-isolation/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-tools/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-tools/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-zk/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/camellia-zk/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-toolkits/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

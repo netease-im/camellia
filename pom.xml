@@ -13,7 +13,6 @@
 	<modules>
 		<module>camellia-admin</module>
 		<module>camellia-core</module>
-		<module>camellia-codec</module>
 		<module>camellia-cache</module>
 		<module>camellia-feign-client</module>
 		<module>camellia-hbase-client</module>
@@ -21,12 +20,9 @@
 		<module>camellia-redis-client</module>
 		<module>camellia-redis-proxy</module>
 		<module>camellia-id-gen</module>
-		<module>camellia-mq-isolation</module>
 		<module>camellia-delay-queue</module>
-		<module>camellia-tools</module>
-		<module>camellia-zk</module>
+		<module>camellia-toolkits</module>
 		<module>camellia-hot-key</module>
-		<module>camellia-http-console</module>
 		<module>camellia-tests</module>
 	</modules>
 
@@ -76,7 +72,9 @@
 		<nacos.version>2.0.3</nacos.version>
 		<lz4-java.version>1.8.0</lz4-java.version>
 		<mybatis-spring-boot-starter.version>1.3.2</mybatis-spring-boot-starter.version>
+		<mybatis-spring-boot3-starter.version>3.0.4</mybatis-spring-boot3-starter.version>
 		<mysql-connector-java.version>5.1.30</mysql-connector-java.version>
+        <mysql8-connector-java.version>8.0.19</mysql8-connector-java.version>
 		<caffeine.version>2.9.3</caffeine.version>
 		<jetcd.version>0.7.7</jetcd.version>
 		<bouncycastle.version>1.70</bouncycastle.version>
