@@ -11,7 +11,7 @@
 * 使用obkv的hbase-client模拟redis协议，使用: `mvn clean package -Pkv-obkv`
 * 使用tikv模拟redis协议，使用: `mvn clean package -Pkv-tikv`
 
-### 1、安装java（jdk8+，至少1.8.0_202）
+### 1、安装java（jdk21+）
 如已经安装则跳过
 
 ### 2、安装maven

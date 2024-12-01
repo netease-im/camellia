@@ -12,7 +12,7 @@ modify config in ./BOOT-INF/classes/
 * logback.xml
 * camellia-redis-proxy.properties
 
-prerequisite `jdk1.8.0_202`, run by: 
+prerequisite `jdk21`, run by: 
 ```
 ./start.sh
 ```
@@ -26,7 +26,7 @@ jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
 ```
 then you can run like this:  
 ```
-java -XX:+UseG1GC -Xms4096m -Xmx4096m -server -jar camellia-redis-proxy.jar  
+java -XX:+UseG1GC -Dio.netty.tryReflectionSetAccessible=true --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/jdk.internal.access=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/sun.net.util=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher  
 ```
 
 proxy will load config from `./BOOT-INF/classes/` by default, you can use startup parameter to specify config file path  
@@ -43,11 +43,7 @@ proxy will load config from `./BOOT-INF/classes/` by default, you can use startu
 
 
 
-others：  
-
-* How to run in jdk11/jdk17/jdk21, [jdk17](jdk17.md)  
-
-* How to build/run by spring-boot3/jdk21/docker, [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)  
+others：
 
 * How to build latest snapshot *.tar.gz package: [build-snapshot-package](build-snapshot-package.md)  
 

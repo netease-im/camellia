@@ -1,7 +1,7 @@
 
 # camellia-redis-proxy([English](redis-proxy-en.md))
 ## 介绍  
-camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
+camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最低要求java21
 
 ## 特性
 * 支持代理到redis-standalone、redis-sentinel、redis-cluster
@@ -38,71 +38,21 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
 
-## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.3.0），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
-```
-<dependency>
-  <groupId>com.netease.nim</groupId>
-  <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.3.0</version>
-</dependency>
-```
-2) 编写主类Application.java, 如下: 
-```java
-import com.netease.nim.camellia.redis.proxy.springboot.EnableCamelliaRedisProxyServer;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
-@EnableCamelliaRedisProxyServer
-public class Application {
-
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class);
-    }
-}
-```
-3) 配置application.yml, 如下:  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
-```
-4) 启动Application.java即可.
-你可以使用redis-cli去连接proxy，端口是6380，密码是pass123（如果不需要密码，则在application.yml里去掉这一行即可）
-```
-➜ ~ ./redis-cli -h 127.0.0.1 -p 6380 -a pass123
-127.0.0.1:6380> set k1 v1
-OK
-127.0.0.1:6380> get k1
-"v1"
-127.0.0.1:6380> mget k1 k2 k3
-1) "v1"
-2) (nil)
-3) (nil)
-```
-
-## 快速开始二（基于安装包）
+## 快速开始一（基于安装包）
 参见：[quick-start-package](quickstart/quick-start-package.md)
 
-## 快速开始三（不使用spring-boot-stater)
+## 快速开始二（基于源码编译，个性化配置）
+参见：[camellia-redis-proxy-bootstrap](other/camellia-redis-proxy-bootstrap.md)
+
+## 快速开始三（适合java开发工程师，使用spring-boot-starter）
+参见：[quick-start-spring-boot](quickstart/quick-start-spring-boot.md)
+
+## 快速开始四（适合java开发工程师，不使用spring-boot-stater)
 参见：[quick-start-no-spring-boot](quickstart/quick-start-no-spring-boot.md)
 
-## 如果要使用java21/spring-boot3/docker  
-参见：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
-
-## 基于源码编译
-参见：[camellia-redis-proxy-bootstrap](other/camellia-redis-proxy-bootstrap.md)
+## 快速开始五（docker）
+参见：[quick-start-docker](deploy/quick-start-docker.md)
 
 ## 源码解读
 具体可见：[代码结构](code/proxy-code.md)

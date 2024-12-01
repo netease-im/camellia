@@ -13,19 +13,17 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 ### 独立部署的中间件服务（server）
 
+最低要求java21+    
+
 * [redis代理](/docs/camellia-redis-proxy/redis-proxy-zh.md) 
 * [发号器](/docs/camellia-id-gen/id-gen.md)
 * [延迟队列](/docs/camellia-delay-queue/delay-queue.md)
 * [热点key探测](/docs/camellia-hot-key/hot-key.md)
 
-更多：   
-* 以上中间件默认使用java8/spring-boot2运行，如果要使用java21/spring-boot3，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
-* 以上中间件支持使用prometheus/grafana对服务进行监控，请参考：[prometheus/grafana](docs/prometheus_grafana.md)
-
-
 ### 增强的三方库（sdk）
 
-此外，还包括其他众多简单易用的三方库（基于开源版本进行二次增强）：
+基于开源版本进行二次增强，最低要求java8+   
+
 * [redis客户端](/docs/camellia-redis-client/redis-client.md) 
 * [hbase客户端 ](/docs/camellia-hbase/hbase-client.md)
 * [微服务feign客户端](/docs/camellia-feign/feign.md)
@@ -35,7 +33,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 ## 功能简介
 
 ### camellia-redis-proxy
-基于netty4开发的一款高性能redis代理  
+基于netty4开发的一款高性能redis代理，最低要求java21  
 * 支持redis-standalone/redis-sentinel/redis-cluster
 * 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
 * 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端
@@ -59,6 +57,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 ### camellia-id-gen
 提供了多种id生成算法，开箱即用，包括：  
+* 服务器最低要求java21，sdk最低要求java8  
 * 雪花算法（支持设置单元标记）   
 * 严格递增的id生成算法（步长支持动态调整）  
 * 趋势递增的id生成算法（支持设置单元标记，支持多单元id同步）    
@@ -66,7 +65,8 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 [快速开始](/docs/camellia-id-gen/id-gen.md)
 
 ### camellia-delay-queue
-基于redis实现的延迟队列服务：
+基于redis实现的延迟队列服务：   
+* 服务器最低要求java21，sdk最低要求java8  
 * 独立部署delay-queue-server服务器，支持水平扩展，支持多topic，以http协议对外提供服务（短轮询or长轮询），支持多语言客户端
 * 提供了一个java-sdk，并且支持以spring-boot方式快速接入
 * 支持丰富的监控数据     
@@ -74,7 +74,8 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 [快速开始](/docs/camellia-delay-queue/delay-queue.md)
 
 ### camellia-hot-key  
-热key探测和缓存服务：  
+热key探测和缓存服务： 
+* 服务器最低要求java21，sdk最低要求java8  
 * 支持热key探测，也支持热key缓存，也支持topN统计  
 * 支持丰富的自定义扩展口（热key通知、topN通知、热key规则数据源、热key缓存命中统计）
 * 支持自定义数据源（内置：本地配置文件、nacos、etcd，也可以自己实现）  
@@ -85,7 +86,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 
 ## RELEASE版本
-最新版本是1.3.0，已经发布到maven中央仓库（2024/11/xx）  
+最新版本是1.3.0，已经发布到maven中央仓库（2024/12/xx）  
 [更新日志](/update-zh.md)  
 
 ## SNAPSHOT版本

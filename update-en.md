@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.3.0（2024/11/xx）
+# 1.3.0（2024/12/xx）
 ### add
 * camellia-redis-proxy, prerequisite `java_21` and `spring_boot3`
 * camellia-delay-queue, prerequisite `java_21` and `spring_boot3`

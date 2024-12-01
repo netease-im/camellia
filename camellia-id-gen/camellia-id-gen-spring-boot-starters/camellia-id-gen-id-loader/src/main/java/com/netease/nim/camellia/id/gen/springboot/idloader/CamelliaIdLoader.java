@@ -4,10 +4,10 @@ import com.netease.nim.camellia.id.gen.common.IDLoader;
 import com.netease.nim.camellia.id.gen.common.IDRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class CamelliaIdLoader implements IDLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaIdLoader.class);
 
-    @Resource
+    @Autowired
     private CamelliaIdLoaderMapper mapper;
 
     @Override

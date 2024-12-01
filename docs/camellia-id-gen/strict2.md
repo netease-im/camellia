@@ -60,6 +60,3 @@ public class CamelliaStrictIdGen2Test {
 
 ```
 
-### 示例源码
-[源码](/camellia-samples/camellia-id-gen-strict-samples)
-

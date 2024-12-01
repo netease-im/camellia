@@ -262,10 +262,6 @@ http://127.0.0.1:8083/camellia/id/gen/segment/sync
 ```
 
 ### 使用安装包启动发号器服务
-具体见：[quick-start-package](quick-start-package-segment.md)  
+具体见：[quick-start-package](quick-start-package-segment.md)
 
-### 如果要使用java21/spring-boot3/docker，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
-
-### 示例源码
-[源码](/camellia-samples/camellia-id-gen-segment-samples)
 

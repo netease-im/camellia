@@ -18,11 +18,6 @@ Camellia provide easy-to-use server toolkits:
 * [delay-queue](/docs/camellia-delay-queue/delay-queue.md)
 * [hot-key](/docs/camellia-hot-key/hot-key.md)
 
-more:   
-* if you want use java21/spring-boot3 to run these servers，see: [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)  
-* these servers support use prometheus/grafana to monitor, see: [prometheus/grafana](docs/prometheus_grafana.md)  
-
-
 ### sdk
 
 camellia also provide enhanced sdk (based on other open source sdk): 
@@ -36,7 +31,7 @@ camellia also provide enhanced sdk (based on other open source sdk):
 
 ### camellia-redis-proxy  
 high performance redis-proxy:  
-* base on netty4, support redis-standalone/redis-sentinel/redis-cluster
+* base on netty4 and java21, support redis-standalone/redis-sentinel/redis-cluster
 * support [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) as the upstream(such as migration scenarios)
 * support [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis)  as the upstream
 * support GET/SET/EVAL, support MGET/MSET, support blocking BLPOP, support PUBSUB/TRANSACTION, support STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter, support TAIR_HASH/TAIR_ZSET/TAIR_STRING
@@ -53,6 +48,7 @@ high performance redis-proxy:
 
 ### camellia-id-gen
 provide some id gen algorithm:   
+* server require java21, sdk require java8
 * snowflake, support setting region tag
 * strict-increment id-gen
 * db-segment id-gen, support setting region tag         
@@ -60,6 +56,7 @@ provide some id gen algorithm:
 
 ### camellia-delay-queue
 delay queue base on redis:   
+* server require java21, sdk require java8
 * independent deployment of delay-queue-server, scale out, support multi-topic, support http-api
 * provide java-sdk, support spring-boot-starter
 * provide monitor data    
@@ -67,6 +64,7 @@ delay queue base on redis:
 
 ### camellia-hot-key
 hot key detect and cache:  
+* server require java21, sdk require java8  
 * support hot key detect, hot key cache, hot key topN stats
 * support custom hot-key-config、hot-key-callback、hot-key-topN-callback、hot-key-cache-stats-callback  
 * support custom registry, such as eureka、zk and so on
@@ -75,7 +73,7 @@ hot key detect and cache:
 
 
 ## Release-Version
-latest version is 1.3.0, have deploy to maven central repository on 2024/11/xx  
+latest version is 1.3.0, have deploy to maven central repository on 2024/12/xx  
 [CHANGE_LOG](/update-en.md)  
 
 ## SNAPSHOT-version
