@@ -77,12 +77,20 @@ public class CommandsTransponder {
             CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
 
             if (logger.isDebugEnabled()) {
-                List<String> commandNameList = new ArrayList<>(commands.size());
+                List<String> loggerCommands = new ArrayList<>(commands.size());
                 for (Command command : commands) {
-                    commandNameList.add(command.getName());
+                    byte[][] objects = command.getObjects();
+                    StringBuilder builder = new StringBuilder();
+                    for (byte[] object : objects) {
+                        builder.append(Utils.bytesToString(object)).append(" ");
+                    }
+                    if (builder.length() > 1) {
+                        builder.deleteCharAt(builder.length() - 1);
+                    }
+                    loggerCommands.add(builder.toString());
                 }
                 logger.debug("receive commands, commands.size = {}, consid = {}, commands = {}",
-                        commands.size(), taskQueue.getChannelInfo().getConsid(), commandNameList);
+                        commands.size(), taskQueue.getChannelInfo().getConsid(), loggerCommands);
             }
 
             if (channelInfo.getChannelStats() == ChannelInfo.ChannelStats.INVALID) {

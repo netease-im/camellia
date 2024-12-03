@@ -470,6 +470,9 @@ public class ChannelInfo {
     }
 
     public boolean isSubscribeCountZero() {
+        if (hasSubscribeChannels()) {
+            return false;
+        }
         return subscribeCount == 0 && ssubscribeCount == 0;
     }
 

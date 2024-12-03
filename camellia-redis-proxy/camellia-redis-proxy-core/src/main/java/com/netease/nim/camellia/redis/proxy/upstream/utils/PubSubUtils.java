@@ -26,48 +26,22 @@ import java.util.concurrent.CompletableFuture;
 public class PubSubUtils {
 
     public static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
-                                            Command command, CompletableFuture<Reply> future, boolean first) {
-        sendByBindConnection(resource, connection, taskQueue, command, future, first, command.getRedisCommand());
+                                            Command command, boolean first) {
+        sendByBindConnection(resource, connection, taskQueue, command, first, command.getRedisCommand());
     }
 
     private static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
-                                             Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
+                                             Command command, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
-        if (future != null && first) {
-            CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-            futures.add(completableFuture);
-            completableFuture.thenAccept(reply -> {
-                if (reply instanceof ErrorReply) {
-                    String error = ((ErrorReply) reply).getError();
-                    if (error != null && error.startsWith("MOVED")) {
-                        reply = ErrorReply.COMMAND_MOVED_BY_UPSTREAM_SERVER;
-                    }
-                }
-                //parse reply must before send reply to connection
-                SubscribeCount subscribeCount = tryGetSubscribeChannelCount(reply);
-                future.complete(reply);
-                //after send reply, update channel subscribe status
-                if (subscribeCount != null && subscribeCount.count != null) {
-                    ChannelInfo channelInfo = taskQueue.getChannelInfo();
-                    if (subscribeCount.shardPubSub) {
-                        channelInfo.updateSSubscribeCount(subscribeCount.count);
-                    } else {
-                        channelInfo.updateSubscribeCount(subscribeCount.count);
-                    }
-                    if (channelInfo.isSubscribeCountZero()) {
-                        channelInfo.setInSubscribe(false);
-                        taskQueue.clear();
-                        connection.clearQueue();
-                    }
-                }
-            });
+        if (first) {
+            taskQueue.clear();
         }
-        if (connection.queueSize() < 8) {
-            for (int j = 0; j < 16; j++) {
+        if (connection.queueSize() < 64) {
+            for (int j = 0; j < 128; j++) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
-                    if (connection.queueSize() < 8 && connection.isValid()) {
-                        sendByBindConnection(resource, connection, taskQueue, null, null, false, redisCommand);
+                    if (connection.queueSize() < 64 && connection.isValid()) {
+                        sendByBindConnection(resource, connection, taskQueue, null, false, redisCommand);
                     }
                     if (reply instanceof ErrorReply) {
                         String error = ((ErrorReply) reply).getError();
@@ -88,8 +62,6 @@ public class PubSubUtils {
                         }
                         if (channelInfo.isSubscribeCountZero()) {
                             channelInfo.setInSubscribe(false);
-                            taskQueue.clear();
-                            connection.clearQueue();
                         }
                     }
                     //monitor
