@@ -31,7 +31,7 @@
 * camellia-redis-proxy，transanction命令中包裹publish命令时逻辑错误（当前仅当后端是redis-cluster时有异常）
 * camellia-redis-client，使用CamelliaRedisProxyResource资源类型时，db参数错误
 * camellia-redis-proxy，当后端是`redis-proxies-discovery://username:passwd@proxyName`，错误的初始化逻辑
-
+* camellia-redis-proxy，pubsub在某些场景下回包超时的问题
 
 # 1.2.30（2024/09/14）
 ### 新增

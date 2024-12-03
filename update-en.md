@@ -30,6 +30,7 @@
 * camellia-redis-proxy, error logic when publish command run in transaction when upstream is redis-cluster
 * camellia-redis-client, illegal db param when use CamelliaRedisProxyResource
 * camellia-redis-proxy, error init when upstream is `redis-proxies-discovery://username:passwd@proxyName`
+* camellia-redis-proxy, pubsub commands timeout on some cases
 
 
 # 1.2.30（2024/09/14）
