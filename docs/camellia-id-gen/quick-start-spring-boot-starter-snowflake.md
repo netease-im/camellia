@@ -1,5 +1,5 @@
 
-引入maven依赖
+* 引入maven依赖
 ```
 <dependencies>
     <dependency>
@@ -14,7 +14,8 @@
     </dependency>
 </dependencies>
 ```
-编写启动类：
+
+* 编写启动类
 ```java
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.netease.nim.camellia.id.gen.springboot.snowflake"})
@@ -24,7 +25,8 @@ public class Application {
     }
 }
 ```
-配置application.yml
+
+* 配置application.yml
 ```yaml
 server:
   port: 8081

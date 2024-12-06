@@ -1,5 +1,5 @@
 
-引入maven依赖
+* 引入maven依赖
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -7,7 +7,8 @@
     <version>1.3.0</version>
 </dependency>
 ```
-示例如下：
+
+* 示例如下
 ```java
 public class CamelliaSegmentIdGenTest {
 

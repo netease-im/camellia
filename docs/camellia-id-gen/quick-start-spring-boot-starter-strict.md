@@ -1,5 +1,5 @@
 
-引入maven依赖
+* 引入maven依赖
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -17,7 +17,8 @@
     <version>1.3.0</version>
 </dependency>
 ```
-编写启动类：
+
+* 编写启动类：
 ```java
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.netease.nim.camellia.id.gen.springboot.segment", "com.netease.nim.camellia.id.gen.springboot.idloader"})
@@ -30,7 +31,8 @@ public class Application {
 }
 
 ```
-配置application.yml
+
+* 配置application.yml
 ```yaml
 server:
   port: 8082
