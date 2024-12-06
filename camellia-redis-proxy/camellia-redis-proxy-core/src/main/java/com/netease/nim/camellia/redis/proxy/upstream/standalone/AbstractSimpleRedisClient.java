@@ -35,7 +35,22 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
     private final ConcurrentLinkedHashMap<String, RedisConnectionAddr> cache = new ConcurrentLinkedHashMap.Builder<String, RedisConnectionAddr>()
             .initialCapacity(128).maximumWeightedCapacity(10240).build();
 
+    /**
+     * default constructor
+     */
+    public AbstractSimpleRedisClient() {
+    }
+
+    /**
+     * get addr
+     * @return addr
+     */
     public abstract RedisConnectionAddr getAddr();
+
+    /**
+     * get resource
+     * @return resource
+     */
     public abstract Resource getResource();
 
     private RedisConnectionAddr getAddr(int db) {

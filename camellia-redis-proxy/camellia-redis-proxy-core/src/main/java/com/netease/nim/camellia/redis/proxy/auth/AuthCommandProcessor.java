@@ -9,19 +9,37 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * auth command processor
+ * Created by caojiajun on 2021/08/18
+ */
 public class AuthCommandProcessor {
     private static final Logger logger = LoggerFactory.getLogger(AuthCommandProcessor.class);
 
     private final ClientAuthProvider clientAuthProvider;
 
+    /**
+     * constructor
+     * @param clientAuthProvider provider
+     */
     public AuthCommandProcessor(ClientAuthProvider clientAuthProvider) {
         this.clientAuthProvider = clientAuthProvider;
     }
 
+    /**
+     * get auth provider
+     * @return provider
+     */
     public ClientAuthProvider getClientAuthProvider() {
         return clientAuthProvider;
     }
 
+    /**
+     * invoke command
+     * @param channelInfo channel info
+     * @param auth auth command
+     * @return reply
+     */
     public Reply invokeAuthCommand(ChannelInfo channelInfo, Command auth) {
         if (!this.clientAuthProvider.isPasswordRequired()) {
             return ErrorReply.NO_PASSWORD_SET;
@@ -49,6 +67,13 @@ public class AuthCommandProcessor {
         }
     }
 
+    /**
+     * check password
+     * @param channelInfo channel info
+     * @param userName user name
+     * @param password password
+     * @return result
+     */
     public boolean checkPassword(ChannelInfo channelInfo, String userName, String password) {
         ClientIdentity clientIdentity = this.clientAuthProvider.auth(userName, password);
         if (clientIdentity == null || !clientIdentity.isPass()) {
@@ -71,6 +96,10 @@ public class AuthCommandProcessor {
         return true;
     }
 
+    /**
+     * is password required
+     * @return result
+     */
     public boolean isPasswordRequired() {
         return clientAuthProvider.isPasswordRequired();
     }

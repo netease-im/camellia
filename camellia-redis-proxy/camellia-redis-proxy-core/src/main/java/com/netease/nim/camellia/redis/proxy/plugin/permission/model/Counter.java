@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * @author anhdt9
- * @since 22/12/2022
+ *
+ * Created by anhdt9 on 2022/22/12
  */
 public class Counter {
     private volatile long timestamp = TimeCache.currentMillis;

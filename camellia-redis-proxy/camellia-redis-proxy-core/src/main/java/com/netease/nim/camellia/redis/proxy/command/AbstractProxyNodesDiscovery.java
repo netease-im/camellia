@@ -14,11 +14,20 @@ public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery
     private final ProxyClusterModeProcessor proxyClusterModeProcessor;
     private final ProxySentinelModeProcessor proxySentinelModeProcessor;
 
+    /**
+     * abstract proxy nodes discovery
+     * @param proxyClusterModeProcessor proxyClusterModeProcessor
+     * @param proxySentinelModeProcessor proxySentinelModeProcessor
+     */
     public AbstractProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
         this.proxyClusterModeProcessor = proxyClusterModeProcessor;
         this.proxySentinelModeProcessor = proxySentinelModeProcessor;
     }
 
+    /**
+     * discovery nodes
+     * @return nodes
+     */
     @Override
     public List<ProxyNode> discovery() {
         if (proxyClusterModeProcessor != null) {
@@ -30,6 +39,10 @@ public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery
         return null;
     }
 
+    /**
+     * current node
+     * @return node
+     */
     @Override
     public ProxyNode current() {
         if (proxyClusterModeProcessor != null) {

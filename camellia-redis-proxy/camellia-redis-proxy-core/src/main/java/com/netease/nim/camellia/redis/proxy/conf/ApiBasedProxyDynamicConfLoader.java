@@ -20,6 +20,12 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     private ApiBasedCamelliaConfig camelliaConfig;
     private Map<String, String> initConf = new HashMap<>();
 
+    /**
+     * default constructor
+     */
+    public ApiBasedProxyDynamicConfLoader() {
+    }
+
     @Override
     public Map<String, String> load() {
         //init conf

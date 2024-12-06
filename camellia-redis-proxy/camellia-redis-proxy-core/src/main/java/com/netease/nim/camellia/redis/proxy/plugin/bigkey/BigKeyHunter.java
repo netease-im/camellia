@@ -18,6 +18,10 @@ public class BigKeyHunter {
 
     private final BigKeyMonitorCallback bigKeyMonitorCallback;
 
+    /**
+     * constructor
+     * @param bigKeyMonitorCallback callback
+     */
     public BigKeyHunter(BigKeyMonitorCallback bigKeyMonitorCallback) {
         this.bigKeyMonitorCallback = bigKeyMonitorCallback;
         this.CALLBACK_NAME = bigKeyMonitorCallback.getClass().getName();

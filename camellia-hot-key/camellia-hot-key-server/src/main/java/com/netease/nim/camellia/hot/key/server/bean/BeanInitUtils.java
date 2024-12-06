@@ -5,6 +5,12 @@ package com.netease.nim.camellia.hot.key.server.bean;
  */
 public class BeanInitUtils {
 
+    /**
+     * util class
+     */
+    private BeanInitUtils() {
+    }
+
     public static Class<?> parseClass(String className) {
         try {
             Class<?> clazz;

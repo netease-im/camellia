@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * @param <T> element
  * Created by caojiajun on 2024/5/22
  */
 public class WriteBuffer<T> {

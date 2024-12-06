@@ -17,20 +17,51 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface IUpstreamClient {
 
+    /**
+     * send commands to upstream
+     * @param db db
+     * @param commands commands
+     * @param futureList future list
+     */
     void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList);
 
+    /**
+     * start method
+     */
     void start();
 
+    /**
+     * preheat method
+     */
     void preheat();
 
+    /**
+     * is valid
+     * @return result
+     */
     boolean isValid();
 
+    /**
+     * shutdown
+     */
     void shutdown();
 
+    /**
+     * get resource
+     * @return resource
+     */
     Resource getResource();
 
+    /**
+     * renew
+     */
     void renew();
 
+    /**
+     * get status of addr
+     * @param addr addr
+     * @return status
+     */
     default RedisConnectionStatus getStatus(RedisConnectionAddr addr) {
         if (addr == null) return RedisConnectionStatus.INVALID;
         RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, addr);

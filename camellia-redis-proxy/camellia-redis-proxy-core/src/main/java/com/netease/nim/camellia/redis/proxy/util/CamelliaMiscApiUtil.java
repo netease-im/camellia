@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author anhdt9
- * @since 22/12/2022
+ *
+ * Created by anhdt9 on 2022/22/12
  */
 public class CamelliaMiscApiUtil {
     private CamelliaMiscApiUtil() {

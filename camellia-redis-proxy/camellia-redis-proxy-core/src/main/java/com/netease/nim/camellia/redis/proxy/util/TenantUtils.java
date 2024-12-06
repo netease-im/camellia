@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 /**
- * @author tasszz2k
- * @since 11/11/2022
+ *
+ * Created by tasszz2k on 2022/11/11
  */
 public class TenantUtils {
 

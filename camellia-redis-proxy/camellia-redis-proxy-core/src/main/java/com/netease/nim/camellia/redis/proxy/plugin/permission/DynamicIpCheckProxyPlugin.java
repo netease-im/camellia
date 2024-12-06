@@ -24,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * @author tasszz2k
- * @since 09/11/2022
+ *
+ * Created by tasszz2k on 2022/09/11
  */
 public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     private static final Logger logger = LoggerFactory.getLogger(DynamicIpCheckProxyPlugin.class);

@@ -24,6 +24,19 @@ public class BigKeyMonitor {
 
     private static ConcurrentHashMap<String, BigKeyStats> statsMap = new ConcurrentHashMap<>();
 
+    /**
+     * default constructor
+     */
+    private BigKeyMonitor() {
+    }
+
+    /**
+     * big key monitor
+     * @param command command
+     * @param key key
+     * @param size size
+     * @param threshold threshold
+     */
     public static void bigKey(Command command, byte[] key, long size, long threshold) {
         try {
             int maxCount = ProxyDynamicConf.getInt("big.key.monitor.collect.max.count", 100);
@@ -47,6 +60,10 @@ public class BigKeyMonitor {
         }
     }
 
+    /**
+     * collect
+     * @return result
+     */
     public static List<BigKeyStats> collect() {
         ConcurrentHashMap<String, BigKeyStats> statsMap = BigKeyMonitor.statsMap;
         BigKeyMonitor.statsMap = new ConcurrentHashMap<>();

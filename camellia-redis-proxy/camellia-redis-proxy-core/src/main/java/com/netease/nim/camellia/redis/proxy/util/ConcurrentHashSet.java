@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ *
+ * @param <E> elements
  * Created by caojiajun on 2022/9/30
  */
 public class ConcurrentHashSet<E> extends AbstractSet<E> {

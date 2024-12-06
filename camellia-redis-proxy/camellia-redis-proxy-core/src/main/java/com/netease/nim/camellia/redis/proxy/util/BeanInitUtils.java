@@ -7,6 +7,12 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
  */
 public class BeanInitUtils {
 
+    /**
+     * util class
+     */
+    private BeanInitUtils() {
+    }
+
     public static Class<?> parseClass(String className) {
         try {
             Class<?> clazz;

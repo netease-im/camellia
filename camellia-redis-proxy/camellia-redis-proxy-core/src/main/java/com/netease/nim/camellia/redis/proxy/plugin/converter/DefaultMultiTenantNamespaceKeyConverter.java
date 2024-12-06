@@ -8,34 +8,33 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 /**
  * Tenant Namespace Key Converter make sure that
  * key single key and key contains hashtag are in the same slot
- *
- * <h3>Normal cases </h3>
- *
- * <ul>
- *   <li>original key: key - 1|default|key
- *   <li>original key: {key} - 1|default|{1|default|key}
- *   <li>original key: key:{key} - 1|default|key:{1|default|key}
- * </ul>
- *
- * <h3>Special cases </h3>
- *
- * <i>the original key contains an odd number of curly braces or not a pair of curly braces</i>
- *
- * <ul>
- *   <li>single curly brace: {key - 1|default|{key
- *   <li>single curly brace: key} - 1|default|key}
- *   <li>not a pair of curly braces: prefix}:{key} - 1|default|prefix}:{1|default|key}
- *   <li>not a pair of curly braces: {{key} - 1|default|{1|default|{key}
- *   <li>multiple hashtag key:{key1}{key2} - 1|default|key:{1|default|key1}{key2}
- * </ul>
- *
- * <h3>Test case: </h3>
- *
- * <ul>
- *   <li>mset k1 v1 {k1} {k1} {k1}:key {k1}:key key:{k1} key:{k1} {k1}:key:{k1} {k1}:key:{k1}
- *   <li>mget k1 {k1} {k1}:key key:{k1} {k1}:key:{k1}
- * </ul>
- * <p>
+ * <br>
+ * Normal cases
+ * <br>
+ * <br>
+ * original key: key - 1|default|key
+ * original key: {key} - 1|default|{1|default|key}
+ * original key: key:{key} - 1|default|key:{1|default|key}
+ * <br>
+ * <br>
+ * Special cases
+ * <br>
+ * <br>
+ * the original key contains an odd number of curly braces or not a pair of curly braces
+ * <br>
+ * <br>
+ * single curly brace: {key - 1|default|{key
+ * single curly brace: key} - 1|default|key}
+ * not a pair of curly braces: prefix}:{key} - 1|default|prefix}:{1|default|key}
+ * not a pair of curly braces: {{key} - 1|default|{1|default|{key}
+ * multiple hashtag key:{key1}{key2} - 1|default|key:{1|default|key1}{key2}
+ * <br>
+ * Test case:
+ * <br>
+ * <br>
+ * mset k1 v1 {k1} {k1} {k1}:key {k1}:key key:{k1} key:{k1} {k1}:key:{k1} {k1}:key:{k1}
+ * mget k1 {k1} {k1}:key key:{k1} {k1}:key:{k1}
+ * <br>
  * Created by caojiajun on 2022/12/7
  */
 public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {

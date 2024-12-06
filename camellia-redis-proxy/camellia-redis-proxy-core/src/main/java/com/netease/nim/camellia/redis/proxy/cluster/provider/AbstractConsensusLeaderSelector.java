@@ -14,12 +14,20 @@ public abstract class AbstractConsensusLeaderSelector implements ConsensusLeader
 
     private final CopyOnWriteArrayList<ConsensusLeaderChangeListener> leaderChangeListenerList = new CopyOnWriteArrayList<>();
 
+    /**
+     * default constructor
+     */
+    public AbstractConsensusLeaderSelector() {
+    }
 
     @Override
     public void addConsensusLeaderChangeListener(ConsensusLeaderChangeListener listener) {
         leaderChangeListenerList.add(listener);
     }
 
+    /**
+     * notify leader change
+     */
     protected final void notifyLeaderChange() {
         for (ConsensusLeaderChangeListener listener : leaderChangeListenerList) {
             try {

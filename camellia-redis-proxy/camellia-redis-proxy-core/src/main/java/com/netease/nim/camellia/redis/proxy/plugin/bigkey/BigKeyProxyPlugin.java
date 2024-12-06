@@ -12,6 +12,12 @@ public class BigKeyProxyPlugin implements ProxyPlugin {
 
     private BigKeyHunter bigKeyHunter;
 
+    /**
+     * default constructor
+     */
+    public BigKeyProxyPlugin() {
+    }
+
     @Override
     public void init(ProxyBeanFactory factory) {
         String callbackClassName = BeanInitUtils.getClassName("big.key.monitor.callback", DummyBigKeyMonitorCallback.class.getName());

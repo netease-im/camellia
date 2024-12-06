@@ -7,8 +7,9 @@ import com.netease.nim.camellia.tools.utils.MathUtil;
 
 import java.util.Map;
 
-
 /**
+ *
+ * @param <V> element
  * Created by caojiajun on 2024/6/12
  */
 public class SlotLRUCache<V> {

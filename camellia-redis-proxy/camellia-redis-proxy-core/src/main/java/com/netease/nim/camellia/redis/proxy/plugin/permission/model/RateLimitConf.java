@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission.model;
 
 /**
- * @author anhdt9
- * @since 22/12/2022
+ *
+ * Created by anhdt9 on 2022/22/12
  */
 public class RateLimitConf {
     long checkMillis;

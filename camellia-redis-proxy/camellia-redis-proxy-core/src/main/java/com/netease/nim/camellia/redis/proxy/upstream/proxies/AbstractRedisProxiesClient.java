@@ -27,6 +27,12 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     private List<RedisConnectionAddr> dynamicList = new ArrayList<>();
     private Renew renew;
 
+    /**
+     * default constructor
+     */
+    public AbstractRedisProxiesClient() {
+    }
+
     @Override
     public void preheat() {
         logger.info("try preheat, resource = {}", PasswordMaskUtils.maskResource(getResource()));
@@ -67,6 +73,10 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         return false;
     }
 
+    /**
+     * get all addrs list
+     * @return list
+     */
     public abstract List<RedisConnectionAddr> getAll();
 
     private void refresh(boolean first) {
@@ -94,6 +104,10 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         }
     }
 
+    /**
+     * add addr to list
+     * @param addr addr
+     */
     public void add(RedisConnectionAddr addr) {
         synchronized (lock) {
             if (!originalList.contains(addr)) {
@@ -103,6 +117,10 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         }
     }
 
+    /**
+     * remove addr from  list
+     * @param addr addr
+     */
     public void remove(RedisConnectionAddr addr) {
         synchronized (lock) {
             if (originalList.contains(addr)) {

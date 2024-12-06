@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.buffer;
 
 /**
+ * @param <T> element
  * Created by caojiajun on 2024/5/22
  */
 public class WriteBufferValue<T> {
