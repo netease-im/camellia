@@ -111,6 +111,9 @@ public class CommandTaskQueue {
 
     public void reply(RedisCommand redisCommand, Reply reply, boolean fromPlugin, boolean checkSubscribeStatus) {
         if (checkSubscribeStatus && !channelInfo.isInSubscribe()) {
+            if (!(reply instanceof ErrorReply)) {
+                logger.warn("skip reply for connection not in subscribe, command = {}, reply = {}, consid = {}", redisCommand, reply, channelInfo.getConsid());
+            }
             return;
         }
         if (logger.isDebugEnabled()) {
@@ -141,8 +144,8 @@ public class CommandTaskQueue {
                 future.addListener((ChannelFutureListener) channelFuture -> {
                     channelInfo.getCtx().close();
                     logger.warn("client connection in subscribe status forced disconnect" +
-                                    " because bind redis connection is null or invalid, bindConnection = {}, consid = {} in direct reply case",
-                            bindConnection.getConnectionName(), channelInfo.getConsid());
+                                    " because subscribe error reply = {}, bindConnection = {}, consid = {} in direct reply case",
+                            reply, bindConnection.getConnectionName(), channelInfo.getConsid());
                 });
             }
         }

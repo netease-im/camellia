@@ -25,23 +25,51 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PubSubUtils {
 
-    public static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
-                                            Command command, boolean first) {
-        sendByBindConnection(resource, connection, taskQueue, command, first, command.getRedisCommand());
+    public static void updateChannelInfo(Command command) {
+        byte[][] objects = command.getObjects();
+        if (objects == null || objects.length <= 1) return;
+        RedisCommand redisCommand = command.getRedisCommand();
+        ChannelInfo channelInfo = command.getChannelInfo();
+        if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+            for (int j = 1; j < objects.length; j++) {
+                byte[] channel = objects[j];
+                if (redisCommand == RedisCommand.SUBSCRIBE) {
+                    channelInfo.addSubscribeChannels(channel);
+                } else if (redisCommand == RedisCommand.PSUBSCRIBE) {
+                    channelInfo.addPSubscribeChannels(channel);
+                } else {
+                    channelInfo.addSSubscribeChannels(channel);
+                }
+            }
+        } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+            for (int j = 1; j < command.getObjects().length; j++) {
+                byte[] channel = command.getObjects()[j];
+                if (redisCommand == RedisCommand.UNSUBSCRIBE) {
+                    channelInfo.removeSubscribeChannels(channel);
+                } else if (redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                    channelInfo.removePSubscribeChannels(channel);
+                } else {
+                    channelInfo.removeSSubscribeChannels(channel);
+                }
+            }
+        }
     }
 
-    private static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
-                                             Command command, boolean first, RedisCommand redisCommand) {
+    public static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
+                                            Command command) {
+        taskQueue.clear();
+        sendByBindConnection0(resource, connection, taskQueue, command, command.getRedisCommand());
+    }
+
+    private static void sendByBindConnection0(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
+                                             Command command, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
-        if (first) {
-            taskQueue.clear();
-        }
         if (connection.queueSize() < 64) {
             for (int j = 0; j < 128; j++) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
                     if (connection.queueSize() < 64 && connection.isValid()) {
-                        sendByBindConnection(resource, connection, taskQueue, null, false, redisCommand);
+                        sendByBindConnection0(resource, connection, taskQueue, null, redisCommand);
                     }
                     if (reply instanceof ErrorReply) {
                         String error = ((ErrorReply) reply).getError();

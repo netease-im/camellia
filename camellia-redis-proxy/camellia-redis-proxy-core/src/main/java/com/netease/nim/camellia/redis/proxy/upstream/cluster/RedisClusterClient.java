@@ -202,18 +202,18 @@ public class RedisClusterClient implements IUpstreamClient {
                 }
             }
 
+            if (channelInfo.isInSubscribe() && bindConnection != null && redisCommand.getCommandType() != RedisCommand.CommandType.PUB_SUB) {
+                commandFlusher.flush();
+                CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command);
+                continue;
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB) {
                     pubsub(command, future, channelInfo, commandFlusher, redisCommand, bindConnection);
                     continue;
                 }
-            }
-
-            if (channelInfo.isInSubscribe() && bindConnection != null && redisCommand.getCommandType() != RedisCommand.CommandType.PUB_SUB) {
-                commandFlusher.flush();
-                CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
-                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, false);
-                continue;
             }
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
@@ -466,7 +466,6 @@ public class RedisClusterClient implements IUpstreamClient {
                         RedisCommand redisCommand, RedisConnection bindConnection) {
         if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
                 || redisCommand == RedisCommand.SSUBSCRIBE) {
-            boolean first = false;
             if (bindConnection == null) {
                 int targetSlot = -1;
                 if (redisCommand == RedisCommand.SSUBSCRIBE) {
@@ -484,57 +483,38 @@ public class RedisClusterClient implements IUpstreamClient {
                 }
                 bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(this, node.getAddr());
                 channelInfo.setBindConnection(bindConnection);
-                first = true;
             }
             if (bindConnection != null) {
-                CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
                 commandFlusher.flush();
-                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, first);
-                byte[][] objects = command.getObjects();
-                if (objects != null && objects.length > 1) {
-                    for (int j = 1; j < objects.length; j++) {
-                        byte[] channel = objects[j];
-                        if (redisCommand == RedisCommand.SUBSCRIBE) {
-                            command.getChannelInfo().addSubscribeChannels(channel);
-                        } else if (redisCommand == RedisCommand.PSUBSCRIBE) {
-                            command.getChannelInfo().addPSubscribeChannels(channel);
-                        } else {
-                            command.getChannelInfo().addSSubscribeChannels(channel);
-                        }
-                    }
-                }
+                PubSubUtils.updateChannelInfo(command);
+                //
+                CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command);
             } else {
                 future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
             }
             return;
-        }
-        if (bindConnection != null && (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+        } else if (bindConnection != null && (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
                 || redisCommand == RedisCommand.SUNSUBSCRIBE)) {
-            byte[][] objects = command.getObjects();
-            if (objects != null && objects.length > 1) {
-                for (int j = 1; j < objects.length; j++) {
-                    byte[] channel = objects[j];
-                    if (redisCommand == RedisCommand.UNSUBSCRIBE) {
-                        channelInfo.removeSubscribeChannels(channel);
-                    } else if (redisCommand == RedisCommand.PUNSUBSCRIBE) {
-                        channelInfo.removePSubscribeChannels(channel);
-                    } else {
-                        channelInfo.removeSSubscribeChannels(channel);
-                    }
-                    if (!channelInfo.hasSubscribeChannels()) {
-                        channelInfo.setBindConnection(null);
-                        bindConnection.startIdleCheck();
-                    }
-                }
+            commandFlusher.flush();
+            PubSubUtils.updateChannelInfo(command);
+            if (!channelInfo.hasSubscribeChannels()) {
+                channelInfo.setBindConnection(null);
+                bindConnection.startIdleCheck();
             }
+            //
+            CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
+            PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command);
+            return;
         }
 
         if (bindConnection != null) {
             if (channelInfo.isInSubscribe()) {
                 commandFlusher.flush();
-                PubSubUtils.sendByBindConnection(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, false);
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command);
             } else {
                 commandFlusher.sendCommand(bindConnection, command, future);
+                commandFlusher.flush();
             }
         } else {
             int targetSlot = -1;
@@ -549,6 +529,7 @@ public class RedisClusterClient implements IUpstreamClient {
             RedisConnection connection = getConnection(targetSlot);
             if (connection != null) {
                 commandFlusher.sendCommand(connection, command, new CompletableFutureWrapper(this, future, command));
+                commandFlusher.flush();
             } else {
                 future.complete(ErrorReply.UPSTREAM_CONNECTION_NULL);
             }

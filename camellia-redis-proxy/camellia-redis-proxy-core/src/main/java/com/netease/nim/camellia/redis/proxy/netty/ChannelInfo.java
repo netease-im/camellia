@@ -393,6 +393,7 @@ public class ChannelInfo {
         }
         for (byte[] channel : channels) {
             subscribeChannels.put(new BytesKey(channel), true);
+            setInSubscribe(true);
         }
     }
 
@@ -415,6 +416,7 @@ public class ChannelInfo {
         }
         for (byte[] channel : channels) {
             psubscribeChannels.put(new BytesKey(channel), true);
+            setInSubscribe(true);
         }
     }
 
@@ -429,6 +431,7 @@ public class ChannelInfo {
         }
         for (byte[] channel : channels) {
             ssubscribeChannels.put(new BytesKey(channel), true);
+            setInSubscribe(true);
         }
     }
 

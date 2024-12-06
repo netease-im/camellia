@@ -122,16 +122,14 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     hasBlockingCommands = false;
                 }
                 CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
-                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, false);
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command);
                 continue;
             }
 
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE || redisCommand == RedisCommand.SSUBSCRIBE) {
-                boolean first = false;
                 if (bindConnection == null) {
                     bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(this, getAddr(db));
                     channelInfo.setBindConnection(bindConnection);
-                    first = true;
                 }
                 if (bindConnection != null) {
                     if (!filterCommands.isEmpty()) {
@@ -141,41 +139,18 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                         hasBlockingCommands = false;
                     }
                     CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
-                    PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, first);
-                    byte[][] objects = command.getObjects();
-                    if (objects != null && objects.length > 1) {
-                        for (int j = 1; j < objects.length; j++) {
-                            byte[] channel = objects[j];
-                            if (redisCommand == RedisCommand.SUBSCRIBE) {
-                                channelInfo.addSubscribeChannels(channel);
-                            } else if (redisCommand == RedisCommand.PSUBSCRIBE) {
-                                channelInfo.addPSubscribeChannels(channel);
-                            } else {
-                                channelInfo.addSSubscribeChannels(channel);
-                            }
-                        }
-                    }
+                    PubSubUtils.updateChannelInfo(command);
+                    PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command);
                 } else {
                     future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
                     renew();
                 }
             } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
                 if (bindConnection != null) {
-                    if (command.getObjects() != null && command.getObjects().length > 1) {
-                        for (int j = 1; j < command.getObjects().length; j++) {
-                            byte[] channel = command.getObjects()[j];
-                            if (redisCommand == RedisCommand.UNSUBSCRIBE) {
-                                channelInfo.removeSubscribeChannels(channel);
-                            } else if (redisCommand == RedisCommand.PUNSUBSCRIBE) {
-                                channelInfo.removePSubscribeChannels(channel);
-                            } else {
-                                channelInfo.removeSSubscribeChannels(channel);
-                            }
-                            if (!channelInfo.hasSubscribeChannels()) {
-                                channelInfo.setBindConnection(null);
-                                bindConnection.startIdleCheck();
-                            }
-                        }
+                    PubSubUtils.updateChannelInfo(command);
+                    if (!channelInfo.hasSubscribeChannels()) {
+                        channelInfo.setBindConnection(null);
+                        bindConnection.startIdleCheck();
                     }
                     if (!filterCommands.isEmpty()) {
                         flush(db, filterCommands, filterFutures, hasBlockingCommands);
@@ -183,7 +158,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                         filterFutures = new ArrayList<>();
                         hasBlockingCommands = false;
                     }
-                    PubSubUtils.sendByBindConnection(getResource(), bindConnection, channelInfo.getCommandTaskQueue(), command, false);
+                    PubSubUtils.sendByBindConnection(getResource(), bindConnection, channelInfo.getCommandTaskQueue(), command);
                 } else {
                     filterCommands.add(command);
                     filterFutures.add(future);
