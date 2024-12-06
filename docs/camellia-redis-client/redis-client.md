@@ -92,6 +92,3 @@ public class TestSamples {
 
 ### 几个工具类
 参见：[tools](/docs/camellia-tools/tools.md)
-
-### 示例源码
-[示例源码](/camellia-samples/camellia-redis-samples)

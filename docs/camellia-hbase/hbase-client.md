@@ -117,5 +117,3 @@ for (Result result1 : resultScanner) {
 //parse result1
 }
 ```
-### 示例源码
-[示例源码](/camellia-samples/camellia-hbase-samples)
