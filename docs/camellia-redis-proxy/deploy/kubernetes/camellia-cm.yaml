@@ -19,6 +19,8 @@ data:
         - monitorPlugin
         - bigKeyPlugin
         - hotKeyPlugin
+      config:
+        "check.redis.resource.valid.not.active.threshold.sceonds": 300 
       transpond:
         type: local 
         local:
@@ -77,6 +79,8 @@ data:
         - monitorPlugin
         - bigKeyPlugin
         - hotKeyPlugin
+      config:
+        "check.redis.resource.valid.not.active.threshold.sceonds": 300 
       transpond:
         type: local 
         local:
@@ -101,6 +105,8 @@ data:
         - monitorPlugin
         - bigKeyPlugin
         - hotKeyPlugin
+      config:
+        "check.redis.resource.valid.not.active.threshold.sceonds": 300 
       transpond:
         type: local 
         local:
@@ -142,6 +148,8 @@ data:
         - bigKeyPlugin
         - hotKeyPlugin
         - hotKeyCachePlugin
+      config:
+        "check.redis.resource.valid.not.active.threshold.sceonds": 300 
       transpond:
         type: local 
         local:
@@ -211,6 +219,8 @@ data:
         - monitorPlugin
         - bigKeyPlugin
         - hotKeyPlugin
+      config:
+        "check.redis.resource.valid.not.active.threshold.sceonds": 300 
       transpond:
         type: local 
         local:
