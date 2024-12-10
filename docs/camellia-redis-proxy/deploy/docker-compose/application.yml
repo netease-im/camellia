@@ -11,6 +11,8 @@ camellia-redis-proxy:
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
+  config:
+    "check.redis.resource.valid.not.active.threshold.sceonds": 300 
   transpond:
     type: local 
     local:
