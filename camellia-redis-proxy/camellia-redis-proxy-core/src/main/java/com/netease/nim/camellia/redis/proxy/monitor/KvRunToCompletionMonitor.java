@@ -20,6 +20,7 @@ public class KvRunToCompletionMonitor {
     private static final ConcurrentHashMap<String, LongAdder> not_hit_map = new ConcurrentHashMap<>();
 
     public static void update(String namespace, String command, boolean hit) {
+        if (!ProxyMonitorCollector.isMonitorEnable()) return;
         LongAdder counter;
         if (hit) {
             counter = CamelliaMapUtils.computeIfAbsent(hit_map, namespace + "|" + command, k -> new LongAdder());
