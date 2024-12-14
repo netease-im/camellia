@@ -50,7 +50,7 @@ public class ZLexCountCommander extends ZSet0Commander {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
 
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

@@ -44,7 +44,7 @@ public class HStrLenCommander extends Hash0Commander {
         byte[] field = objects[2];
 
         //meta
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

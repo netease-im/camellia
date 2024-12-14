@@ -39,7 +39,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     }
 
     @Override
-    public ValueWrapper<KeyMeta> runToComplete(int slot, byte[] key) {
+    public ValueWrapper<KeyMeta> runToCompletion(int slot, byte[] key) {
         WriteBufferValue<KeyMeta> writeBufferValue = writeBuffer.get(key);
         if (writeBufferValue != null) {
             KvCacheMonitor.writeBuffer(cacheConfig.getNamespace(), "getKeyMeta");

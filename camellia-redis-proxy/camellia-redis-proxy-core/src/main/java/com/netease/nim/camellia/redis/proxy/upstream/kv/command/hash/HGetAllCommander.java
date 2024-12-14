@@ -45,7 +45,7 @@ public class HGetAllCommander extends Hash0Commander {
         byte[] key = objects[1];
 
         //meta
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

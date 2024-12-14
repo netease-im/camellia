@@ -40,7 +40,7 @@ public class SIsMemberCommander extends Set0Commander {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         byte[] member = objects[2];
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

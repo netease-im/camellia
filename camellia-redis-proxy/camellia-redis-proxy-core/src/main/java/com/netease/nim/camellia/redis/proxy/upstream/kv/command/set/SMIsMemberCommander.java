@@ -45,7 +45,7 @@ public class SMIsMemberCommander extends Set0Commander {
         for (int i=2; i<objects.length; i++) {
             members.add(new BytesKey(objects[i]));
         }
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

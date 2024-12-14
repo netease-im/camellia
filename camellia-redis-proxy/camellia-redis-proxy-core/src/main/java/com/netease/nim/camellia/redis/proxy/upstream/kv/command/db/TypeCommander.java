@@ -9,7 +9,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import org.checkerframework.checker.units.qual.K;
 
 
 /**
@@ -38,7 +37,7 @@ public class TypeCommander extends Commander {
     public Reply runToCompletion(int slot, Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

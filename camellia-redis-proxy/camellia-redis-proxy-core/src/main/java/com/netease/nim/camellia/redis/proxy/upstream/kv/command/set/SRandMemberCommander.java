@@ -48,7 +48,7 @@ public class SRandMemberCommander extends Set0Commander {
             count = (int) Utils.bytesToNum(objects[2]);
             batch = true;
         }
-        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToComplete(slot, key);
+        ValueWrapper<KeyMeta> valueWrapper = keyMetaServer.runToCompletion(slot, key);
         if (valueWrapper == null) {
             return null;
         }

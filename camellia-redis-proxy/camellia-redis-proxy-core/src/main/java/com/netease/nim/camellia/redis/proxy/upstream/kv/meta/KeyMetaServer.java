@@ -14,7 +14,7 @@ public interface KeyMetaServer {
      * @param key key
      * @return key-meta
      */
-    ValueWrapper<KeyMeta> runToComplete(int slot, byte[] key);
+    ValueWrapper<KeyMeta> runToCompletion(int slot, byte[] key);
 
     /**
      * get key-meta by key
