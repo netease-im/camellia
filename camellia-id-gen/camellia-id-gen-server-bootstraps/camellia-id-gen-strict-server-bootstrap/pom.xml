@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-id-gen-strict-server-bootstrap</artifactId>
-	<version>1.3.1-SNAPSHOT</version>
+	<version>1.4.0-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-id-gen-server-bootstraps</artifactId>
-		<version>1.3.1-SNAPSHOT</version>
+		<version>1.4.0-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -33,17 +33,17 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
-			<version>1.3.1-SNAPSHOT</version>
+			<version>1.4.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-id-loader</artifactId>
-			<version>1.3.1-SNAPSHOT</version>
+			<version>1.4.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-spring-boot3-starter</artifactId>
-			<version>1.3.1-SNAPSHOT</version>
+			<version>1.4.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

@@ -16,17 +16,25 @@
         <module name="camellia-redis-proxy-hbase-spring-boot-starter" />
         <module name="camellia-redis-eureka-spring-boot3-starter" />
         <module name="camellia-hot-key-common" />
+        <module name="camellia-redis-proxy-kv-tikv" />
         <module name="camellia-cache-spring-boot" />
         <module name="camellia-spring-redis-zk-discovery-spring-boot-starter" />
         <module name="camellia-mq-isolation-controller" />
+        <module name="camellia-redis-proxy-discovery-jedis3" />
+        <module name="camellia-redis-proxy-discovery-jedis2" />
         <module name="camellia-spring-redis-eureka-discovery-spring-boot-starter" />
         <module name="camellia-feign" />
+        <module name="camellia-redis-proxy-core" />
         <module name="camellia-redis-spring-boot-starter" />
+        <module name="camellia-redis-proxy-mq-kafka" />
         <module name="camellia-feign-spring-boot-starter" />
+        <module name="camellia-redis-proxy-hot-key-discovery-zk" />
         <module name="camellia-id-gen-segment-spring-boot-starter" />
         <module name="camellia-core" />
         <module name="camellia-feign-tests" />
+        <module name="camellia-redis-proxy-hot-key-common" />
         <module name="camellia-tools" />
+        <module name="camellia-redis-proxy-hbase" />
         <module name="camellia-dashboard-spring-boot-starter" />
         <module name="camellia-cache-core" />
         <module name="camellia-delay-queue-sdk" />
@@ -40,13 +48,17 @@
         <module name="camellia-spring-redis-zk-discovery-spring-boot" />
         <module name="camellia-http-console" />
         <module name="camellia-spring-redis3-eureka-discovery-spring-boot" />
+        <module name="camellia-redis-proxy-kv-hbase" />
         <module name="camellia-id-gen-segment-server-bootstrap" />
         <module name="camellia-id-gen-strict-server-bootstrap" />
         <module name="camellia-redis-base" />
         <module name="camellia-hot-key-server" />
+        <module name="camellia-redis-proxy-kv-obkv" />
         <module name="camellia-spring-redis3-zk-discovery-spring-boot-starter" />
+        <module name="camellia-redis-proxy-hot-key-cache-plugin" />
         <module name="camellia-redis-zk-discovery-spring-boot3-starter" />
         <module name="camellia-config-sdk-spring-boot3-starter" />
+        <module name="camellia-redis-proxy-config-etcd" />
         <module name="camellia-spring-redis-base" />
         <module name="camellia-redis-spring-boot" />
         <module name="camellia-id-gen-strict-spring-boot-starter" />
@@ -58,6 +70,7 @@
         <module name="camellia-redis3-toolkit" />
         <module name="camellia-hbase-spring-boot-starter" />
         <module name="camellia-redis-proxy-tests" />
+        <module name="camellia-redis-proxy-hot-key-monitor-plugin" />
         <module name="camellia-hot-key-server-spring-boot-starter" />
         <module name="camellia-spring-redis3-base" />
         <module name="camellia-hot-key-discovery-eureka3" />
@@ -67,10 +80,13 @@
         <module name="camellia-spring-redis-eureka-discovery-spring-boot" />
         <module name="camellia-mq-isolation-kafka" />
         <module name="camellia-delay-queue-sdk-spring-boot-starter" />
+        <module name="camellia-redis-proxy-discovery-zk" />
         <module name="camellia-id-gen-snowflake-server-bootstrap" />
         <module name="camellia-config-spring-boot-starter" />
         <module name="camellia-id-gen-core" />
+        <module name="camellia-redis-proxy-mq-common" />
         <module name="camellia-redis3-eureka-spring-boot3-starter" />
+        <module name="camellia-redis-proxy-bootstrap" />
         <module name="camellia-spring-redis3-eureka-discovery-spring-boot-starter" />
         <module name="camellia-redis-zk-discovery-spring-boot" />
         <module name="camellia-hbase-spring-boot" />
@@ -83,6 +99,7 @@
         <module name="camellia-config" />
         <module name="camellia-cache-spring-boot-starter" />
         <module name="camellia-codec" />
+        <module name="camellia-redis-proxy-hot-key-discovery-eureka" />
         <module name="camellia-hot-key-config-nacos" />
         <module name="camellia-redis3-tests" />
         <module name="camellia-config-sdk-spring-boot" />
@@ -105,43 +122,16 @@
         <module name="camellia-redis3-spring-boot-starter" />
         <module name="camellia-hot-key-sdk" />
         <module name="camellia-redis-proxy-nacos-spring-boot-starter" />
+        <module name="camellia-redis-proxy-discovery-common" />
         <module name="camellia-delay-queue-sdk-spring-boot" />
         <module name="camellia-redis3-zk-discovery-spring-boot-starter" />
         <module name="camellia-feign-spring-boot" />
+        <module name="camellia-redis-proxy-config-nacos" />
         <module name="camellia-spring-redis3-eureka-discovery-spring-boot3-starter" />
         <module name="camellia-redis-tests" />
         <module name="camellia-console-spring-boot-starter" />
         <module name="camellia-id-gen-id-loader" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="camellia-redis-proxy-bootstrap" target="21" />
-      <module name="camellia-redis-proxy-config" target="1.5" />
-      <module name="camellia-redis-proxy-config-etcd" target="21" />
-      <module name="camellia-redis-proxy-config-nacos" target="21" />
-      <module name="camellia-redis-proxy-core" target="21" />
-      <module name="camellia-redis-proxy-discovery" target="1.5" />
-      <module name="camellia-redis-proxy-discovery-common" target="1.8" />
-      <module name="camellia-redis-proxy-discovery-jedis2" target="1.8" />
-      <module name="camellia-redis-proxy-discovery-jedis3" target="1.8" />
-      <module name="camellia-redis-proxy-discovery-zk" target="1.8" />
-      <module name="camellia-redis-proxy-extensions" target="1.5" />
-      <module name="camellia-redis-proxy-hbase" target="21" />
-      <module name="camellia-redis-proxy-hot-key" target="1.5" />
-      <module name="camellia-redis-proxy-hot-key-cache-plugin" target="21" />
-      <module name="camellia-redis-proxy-hot-key-common" target="21" />
-      <module name="camellia-redis-proxy-hot-key-discovery" target="1.5" />
-      <module name="camellia-redis-proxy-hot-key-discovery-eureka" target="21" />
-      <module name="camellia-redis-proxy-hot-key-discovery-zk" target="21" />
-      <module name="camellia-redis-proxy-hot-key-monitor-plugin" target="21" />
-      <module name="camellia-redis-proxy-hot-key-plugin" target="1.5" />
-      <module name="camellia-redis-proxy-kv" target="1.5" />
-      <module name="camellia-redis-proxy-kv-hbase" target="21" />
-      <module name="camellia-redis-proxy-kv-obkv" target="21" />
-      <module name="camellia-redis-proxy-kv-tikv" target="21" />
-      <module name="camellia-redis-proxy-mq" target="1.5" />
-      <module name="camellia-redis-proxy-mq-common" target="21" />
-      <module name="camellia-redis-proxy-mq-kafka" target="21" />
-    </bytecodeTargetLevel>
   </component>
 </project>
