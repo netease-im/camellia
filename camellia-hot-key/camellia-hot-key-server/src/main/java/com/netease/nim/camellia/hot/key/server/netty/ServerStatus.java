@@ -26,6 +26,10 @@ public class ServerStatus {
         ;
     }
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(ServerStatus::invokeOfflineCallback));
+    }
+
     public static Status getStatus() {
         return status;
     }
