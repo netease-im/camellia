@@ -129,6 +129,10 @@
     <file url="file://$PROJECT_DIR$/camellia-id-gen/camellia-id-gen-spring-boot-starters/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-id-gen/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-kv/camellia-kv-wal/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-kv/camellia-kv-wal/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-kv/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/camellia-kv/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-base/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-base/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/camellia-redis-client/camellia-redis-spring-boot-starters/camellia-redis-eureka-base/src/main/java" charset="UTF-8" />

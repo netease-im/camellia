@@ -47,12 +47,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisStandaloneClient client0 = new RedisStandaloneClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisStandaloneClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -60,12 +57,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisStandaloneClient client0 = new RedisStandaloneClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisStandaloneClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -73,12 +67,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisUnixDomainSocketResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisUnixDomainSocketClient client0 = new RedisUnixDomainSocketClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisUnixDomainSocketClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -86,12 +77,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisClusterResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisClusterClient client0 = new RedisClusterClient(resource, maxAttempts);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisClusterClient(resource, maxAttempts);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -99,12 +87,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissClusterResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisClusterClient client0 = new RedisClusterClient(resource, maxAttempts);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisClusterClient(resource, maxAttempts);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -112,12 +97,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisClusterSlavesResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisClusterClient client0 = new RedisClusterClient(resource, maxAttempts);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisClusterClient(resource, maxAttempts);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -125,12 +107,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissClusterSlavesResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisClusterClient client0 = new RedisClusterClient(resource, maxAttempts);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisClusterClient(resource, maxAttempts);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -138,12 +117,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisSentinelResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisSentinelClient client0 = new RedisSentinelClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisSentinelClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -151,12 +127,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissSentinelResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisSentinelClient client0 = new RedisSentinelClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisSentinelClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -164,12 +137,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisSentinelSlavesResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisSentinelSlavesClient client0 = new RedisSentinelSlavesClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisSentinelSlavesClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -177,12 +147,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissSentinelSlavesResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisSentinelSlavesClient client0 = new RedisSentinelSlavesClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisSentinelSlavesClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -190,12 +157,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisProxiesResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisProxiesClient client0 = new RedisProxiesClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisProxiesClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -203,12 +167,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissProxiesResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisProxiesClient client0 = new RedisProxiesClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisProxiesClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -216,12 +177,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisProxiesDiscoveryResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisProxiesDiscoveryClient client0 = new RedisProxiesDiscoveryClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisProxiesDiscoveryClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -229,12 +187,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedissProxiesDiscoveryResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisProxiesDiscoveryClient client0 = new RedisProxiesDiscoveryClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisProxiesDiscoveryClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
@@ -242,12 +197,9 @@ public interface UpstreamRedisClientFactory {
         public IUpstreamClient get(RedisKvResource resource) {
             IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(resource.getUrl(),
-                        u -> {
-                            RedisKvClient client0 = new RedisKvClient(resource);
-                            client0.start();
-                            return client0;
-                        });
+                client = new RedisKvClient(resource);
+                client.start();
+                map.put(resource.getUrl(), client);
             }
             return client;
         }
