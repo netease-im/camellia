@@ -4,17 +4,17 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-id-loader</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-spring-boot3-starter</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
 </dependency>
 ```
 

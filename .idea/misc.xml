@@ -10,6 +10,7 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/camellia-http-accelerate-proxy/pom.xml" />
+        <option value="$PROJECT_DIR$/camellia-kv/pom.xml" />
       </set>
     </option>
   </component>

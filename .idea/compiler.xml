@@ -134,5 +134,8 @@
         <module name="camellia-id-gen-id-loader" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="camellia-kv" target="1.5" />
+    </bytecodeTargetLevel>
   </component>
 </project>

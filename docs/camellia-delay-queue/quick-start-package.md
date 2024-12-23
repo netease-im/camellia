@@ -1,10 +1,10 @@
 
 
-下载最新版安装包并解压（v1.3.0）：
+下载最新版安装包并解压（v1.3.1）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.3.0/camellia-delay-queue-server-1.3.0.tar.gz
-tar zxvf camellia-delay-queue-server-1.3.0.tar.gz
-cd camellia-delay-queue-server-1.3.0/
+wget https://github.com/netease-im/camellia/releases/download/1.3.1/camellia-delay-queue-server-1.3.1.tar.gz
+tar zxvf camellia-delay-queue-server-1.3.1.tar.gz
+cd camellia-delay-queue-server-1.3.1/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
