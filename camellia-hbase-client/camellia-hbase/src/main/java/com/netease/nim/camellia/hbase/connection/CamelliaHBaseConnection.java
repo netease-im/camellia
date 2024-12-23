@@ -45,17 +45,26 @@ public class CamelliaHBaseConnection {
                     configuration.set(entry.getKey(), entry.getValue());
                 }
             }
-            configuration.set(HBaseConstants.ZK, hBaseResource.getZk());
-            configuration.set(HBaseConstants.ZK_PARENT, hBaseResource.getZkParent());
-            if (hBaseResource.getUserName() != null) {
-                configuration.set(HBaseConstants.USER_NAME, hBaseResource.getUserName());
-            }
-            if (hBaseResource.getPassword() != null) {
-                configuration.set(HBaseConstants.PASSWORD, hBaseResource.getPassword());
-            }
-            if (hBaseResource.isLindorm()) {
-                if (hBaseConf == null || !hBaseConf.getConfMap().containsKey(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL)) {
-                    configuration.set(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL, HBaseConstants.HBASE_CLIENT_CONNECTION_LINDORM_IMPL);
+            if (hBaseResource.isObkv()) {
+                configuration.set(HBaseConstants.HBASE_OCEANBASE_FULL_USER_NAME, hBaseResource.getObkvFullUserName());
+                configuration.set(HBaseConstants.HBASE_OCEANBASE_PASSWORD, hBaseResource.getObkvPassword());
+                configuration.set(HBaseConstants.HBASE_OCEANBASE_PARAM_URL, hBaseResource.getObkvParamUrl());
+                configuration.set(HBaseConstants.HBASE_OCEANBASE_SYS_USER_NAME, hBaseResource.getObkvSysUserName());
+                configuration.set(HBaseConstants.HBASE_OCEANBASE_SYS_PASSWORD, hBaseResource.getObkvSysPassword());
+                configuration.set(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL, HBaseConstants.HBASE_CLIENT_CONNECTION_OBKV_IMPL);
+            } else {
+                configuration.set(HBaseConstants.ZK, hBaseResource.getZk());
+                configuration.set(HBaseConstants.ZK_PARENT, hBaseResource.getZkParent());
+                if (hBaseResource.getUserName() != null) {
+                    configuration.set(HBaseConstants.USER_NAME, hBaseResource.getUserName());
+                }
+                if (hBaseResource.getPassword() != null) {
+                    configuration.set(HBaseConstants.PASSWORD, hBaseResource.getPassword());
+                }
+                if (hBaseResource.isLindorm()) {
+                    if (hBaseConf == null || !hBaseConf.getConfMap().containsKey(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL)) {
+                        configuration.set(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL, HBaseConstants.HBASE_CLIENT_CONNECTION_LINDORM_IMPL);
+                    }
                 }
             }
             this.configuration = configuration;

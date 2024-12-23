@@ -42,6 +42,32 @@ public class HBaseResourceUtil {
             throw new IllegalArgumentException("not start with '" + HBaseResource.prefix + "'");
         }
         String substring = resource.getUrl().substring(HBaseResource.prefix.length());
+        if (substring.startsWith("obkv%")) {
+            try {
+                int index = substring.lastIndexOf("%");
+                String obkvParamUrl = substring.substring(5, index);
+                Map<String, String> params = getParams(substring.substring(index+1));
+                String obkvFullUserName = params.get("obkvFullUserName");
+                if (obkvFullUserName == null) {
+                    throw new IllegalArgumentException("missing 'obkvFullUserName'");
+                }
+                String obkvPassword = params.get("obkvPassword");
+                if (obkvPassword == null) {
+                    throw new IllegalArgumentException("missing 'obkvPassword'");
+                }
+                String obkvSysUserName = params.get("obkvSysUserName");
+                if (obkvSysUserName == null) {
+                    throw new IllegalArgumentException("missing 'obkvSysUserName'");
+                }
+                String obkvSysPassword = params.get("obkvSysPassword");
+                if (obkvSysPassword == null) {
+                    throw new IllegalArgumentException("missing 'obkvSysPassword'");
+                }
+                return new HBaseResource(obkvParamUrl, obkvFullUserName, obkvPassword, obkvSysUserName, obkvSysPassword);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("parse obkv url error", e);
+            }
+        }
         if (!substring.contains("/")) {
             throw new IllegalArgumentException("miss '/'");
         }
@@ -66,7 +92,7 @@ public class HBaseResourceUtil {
             }
         }
         HBaseResource hBaseResource = new HBaseResource(zk, zkParent, userName, password, lindorm);
-        if (zk == null || zk.length() == 0) {
+        if (zk == null || zk.isEmpty()) {
             throw new IllegalArgumentException("zk is empty");
         }
         return hBaseResource;
