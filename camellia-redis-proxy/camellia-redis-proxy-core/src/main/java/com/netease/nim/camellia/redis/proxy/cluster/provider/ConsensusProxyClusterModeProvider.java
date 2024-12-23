@@ -171,7 +171,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             if (currentNodeLeader()) {
                 return ProxyClusterSlotMapUtils.localSlotMap(current(), leaderSelector.getSlotMap());
             }
-            reply = sendCmd(leader, ClusterModeCmd.send_get_slot_map_from_leader, "{}");
+            reply = sync(sendCmd(leader, ClusterModeCmd.send_get_slot_map_from_leader, "{}"));
             if (reply instanceof BulkReply) {
                 String data = Utils.bytesToString(((BulkReply) reply).getRaw());
                 return ProxyClusterSlotMapUtils.localSlotMap(current(), ProxyClusterSlotMap.parseString(data));
@@ -359,7 +359,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             }
             JSONObject data = new JSONObject();
             data.put("status", ClusterModeStatus.getStatus().getValue());
-            Reply reply = sendCmd(targetLeader, ClusterModeCmd.send_heartbeat_to_leader, data.toString());
+            Reply reply = sync(sendCmd(targetLeader, ClusterModeCmd.send_heartbeat_to_leader, data.toString()));
             if (reply instanceof ErrorReply) {
                 logger.error("send heartbeat to leader error, leader = {}, error = {}", targetLeader, ((ErrorReply) reply).getError());
             }
@@ -386,7 +386,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
             data.put("md5", slotMap.getMd5());
         }
         try {
-            Reply reply = sendCmd(node, ClusterModeCmd.send_heartbeat_to_follower, data.toString());
+            Reply reply = sync(sendCmd(node, ClusterModeCmd.send_heartbeat_to_follower, data.toString()));
             if (reply instanceof ErrorReply) {
                 logger.error("send heartbeat to follower error, follower = {}, error = {}", node, ((ErrorReply) reply).getError());
             }
@@ -441,20 +441,25 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
                 data.put("md5", newSlotMap.getMd5());
                 data.put("slotMap", newSlotMap.toString());
                 logger.info("send_slot_map_to_follower, target = {}, md5 = {}, requestId = {}", node, newSlotMap.getMd5(), requestId);
-                sendCmd(node, ClusterModeCmd.send_slot_map_to_follower, data.toString());
+                CompletableFuture<Reply> future = sendCmd(node, ClusterModeCmd.send_slot_map_to_follower, data.toString());
+                future.thenAccept(reply -> {
+                    if (reply instanceof ErrorReply) {
+                        logger.error("send_slot_map_to_follower error, target = {}, md5 = {}, requestId = {}, reply = {}",
+                                node, newSlotMap.getMd5(), requestId, reply);
+                    }
+                });
             } catch (Exception e) {
                 logger.error("send_slot_map_to_follower error, target = {}, md5 = {}, requestId = {}", node, newSlotMap.getMd5(), requestId, e);
             }
         }
     }
 
-    private Reply sendCmd(ProxyNode target, ClusterModeCmd cmd, String data) {
+    private CompletableFuture<Reply> sendCmd(ProxyNode target, ClusterModeCmd cmd, String data) {
         try {
             byte[][] args = new byte[][]{RedisCommand.CLUSTER.raw(), RedisKeyword.PROXY_HEARTBEAT.getRaw(), Utils.stringToBytes(current().toString()),
                     Utils.stringToBytes(String.valueOf(cmd.getValue())), Utils.stringToBytes(data)};
             RedisConnection connection = RedisConnectionHub.getInstance().get(toAddr(target));
-            CompletableFuture<Reply> future = connection.sendCommand(args);
-            return sync(future);
+            return connection.sendCommand(args);
         } catch (Exception e) {
             logger.error("send cmd error, target = {}, cmd = {}, data = {}", target, cmd, data, e);
             throw new CamelliaRedisException(e);

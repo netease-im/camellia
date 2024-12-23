@@ -17,7 +17,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,11 +37,14 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(executorSize, executorSize,
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-receiver"), new ThreadPoolExecutor.AbortPolicy());
 
+
     private final ReentrantLock initLock = new ReentrantLock();
     private final ReentrantLock refreshLock = new ReentrantLock();
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     private final ProxyClusterModeProvider provider;
+
+    private ClusterModeCommandMoveInvoker commandMoveInvoker;
 
     private ProxyClusterSlotMap clusterSlotMap;
 
@@ -64,6 +67,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
         try {
             if (init) return;
             provider.init();
+            commandMoveInvoker = new ClusterModeCommandMoveInvoker(this);
             refresh();
             provider.addSlotMapChangeListener(this::refresh);
             reloadConf();
@@ -125,7 +129,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
      * @return reply
      */
     @Override
-    public Reply isCommandMove(Command command) {
+    public CompletableFuture<Reply> isCommandMove(Command command) {
         try {
             if (!init) return null;
             if (!clusterModeCommandMoveEnable) return null;//不开启move，则直接返回null
@@ -135,20 +139,23 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                     return null;
                 }
                 if (clusterSlotMap == null) {
-                    return ErrorReply.NOT_AVAILABLE;
+                    return CompletableFuture.completedFuture(ErrorReply.NOT_AVAILABLE);
                 }
                 int lasSlot = -1;
+                boolean move = false;
                 for (byte[] key : keys) {
                     int slot = RedisClusterCRC16Utils.getSlot(key);
                     if (lasSlot != -1 && lasSlot != slot) {
-                        return ErrorReply.CROSS_SLOT_ERROR;
+                        return CompletableFuture.completedFuture(ErrorReply.CROSS_SLOT_ERROR);
                     }
                     lasSlot = slot;
                     if (clusterSlotMap.isSlotInCurrentNode(slot)) {
                         continue;
                     }
-                    ProxyNode node = clusterSlotMap.getBySlot(slot);
-                    return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
+                    move = true;
+                }
+                if (move) {
+                    return commandMoveInvoker.gracefulCommandMove(lasSlot);
                 }
                 return null;
             }
@@ -169,7 +176,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             if (!clusterSlotMap.isSlotInCurrentNode(slot)) {
                 ProxyNode node = clusterSlotMap.getBySlot(slot);
                 channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
-                return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
+                return CompletableFuture.completedFuture(new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort()));
             }
             return null;
         } catch (Exception e) {
@@ -254,5 +261,14 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     @Override
     public List<ProxyNode> getOnlineNodes() {
         return clusterSlotMap.getOnlineNodes();
+    }
+
+    /**
+     * 获取slot-map
+     * @return slot-map
+     */
+    @Override
+    public ProxyClusterSlotMap getSlotMap() {
+        return clusterSlotMap;
     }
 }

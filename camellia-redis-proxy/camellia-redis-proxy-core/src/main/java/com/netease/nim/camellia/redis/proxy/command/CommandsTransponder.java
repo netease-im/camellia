@@ -418,9 +418,9 @@ public class CommandsTransponder {
                 }
 
                 if (clusterModeProcessor != null) {
-                    Reply moveReply = clusterModeProcessor.isCommandMove(command);
-                    if (moveReply != null) {
-                        task.replyCompleted(moveReply);
+                    CompletableFuture<Reply> future = clusterModeProcessor.isCommandMove(command);
+                    if (future != null) {
+                        future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;
                     }

@@ -26,4 +26,17 @@ public class ClusterModeConfig {
     public static boolean clusterModeCommandMoveAlways() {
         return ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.always", false);
     }
+
+    public static long clusterModeCommandMoveDelayMillis() {
+        return ProxyDynamicConf.getLong("cluster.mode.command.move.graceful.delay.millis", 100L);
+    }
+
+    public static int clusterModeCommandMoveMaxRetry() {
+        return ProxyDynamicConf.getInt("cluster.mode.command.move.graceful.max.retry", 5);
+    }
+
+    public static int clusterModeCommandMoveCacheMillis() {
+        return ProxyDynamicConf.getInt("cluster.mode.command.move.graceful.cache.millis", 50);
+    }
+
 }

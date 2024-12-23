@@ -15,7 +15,7 @@ public interface ProxyClusterModeProcessor {
      * @param command Command
      * @return reply
      */
-    Reply isCommandMove(Command command);
+    CompletableFuture<Reply> isCommandMove(Command command);
 
     /**
      * cluster相关命令
@@ -35,4 +35,10 @@ public interface ProxyClusterModeProcessor {
      * @return 节点列表
      */
     List<ProxyNode> getOnlineNodes();
+
+    /**
+     * 获取slot-map
+     * @return slot-map
+     */
+    ProxyClusterSlotMap getSlotMap();
 }
