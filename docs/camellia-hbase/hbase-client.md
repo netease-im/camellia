@@ -6,26 +6,19 @@
 ## feature
 * enhanced hbase client
 * base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate
+* support dynamic-conf
 * support client read-write-separate/double-write
+* support aliyun-lindorm
+* support obkv-hbase
 
 ## 特性
 * 多读多写（如读写分离、双写等）  
-* 支持配置在线修改（需整合camellia-dashboard）
+* 支持配置在线修改
 * 提供了一个spring-boot-starter，快速接入
-
-## 使用场景
-* 需要进行hbase双写迁移  
+* 支持阿里云lindorm
+* 支持obkv-hbase
 
 ## maven依赖
-* spring-boot-starter（spring自动注入CamelliaHBaseTemplate对象）
-```
-<dependency>
-  <groupId>com.netease.nim</groupId>
-  <artifactId>camellia-hbase-spring-boot-starter</artifactId>
-  <version>a.b.c</version>
-</dependency>
-```
-* 直接使用（需要你自己new一个CamelliaHBaseTemplate对象）
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
@@ -37,62 +30,53 @@
 ## 支持的命令
 参考ICamelliaHBaseTemplate接口定义
 
-## 示例（详细配置参考CamelliaHBaseProperties）
+## 客户端初始化（手动构造CamelliaHBaseTemplate对象）
 
-### 使用本地配置（基于xml）
-```
-camellia-hbase:
-  type: local
-  local:
-    xml:
-      xml-file: hbase.xml
-```
-### 使用本地配置（基于yml）
-```
-camellia-hbase:
-  type: local
-  local:
-    conf-type: yml
-    yml:
-      resource: hbase://xxx1.163.org,xxx2.163.org,xxx3.163.org/hbase
-```
-### 使用本地配置（复杂配置，单独的一个json文件）  
-```
-camellia-hbase:
-  type: local
-  local:
-    conf-type: yml
-    yml:
-      type: complex
-      json-file: resource-table.json
-```
-```
-{
-  "type": "simple",
-  "operation": {
-    "read": "hbase://xxx1.163.org,xxx2.163.org,xxx3.163.org/hbase",
-    "type": "rw_separate",
-    "write": {
-      "resources": [
-        "hbase://xxx1.163.org,xxx2.163.org,xxx3.163.org/hbase",
-        "hbase://yyy1.163.org,yyy2.163.org,yyy3.163.org/hbase"
-      ],
-      "type": "multi"
-    }
-  }
-}
-```
-### 使用dashboard动态配置
-```
-camellia-hbase:
-  type: remote
-  remote:
-    bid: 1
-    bgroup: default
-    url: http://127.0.0.1:8080
+### hbase
+
+```java
+String url = "hbase://nim-xx1.163.org,nim-xx2.163.org,nim-xx3.163.org/hbase1";
+HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(url));
+CamelliaHBaseTemplate template = new CamelliaHBaseTemplate(hBaseResource);
 ```
 
-### 客户端使用
+### lindorm
+
+先引入lindorm依赖
+```
+<dependency>
+    <groupId>com.alibaba.hbase</groupId>
+    <artifactId>alihbase-connector</artifactId>
+    <version>x.x.x</version>
+</dependency>
+```
+```java
+String url = "hbase://ld-xxxx-lindorm.lindorm.rds.aliyuncs.com:30020/?userName=nim_lindorm_1&password=xxabc&lindorm=true";
+HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(url));
+CamelliaHBaseTemplate template = new CamelliaHBaseTemplate(hBaseResource);
+```
+
+### obkv
+
+先引入obkv-hbase依赖
+```
+<dependency>
+    <groupId>com.oceanbase</groupId>
+    <artifactId>obkv-hbase-client</artifactId>
+    <version>2.x.x</version>
+</dependency>
+```
+```java
+String url = "hbase://obkv%http://10.1.1.1:8080/services?Action=ObRootServiceInfo&ObRegion=nimtestob&database=obkv%obkvFullUserName=kvtest@testkv#nimtestob&obkvPassword=abcdef&obkvSysUserName=root&obkvSysPassword=111234abc";
+HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(url));
+CamelliaHBaseTemplate template = new CamelliaHBaseTemplate(hBaseResource);
+```
+
+## 客户端初始化（使用spring-boot自动注入）
+
+具体见：[spring-boot](springboot.md)
+
+## 客户端使用
 ```
 //PUT操作
 Put put = new Put(Bytes.toBytes("rowKey"));
