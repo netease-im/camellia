@@ -38,6 +38,10 @@ public class CamelliaIdGenStrictServerStatus {
         }
     }
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(CamelliaIdGenStrictServerStatus::invokeOfflineCallback));
+    }
+
     private static Status status = Status.ONLINE;
     private static long lastUseTime = System.currentTimeMillis();
 

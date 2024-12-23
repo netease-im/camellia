@@ -47,6 +47,10 @@ public class CamelliaIdGenSegmentServerStatus {
         ;
     }
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(CamelliaIdGenSegmentServerStatus::invokeOfflineCallback));
+    }
+
     public static Status getStatus() {
         return status;
     }
