@@ -58,14 +58,13 @@
 		<okhttp.version>3.14.9</okhttp.version>
 		<okhttp4.version>4.11.0</okhttp4.version>
 		<slf4j.version>1.7.7</slf4j.version>
-		<netty.version>4.1.114.Final</netty.version>
-		<jctools.version>4.0.1</jctools.version>
+		<netty.version>4.1.116.Final</netty.version>
+		<jctools.version>4.0.5</jctools.version>
 		<netty-incubator-transport-native-io_uring.version>0.0.25.Final</netty-incubator-transport-native-io_uring.version>
-		<netty-incubator-codec-native-quic.version>0.0.67.Final</netty-incubator-codec-native-quic.version>
+		<netty-incubator-codec-native-quic.version>0.0.69.Final</netty-incubator-codec-native-quic.version>
 		<jedis.version>2.9.3</jedis.version>
 		<jedis3.version>3.6.3</jedis3.version>
 		<concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
-		<swagger.version>2.2.2</swagger.version>
 		<hbase-client.version>2.2.6</hbase-client.version>
 		<curator.version>2.12.0</curator.version>
 		<msgpack.version>0.9.0</msgpack.version>
@@ -75,7 +74,7 @@
 		<mybatis-spring-boot-starter.version>1.3.2</mybatis-spring-boot-starter.version>
 		<mybatis-spring-boot3-starter.version>3.0.4</mybatis-spring-boot3-starter.version>
 		<mysql-connector-java.version>5.1.30</mysql-connector-java.version>
-        <mysql8-connector-java.version>8.0.19</mysql8-connector-java.version>
+		<mysql8-connector-java.version>8.0.19</mysql8-connector-java.version>
 		<caffeine.version>2.9.3</caffeine.version>
 		<jetcd.version>0.7.7</jetcd.version>
 		<bouncycastle.version>1.70</bouncycastle.version>
