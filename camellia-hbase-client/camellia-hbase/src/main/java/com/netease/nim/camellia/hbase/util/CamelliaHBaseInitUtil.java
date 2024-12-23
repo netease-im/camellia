@@ -45,6 +45,12 @@ public class CamelliaHBaseInitUtil {
         String userName = null;
         String password = null;
         Boolean lindorm = null;
+        String obkvParamUrl = null;
+        String obkvFullUserName = null;
+        String obkvPassword = null;
+        String obkvSysUserName = null;
+        String obkvSysPassword = null;
+        Boolean obkv = null;
         for (Map.Entry<String, String> entry : configuration) {
             if (entry.getKey().equalsIgnoreCase(HBaseConstants.ZK)) {
                 zk = entry.getValue();
@@ -57,10 +63,25 @@ public class CamelliaHBaseInitUtil {
             } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL)
                     && entry.getValue().equalsIgnoreCase(HBaseConstants.HBASE_CLIENT_CONNECTION_LINDORM_IMPL)) {
                 lindorm = true;
-            }
-            else {
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL)
+                    && entry.getValue().equalsIgnoreCase(HBaseConstants.HBASE_CLIENT_CONNECTION_OBKV_IMPL)) {
+                obkv = true;
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_PARAM_URL)) {
+                obkvParamUrl = entry.getValue();
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_FULL_USER_NAME)) {
+                obkvFullUserName = entry.getValue();
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_PASSWORD)) {
+                obkvPassword = entry.getValue();
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_SYS_USER_NAME)) {
+                obkvSysUserName = entry.getValue();
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_SYS_PASSWORD)) {
+                obkvSysPassword = entry.getValue();
+            } else {
                 camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
             }
+        }
+        if (obkv != null && obkv) {
+            return new HBaseResource(obkvParamUrl, obkvFullUserName, obkvPassword, obkvSysUserName, obkvSysPassword);
         }
         if (zk == null) {
             throw new IllegalArgumentException("missing '" + HBaseConstants.ZK + "'");
@@ -81,7 +102,10 @@ public class CamelliaHBaseInitUtil {
         CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
         for (Map.Entry<String, String> entry : configuration) {
             if (!entry.getKey().equalsIgnoreCase(HBaseConstants.ZK) && !entry.getKey().equalsIgnoreCase(HBaseConstants.ZK_PARENT)
-                    && !entry.getKey().equalsIgnoreCase(HBaseConstants.USER_NAME) && !entry.getKey().equalsIgnoreCase(HBaseConstants.PASSWORD)) {
+                    && !entry.getKey().equalsIgnoreCase(HBaseConstants.USER_NAME) && !entry.getKey().equalsIgnoreCase(HBaseConstants.PASSWORD)
+                    && !entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_PARAM_URL) && !entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_FULL_USER_NAME)
+                    && !entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_PASSWORD)
+                    && !entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_SYS_USER_NAME) && !entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_OCEANBASE_SYS_PASSWORD)) {
                 camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
             }
         }

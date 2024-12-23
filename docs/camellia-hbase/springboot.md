@@ -11,8 +11,17 @@
 
 如果是lindorm或者obkv，则引入关联依赖
 
+### 使用本地配置（基于xml）
+```
+camellia-hbase:
+  type: local
+  local:
+    conf-type: xml
+    xml:
+      xml-file: hbase.xml
+```
 
-### 使用本地配置
+### 使用本地配置（基于yml）
 ```
 camellia-hbase:
   type: local
