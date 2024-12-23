@@ -1,5 +1,23 @@
 [中文版](update-zh.md)
 
+# 1.3.1（2024/12/xx）
+### add
+* camellia-hbase-client, support obkv-hbase
+
+### update
+* camellia-redis-proxy, cluster-mode-2, support graceful online/offline on kv case
+* camellia-redis-proxy, call offlineCallback on shutdown
+* camellia-hot-key-server, call offlineCallback on shutdown
+* camellia-delay-queue-server, call offlineCallback on shutdown
+* camellia-id-gen-servers, call offlineCallback on shutdown
+* upgrade netty to `4.1.116`
+* upgrade jctools to `4.0.5`
+* upgrade obkv-table to `1.3.0`
+
+### fix
+* camellia-redis-proxy, kv, fix `java.lang.IllegalStateException: Recursive update` on some cases
+
+
 # 1.3.0（2024/12/06）
 ### add
 * camellia-redis-proxy, prerequisite `java_21` and `spring_boot3`

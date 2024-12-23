@@ -13,7 +13,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 ### 独立部署的中间件服务（server）
 
-最低要求java21+    
+最低要求java21    
 
 * [redis代理](/docs/camellia-redis-proxy/redis-proxy-zh.md) 
 * [发号器](/docs/camellia-id-gen/id-gen.md)
@@ -22,7 +22,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 ### 增强的三方库（sdk）
 
-基于开源版本进行二次增强，最低要求java8+   
+基于开源版本进行二次增强，最低要求java8   
 
 * [redis客户端](/docs/camellia-redis-client/redis-client.md) 
 * [hbase客户端 ](/docs/camellia-hbase/hbase-client.md)

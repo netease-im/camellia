@@ -1,5 +1,22 @@
 [ENGLISH](update-en.md)
 
+# 1.3.1（2024/12/xx）
+### 新增
+* camellia-hbase-client，支持obkv-hbase
+
+### 更新
+* camellia-redis-proxy，cluster-mode-2，kv场景下（开启严格命令重定向），支持更平滑的节点上下线
+* camellia-redis-proxy，进程退出时执行自定义offlineCallback
+* camellia-hot-key-server，进程退出时执行自定义offlineCallback
+* camellia-delay-queue-server，进程退出时执行自定义offlineCallback
+* camellia-id-gen-servers，进程退出时执行自定义offlineCallback
+* 升级netty版本到 `4.1.116`
+* 升级jctools版本到 `4.0.5`
+* 升级obkv-table版本到 `1.3.0`
+
+### fix
+* camellia-redis-proxy，kv，修复了某些场景下，初始化可能失败的问题
+
 
 # 1.3.0（2024/12/06）
 ### 新增
