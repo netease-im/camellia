@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-bootstrap</artifactId>
-	<version>1.3.1</version>
+	<version>1.4.0-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy</artifactId>
-		<version>1.3.1</version>
+		<version>1.4.0-SNAPSHOT</version>
 	</parent>
 
 	<profiles>
@@ -30,7 +30,7 @@
 				<dependency>
 					<groupId>com.netease.nim</groupId>
 					<artifactId>camellia-redis-proxy-config-etcd</artifactId>
-					<version>1.3.1</version>
+					<version>1.4.0-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -43,7 +43,7 @@
 				<dependency>
 					<groupId>com.netease.nim</groupId>
 					<artifactId>camellia-redis-proxy-config-nacos</artifactId>
-					<version>1.3.1</version>
+					<version>1.4.0-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -56,7 +56,7 @@
 				<dependency>
 					<groupId>com.netease.nim</groupId>
 					<artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
-					<version>1.3.1</version>
+					<version>1.4.0-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -69,7 +69,7 @@
 				<dependency>
 					<groupId>com.netease.nim</groupId>
 					<artifactId>camellia-redis-proxy-kv-hbase</artifactId>
-					<version>1.3.1</version>
+					<version>1.4.0-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -82,7 +82,7 @@
 				<dependency>
 					<groupId>com.netease.nim</groupId>
 					<artifactId>camellia-redis-proxy-kv-obkv</artifactId>
-					<version>1.3.1</version>
+					<version>1.4.0-SNAPSHOT</version>
 					<exclusions>
 						<exclusion>
 							<groupId>org.jruby</groupId>
@@ -101,7 +101,7 @@
 				<dependency>
 					<groupId>com.netease.nim</groupId>
 					<artifactId>camellia-redis-proxy-kv-tikv</artifactId>
-					<version>1.3.1</version>
+					<version>1.4.0-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -128,7 +128,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-			<version>1.3.1</version>
+			<version>1.4.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
