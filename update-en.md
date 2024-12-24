@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.3.1（2024/12/xx）
+# 1.3.1（2024/12/23）
 ### add
 * camellia-hbase-client, support obkv-hbase
 

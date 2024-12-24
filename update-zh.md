@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.3.1（2024/12/xx）
+# 1.3.1（2024/12/23）
 ### 新增
 * camellia-hbase-client，支持obkv-hbase
 
