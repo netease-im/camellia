@@ -50,7 +50,6 @@
         <module name="camellia-spring-redis3-eureka-discovery-spring-boot" />
         <module name="camellia-redis-proxy-kv-hbase" />
         <module name="camellia-id-gen-segment-server-bootstrap" />
-        <module name="camellia-kv-wal" />
         <module name="camellia-id-gen-strict-server-bootstrap" />
         <module name="camellia-redis-base" />
         <module name="camellia-hot-key-server" />
@@ -136,6 +135,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="camellia-kv" target="1.5" />
+      <module name="camellia-kv-wal" target="21" />
     </bytecodeTargetLevel>
   </component>
 </project>
