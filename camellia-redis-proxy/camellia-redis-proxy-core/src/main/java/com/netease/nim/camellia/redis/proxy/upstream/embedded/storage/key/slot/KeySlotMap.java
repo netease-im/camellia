@@ -1,5 +1,6 @@
-package com.netease.nim.camellia.redis.proxy.embedded.storage.key;
+package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot;
 
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.constants.EmbeddedStorageConstants;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -15,15 +16,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+
 /**
  * Created by caojiajun on 2024/12/31
  */
 public class KeySlotMap {
 
     private static final Logger logger = LoggerFactory.getLogger(KeySlotMap.class);
-
-    private static final int _64k = 64*1024;
-    private static final int bit_size = (int)(16*1024*1024*1024L / _64k);//16Gib
 
     private static final byte[] magic_header = "camellia_header".getBytes(StandardCharsets.UTF_8);
     private static final byte[] magic_footer = "camellia_footer".getBytes(StandardCharsets.UTF_8);
@@ -80,9 +79,9 @@ public class KeySlotMap {
                 if (fileId == 0) {
                     continue;
                 }
-                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(bit_size));
-                int bitsStart = (int)(offset / _64k);
-                int bitsEnd = (int)((offset + capacity) / _64k);
+                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(EmbeddedStorageConstants.bit_size));
+                int bitsStart = (int)(offset / EmbeddedStorageConstants._64k);
+                int bitsEnd = (int)((offset + capacity) / EmbeddedStorageConstants._64k);
                 for (int index=bitsStart; index<bitsEnd; index++) {
                     bits.set(index, true);
                 }
@@ -132,17 +131,17 @@ public class KeySlotMap {
             for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
                 Long fileId = entry.getKey();
                 BitSet bits = entry.getValue();
-                for (int i=0; i<bit_size; i++) {
+                for (int i = 0; i< EmbeddedStorageConstants.bit_size; i++) {
                     boolean used = bits.get(i);
                     if (!used) {
-                        update(slot, fileId, (long) i * _64k, _64k);
+                        update(slot, fileId, (long) i * EmbeddedStorageConstants._64k, EmbeddedStorageConstants._64k);
                         bits.set(i, true);
                         return slotInfoMap.get(slot);
                     }
                 }
             }
             long fileId = initFileId();
-            update(slot, fileId, 0, _64k);
+            update(slot, fileId, 0, EmbeddedStorageConstants._64k);
             fileBitsMap.get(fileId).set(0, true);
             return slotInfoMap.get(slot);
         } finally {
@@ -165,12 +164,12 @@ public class KeySlotMap {
             long fileId = slotInfo.fileId();
             long offset = slotInfo.offset();
             int capacity = slotInfo.capacity();
-            int bitsStep = capacity / _64k;
+            int bitsStep = capacity / EmbeddedStorageConstants._64k;
             BitSet bits = fileBitsMap.get(fileId);
-            int bitsStart = (int)(offset / _64k);
-            int bitsEnd = (int)((offset + capacity) / _64k);
+            int bitsStart = (int)(offset / EmbeddedStorageConstants._64k);
+            int bitsEnd = (int)((offset + capacity) / EmbeddedStorageConstants._64k);
             //直接顺延扩容
-            if (bitsStart + (bitsEnd - bitsStart) * 2 < bit_size) {
+            if (bitsStart + (bitsEnd - bitsStart) * 2 < EmbeddedStorageConstants.bit_size) {
                 boolean directExpand = true;
                 for (int i=bitsEnd; i<bitsEnd + bitsStep; i++) {
                     boolean used = bits.get(i);
@@ -190,8 +189,8 @@ public class KeySlotMap {
                 }
             }
             //使用同一个文件的空闲区域，优先复用其他slot回收的区域
-            if (bit_size - bits.cardinality() >= bitsStep*2) {
-                for (int i=0; i<bit_size-bitsStep*2; i++) {
+            if (EmbeddedStorageConstants.bit_size - bits.cardinality() >= bitsStep*2) {
+                for (int i = 0; i< EmbeddedStorageConstants.bit_size-bitsStep*2; i++) {
                     if (bits.get(i, bitsStep * 2).cardinality() == 0) {
                         //clear old
                         for (int j=bitsStart; j<bitsEnd; j++) {
@@ -202,14 +201,14 @@ public class KeySlotMap {
                             bits.set(j, true);
                         }
                         //update
-                        update(slot, fileId, (long) i *_64k, capacity*2);
+                        update(slot, fileId, (long) i * EmbeddedStorageConstants._64k, capacity*2);
                         return slotInfoMap.get(slot);
                     }
                 }
             }
             //分配不出来就使用新文件
             fileId = initFileId();
-            update(slot, fileId, 0, _64k);
+            update(slot, fileId, 0, EmbeddedStorageConstants._64k);
             fileBitsMap.get(fileId).set(0, true);
             return slotInfoMap.get(slot);
         } finally {
@@ -222,7 +221,7 @@ public class KeySlotMap {
         while (fileBitsMap.containsKey(fileId)) {
             fileId ++;
         }
-        fileBitsMap.put(fileId, new BitSet(bit_size));
+        fileBitsMap.put(fileId, new BitSet(EmbeddedStorageConstants.bit_size));
         return fileId;
     }
 

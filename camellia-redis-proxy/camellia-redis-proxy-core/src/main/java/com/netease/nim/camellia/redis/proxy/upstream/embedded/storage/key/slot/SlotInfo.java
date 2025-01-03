@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.embedded.storage.key;
+package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot;
 
 /**
  * Created by caojiajun on 2024/12/31

@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.embedded.storage.enums;
+package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums;
 
 
 /**
