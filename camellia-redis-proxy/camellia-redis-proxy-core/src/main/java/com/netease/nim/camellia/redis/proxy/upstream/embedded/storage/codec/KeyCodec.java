@@ -20,6 +20,11 @@ import java.util.Map;
  */
 public class KeyCodec {
 
+    /**
+     * 解码一整个slot
+     * @param all data
+     * @return 解码结果
+     */
     public static Map<BytesKey, KeyInfo> decodeSlot(byte[] all) {
         ByteBuffer buffer = ByteBuffer.wrap(all);
         int bucketSize = all.length / EmbeddedStorageConstants._4k;
@@ -40,14 +45,15 @@ public class KeyCodec {
      */
     public static Map<BytesKey, KeyInfo> decodeBucket(byte[] bytes) {
         int crc1 = BytesUtils.toInt(bytes, 0);//0,1,2,3
-        int crc2 = RedisClusterCRC16Utils.getCRC16(bytes, 5, bytes.length);
+        int crc2 = RedisClusterCRC16Utils.getCRC16(bytes, 9, bytes.length);
         if (crc1 != crc2) {
             return new HashMap<>();
         }
         int decompressLen = BytesUtils.toShort(bytes, 4);//4,5
-        byte compressType = bytes[6];//6
+        int compressLen = BytesUtils.toShort(bytes, 6);//6,7
+        byte compressType = bytes[8];//8
         ICompressor compressor = CompressUtils.get(CompressType.getByValue(compressType));
-        byte[] decompressData = compressor.decompress(bytes, 7, bytes.length - 7, decompressLen);
+        byte[] decompressData = compressor.decompress(bytes, 9, compressLen, decompressLen);
         Unpack unpack = new Unpack(decompressData);
         int size = unpack.popVarUint();
         Map<BytesKey, KeyInfo> map = new HashMap<>();
@@ -81,15 +87,20 @@ public class KeyCodec {
             compressType = CompressType.none;
             compressed = array;
         }
-        if (compressed.length + 5 > EmbeddedStorageConstants._4k) {
+        if (compressed.length + 9 > EmbeddedStorageConstants._4k) {
             return null;
         }
-        int crc = RedisClusterCRC16Utils.getCRC16(compressed, 0, compressed.length);
+        short compressLen = (short) compressed.length;
+
         ByteBuffer buffer = ByteBuffer.allocate(EmbeddedStorageConstants._4k);
-        buffer.putInt(crc);
-        buffer.putShort(decompressLen);
-        buffer.put(compressType.getType());
+        buffer.putInt(0);//0,1,2,3
+        buffer.putShort(decompressLen);//4,5
+        buffer.putShort(compressLen);//6,7
+        buffer.put(compressType.getType());//8
         buffer.put(compressed);
+        byte[] bytes = buffer.array();
+        int crc = RedisClusterCRC16Utils.getCRC16(bytes, 9, bytes.length);
+        buffer.putInt(0, crc);
         return buffer.array();
     }
 }

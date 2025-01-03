@@ -11,7 +11,7 @@ public class ZstdCompressor implements ICompressor {
     private final int compressionLevel;
 
     public ZstdCompressor() {
-        compressionLevel = Zstd.defaultCompressionLevel();
+        compressionLevel = Zstd.maxCompressionLevel();
     }
 
     @Override
