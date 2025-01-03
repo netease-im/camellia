@@ -15,6 +15,8 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.constants.EmbeddedStorageConstants.*;
+
 /**
  * Created by caojiajun on 2025/1/3
  */
@@ -80,19 +82,26 @@ public class KeyCodec {
         pack.getBuffer().capacity(pack.getBuffer().readableBytes());
         byte[] array = pack.getBuffer().array();
         short decompressLen = (short) array.length;
-        CompressType compressType = CompressType.zstd;
-        ICompressor compressor = CompressUtils.get(compressType);
-        byte[] compressed = compressor.compress(array, 0, array.length);
-        if (compressed.length > array.length) {
+        CompressType compressType;
+        if (decompressLen + 9 > _4k) {//4k装不下，才压缩
+            compressType = CompressType.zstd;
+        } else {
             compressType = CompressType.none;
+        }
+        byte[] compressed;
+        short compressLen;
+        if (compressType == CompressType.none) {
             compressed = array;
+            compressLen = (short) compressed.length;
+        } else {
+            ICompressor compressor = CompressUtils.get(compressType);
+            compressed = compressor.compress(array, 0, array.length);
+            compressLen = (short) compressed.length;
+            if (compressed.length + 9 > _4k) {
+                return null;
+            }
         }
-        if (compressed.length + 9 > EmbeddedStorageConstants._4k) {
-            return null;
-        }
-        short compressLen = (short) compressed.length;
-
-        ByteBuffer buffer = ByteBuffer.allocate(EmbeddedStorageConstants._4k);
+        ByteBuffer buffer = ByteBuffer.allocate(_4k);
         buffer.putInt(0);//0,1,2,3
         buffer.putShort(decompressLen);//4,5
         buffer.putShort(compressLen);//6,7
