@@ -4,7 +4,11 @@ import com.netease.nim.camellia.codec.Marshallable;
 import com.netease.nim.camellia.codec.Pack;
 import com.netease.nim.camellia.codec.Unpack;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.ValueLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.ValueLocation;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Created by caojiajun on 2025/1/2
@@ -161,8 +165,9 @@ public class KeyInfo implements Marshallable {
             pack.putLong(expireTime);
         }
         if (containsValue()) {
-            pack.putLong(valueLocation.fileId());
-            pack.putLong(valueLocation.offset());
+            pack.putLong(valueLocation.blockLocation().fileId());
+            pack.putInt(valueLocation.blockLocation().blockId());
+            pack.putInt(valueLocation.offset());
         }
         if (containsExtra()) {
             pack.putVarbin(extra);
@@ -178,12 +183,26 @@ public class KeyInfo implements Marshallable {
             expireTime = unpack.popLong();
         }
         if (containsValue()) {
-            long valueFileId = unpack.popLong();
-            long valueOffset = unpack.popLong();
-            valueLocation = new ValueLocation(valueFileId, valueOffset);
+            long fileId = unpack.popLong();
+            int blockId = unpack.popInt();
+            int offset = unpack.popInt();
+            valueLocation = new ValueLocation(new BlockLocation(fileId, blockId), offset);
         }
         if (containsExtra()) {
             extra = unpack.popVarbin();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KeyInfo keyInfo = (KeyInfo) o;
+        return Objects.deepEquals(key, keyInfo.key);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(key);
     }
 }

@@ -8,8 +8,8 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.command.CommandOnEmbeddedStorage;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.ValueLocation;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -117,10 +117,12 @@ public class Set extends CommandOnEmbeddedStorage {
             keyInfo.setExtra(value);
         } else {
             keyInfo.setExtra(null);
-            ValueLocation location = stringReadWrite.put(slot, keyInfo, value);
-            keyInfo.setValueLocation(location);
+            stringReadWrite.put(slot, keyInfo, value);
         }
         keyReadWrite.put(slot, keyInfo);
+
+        checkAndFlush(slot);
+
         if (get) {
             return new BulkReply(oldValue);
         } else {

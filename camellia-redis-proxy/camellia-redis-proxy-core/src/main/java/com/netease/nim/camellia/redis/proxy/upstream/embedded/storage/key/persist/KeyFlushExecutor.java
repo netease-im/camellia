@@ -1,13 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist;
 
-
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.KeyCodec;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.flush.FlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.util.KeyHashUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotKeyBlockCache;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeySlotMap;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyBlockCache;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotInfo;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.constants.EmbeddedStorageConstants.*;
 
@@ -26,14 +25,14 @@ public class KeyFlushExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(KeyFlushExecutor.class);
 
-    private final ThreadPoolExecutor executor;
-    private final KeySlotMap keySlotMap;
+    private final FlushExecutor executor;
+    private final KeyManifest keyManifest;
     private final FileReadWrite fileReadWrite;
-    private final SlotKeyBlockCache blockCache;
+    private final KeyBlockCache blockCache;
 
-    public KeyFlushExecutor(ThreadPoolExecutor executor, KeySlotMap keySlotMap, FileReadWrite fileReadWrite, SlotKeyBlockCache blockCache) {
+    public KeyFlushExecutor(FlushExecutor executor, KeyManifest keyManifest, FileReadWrite fileReadWrite, KeyBlockCache blockCache) {
         this.executor = executor;
-        this.keySlotMap = keySlotMap;
+        this.keyManifest = keyManifest;
         this.fileReadWrite = fileReadWrite;
         this.blockCache = blockCache;
     }
@@ -60,9 +59,9 @@ public class KeyFlushExecutor {
     private void execute(KeyFlushTask task) throws Exception {
         short slot = task.slot();
         Map<BytesKey, KeyInfo> flushKeys = task.flushKeys();
-        SlotInfo source = keySlotMap.get(slot);
+        SlotInfo source = keyManifest.get(slot);
         if (source == null) {
-            source = keySlotMap.init(slot);
+            source = keyManifest.init(slot);
             clear(source);
         }
         SlotInfo target = source;
@@ -72,7 +71,7 @@ public class KeyFlushExecutor {
             if (lastWrite.success) {
                 break;
             }
-            target = keySlotMap.expand(slot);
+            target = keyManifest.expand(slot);
         }
     }
 

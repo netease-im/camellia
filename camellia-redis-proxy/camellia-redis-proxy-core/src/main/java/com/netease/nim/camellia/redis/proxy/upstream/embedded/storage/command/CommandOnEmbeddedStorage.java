@@ -3,9 +3,14 @@ package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.command;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.string.StringReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.wal.WalGroup;
+
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * Created by caojiajun on 2025/1/3
@@ -37,4 +42,17 @@ public abstract class CommandOnEmbeddedStorage {
      * @return reply
      */
     protected abstract Reply execute(short slot, Command command) throws Exception;
+
+    /**
+     * check and flush
+     * @param slot slot
+     * @throws IOException exception
+     */
+    protected void checkAndFlush(short slot) throws IOException {
+        if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
+            keyReadWrite.flushPrepare(slot);
+            CompletableFuture<FlushResult> future = stringReadWrite.flush(slot);
+            future.thenAccept(flushResult -> keyReadWrite.flush(slot));
+        }
+    }
 }

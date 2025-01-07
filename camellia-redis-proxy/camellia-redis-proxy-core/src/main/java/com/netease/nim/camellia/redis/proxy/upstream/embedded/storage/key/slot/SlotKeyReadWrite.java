@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot;
 
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist.KeyFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist.KeyFlushTask;
@@ -22,13 +23,14 @@ public class SlotKeyReadWrite {
 
     private final short slot;
     private final KeyFlushExecutor executor;
-    private final SlotKeyBlockCache blockCache;
+    private final KeyBlockCache blockCache;
 
-    private Map<BytesKey, KeyInfo> mutable = new HashMap<>();
-    private Map<BytesKey, KeyInfo> immutable = new HashMap<>();
-    private volatile boolean flushing = false;
+    private final Map<BytesKey, KeyInfo> mutable = new HashMap<>();
+    private final Map<BytesKey, KeyInfo> immutable = new HashMap<>();
 
-    public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, SlotKeyBlockCache blockCache) {
+    private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
+
+    public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockCache blockCache) {
         this.slot = slot;
         this.executor = executor;
         this.blockCache = blockCache;
@@ -61,7 +63,6 @@ public class SlotKeyReadWrite {
      */
     public void put(KeyInfo key) {
         mutable.put(new BytesKey(key.getKey()), key);
-        checkAndFlush();
     }
 
     /**
@@ -70,7 +71,6 @@ public class SlotKeyReadWrite {
      */
     public void delete(BytesKey key) {
         mutable.put(key, KeyInfo.DELETE);
-        checkAndFlush();
     }
 
     /**
@@ -78,16 +78,12 @@ public class SlotKeyReadWrite {
      */
     public CompletableFuture<FlushResult> flush() {
         CompletableFuture<FlushResult> future = new CompletableFuture<>();
-        if (flushing) {
+        if (flushStatus == FlushStatus.FLUSHING || flushStatus == FlushStatus.FLUSH_OK) {
             future.complete(FlushResult.SKIP);
             return future;
         }
-        if (mutable.isEmpty()) {
-            future.complete(FlushResult.OK);
-            return future;
-        }
-        Map<BytesKey, KeyInfo> flushKeys = flushPrepare();
-        CompletableFuture<FlushResult> submit = executor.submit(new KeyFlushTask(slot, flushKeys));
+        flushStatus = FlushStatus.FLUSHING;
+        CompletableFuture<FlushResult> submit = executor.submit(new KeyFlushTask(slot, immutable));
         submit.thenAccept(b -> {
             flushDone();
             future.complete(b);
@@ -95,21 +91,34 @@ public class SlotKeyReadWrite {
         return future;
     }
 
-    private Map<BytesKey, KeyInfo> flushPrepare() {
-        immutable = mutable;
-        mutable = new HashMap<>();
-        flushing = true;
-        return immutable;
+    /**
+     * flush prepare
+     */
+    public void flushPrepare() {
+        if (flushStatus != FlushStatus.FLUSH_OK) {
+            return;
+        }
+        if (mutable.isEmpty()) {
+            return;
+        }
+        immutable.putAll(mutable);
+        mutable.clear();
+        flushStatus = FlushStatus.PREPARE;
+    }
+
+    /**
+     * check need flush
+     * @return true/false
+     */
+    public boolean needFlush() {
+        if (flushStatus != FlushStatus.FLUSH_OK) {
+            return false;
+        }
+        return mutable.size() >= 200;
     }
 
     private void flushDone() {
         immutable.clear();
-        flushing = false;
-    }
-
-    private void checkAndFlush() {
-        if (mutable.size() >= 200 && !flushing) {
-            flush();
-        }
+        flushStatus = FlushStatus.FLUSH_OK;
     }
 }

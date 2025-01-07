@@ -3,7 +3,8 @@ package com.netease.nim.camellia.redis.proxy.test;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.KeyCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.ValueLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.ValueLocation;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,9 +26,9 @@ public class KeyCodecTest {
         KeyInfo keyInfo1 = keyInfo("k1", 0, null, "v1");
         KeyInfo keyInfo2 = keyInfo("k2", 10000, null, "v2");
         KeyInfo keyInfo3 = keyInfo("k3", 20000, null, null);
-        KeyInfo keyInfo4 = keyInfo("k4", 0, new ValueLocation(1, 1000), null);
-        KeyInfo keyInfo5 = keyInfo("k5", 30000, new ValueLocation(2, 2000), "v5");
-        KeyInfo keyInfo6 = keyInfo("k6", 40000, new ValueLocation(3, 3000), null);
+        KeyInfo keyInfo4 = keyInfo("k4", 0, new ValueLocation(new BlockLocation(1, 10), (short) 1000), null);
+        KeyInfo keyInfo5 = keyInfo("k5", 30000, new ValueLocation(new BlockLocation(2, 30), (short) 2000), "v5");
+        KeyInfo keyInfo6 = keyInfo("k6", 40000, new ValueLocation(new BlockLocation(1, 50), (short) 3000), null);
 
         map.put(new BytesKey(keyInfo1.getKey()), keyInfo1);
         map.put(new BytesKey(keyInfo2.getKey()), keyInfo2);

@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key;
 
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist.KeyFlushExecutor;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotKeyBlockCache;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyBlockCache;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotKeyReadWrite;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -17,11 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KeyReadWrite {
 
     private final KeyFlushExecutor executor;
-    private final SlotKeyBlockCache blockCache;
+    private final KeyBlockCache blockCache;
 
     private final ConcurrentHashMap<Short, SlotKeyReadWrite> map = new ConcurrentHashMap<>();
 
-    public KeyReadWrite(KeyFlushExecutor executor, SlotKeyBlockCache blockCache) {
+    public KeyReadWrite(KeyFlushExecutor executor, KeyBlockCache blockCache) {
         this.executor = executor;
         this.blockCache = blockCache;
     }
@@ -49,11 +49,27 @@ public class KeyReadWrite {
         get(slot).delete(key);
     }
 
+    public void flushPrepare(short slot) {
+        SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
+        if (slotKeyReadWrite == null) {
+            return;
+        }
+        slotKeyReadWrite.flushPrepare();
+    }
+
     public CompletableFuture<FlushResult> flush(short slot) {
         SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
         if (slotKeyReadWrite == null) {
             return CompletableFuture.completedFuture(FlushResult.OK);
         }
         return slotKeyReadWrite.flush();
+    }
+
+    public boolean needFlush(short slot) {
+        SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
+        if (slotKeyReadWrite == null) {
+            return false;
+        }
+        return slotKeyReadWrite.needFlush();
     }
 }

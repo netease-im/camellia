@@ -20,9 +20,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by caojiajun on 2024/12/31
  */
-public class KeySlotMap {
+public class KeyManifest implements IKeyManifest {
 
-    private static final Logger logger = LoggerFactory.getLogger(KeySlotMap.class);
+    private static final Logger logger = LoggerFactory.getLogger(KeyManifest.class);
 
     private static final byte[] magic_header = "camellia_header".getBytes(StandardCharsets.UTF_8);
     private static final byte[] magic_footer = "camellia_footer".getBytes(StandardCharsets.UTF_8);
@@ -35,33 +35,34 @@ public class KeySlotMap {
     private final String fileName;
     private FileChannel fileChannel;
 
-    public KeySlotMap(String fileName) {
+    public KeyManifest(String fileName) {
         this.fileName = fileName;
     }
 
+    @Override
     public void load() throws IOException {
-        logger.info("try load key.slot.map.file = {}", fileName);
+        logger.info("try load key.manifest.file = {}", fileName);
         File file = new File(fileName);
         if (!file.exists()) {
             boolean newFile = file.createNewFile();
-            logger.info("create key.slot.map.file = {}, result = {}", fileName, newFile);
+            logger.info("create key.manifest.file = {}, result = {}", fileName, newFile);
         }
         fileChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.READ, StandardOpenOption.WRITE);
         if (fileChannel.size() == 0) {
             ByteBuffer buffer1 = ByteBuffer.wrap(magic_header);
             while (buffer1.hasRemaining()) {
                 int write = fileChannel.write(buffer1);
-                logger.info("init slot map file, magic_header, key.slot.map.file = {}, result = {}", fileName, write);
+                logger.info("init key.manifest.file, magic_header, key.manifest.file = {}, result = {}", fileName, write);
             }
             ByteBuffer buffer2 = ByteBuffer.wrap(magic_footer);
             while (buffer2.hasRemaining()) {
                 int write = fileChannel.write(buffer2, magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+4));
-                logger.info("init slot map file, magic_footer, key.slot.map.file = {}, result = {}", fileName, write);
+                logger.info("init key.manifest.file, magic_footer, key.manifest.file = {}, result = {}", fileName, write);
             }
         } else {
             int len = magic_header.length + magic_footer.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+4);
             if (fileChannel.size() != len) {
-                throw new IOException("slot map file illegal size");
+                throw new IOException("key.manifest.file illegal size");
             }
             ByteBuffer buffer = ByteBuffer.allocate(len);
             fileChannel.read(buffer);
@@ -69,7 +70,7 @@ public class KeySlotMap {
             byte[] realMagicHeader = new byte[magic_header.length];
             buffer.get(realMagicHeader);
             if (!Arrays.equals(realMagicHeader, magic_header)) {
-                throw new IOException("slot map file magic_header not match!");
+                throw new IOException("key.manifest.file magic_header not match!");
             }
             long totalCapacity = 0;
             for (short slot=0; slot<RedisClusterCRC16Utils.SLOT_SIZE; slot++) {
@@ -97,15 +98,11 @@ public class KeySlotMap {
             if (!Arrays.equals(realMagicFooter, magic_footer)) {
                 throw new IOException("slot map file magic_footer not match!");
             }
-            logger.info("load slot info success, key.slot.map.file = {}, slot.count = {}", fileName, slotInfoMap.size());
+            logger.info("load key.manifest.file success, key.manifest.file = {}, slot.count = {}", fileName, slotInfoMap.size());
         }
     }
 
-    /**
-     * get slot info
-     * @param slot slot
-     * @return slot info
-     */
+    @Override
     public SlotInfo get(short slot) throws IOException {
         readWriteLock.readLock().lock();
         try {
@@ -115,12 +112,7 @@ public class KeySlotMap {
         }
     }
 
-    /**
-     * init slot info
-     * @param slot slot
-     * @return slot info
-     * @throws IOException exception
-     */
+    @Override
     public SlotInfo init(short slot) throws IOException {
         readWriteLock.writeLock().lock();
         try {
@@ -149,11 +141,7 @@ public class KeySlotMap {
         }
     }
 
-    /**
-     * expand slot info, capacity will expand to double size
-     * @param slot slot
-     * @return slot info
-     */
+    @Override
     public SlotInfo expand(short slot) throws IOException {
         readWriteLock.writeLock().lock();
         try {

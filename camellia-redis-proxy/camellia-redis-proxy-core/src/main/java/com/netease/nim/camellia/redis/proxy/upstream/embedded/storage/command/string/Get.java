@@ -8,8 +8,9 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.command.CommandOnEmbeddedStorage;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.ValueLocation;
 import com.netease.nim.camellia.tools.utils.BytesKey;
+
+import java.io.IOException;
 
 /**
  * GET key
@@ -34,10 +35,10 @@ public class Get extends CommandOnEmbeddedStorage {
         byte[][] objects = command.getObjects();
         BytesKey key = new BytesKey(objects[1]);
         KeyInfo keyInfo = keyReadWrite.get(slot, key);
-        return execute0(keyInfo);
+        return execute0(slot, keyInfo);
     }
 
-    private Reply execute0(KeyInfo keyInfo) {
+    private Reply execute0(short slot, KeyInfo keyInfo) throws IOException {
         if (keyInfo == null) {
             return BulkReply.NIL_REPLY;
         }
@@ -47,8 +48,7 @@ public class Get extends CommandOnEmbeddedStorage {
         if (keyInfo.containsExtra()) {
             return new BulkReply(keyInfo.getExtra());
         }
-        ValueLocation valueLocation = keyInfo.getValueLocation();
-        byte[] bytes = stringReadWrite.get(valueLocation);
+        byte[] bytes = stringReadWrite.get(slot, keyInfo);
         if (bytes == null) {
             return BulkReply.NIL_REPLY;
         }

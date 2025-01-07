@@ -15,16 +15,16 @@ import static com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.con
 /**
  * Created by caojiajun on 2025/1/2
  */
-public class SlotKeyBlockCache {
+public class KeyBlockCache {
 
-    private final KeySlotMap keySlotMap;
+    private final KeyManifest keySlotMap;
     private final FileReadWrite fileReadWrite;
 
     private final ConcurrentLinkedHashMap<String, byte[]> readCache;
 
     private final ConcurrentLinkedHashMap<String, byte[]> writeCache;
 
-    public SlotKeyBlockCache(KeySlotMap keySlotMap, FileReadWrite fileReadWrite) {
+    public KeyBlockCache(KeyManifest keySlotMap, FileReadWrite fileReadWrite) {
         this.keySlotMap = keySlotMap;
         this.fileReadWrite = fileReadWrite;
         readCache = new ConcurrentLinkedHashMap.Builder<String, byte[]>()

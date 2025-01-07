@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeySlotMap;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotInfo;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import org.junit.After;
@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Created by caojiajun on 2025/1/2
  */
-public class KeySlotMapTest {
+public class KeyManifestTest {
 
     private final String fileName1 = "/tmp/" + UUID.randomUUID();
     private final String fileName2 = "/tmp/" + UUID.randomUUID();
@@ -44,7 +44,7 @@ public class KeySlotMapTest {
     @Test
     public void test() throws IOException {
 
-        KeySlotMap keySlotMap = new KeySlotMap(fileName1);
+        KeyManifest keySlotMap = new KeyManifest(fileName1);
         keySlotMap.load();
 
         short slot = (short)ThreadLocalRandom.current().nextInt(RedisClusterCRC16Utils.SLOT_SIZE / 2);
@@ -68,7 +68,7 @@ public class KeySlotMapTest {
         SlotInfo slotInfo3 = keySlotMap.init((short) (slot + 200));
         Assert.assertEquals(slotInfo3, slotInfo);
 
-        KeySlotMap keySlotMap2 = new KeySlotMap(fileName1);
+        KeyManifest keySlotMap2 = new KeyManifest(fileName1);
         keySlotMap2.load();
 
         SlotInfo slotInfo11 = keySlotMap2.get(slot);
@@ -81,7 +81,7 @@ public class KeySlotMapTest {
 
     @Test
     public void test2() throws IOException {
-        KeySlotMap keySlotMap = new KeySlotMap(fileName2);
+        KeyManifest keySlotMap = new KeyManifest(fileName2);
         keySlotMap.load();
 
         long time1 = System.nanoTime();
