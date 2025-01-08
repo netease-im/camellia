@@ -81,7 +81,7 @@ public class ValueManifest implements IValueManifest {
         //
         BitSet bitSet1 = bits1Map.get(fileId);
         if (!bitSet1.get(blockId)) {
-            throw new IOException("blockId not allocated");
+            throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
         }
         //bits2
         BitSet bitSet2 = bits2Map.get(fileId);
@@ -98,21 +98,25 @@ public class ValueManifest implements IValueManifest {
     }
 
     @Override
-    public void clear(short slot, BlockLocation blockLocation) throws IOException {
+    public void recycle(short slot, BlockLocation blockLocation) throws IOException {
         long fileId = blockLocation.fileId();
         int blockId = blockLocation.blockId();
         //bits1
-        bits1Map.get(fileId).set(blockId, false);
+        BitSet bitSet1 = bits1Map.get(fileId);
+        if (!bitSet1.get(blockId)) {
+            throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
+        }
+        bitSet1.set(blockId, false);
         Integer offset = allocateOffsetMap.get(fileId);
         if (offset > blockId) {
             allocateOffsetMap.put(fileId, blockId);
         }
         //bits2
-        BitSet bitSet = bits2Map.get(fileId);
-        bitSet.set(blockId, false);
+        BitSet bitSet2 = bits2Map.get(fileId);
+        bitSet2.set(blockId, false);
         //update file
         int index = blockId / 64;
-        long[] longArray = bitSet.toLongArray();
+        long[] longArray = bitSet2.toLongArray();
         long changed;
         if (longArray.length > index) {
             changed = longArray[index];

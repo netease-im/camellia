@@ -41,11 +41,11 @@ public interface IValueManifest {
 
 
     /**
-     * clear
+     * recycle
      * @param slot slot
      * @param blockLocation location
      * @throws IOException exception
      */
-    void clear(short slot, BlockLocation blockLocation) throws IOException;
+    void recycle(short slot, BlockLocation blockLocation) throws IOException;
 
 }

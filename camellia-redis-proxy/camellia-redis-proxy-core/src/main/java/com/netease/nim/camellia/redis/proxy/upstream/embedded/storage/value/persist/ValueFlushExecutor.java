@@ -11,10 +11,7 @@ import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -66,9 +63,11 @@ public class ValueFlushExecutor {
             buffers.add(new Pair<>(entry.getKey(), entry.getValue()));
         }
         List<BlockInfo> list = new ArrayList<>();
+        List<ValueLocation> oldLocations = new ArrayList<>();
         for (Map.Entry<BlockType, List<Pair<KeyInfo, byte[]>>> entry : blockMap.entrySet()) {
-            List<BlockInfo> blockInfos = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
-            list.addAll(blockInfos);
+            StringValueCodecResult result = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
+            list.addAll(result.blockInfos());
+            oldLocations.addAll(result.oldLocations());
         }
         for (BlockInfo blockInfo : list) {
             BlockLocation blockLocation = blockInfo.blockLocation();
@@ -76,7 +75,16 @@ public class ValueFlushExecutor {
             long offset = (long) blockLocation.blockId() * blockInfo.blockType().getBlockSize();
             fileReadWrite.write(fileId, offset, blockInfo.data());
             blockCache.updateBlockCache(slot, fileId, offset, blockInfo.data());
+            valueManifest.commit(slot, blockLocation);
         }
+        Set<BlockLocation> changedBlocks = new HashSet<>();
+        for (ValueLocation oldLocation : oldLocations) {
+            changedBlocks.add(oldLocation.blockLocation());
+        }
+        compact(changedBlocks);
     }
 
+    private void compact(Set<BlockLocation> blocks) {
+        //todo
+    }
 }

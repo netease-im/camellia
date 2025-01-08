@@ -19,7 +19,7 @@ import static com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.con
  */
 public class StringValueCodec {
 
-    public static List<BlockInfo> encode(short slot, BlockType blockType, IValueManifest valueManifest, List<Pair<KeyInfo, byte[]>> values) throws IOException {
+    public static StringValueCodecResult encode(short slot, BlockType blockType, IValueManifest valueManifest, List<Pair<KeyInfo, byte[]>> values) throws IOException {
         //
         //data to sub-block
         List<SubBlock> subBlocks = new ArrayList<>();
@@ -80,6 +80,7 @@ public class StringValueCodec {
 
         //sub-block to block
         List<BlockInfo> blockInfos = new ArrayList<>();
+        List<ValueLocation> oldLocations = new ArrayList<>();
 
         {
             //new block
@@ -111,7 +112,10 @@ public class StringValueCodec {
                 buffer.putInt(block.compressLen);
                 buffer.put(block.compressed);
                 for (KeyInfo keyInfo : block.keyInfos) {
-                    keyInfo.setValueLocation(new ValueLocation(location, offset));
+                    ValueLocation valueLocation = keyInfo.setValueLocation(new ValueLocation(location, offset));
+                    if (valueLocation != null) {
+                        oldLocations.add(valueLocation);
+                    }
                     offset++;
                 }
                 subBlockCount++;
@@ -122,7 +126,7 @@ public class StringValueCodec {
             buffer.putShort(4, subBlockCount);
             blockInfos.add(new BlockInfo(blockType, location, buffer.array()));
         }
-        return blockInfos;
+        return new StringValueCodecResult(blockInfos, oldLocations);
     }
 
     public static List<byte[]> decode(byte[] data, BlockType blockType) {

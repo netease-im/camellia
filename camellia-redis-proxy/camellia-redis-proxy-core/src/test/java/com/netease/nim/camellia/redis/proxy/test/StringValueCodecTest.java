@@ -39,7 +39,7 @@ public class StringValueCodecTest {
         values.add(new Pair<>(keyInfo("k6", 1000L, null, null), "1k12l12121".getBytes(StandardCharsets.UTF_8)));
         values.add(new Pair<>(keyInfo("k7", 1000L, null, null), "sasasas".getBytes(StandardCharsets.UTF_8)));
 
-        List<BlockInfo> blockInfos = StringValueCodec.encode(slot, blockType, valueManifest, values);
+        List<BlockInfo> blockInfos = StringValueCodec.encode(slot, blockType, valueManifest, values).blockInfos();
 
         Assert.assertEquals(blockInfos.size(), 1);
 
@@ -65,7 +65,7 @@ public class StringValueCodecTest {
             values.add(new Pair<>(keyInfo("k" + i, 1000L, null, null), UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)));
         }
 
-        List<BlockInfo> blockInfos = StringValueCodec.encode(slot, blockType, valueManifest, values);
+        List<BlockInfo> blockInfos = StringValueCodec.encode(slot, blockType, valueManifest, values).blockInfos();
 
         for (int i=0;i<blockInfos.size(); i++) {
             BlockInfo blockInfo = blockInfos.get(i);
@@ -125,7 +125,7 @@ public class StringValueCodecTest {
         }
 
         @Override
-        public void clear(short slot, BlockLocation blockLocation) throws IOException {
+        public void recycle(short slot, BlockLocation blockLocation) throws IOException {
 
         }
     }

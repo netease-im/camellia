@@ -107,13 +107,15 @@ public class KeyInfo implements Marshallable {
         }
     }
 
-    public void setValueLocation(ValueLocation valueLocation) {
+    public ValueLocation setValueLocation(ValueLocation valueLocation) {
+        ValueLocation oldValueLocation = this.valueLocation;
         this.valueLocation = valueLocation;
         if (valueLocation != null) {
             setContainsValue();
         } else {
             clearContainsValue();
         }
+        return oldValueLocation;
     }
 
     public ValueLocation getValueLocation() {
