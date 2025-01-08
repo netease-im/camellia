@@ -10,7 +10,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.wal.WalGro
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * Created by caojiajun on 2025/1/3

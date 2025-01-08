@@ -1,10 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key;
 
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.EstimateSizeValueCalculator;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist.KeyFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyBlockCache;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotKeyReadWrite;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.io.IOException;
@@ -21,17 +23,28 @@ public class KeyReadWrite {
 
     private final ConcurrentHashMap<Short, SlotKeyReadWrite> map = new ConcurrentHashMap<>();
 
+    private final LRUCache<CacheKey, KeyInfo> cache;
+
     public KeyReadWrite(KeyFlushExecutor executor, KeyBlockCache blockCache) {
         this.executor = executor;
         this.blockCache = blockCache;
+        this.cache = new LRUCache<>("key-cache", "embedded.storage.key.cache.capacity", "32M",
+                128, new EstimateSizeValueCalculator<>(), new EstimateSizeValueCalculator<>());
     }
 
     private SlotKeyReadWrite get(short slot) {
         return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotKeyReadWrite(slot, executor, blockCache));
     }
 
-    public KeyInfo get(short slot, BytesKey key) throws IOException {
-        KeyInfo keyInfo = get(slot).get(key);
+    public KeyInfo get(short slot, CacheKey key) throws IOException {
+        KeyInfo keyInfo = cache.get(new CacheKey(key.key()));
+        if (keyInfo != null) {
+            if (keyInfo == KeyInfo.DELETE) {
+                return null;
+            }
+            return keyInfo;
+        }
+        keyInfo = get(slot).get(key);
         if (keyInfo == null) {
             return null;
         }
@@ -42,10 +55,12 @@ public class KeyReadWrite {
     }
 
     public void put(short slot, KeyInfo keyInfo) {
+        cache.put(new CacheKey(keyInfo.getKey()), keyInfo);
         get(slot).put(keyInfo);
     }
 
-    public void delete(short slot, BytesKey key) {
+    public void delete(short slot, CacheKey key) {
+        cache.put(key, KeyInfo.DELETE);
         get(slot).delete(key);
     }
 

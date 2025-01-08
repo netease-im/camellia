@@ -6,14 +6,13 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.command.CommandOnEmbeddedStorage;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
 /**
  * SET key value [NX | XX] [GET] [EX seconds | PX milliseconds | EXAT unix-time-seconds | PXAT unix-time-milliseconds | KEEPTTL]
@@ -38,7 +37,7 @@ public class Set extends CommandOnEmbeddedStorage {
     @Override
     protected Reply execute(short slot, Command command) throws Exception {
         byte[][] objects = command.getObjects();
-        BytesKey key = new BytesKey(objects[1]);
+        CacheKey key = new CacheKey(objects[1]);
         byte[] value = objects[2];
         int nxxx = -1;
         long expireTime = -1;
@@ -113,7 +112,7 @@ public class Set extends CommandOnEmbeddedStorage {
 
         walGroup.append(slot, command);
 
-        if (key.getKey().length + value.length <= 128) {
+        if (key.key().length + value.length <= 128) {
             keyInfo.setExtra(value);
         } else {
             keyInfo.setExtra(null);

@@ -1,11 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot;
 
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.LRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.SizeCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.KeyCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.util.KeyHashUtils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.io.IOException;
 import java.util.Map;
@@ -17,24 +18,21 @@ import static com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.con
  */
 public class KeyBlockCache {
 
+    private static final String READ_CACHE_CONFIG_KEY = "embedded.storage.key.block.read.cache.capacity";
+    private static final String WRITE_CACHE_CONFIG_KEY = "embedded.storage.key.block.write.cache.capacity";
+
     private final KeyManifest keySlotMap;
     private final FileReadWrite fileReadWrite;
 
-    private final ConcurrentLinkedHashMap<String, byte[]> readCache;
+    private final LRUCache<String, byte[]> readCache;
 
-    private final ConcurrentLinkedHashMap<String, byte[]> writeCache;
+    private final LRUCache<String, byte[]> writeCache;
 
     public KeyBlockCache(KeyManifest keySlotMap, FileReadWrite fileReadWrite) {
         this.keySlotMap = keySlotMap;
         this.fileReadWrite = fileReadWrite;
-        readCache = new ConcurrentLinkedHashMap.Builder<String, byte[]>()
-                .initialCapacity(10000)
-                .maximumWeightedCapacity(10000)
-                .build();
-        writeCache = new ConcurrentLinkedHashMap.Builder<String, byte[]>()
-                .initialCapacity(10000)
-                .maximumWeightedCapacity(10000)
-                .build();
+        this.readCache = new LRUCache<>("key-read-block-cache", READ_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
+        this.writeCache = new LRUCache<>("key-write-block-cache", WRITE_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
     }
 
     /**
@@ -44,13 +42,13 @@ public class KeyBlockCache {
      * @return key
      * @throws IOException exception
      */
-    public KeyInfo get(short slot, BytesKey key) throws IOException {
+    public KeyInfo get(short slot, CacheKey key) throws IOException {
         SlotInfo slotInfo = keySlotMap.get(slot);
         long fileId = slotInfo.fileId();
         long offset = slotInfo.offset();
         int capacity = slotInfo.capacity();
         int bucketSize = capacity / _4k;
-        int bucket = KeyHashUtils.hash(key.getKey()) % bucketSize;
+        int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
 
         String cacheKey = slot + "|" + fileId + "|" + (offset + _4k * bucket);
         byte[] blockCache = readCache.get(cacheKey);
@@ -58,14 +56,14 @@ public class KeyBlockCache {
             blockCache = writeCache.get(cacheKey);
             if (blockCache != null) {
                 readCache.put(cacheKey, blockCache);
-                writeCache.remove(cacheKey);
+                writeCache.delete(cacheKey);
             }
         }
         if (blockCache == null) {
             blockCache = fileReadWrite.read(fileId, offset, bucket * _4k);
             readCache.put(cacheKey, blockCache);
         }
-        Map<BytesKey, KeyInfo> map = KeyCodec.decodeBucket(blockCache);
+        Map<CacheKey, KeyInfo> map = KeyCodec.decodeBucket(blockCache);
         KeyInfo data = map.get(key);
         if (data == null) {
             return KeyInfo.DELETE;

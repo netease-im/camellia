@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec;
 
 import com.netease.nim.camellia.codec.Pack;
 import com.netease.nim.camellia.codec.Unpack;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.compress.CompressType;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.compress.CompressUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.compress.ICompressor;
@@ -9,7 +10,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.constants.
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -27,14 +27,14 @@ public class KeyCodec {
      * @param all data
      * @return 解码结果
      */
-    public static Map<BytesKey, KeyInfo> decodeSlot(byte[] all) {
+    public static Map<CacheKey, KeyInfo> decodeSlot(byte[] all) {
         ByteBuffer buffer = ByteBuffer.wrap(all);
         int bucketSize = all.length / EmbeddedStorageConstants._4k;
-        Map<BytesKey, KeyInfo> result = new HashMap<>();
+        Map<CacheKey, KeyInfo> result = new HashMap<>();
         for (int i=0; i<bucketSize; i++) {
             byte[] bytes = new byte[EmbeddedStorageConstants._4k];
             buffer.get(bytes);
-            Map<BytesKey, KeyInfo> map = KeyCodec.decodeBucket(bytes);
+            Map<CacheKey, KeyInfo> map = KeyCodec.decodeBucket(bytes);
             result.putAll(map);
         }
         return result;
@@ -45,7 +45,7 @@ public class KeyCodec {
      * @param bytes 固定为4k输入
      * @return 解码结果
      */
-    public static Map<BytesKey, KeyInfo> decodeBucket(byte[] bytes) {
+    public static Map<CacheKey, KeyInfo> decodeBucket(byte[] bytes) {
         int crc1 = BytesUtils.toInt(bytes, 0);//0,1,2,3
         int crc2 = RedisClusterCRC16Utils.getCRC16(bytes, 9, bytes.length);
         if (crc1 != crc2) {
@@ -58,11 +58,11 @@ public class KeyCodec {
         byte[] decompressData = compressor.decompress(bytes, 9, compressLen, decompressLen);
         Unpack unpack = new Unpack(decompressData);
         int size = unpack.popVarUint();
-        Map<BytesKey, KeyInfo> map = new HashMap<>();
+        Map<CacheKey, KeyInfo> map = new HashMap<>();
         for (int i=0; i<size; i++) {
             KeyInfo key = new KeyInfo();
             unpack.popMarshallable(key);
-            map.put(new BytesKey(key.getKey()), key);
+            map.put(new CacheKey(key.getKey()), key);
         }
         return map;
     }
@@ -73,10 +73,10 @@ public class KeyCodec {
      * @param keys keys
      * @return 编码结果，固定为4k
      */
-    public static byte[] encodeBucket(Map<BytesKey, KeyInfo> keys) {
+    public static byte[] encodeBucket(Map<CacheKey, KeyInfo> keys) {
         Pack pack = new Pack();
         pack.putVarUint(keys.size());
-        for (Map.Entry<BytesKey, KeyInfo> entry : keys.entrySet()) {
+        for (Map.Entry<CacheKey, KeyInfo> entry : keys.entrySet()) {
             pack.putMarshallable(entry.getValue());
         }
         pack.getBuffer().capacity(pack.getBuffer().readableBytes());

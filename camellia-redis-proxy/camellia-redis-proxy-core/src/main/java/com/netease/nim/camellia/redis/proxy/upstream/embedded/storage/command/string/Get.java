@@ -5,12 +5,10 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.command.CommandOnEmbeddedStorage;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.tools.utils.BytesKey;
-
-import java.io.IOException;
 
 /**
  * GET key
@@ -33,12 +31,8 @@ public class Get extends CommandOnEmbeddedStorage {
     @Override
     protected Reply execute(short slot, Command command) throws Exception {
         byte[][] objects = command.getObjects();
-        BytesKey key = new BytesKey(objects[1]);
+        CacheKey key = new CacheKey(objects[1]);
         KeyInfo keyInfo = keyReadWrite.get(slot, key);
-        return execute0(slot, keyInfo);
-    }
-
-    private Reply execute0(short slot, KeyInfo keyInfo) throws IOException {
         if (keyInfo == null) {
             return BulkReply.NIL_REPLY;
         }

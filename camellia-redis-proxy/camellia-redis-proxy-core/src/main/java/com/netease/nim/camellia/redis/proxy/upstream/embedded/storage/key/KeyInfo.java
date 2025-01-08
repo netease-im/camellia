@@ -6,6 +6,7 @@ import com.netease.nim.camellia.codec.Unpack;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockLocation;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.ValueLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.EstimateSizeValue;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -13,7 +14,7 @@ import java.util.Objects;
 /**
  * Created by caojiajun on 2025/1/2
  */
-public class KeyInfo implements Marshallable {
+public class KeyInfo implements Marshallable, EstimateSizeValue {
 
     public static final KeyInfo DELETE = new KeyInfo();
 
@@ -23,6 +24,18 @@ public class KeyInfo implements Marshallable {
     private long expireTime;
     private ValueLocation valueLocation;
     private byte[] extra;
+
+    @Override
+    public long estimateSize() {
+        long size = 1 + 1 + key.length + 8;
+        if (valueLocation != null) {
+            size += 16;
+        }
+        if (extra != null) {
+            size += extra.length;
+        }
+        return size;
+    }
 
     public static enum FlagType {
         DEFAULT((byte) 0),

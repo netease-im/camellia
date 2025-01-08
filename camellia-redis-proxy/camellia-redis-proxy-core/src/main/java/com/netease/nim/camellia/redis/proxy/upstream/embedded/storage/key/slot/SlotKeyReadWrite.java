@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot;
 
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist.KeyFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist.KeyFlushTask;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +25,8 @@ public class SlotKeyReadWrite {
     private final KeyFlushExecutor executor;
     private final KeyBlockCache blockCache;
 
-    private final Map<BytesKey, KeyInfo> mutable = new HashMap<>();
-    private final Map<BytesKey, KeyInfo> immutable = new HashMap<>();
+    private final Map<CacheKey, KeyInfo> mutable = new HashMap<>();
+    private final Map<CacheKey, KeyInfo> immutable = new HashMap<>();
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
@@ -41,7 +41,7 @@ public class SlotKeyReadWrite {
      * @param key key
      * @return key
      */
-    public KeyInfo get(BytesKey key) throws IOException  {
+    public KeyInfo get(CacheKey key) throws IOException  {
         KeyInfo keyInfo = mutable.get(key);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
@@ -62,14 +62,14 @@ public class SlotKeyReadWrite {
      * @param key key
      */
     public void put(KeyInfo key) {
-        mutable.put(new BytesKey(key.getKey()), key);
+        mutable.put(new CacheKey(key.getKey()), key);
     }
 
     /**
      * 删除一个key
      * @param key key
      */
-    public void delete(BytesKey key) {
+    public void delete(CacheKey key) {
         mutable.put(key, KeyInfo.DELETE);
     }
 

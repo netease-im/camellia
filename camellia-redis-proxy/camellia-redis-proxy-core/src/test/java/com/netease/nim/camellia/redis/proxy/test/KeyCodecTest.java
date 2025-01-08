@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.KeyCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockLocation;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.ValueLocation;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ public class KeyCodecTest {
 
     @Test
     public void test() {
-        Map<BytesKey, KeyInfo> map = new HashMap<>();
+        Map<CacheKey, KeyInfo> map = new HashMap<>();
         KeyInfo keyInfo1 = keyInfo("k1", 0, null, "v1");
         KeyInfo keyInfo2 = keyInfo("k2", 10000, null, "v2");
         KeyInfo keyInfo3 = keyInfo("k3", 20000, null, null);
@@ -30,42 +30,42 @@ public class KeyCodecTest {
         KeyInfo keyInfo5 = keyInfo("k5", 30000, new ValueLocation(new BlockLocation(2, 30), (short) 2000), "v5");
         KeyInfo keyInfo6 = keyInfo("k6", 40000, new ValueLocation(new BlockLocation(1, 50), (short) 3000), null);
 
-        map.put(new BytesKey(keyInfo1.getKey()), keyInfo1);
-        map.put(new BytesKey(keyInfo2.getKey()), keyInfo2);
-        map.put(new BytesKey(keyInfo3.getKey()), keyInfo3);
-        map.put(new BytesKey(keyInfo4.getKey()), keyInfo4);
-        map.put(new BytesKey(keyInfo5.getKey()), keyInfo5);
-        map.put(new BytesKey(keyInfo6.getKey()), keyInfo6);
+        map.put(new CacheKey(keyInfo1.getKey()), keyInfo1);
+        map.put(new CacheKey(keyInfo2.getKey()), keyInfo2);
+        map.put(new CacheKey(keyInfo3.getKey()), keyInfo3);
+        map.put(new CacheKey(keyInfo4.getKey()), keyInfo4);
+        map.put(new CacheKey(keyInfo5.getKey()), keyInfo5);
+        map.put(new CacheKey(keyInfo6.getKey()), keyInfo6);
 
         byte[] bytes = KeyCodec.encodeBucket(map);
         Assert.assertNotNull(bytes);
         Assert.assertEquals(bytes.length, _4k);
 
-        Map<BytesKey, KeyInfo> decodeMap = KeyCodec.decodeBucket(bytes);
+        Map<CacheKey, KeyInfo> decodeMap = KeyCodec.decodeBucket(bytes);
         Assert.assertEquals(decodeMap.size(), map.size());
 
         {
-            KeyInfo keyInfo = decodeMap.get(new BytesKey("k1".getBytes(StandardCharsets.UTF_8)));
+            KeyInfo keyInfo = decodeMap.get(new CacheKey("k1".getBytes(StandardCharsets.UTF_8)));
             Assert.assertEquals(new String(keyInfo.getExtra(), StandardCharsets.UTF_8), "v1");
         }
         {
-            KeyInfo keyInfo = decodeMap.get(new BytesKey("k2".getBytes(StandardCharsets.UTF_8)));
+            KeyInfo keyInfo = decodeMap.get(new CacheKey("k2".getBytes(StandardCharsets.UTF_8)));
             Assert.assertEquals(new String(keyInfo.getExtra(), StandardCharsets.UTF_8), "v2");
         }
         {
-            KeyInfo keyInfo = decodeMap.get(new BytesKey("k3".getBytes(StandardCharsets.UTF_8)));
+            KeyInfo keyInfo = decodeMap.get(new CacheKey("k3".getBytes(StandardCharsets.UTF_8)));
             Assert.assertNull(keyInfo.getExtra());
         }
         {
-            KeyInfo keyInfo = decodeMap.get(new BytesKey("k4".getBytes(StandardCharsets.UTF_8)));
+            KeyInfo keyInfo = decodeMap.get(new CacheKey("k4".getBytes(StandardCharsets.UTF_8)));
             Assert.assertNull(keyInfo.getExtra());
         }
         {
-            KeyInfo keyInfo = decodeMap.get(new BytesKey("k5".getBytes(StandardCharsets.UTF_8)));
+            KeyInfo keyInfo = decodeMap.get(new CacheKey("k5".getBytes(StandardCharsets.UTF_8)));
             Assert.assertEquals(new String(keyInfo.getExtra(), StandardCharsets.UTF_8), "v5");
         }
         {
-            KeyInfo keyInfo = decodeMap.get(new BytesKey("k6".getBytes(StandardCharsets.UTF_8)));
+            KeyInfo keyInfo = decodeMap.get(new CacheKey("k6".getBytes(StandardCharsets.UTF_8)));
             Assert.assertNull(keyInfo.getExtra());
         }
     }

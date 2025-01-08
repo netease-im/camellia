@@ -51,11 +51,10 @@ public class ValueManifest implements IValueManifest {
             throw new IOException(dir + " is not dict");
         }
         File[] files = dict.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File file : files) {
-            loadIndexFile(file);
+        if (files != null) {
+            for (File file : files) {
+                loadIndexFile(file);
+            }
         }
         logger.info("value manifest load success, dir = {}, index.file.count = {}", dir, typeMap.size());
     }
@@ -131,7 +130,7 @@ public class ValueManifest implements IValueManifest {
     }
 
     @Override
-    public BlockType blockType(long fileId) throws IOException {
+    public BlockType blockType(long fileId) {
         return typeMap.get(fileId);
     }
 

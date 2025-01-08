@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.persist;
 
+import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.KeyCodec;
@@ -9,7 +10,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInf
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyBlockCache;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotInfo;
-import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class KeyFlushExecutor {
 
     private void execute(KeyFlushTask task) throws Exception {
         short slot = task.slot();
-        Map<BytesKey, KeyInfo> flushKeys = task.flushKeys();
+        Map<CacheKey, KeyInfo> flushKeys = task.flushKeys();
         SlotInfo source = keyManifest.get(slot);
         if (source == null) {
             source = keyManifest.init(slot);
@@ -82,16 +82,16 @@ public class KeyFlushExecutor {
         fileReadWrite.write(fileId, offset, new byte[capacity]);
     }
 
-    private WriteResult writeTo(short slot, SlotInfo source, SlotInfo target, Map<BytesKey, KeyInfo> immutable, WriteResult lastWrite) {
-        Map<Integer, Map<BytesKey, KeyInfo>> writeBuffer = new HashMap<>();
+    private WriteResult writeTo(short slot, SlotInfo source, SlotInfo target, Map<CacheKey, KeyInfo> immutable, WriteResult lastWrite) {
+        Map<Integer, Map<CacheKey, KeyInfo>> writeBuffer = new HashMap<>();
         int capacity = target.capacity();
         int bucketSize = capacity / _4k;
         {
-            for (Map.Entry<BytesKey, KeyInfo> entry : immutable.entrySet()) {
-                BytesKey key = entry.getKey();
+            for (Map.Entry<CacheKey, KeyInfo> entry : immutable.entrySet()) {
+                CacheKey key = entry.getKey();
                 KeyInfo data = entry.getValue();
-                int bucket = KeyHashUtils.hash(key.getKey()) % bucketSize;
-                Map<BytesKey, KeyInfo> keys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
+                int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
+                Map<CacheKey, KeyInfo> keys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
                 keys.put(key, data);
             }
         }
@@ -102,11 +102,11 @@ public class KeyFlushExecutor {
         if (source.equals(target)) {
             long fileId = target.fileId();
             long offset = target.offset();
-            for (Map.Entry<Integer, Map<BytesKey, KeyInfo>> entry : writeBuffer.entrySet()) {
+            for (Map.Entry<Integer, Map<CacheKey, KeyInfo>> entry : writeBuffer.entrySet()) {
                 Integer bucket = entry.getKey();
-                Map<BytesKey, KeyInfo> newKeys = entry.getValue();
+                Map<CacheKey, KeyInfo> newKeys = entry.getValue();
                 long bucketOffset = offset + bucket * _4k;
-                Map<BytesKey, KeyInfo> oldKeys = lastWrite.oldBucketKeys.get(bucket);
+                Map<CacheKey, KeyInfo> oldKeys = lastWrite.oldBucketKeys.get(bucket);
                 if (oldKeys == null) {
                     byte[] bytes = fileReadWrite.read(fileId, bucketOffset, _4k);
                     oldKeys = KeyCodec.decodeBucket(bytes);
@@ -121,19 +121,19 @@ public class KeyFlushExecutor {
                 tasks.put(bucketOffset, new WriteTask(bucketOffset, encoded));
             }
         } else {
-            Map<BytesKey, KeyInfo> oldAllKeys;
+            Map<CacheKey, KeyInfo> oldAllKeys;
             if (lastWrite == null || lastWrite.oldAllKeys == null) {
                 byte[] oldAll = fileReadWrite.read(source.fileId(), source.offset(), source.capacity());
                 oldAllKeys = KeyCodec.decodeSlot(oldAll);
             } else {
                 oldAllKeys = lastWrite.oldAllKeys;
             }
-            for (Map.Entry<BytesKey, KeyInfo> entry : oldAllKeys.entrySet()) {
-                int bucket = KeyHashUtils.hash(entry.getKey().getKey()) % bucketSize;
-                Map<BytesKey, KeyInfo> newKeys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
+            for (Map.Entry<CacheKey, KeyInfo> entry : oldAllKeys.entrySet()) {
+                int bucket = KeyHashUtils.hash(entry.getKey().key()) % bucketSize;
+                Map<CacheKey, KeyInfo> newKeys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
                 merge(newKeys, entry);
             }
-            for (Map.Entry<Integer, Map<BytesKey, KeyInfo>> entry : writeBuffer.entrySet()) {
+            for (Map.Entry<Integer, Map<CacheKey, KeyInfo>> entry : writeBuffer.entrySet()) {
                 Integer bucket = entry.getKey();
                 byte[] encoded = KeyCodec.encodeBucket(entry.getValue());
                 if (encoded == null) {
@@ -156,8 +156,8 @@ public class KeyFlushExecutor {
 
     private static class WriteResult {
         boolean success;
-        Map<BytesKey, KeyInfo> oldAllKeys;
-        Map<Integer, Map<BytesKey, KeyInfo>> oldBucketKeys = new HashMap<>();
+        Map<CacheKey, KeyInfo> oldAllKeys;
+        Map<Integer, Map<CacheKey, KeyInfo>> oldBucketKeys = new HashMap<>();
     }
 
     private static class WriteTask {
@@ -209,7 +209,7 @@ public class KeyFlushExecutor {
         }
     }
 
-    private void merge(Map<BytesKey, KeyInfo> newKeys, Map.Entry<BytesKey, KeyInfo> entry) {
+    private void merge(Map<CacheKey, KeyInfo> newKeys, Map.Entry<CacheKey, KeyInfo> entry) {
         KeyInfo key = newKeys.get(entry.getKey());
         if (key == KeyInfo.DELETE) {
             return;
@@ -219,8 +219,8 @@ public class KeyFlushExecutor {
         }
     }
 
-    private void merge(Map<BytesKey, KeyInfo> newKeys, Map<BytesKey, KeyInfo> oldKeys) {
-        for (Map.Entry<BytesKey, KeyInfo> entry : oldKeys.entrySet()) {
+    private void merge(Map<CacheKey, KeyInfo> newKeys, Map<CacheKey, KeyInfo> oldKeys) {
+        for (Map.Entry<CacheKey, KeyInfo> entry : oldKeys.entrySet()) {
             merge(newKeys, entry);
         }
     }
