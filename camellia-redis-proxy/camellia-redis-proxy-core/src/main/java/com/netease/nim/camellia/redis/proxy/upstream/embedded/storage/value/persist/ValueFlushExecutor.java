@@ -25,11 +25,11 @@ public class ValueFlushExecutor {
     private static final Logger logger = LoggerFactory.getLogger(ValueFlushExecutor.class);
 
     private final FlushExecutor executor;
-    private final ValueManifest valueManifest;
+    private final IValueManifest valueManifest;
     private final FileReadWrite fileReadWrite;
     private final StringBlockCache blockCache;
 
-    public ValueFlushExecutor(FlushExecutor executor, ValueManifest valueManifest, FileReadWrite fileReadWrite, StringBlockCache blockCache) {
+    public ValueFlushExecutor(FlushExecutor executor, IValueManifest valueManifest, FileReadWrite fileReadWrite, StringBlockCache blockCache) {
         this.executor = executor;
         this.valueManifest = valueManifest;
         this.fileReadWrite = fileReadWrite;

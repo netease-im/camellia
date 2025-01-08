@@ -26,16 +26,26 @@ public interface IValueManifest {
      * block type
      * @param fileId fileId
      * @return block type
+     * @throws IOException exception
      */
     BlockType blockType(long fileId) throws IOException;
 
+
     /**
-     * block flush to disk
+     * flush block location to disk
      * @param slot slot
-     * @param location location
+     * @param blockLocation location
      * @throws IOException exception
      */
-    void flush(short slot, BlockLocation location) throws IOException;
+    void commit(short slot, BlockLocation blockLocation) throws IOException;
 
+
+    /**
+     * clear
+     * @param slot slot
+     * @param blockLocation location
+     * @throws IOException exception
+     */
+    void clear(short slot, BlockLocation blockLocation) throws IOException;
 
 }

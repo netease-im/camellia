@@ -35,8 +35,8 @@ public class KeyManifest implements IKeyManifest {
     private final String fileName;
     private FileChannel fileChannel;
 
-    public KeyManifest(String fileName) {
-        this.fileName = fileName;
+    public KeyManifest(String dir) {
+        this.fileName = dir + "/key.manifest";
     }
 
     @Override
@@ -80,7 +80,7 @@ public class KeyManifest implements IKeyManifest {
                 if (fileId == 0) {
                     continue;
                 }
-                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(EmbeddedStorageConstants.bit_size));
+                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(EmbeddedStorageConstants.key_manifest_bit_size));
                 int bitsStart = (int)(offset / EmbeddedStorageConstants._64k);
                 int bitsEnd = (int)((offset + capacity) / EmbeddedStorageConstants._64k);
                 for (int index=bitsStart; index<bitsEnd; index++) {
@@ -123,7 +123,7 @@ public class KeyManifest implements IKeyManifest {
             for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
                 Long fileId = entry.getKey();
                 BitSet bits = entry.getValue();
-                for (int i = 0; i< EmbeddedStorageConstants.bit_size; i++) {
+                for (int i = 0; i< EmbeddedStorageConstants.key_manifest_bit_size; i++) {
                     boolean used = bits.get(i);
                     if (!used) {
                         update(slot, fileId, (long) i * EmbeddedStorageConstants._64k, EmbeddedStorageConstants._64k);
@@ -157,7 +157,7 @@ public class KeyManifest implements IKeyManifest {
             int bitsStart = (int)(offset / EmbeddedStorageConstants._64k);
             int bitsEnd = (int)((offset + capacity) / EmbeddedStorageConstants._64k);
             //直接顺延扩容
-            if (bitsStart + (bitsEnd - bitsStart) * 2 < EmbeddedStorageConstants.bit_size) {
+            if (bitsStart + (bitsEnd - bitsStart) * 2 < EmbeddedStorageConstants.key_manifest_bit_size) {
                 boolean directExpand = true;
                 for (int i=bitsEnd; i<bitsEnd + bitsStep; i++) {
                     boolean used = bits.get(i);
@@ -177,8 +177,8 @@ public class KeyManifest implements IKeyManifest {
                 }
             }
             //使用同一个文件的空闲区域，优先复用其他slot回收的区域
-            if (EmbeddedStorageConstants.bit_size - bits.cardinality() >= bitsStep*2) {
-                for (int i = 0; i< EmbeddedStorageConstants.bit_size-bitsStep*2; i++) {
+            if (EmbeddedStorageConstants.key_manifest_bit_size - bits.cardinality() >= bitsStep*2) {
+                for (int i = 0; i< EmbeddedStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
                     if (bits.get(i, bitsStep * 2).cardinality() == 0) {
                         //clear old
                         for (int j=bitsStart; j<bitsEnd; j++) {
@@ -209,7 +209,7 @@ public class KeyManifest implements IKeyManifest {
         while (fileBitsMap.containsKey(fileId)) {
             fileId ++;
         }
-        fileBitsMap.put(fileId, new BitSet(EmbeddedStorageConstants.bit_size));
+        fileBitsMap.put(fileId, new BitSet(EmbeddedStorageConstants.key_manifest_bit_size));
         return fileId;
     }
 

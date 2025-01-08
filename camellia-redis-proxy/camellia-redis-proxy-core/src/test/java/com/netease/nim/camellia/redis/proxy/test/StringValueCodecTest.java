@@ -120,7 +120,12 @@ public class StringValueCodecTest {
         }
 
         @Override
-        public void flush(short slot, BlockLocation location) throws IOException {
+        public void commit(short slot, BlockLocation blockLocation) throws IOException {
+
+        }
+
+        @Override
+        public void clear(short slot, BlockLocation blockLocation) throws IOException {
 
         }
     }

@@ -11,7 +11,6 @@ public enum BlockType {
     _32k(2, 32*1024, 2),
     _256k(3, 256*1024, 4),
     _1024k(4, 1024*1024, 4),
-    no_align(5, -1, 4),
     ;
 
     private final int type;
@@ -36,6 +35,15 @@ public enum BlockType {
         return sizeLen;
     }
 
+    public static BlockType getByValue(int type) {
+        for (BlockType blockType : BlockType.values()) {
+            if (blockType.getType() == type) {
+                return blockType;
+            }
+        }
+        return null;
+    }
+
     public static BlockType fromData(byte[] data) {
         if (data.length + 4 + 2 < EmbeddedStorageConstants._4k) {
             return BlockType._4k;
@@ -46,7 +54,17 @@ public enum BlockType {
         } else if (data.length + 4 + 4 < EmbeddedStorageConstants._1024k) {
             return BlockType._1024k;
         } else {
-            return BlockType.no_align;
+            throw new IllegalArgumentException("data too long");
         }
+    }
+
+    public int valueManifestSize(long dataFileCapacity) {
+        int blockCount = (int) (dataFileCapacity / getBlockSize());
+        return blockCount / 8;
+    }
+
+    public int valueSlotManifestSize(long dataFileCapacity) {
+        int blockCount = (int) (dataFileCapacity / getBlockSize());
+        return blockCount * 2;
     }
 }

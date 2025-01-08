@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -18,33 +17,19 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class KeyManifestTest {
 
-    private final String fileName1 = "/tmp/" + UUID.randomUUID();
-    private final String fileName2 = "/tmp/" + UUID.randomUUID();
+    private final String dir = "/tmp";
 
     private static final int _64k = 64*1024;
 
     @Before
     public void before() {
-        {
-            File file = new File(fileName1);
-            if (file.exists()) {
-                boolean delete = file.delete();
-                System.out.println("delete tmp file1 = " + delete);
-            }
-        }
-        {
-            File file = new File(fileName2);
-            if (file.exists()) {
-                boolean delete = file.delete();
-                System.out.println("delete tmp file2 = " + delete);
-            }
-        }
+        delete();
     }
 
     @Test
     public void test() throws IOException {
 
-        KeyManifest keySlotMap = new KeyManifest(fileName1);
+        KeyManifest keySlotMap = new KeyManifest(dir);
         keySlotMap.load();
 
         short slot = (short)ThreadLocalRandom.current().nextInt(RedisClusterCRC16Utils.SLOT_SIZE / 2);
@@ -68,7 +53,7 @@ public class KeyManifestTest {
         SlotInfo slotInfo3 = keySlotMap.init((short) (slot + 200));
         Assert.assertEquals(slotInfo3, slotInfo);
 
-        KeyManifest keySlotMap2 = new KeyManifest(fileName1);
+        KeyManifest keySlotMap2 = new KeyManifest(dir);
         keySlotMap2.load();
 
         SlotInfo slotInfo11 = keySlotMap2.get(slot);
@@ -77,11 +62,13 @@ public class KeyManifestTest {
         Assert.assertEquals(slotInfo1, slotInfo11);
         Assert.assertEquals(slotInfo2, slotInfo22);
         Assert.assertEquals(slotInfo3, slotInfo33);
+
+        delete();
     }
 
     @Test
     public void test2() throws IOException {
-        KeyManifest keySlotMap = new KeyManifest(fileName2);
+        KeyManifest keySlotMap = new KeyManifest(dir);
         keySlotMap.load();
 
         long time1 = System.nanoTime();
@@ -97,23 +84,20 @@ public class KeyManifestTest {
         }
         long time3 = System.nanoTime();
         System.out.println("rand expand 1000 slot, spend = " + (time3 - time2) / 1000000.0);
+
+        delete();
     }
 
     @After
     public void after() {
-        {
-            File file = new File(fileName1);
-            if (file.exists()) {
-                boolean delete = file.delete();
-                System.out.println("delete tmp file1 = " + delete);
-            }
-        }
-        {
-            File file = new File(fileName2);
-            if (file.exists()) {
-                boolean delete = file.delete();
-                System.out.println("delete tmp file2 = " + delete);
-            }
+        delete();
+    }
+
+    private void delete() {
+        File file = new File(dir + "/key.manifest");
+        if (file.exists()) {
+            boolean delete = file.delete();
+            System.out.println("delete " + delete);
         }
     }
 }
