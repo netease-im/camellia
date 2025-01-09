@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.StringValueCodec;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.*;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.*;
 import com.netease.nim.camellia.tools.utils.Pair;
 import org.junit.Assert;
 import org.junit.Test;

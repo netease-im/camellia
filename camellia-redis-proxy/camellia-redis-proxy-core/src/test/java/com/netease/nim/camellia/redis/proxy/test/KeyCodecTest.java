@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.codec.KeyCodec;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.enums.DataType;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.KeyInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockLocation;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.ValueLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.KeyCodec;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.ValueLocation;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.constants.EmbeddedStorageConstants._4k;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants._4k;
 
 /**
  * Created by caojiajun on 2025/1/3

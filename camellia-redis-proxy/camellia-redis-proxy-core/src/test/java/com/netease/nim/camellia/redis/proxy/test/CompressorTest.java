@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.compress.NoneCompressor;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.compress.ZstdCompressor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compress.NoneCompressor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compress.ZstdCompressor;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.KeyManifest;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.key.slot.SlotInfo;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.KeyManifest;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.SlotInfo;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import org.junit.After;
 import org.junit.Assert;

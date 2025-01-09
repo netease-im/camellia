@@ -1,10 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.constants.EmbeddedStorageConstants;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockLocation;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.BlockType;
-import com.netease.nim.camellia.redis.proxy.upstream.embedded.storage.value.block.ValueLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockLocation;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockType;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.ValueLocation;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.junit.Assert;
 import org.junit.Test;
