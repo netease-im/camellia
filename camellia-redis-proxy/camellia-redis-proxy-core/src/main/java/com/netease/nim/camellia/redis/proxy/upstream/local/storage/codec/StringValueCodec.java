@@ -136,7 +136,7 @@ public class StringValueCodec {
     public static StringValueDecodeResult decode(byte[] data, BlockType blockType) {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         int crc1 = buffer.getInt();
-        int crc2 = RedisClusterCRC16Utils.getCRC16(data, 6, data.length);
+        int crc2 = RedisClusterCRC16Utils.getCRC16(data, 10, data.length);
         if (crc1 != crc2) {
             return new StringValueDecodeResult(new ArrayList<>(), -1);
         }
