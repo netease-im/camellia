@@ -37,7 +37,7 @@ public class KeyReadWrite {
     }
 
     public KeyInfo get(short slot, CacheKey key) throws IOException {
-        KeyInfo keyInfo = cache.get(new CacheKey(key.key()));
+        KeyInfo keyInfo = cache.get(key);
         if (keyInfo != null) {
             if (keyInfo == KeyInfo.DELETE) {
                 return null;

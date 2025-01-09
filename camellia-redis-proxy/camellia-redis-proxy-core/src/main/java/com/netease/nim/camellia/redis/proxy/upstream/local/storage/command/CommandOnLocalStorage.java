@@ -51,6 +51,9 @@ public abstract class CommandOnLocalStorage {
      * @throws IOException exception
      */
     protected void afterWrite(short slot) throws IOException {
+        //compact
+        compactExecutor.compact(slot);
+        //flush
         if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
             //key flush prepare
             keyReadWrite.flushPrepare(slot);
@@ -59,6 +62,5 @@ public abstract class CommandOnLocalStorage {
             //flush key
             future1.thenAccept(result -> keyReadWrite.flush(slot));
         }
-        compactExecutor.compact(slot);
     }
 }
