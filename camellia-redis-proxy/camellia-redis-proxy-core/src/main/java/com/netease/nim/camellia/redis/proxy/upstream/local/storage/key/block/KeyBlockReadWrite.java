@@ -71,6 +71,32 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
     }
 
     @Override
+    public KeyInfo getForCompact(short slot, CacheKey key) throws IOException {
+        SlotInfo slotInfo = keyManifest.get(slot);
+        long fileId = slotInfo.fileId();
+        long offset = slotInfo.offset();
+        int capacity = slotInfo.capacity();
+        int bucketSize = capacity / _4k;
+        int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
+
+        String cacheKey = fileId + "|" + offset;
+        byte[] block = readCache.get(cacheKey);
+        if (block == null) {
+            block = writeCache.get(cacheKey);
+        }
+        if (block == null) {
+            block = fileReadWrite.read(file(fileId), offset, bucket * _4k);
+            writeCache.put(cacheKey, block);
+        }
+        Map<CacheKey, KeyInfo> map = KeyCodec.decodeBucket(block);
+        KeyInfo data = map.get(key);
+        if (data == null) {
+            return KeyInfo.DELETE;
+        }
+        return data;
+    }
+
+    @Override
     public void updateBlockCache(long fileId, long offset, byte[] block) {
         if (block.length != _4k) {
             return;

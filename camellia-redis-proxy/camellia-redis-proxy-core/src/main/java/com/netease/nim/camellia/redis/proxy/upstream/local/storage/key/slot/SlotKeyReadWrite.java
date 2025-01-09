@@ -59,6 +59,27 @@ public class SlotKeyReadWrite {
     }
 
     /**
+     * 获取一个key
+     * @param key key
+     * @return key
+     */
+    public KeyInfo getForCompact(CacheKey key) throws IOException  {
+        KeyInfo keyInfo = mutable.get(key);
+        if (keyInfo == KeyInfo.DELETE) {
+            return null;
+        }
+        keyInfo = immutable.get(key);
+        if (keyInfo == KeyInfo.DELETE) {
+            return null;
+        }
+        keyInfo = blockCache.getForCompact(slot, key);
+        if (keyInfo == KeyInfo.DELETE) {
+            return null;
+        }
+        return keyInfo;
+    }
+
+    /**
      * 写入一个key
      * @param key key
      */

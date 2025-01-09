@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueDecodeResult;
@@ -24,25 +25,39 @@ public class CompactExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(CompactExecutor.class);
 
-    private KeyReadWrite keyReadWrite;
-    private StringReadWrite stringReadWrite;
+    private final IValueManifest valueManifest;
 
-    private IValueManifest valueManifest;
-    private StringBlockReadWrite stringBlockReadWrite;
+    private final KeyReadWrite keyReadWrite;
+    private final StringReadWrite stringReadWrite;
+    private final StringBlockReadWrite stringBlockReadWrite;
+
+    private int compactIntervalSeconds;
+    private Map<BlockType, Integer> blockLimit;
 
     private final ConcurrentHashMap<Short, Long> lastCompactTimeMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Integer> nextOffsetMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Short, BlockType> nextBlockTypeMap = new ConcurrentHashMap<>();
 
+    public CompactExecutor(IValueManifest valueManifest, KeyReadWrite keyReadWrite,
+                           StringReadWrite stringReadWrite, StringBlockReadWrite stringBlockReadWrite) {
+        this.valueManifest = valueManifest;
+        this.keyReadWrite = keyReadWrite;
+        this.stringReadWrite = stringReadWrite;
+        this.stringBlockReadWrite = stringBlockReadWrite;
+        updateConf();
+        ProxyDynamicConf.registerCallback(this::updateConf);
+    }
+
     public void compact(short slot) {
         Long lastCompactTime = lastCompactTimeMap.get(slot);
-        if (lastCompactTime != null && TimeCache.currentMillis - lastCompactTime < 10*1000) {
+        if (lastCompactTime != null && TimeCache.currentMillis - lastCompactTime < compactIntervalSeconds*1000L) {
             return;
         }
+        BlockType blockType = nextBlockType(slot);
+        int offset = nextOffset(blockType, slot);
+        int limit = blockLimit.getOrDefault(blockType, 1);
         try {
-            BlockType blockType = nextBlockType(slot);
-            int offset = nextOffset(blockType, slot);
-            List<BlockLocation> blocks = valueManifest.getBlocks(slot, blockType, offset, 4);
+            List<BlockLocation> blocks = valueManifest.getBlocks(slot, blockType, offset, limit);
             if (blocks.isEmpty()) {
                 updateNextOffset(blockType, slot, 0);
                 return;
@@ -50,12 +65,12 @@ public class CompactExecutor {
             List<Pair<KeyInfo, byte[]>> values = new ArrayList<>();
             List<BlockLocation> recycleBlocks = new ArrayList<>();
 
-            for (BlockLocation block : blocks) {
-                long fileId = block.fileId();
-                int blockId = block.blockId();
-                byte[] bytes = stringBlockReadWrite.getBlock(blockType, fileId, (long) blockId * blockType.getBlockSize());
+            for (BlockLocation blockLocation : blocks) {
+                long fileId = blockLocation.fileId();
+                int blockId = blockLocation.blockId();
+                byte[] block = stringBlockReadWrite.getBlock(blockType, fileId, (long) blockId * blockType.getBlockSize());
 
-                StringValueDecodeResult decodeResult = StringValueCodec.decode(bytes, blockType);
+                StringValueDecodeResult decodeResult = StringValueCodec.decode(block, blockType);
                 List<byte[]> list = decodeResult.values();
 
                 List<Pair<KeyInfo, byte[]>> surviving = new ArrayList<>();
@@ -68,8 +83,7 @@ public class CompactExecutor {
                         continue;
                     }
                     if (keyInfo.getValueLocation() != null) {
-                        BlockLocation blockLocation = keyInfo.getValueLocation().blockLocation();
-                        if (blockLocation.equals(block)) {
+                        if (keyInfo.getValueLocation().blockLocation().equals(blockLocation)) {
                             surviving.add(new Pair<>(keyInfo, stringValue.value()));
                         }
                     }
@@ -90,7 +104,7 @@ public class CompactExecutor {
                 }
                 if (recycle) {
                     values.addAll(surviving);
-                    recycleBlocks.add(block);
+                    recycleBlocks.add(blockLocation);
                 }
             }
             if (!values.isEmpty()) {
@@ -103,13 +117,27 @@ public class CompactExecutor {
                 valueManifest.recycle(slot, block);
             }
             if (recycleBlocks.isEmpty()) {
-                updateNextOffset(blockType, slot, offset + 4);
+                updateNextOffset(blockType, slot, offset + limit);
             }
         } catch (Exception e) {
-            logger.error("compact error, slot = {}", slot, e);
+            logger.error("compact error, slot = {}, blockType = {}, offset = {}, limit = {}", slot, blockType, offset, limit, e);
         } finally {
             lastCompactTimeMap.put(slot, TimeCache.currentMillis);
         }
+    }
+
+    private void updateConf() {
+        compactIntervalSeconds = ProxyDynamicConf.getInt("local.storage.compact.interval.seconds", 10);
+        Map<BlockType, Integer> blockLimit = new HashMap<>();
+        for (BlockType type : BlockType.values()) {
+            String key = "local.storage.compact.block.type." + type.getType() + ".limit";
+            if (type == BlockType._4k) {
+                blockLimit.put(type, ProxyDynamicConf.getInt(key, 4));
+            } else {
+                blockLimit.put(type, ProxyDynamicConf.getInt(key, 1));
+            }
+        }
+        this.blockLimit = blockLimit;
     }
 
     private BlockType nextBlockType(short slot) {

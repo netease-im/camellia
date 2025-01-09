@@ -22,6 +22,15 @@ public interface IKeyBlockReadWrite extends IBlockReadWrite {
     KeyInfo get(short slot, CacheKey key) throws IOException;
 
     /**
+     * 获取一个key
+     * @param slot slot
+     * @param key key
+     * @return key
+     * @throws IOException exception
+     */
+    KeyInfo getForCompact(short slot, CacheKey key) throws IOException;
+
+    /**
      * get block
      * @param fileId fileId
      * @param offset offset

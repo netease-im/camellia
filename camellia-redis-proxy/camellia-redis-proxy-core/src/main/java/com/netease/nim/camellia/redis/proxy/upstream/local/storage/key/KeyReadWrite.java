@@ -58,14 +58,14 @@ public class KeyReadWrite {
     }
 
     public KeyInfo getForCompact(short slot, CacheKey key) throws IOException {
-        KeyInfo keyInfo = cache.get(new CacheKey(key.key()));
+        KeyInfo keyInfo = cache.get(key);
         if (keyInfo != null) {
             if (keyInfo == KeyInfo.DELETE) {
                 return null;
             }
             return keyInfo;
         }
-        keyInfo = get(slot).get(key);
+        keyInfo = get(slot).getForCompact(key);
         if (keyInfo == null) {
             return null;
         }

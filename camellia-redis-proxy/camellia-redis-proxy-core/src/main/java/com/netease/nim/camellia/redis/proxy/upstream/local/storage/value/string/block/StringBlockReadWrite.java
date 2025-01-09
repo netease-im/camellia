@@ -93,7 +93,9 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
             return block;
         }
         String file = file(blockType, fileId);
-        return fileReadWrite.read(file, offset, blockType.getBlockSize());
+        block = fileReadWrite.read(file, offset, blockType.getBlockSize());
+        writeCache.put(cacheKey, block);;
+        return block;
     }
 
     @Override

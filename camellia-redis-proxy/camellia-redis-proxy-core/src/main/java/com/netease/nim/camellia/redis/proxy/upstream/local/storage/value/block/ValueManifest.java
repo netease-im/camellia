@@ -109,7 +109,7 @@ public class ValueManifest implements IValueManifest {
         //bits1
         BitSet bitSet1 = bits1Map.get(fileId);
         if (!bitSet1.get(blockId)) {
-            return;
+            throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
         }
         bitSet1.set(blockId, false);
         Integer offset = allocateOffsetMap.get(fileId);
