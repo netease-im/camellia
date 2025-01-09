@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandOnEmbeddedStorage;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandOnLocalStorage;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 
@@ -15,7 +15,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
  * <p>
  * Created by caojiajun on 2025/1/3
  */
-public class Get extends CommandOnEmbeddedStorage {
+public class Get extends CommandOnLocalStorage {
 
     @Override
     public RedisCommand redisCommand() {

@@ -1,10 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string;
 
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.StringValueFlushTask;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.ValueFlushExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block.StringBlockReadWrite;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,17 +19,17 @@ import java.util.concurrent.CompletableFuture;
 public class SlotStringReadWrite {
 
     private final short slot;
-    private final StringBlockCache slotStringBlockCache;
+    private final StringBlockReadWrite stringBlockReadWrite;
     private final ValueFlushExecutor flushExecutor;
 
     private final Map<KeyInfo, byte[]> mutable = new HashMap<>();
     private final Map<KeyInfo, byte[]> immutable = new HashMap<>();
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
-    public SlotStringReadWrite(short slot, ValueFlushExecutor flushExecutor, StringBlockCache slotStringBlockCache) {
+    public SlotStringReadWrite(short slot, ValueFlushExecutor flushExecutor, StringBlockReadWrite slotStringBlockCache) {
         this.slot = slot;
         this.flushExecutor = flushExecutor;
-        this.slotStringBlockCache = slotStringBlockCache;
+        this.stringBlockReadWrite = slotStringBlockCache;
     }
 
     public void put(KeyInfo keyInfo, byte[] data) throws IOException {
@@ -47,7 +49,7 @@ public class SlotStringReadWrite {
         if (data != null) {
             return data;
         }
-        return slotStringBlockCache.get(slot, keyInfo);
+        return stringBlockReadWrite.get(keyInfo);
     }
 
     public CompletableFuture<FlushResult> flush() throws IOException {
@@ -61,7 +63,7 @@ public class SlotStringReadWrite {
         immutable.putAll(mutable);
         mutable.clear();
         flushStatus = FlushStatus.FLUSHING;
-        CompletableFuture<FlushResult> submit = flushExecutor.submit(new StringValueFlushTask(slot, immutable));
+        CompletableFuture<FlushResult> submit = flushExecutor.submit(new StringValueFlushTask(slot, StringValue.encodeMap(immutable)));
         submit.thenAccept(flushResult -> {
             flushDone();
             future.complete(flushResult);

@@ -19,7 +19,7 @@ import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.consta
  */
 public class StringValueCodec {
 
-    public static StringValueCodecResult encode(short slot, BlockType blockType, IValueManifest valueManifest, List<Pair<KeyInfo, byte[]>> values) throws IOException {
+    public static StringValueEncodeResult encode(short slot, BlockType blockType, IValueManifest valueManifest, List<Pair<KeyInfo, byte[]>> values) throws IOException {
         //
         //data to sub-block
         List<SubBlock> subBlocks = new ArrayList<>();
@@ -89,14 +89,16 @@ public class StringValueCodec {
             int offset = 0;
             short subBlockCount = 0;
             buffer.putInt(0);//4
+            buffer.putInt(blockType.getBlockSize() - 10);//4
             buffer.putShort(subBlockCount);//2
             for (SubBlock block : subBlocks) {
                 //
                 if (buffer.remaining() < block.size()) {
                     //sub block merge
-                    int crc = RedisClusterCRC16Utils.getCRC16(buffer.array(), 6, buffer.array().length);
+                    int crc = RedisClusterCRC16Utils.getCRC16(buffer.array(), 10, buffer.array().length);
                     buffer.putInt(0, crc);//4
-                    buffer.putShort(4, subBlockCount);//2
+                    buffer.putInt(4, buffer.remaining());
+                    buffer.putShort(8, subBlockCount);//2
                     blockInfos.add(new BlockInfo(blockType, location, buffer.array()));
                     //
                     //new block
@@ -104,6 +106,7 @@ public class StringValueCodec {
                     buffer = ByteBuffer.allocate(blockType.getBlockSize());
                     subBlockCount = 0;
                     buffer.putInt(0);//4
+                    buffer.putInt(blockType.getBlockSize() - 10);
                     buffer.putShort(subBlockCount);//2
                 }
                 //add sub-block to block
@@ -121,23 +124,26 @@ public class StringValueCodec {
                 subBlockCount++;
             }
             //sub block merge
-            int crc = RedisClusterCRC16Utils.getCRC16(buffer.array(), 6, buffer.array().length);
+            int crc = RedisClusterCRC16Utils.getCRC16(buffer.array(), 10, buffer.array().length);
             buffer.putInt(0, crc);
-            buffer.putShort(4, subBlockCount);
+            buffer.putInt(4, buffer.remaining());
+            buffer.putShort(8, subBlockCount);
             blockInfos.add(new BlockInfo(blockType, location, buffer.array()));
         }
-        return new StringValueCodecResult(blockInfos, oldLocations);
+        return new StringValueEncodeResult(blockInfos, oldLocations);
     }
 
-    public static List<byte[]> decode(byte[] data, BlockType blockType) {
+    public static StringValueDecodeResult decode(byte[] data, BlockType blockType) {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         int crc1 = buffer.getInt();
         int crc2 = RedisClusterCRC16Utils.getCRC16(data, 6, data.length);
         if (crc1 != crc2) {
-            return new ArrayList<>();
+            return new StringValueDecodeResult(new ArrayList<>(), -1);
         }
 
         List<byte[]> values = new ArrayList<>();
+
+        int remaining = buffer.getInt();
 
         short subBlockCount = buffer.getShort();
         for (int i=0; i<subBlockCount; i++) {
@@ -160,7 +166,7 @@ public class StringValueCodec {
                 values.add(value);
             }
         }
-        return values;
+        return new StringValueDecodeResult(values, remaining);
     }
 
     private static class SubBlock {

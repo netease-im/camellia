@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKe
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block.KeyBlockReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist.KeyFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist.KeyFlushTask;
 import org.slf4j.Logger;
@@ -23,14 +24,14 @@ public class SlotKeyReadWrite {
 
     private final short slot;
     private final KeyFlushExecutor executor;
-    private final KeyBlockCache blockCache;
+    private final KeyBlockReadWrite blockCache;
 
     private final Map<CacheKey, KeyInfo> mutable = new HashMap<>();
     private final Map<CacheKey, KeyInfo> immutable = new HashMap<>();
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
-    public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockCache blockCache) {
+    public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockReadWrite blockCache) {
         this.slot = slot;
         this.executor = executor;
         this.blockCache = blockCache;

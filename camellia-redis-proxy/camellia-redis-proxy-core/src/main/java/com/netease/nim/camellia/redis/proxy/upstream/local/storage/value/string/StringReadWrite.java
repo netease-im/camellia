@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.ValueFlushExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block.StringBlockReadWrite;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.io.IOException;
@@ -17,11 +18,11 @@ public class StringReadWrite {
     private final ConcurrentHashMap<Short, SlotStringReadWrite> map = new ConcurrentHashMap<>();
 
     private final ValueFlushExecutor flushExecutor;
-    private final StringBlockCache stringBlockCache;
+    private final StringBlockReadWrite stringBlockReadWrite;
 
-    public StringReadWrite(ValueFlushExecutor flushExecutor, StringBlockCache stringBlockCache) {
+    public StringReadWrite(ValueFlushExecutor flushExecutor, StringBlockReadWrite stringBlockReadWrite) {
         this.flushExecutor = flushExecutor;
-        this.stringBlockCache = stringBlockCache;
+        this.stringBlockReadWrite = stringBlockReadWrite;
     }
 
     public void put(short slot, KeyInfo keyInfo, byte[] data) throws IOException {
@@ -41,7 +42,7 @@ public class StringReadWrite {
     }
 
     private SlotStringReadWrite get(short slot) {
-        return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotStringReadWrite(slot, flushExecutor, stringBlockCache));
+        return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotStringReadWrite(slot, flushExecutor, stringBlockReadWrite));
     }
 
     public boolean needFlush(short slot) {

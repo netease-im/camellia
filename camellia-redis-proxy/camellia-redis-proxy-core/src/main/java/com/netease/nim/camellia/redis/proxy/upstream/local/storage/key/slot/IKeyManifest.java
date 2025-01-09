@@ -8,6 +8,12 @@ import java.io.IOException;
 public interface IKeyManifest {
 
     /**
+     * get dir
+     * @return dir
+     */
+    String dir();
+
+    /**
      * init and load
      * 初始化
      * @throws IOException exception

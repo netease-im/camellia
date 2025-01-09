@@ -13,6 +13,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,6 +43,11 @@ public class ValueManifest implements IValueManifest {
 
     public ValueManifest(String dir) {
         this.dir = dir;
+    }
+
+    @Override
+    public String dir() {
+        return dir;
     }
 
     @Override
@@ -103,7 +109,7 @@ public class ValueManifest implements IValueManifest {
         //bits1
         BitSet bitSet1 = bits1Map.get(fileId);
         if (!bitSet1.get(blockId)) {
-            throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
+            return;
         }
         bitSet1.set(blockId, false);
         Integer offset = allocateOffsetMap.get(fileId);
@@ -127,6 +133,44 @@ public class ValueManifest implements IValueManifest {
 
         MappedByteBuffer buffer2 = slotsMmp.get(fileId);
         buffer2.putShort(blockId*2, (short) -1);
+    }
+
+    @Override
+    public List<BlockLocation> getBlocks(short slot, BlockType blockType, int offset, int limit) {
+        List<BlockLocation> list = new ArrayList<>();
+        int count = 0;
+        for (Map.Entry<Long, MappedByteBuffer> entry : slotsMmp.entrySet()) {
+            Long fileId = entry.getKey();
+            if (typeMap.get(fileId) != blockType) {
+                continue;
+            }
+            BitSet bitSet = bits1Map.get(fileId);
+            MappedByteBuffer buffer = entry.getValue();
+            int size = blockType.valueSlotManifestSize(data_file_size);
+            int noAllocateBlocks = 0;
+            for (int i=0; i<size/2; i++) {
+                if (!bitSet.get(i)) {
+                    noAllocateBlocks ++;
+                    if (noAllocateBlocks >= 512) {
+                        break;
+                    }
+                }
+                short allocateSlot = buffer.getShort(i*2);
+                if (allocateSlot == slot) {
+                    count ++;
+                    if (count >= offset) {
+                        list.add(new BlockLocation(fileId, i));
+                        if (list.size() >= limit) {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (list.size() >= limit) {
+                break;
+            }
+        }
+        return list;
     }
 
     @Override

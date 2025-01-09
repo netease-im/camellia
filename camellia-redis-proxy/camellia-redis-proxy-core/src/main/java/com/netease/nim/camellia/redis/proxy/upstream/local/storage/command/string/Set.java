@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandOnEmbeddedStorage;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandOnLocalStorage;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
@@ -18,7 +18,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  * SET key value [NX | XX] [GET] [EX seconds | PX milliseconds | EXAT unix-time-seconds | PXAT unix-time-milliseconds | KEEPTTL]
  * Created by caojiajun on 2025/1/3
  */
-public class Set extends CommandOnEmbeddedStorage {
+public class Set extends CommandOnLocalStorage {
 
     private static final int nx = 1;
     private static final int xx = 2;
@@ -120,7 +120,7 @@ public class Set extends CommandOnEmbeddedStorage {
         }
         keyReadWrite.put(slot, keyInfo);
 
-        checkAndFlush(slot);
+        afterWrite(slot);
 
         if (get) {
             return new BulkReply(oldValue);

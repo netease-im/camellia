@@ -8,6 +8,6 @@ import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 public class KeyHashUtils {
 
     public static int hash(byte[] key) {
-        return RedisClusterCRC16Utils.getCRC16(key);
+        return Math.abs(RedisClusterCRC16Utils.getCRC16(key));
     }
 }

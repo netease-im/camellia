@@ -32,11 +32,18 @@ public class KeyManifest implements IKeyManifest {
     private final Map<Short, SlotInfo> slotInfoMap = new HashMap<>();//slot -> slotInfo
     private final Map<Long, BitSet> fileBitsMap = new TreeMap<>();
 
+    private final String dir;
     private final String fileName;
     private FileChannel fileChannel;
 
     public KeyManifest(String dir) {
+        this.dir = dir;
         this.fileName = dir + "/key.manifest";
+    }
+
+    @Override
+    public String dir() {
+        return dir;
     }
 
     @Override

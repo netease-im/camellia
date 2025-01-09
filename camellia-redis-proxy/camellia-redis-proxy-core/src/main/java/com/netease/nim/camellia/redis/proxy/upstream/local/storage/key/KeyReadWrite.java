@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.Estimat
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist.KeyFlushExecutor;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.KeyBlockCache;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block.KeyBlockReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.SlotKeyReadWrite;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
@@ -19,13 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KeyReadWrite {
 
     private final KeyFlushExecutor executor;
-    private final KeyBlockCache blockCache;
+    private final KeyBlockReadWrite blockCache;
 
     private final ConcurrentHashMap<Short, SlotKeyReadWrite> map = new ConcurrentHashMap<>();
 
     private final LRUCache<CacheKey, KeyInfo> cache;
 
-    public KeyReadWrite(KeyFlushExecutor executor, KeyBlockCache blockCache) {
+    public KeyReadWrite(KeyFlushExecutor executor, KeyBlockReadWrite blockCache) {
         this.executor = executor;
         this.blockCache = blockCache;
         this.cache = new LRUCache<>("key-cache", "embedded.storage.key.cache.capacity", "32M",
@@ -54,6 +54,24 @@ public class KeyReadWrite {
             return null;
         }
         cache.put(key, keyInfo);
+        return keyInfo;
+    }
+
+    public KeyInfo getForCompact(short slot, CacheKey key) throws IOException {
+        KeyInfo keyInfo = cache.get(new CacheKey(key.key()));
+        if (keyInfo != null) {
+            if (keyInfo == KeyInfo.DELETE) {
+                return null;
+            }
+            return keyInfo;
+        }
+        keyInfo = get(slot).get(key);
+        if (keyInfo == null) {
+            return null;
+        }
+        if (keyInfo.isExpire()) {
+            return null;
+        }
         return keyInfo;
     }
 

@@ -105,28 +105,9 @@ public class StringValueCodecTest {
         private final AtomicInteger blockId = new AtomicInteger(0);
 
         @Override
-        public void load() throws IOException {
-
-        }
-
-        @Override
         public BlockLocation allocate(short slot, BlockType blockType) throws IOException {
             return new BlockLocation(fileId, blockId.getAndIncrement());
         }
 
-        @Override
-        public BlockType blockType(long fileId) throws IOException {
-            return null;
-        }
-
-        @Override
-        public void commit(short slot, BlockLocation blockLocation) throws IOException {
-
-        }
-
-        @Override
-        public void recycle(short slot, BlockLocation blockLocation) throws IOException {
-
-        }
     }
 }

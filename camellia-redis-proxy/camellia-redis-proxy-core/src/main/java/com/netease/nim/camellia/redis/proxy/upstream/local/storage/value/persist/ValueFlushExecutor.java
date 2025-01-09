@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist;
 
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueEncodeResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.*;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringBlockCache;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block.StringBlockReadWrite;
 import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,14 +23,12 @@ public class ValueFlushExecutor {
 
     private final FlushExecutor executor;
     private final IValueManifest valueManifest;
-    private final FileReadWrite fileReadWrite;
-    private final StringBlockCache blockCache;
+    private final StringBlockReadWrite stringBlockReadWrite;
 
-    public ValueFlushExecutor(FlushExecutor executor, IValueManifest valueManifest, FileReadWrite fileReadWrite, StringBlockCache blockCache) {
+    public ValueFlushExecutor(FlushExecutor executor, IValueManifest valueManifest, StringBlockReadWrite blockCache) {
         this.executor = executor;
         this.valueManifest = valueManifest;
-        this.fileReadWrite = fileReadWrite;
-        this.blockCache = blockCache;
+        this.stringBlockReadWrite = blockCache;
     }
 
     public CompletableFuture<FlushResult> submit(StringValueFlushTask flushTask) {
@@ -63,28 +61,18 @@ public class ValueFlushExecutor {
             buffers.add(new Pair<>(entry.getKey(), entry.getValue()));
         }
         List<BlockInfo> list = new ArrayList<>();
-        List<ValueLocation> oldLocations = new ArrayList<>();
         for (Map.Entry<BlockType, List<Pair<KeyInfo, byte[]>>> entry : blockMap.entrySet()) {
-            StringValueCodecResult result = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
+            StringValueEncodeResult result = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
             list.addAll(result.blockInfos());
-            oldLocations.addAll(result.oldLocations());
         }
         for (BlockInfo blockInfo : list) {
             BlockLocation blockLocation = blockInfo.blockLocation();
             long fileId = blockLocation.fileId();
             long offset = (long) blockLocation.blockId() * blockInfo.blockType().getBlockSize();
-            fileReadWrite.write(fileId, offset, blockInfo.data());
-            blockCache.updateBlockCache(slot, fileId, offset, blockInfo.data());
+            stringBlockReadWrite.writeBlocks(fileId, offset, blockInfo.data());
+            stringBlockReadWrite.updateBlockCache(fileId, offset, blockInfo.data());
             valueManifest.commit(slot, blockLocation);
         }
-        Set<BlockLocation> changedBlocks = new HashSet<>();
-        for (ValueLocation oldLocation : oldLocations) {
-            changedBlocks.add(oldLocation.blockLocation());
-        }
-        compact(changedBlocks);
     }
 
-    private void compact(Set<BlockLocation> blocks) {
-        //todo
-    }
 }
