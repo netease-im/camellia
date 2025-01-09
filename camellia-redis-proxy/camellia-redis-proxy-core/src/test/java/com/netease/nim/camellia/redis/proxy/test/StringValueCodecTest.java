@@ -44,7 +44,7 @@ public class StringValueCodecTest {
         Assert.assertEquals(blockInfos.size(), 1);
 
         BlockInfo blockInfo = blockInfos.getFirst();
-        List<byte[]> list = StringValueCodec.decode(blockInfo.data(), blockType);
+        List<byte[]> list = StringValueCodec.decode(blockInfo.data(), blockType).values();
 
         Assert.assertEquals(list.size(), values.size());
 
@@ -77,7 +77,7 @@ public class StringValueCodecTest {
 
         List<byte[]> result = new ArrayList<>();
         for (BlockInfo blockInfo : blockInfos) {
-            List<byte[]> list = StringValueCodec.decode(blockInfo.data(), blockType);
+            List<byte[]> list = StringValueCodec.decode(blockInfo.data(), blockType).values();
             result.addAll(list);
         }
 
