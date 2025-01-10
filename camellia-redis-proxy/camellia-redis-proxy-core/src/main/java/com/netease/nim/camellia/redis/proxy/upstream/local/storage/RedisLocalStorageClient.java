@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisLocalStorageResource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
@@ -11,7 +12,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.db.MemFlushCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.WalGroup;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
@@ -80,14 +80,13 @@ public class RedisLocalStorageClient implements IUpstreamClient {
             CompactExecutor compactExecutor = new CompactExecutor(readWrite);
 
             CommandConfig commandConfig = new CommandConfig();
-            commandConfig.setWalGroup(new WalGroup());
             commandConfig.setCompactExecutor(compactExecutor);
             commandConfig.setReadWrite(readWrite);
 
             commands = new Commands(commandConfig);
 
             ScheduledExecutorService scheduler = LocalStorageExecutors.getInstance().getScheduler();
-            scheduler.scheduleAtFixedRate(this::flush, 10, 10, TimeUnit.SECONDS);
+            scheduler.scheduleAtFixedRate(this::flush, 1, 1, TimeUnit.SECONDS);
 
             logger.info("local storage client start success, dir = {}", dir);
         } catch (Exception e) {
@@ -98,13 +97,14 @@ public class RedisLocalStorageClient implements IUpstreamClient {
 
     private void flush() {
         try {
+            int seconds = ProxyDynamicConf.getInt("local.storage.flush.max.interval.seconds", 10);
             for (short slot=0; slot<RedisClusterCRC16Utils.SLOT_SIZE; slot++) {
                 Long lastWriteCommandTime = timeMap.get(slot);
                 boolean flush;
                 if (lastWriteCommandTime == null) {
                     flush = true;
                 } else {
-                    flush = TimeCache.currentMillis - lastWriteCommandTime > 10*1000;
+                    flush = TimeCache.currentMillis - lastWriteCommandTime >= seconds*1000L;
                 }
                 if (!flush) continue;
                 final short flushSlot = slot;
