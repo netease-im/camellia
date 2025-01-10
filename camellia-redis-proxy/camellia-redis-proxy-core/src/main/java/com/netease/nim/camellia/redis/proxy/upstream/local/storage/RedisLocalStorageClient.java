@@ -25,6 +25,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.key_max_len;
+
 /**
  * Created by caojiajun on 2025/1/3
  */
@@ -62,7 +64,7 @@ public class RedisLocalStorageClient implements IUpstreamClient {
             } else {
                 List<byte[]> keys = command.getKeys();
                 for (byte[] key : keys) {
-                    if (key.length > 1024) {
+                    if (key.length > key_max_len) {
                         future.complete(ErrorReply.KEY_TOO_LONG);
                         return;
                     }

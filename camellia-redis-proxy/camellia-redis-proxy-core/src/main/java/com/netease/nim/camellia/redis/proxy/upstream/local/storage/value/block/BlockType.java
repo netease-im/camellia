@@ -11,7 +11,7 @@ public enum BlockType {
     _32k(2, 32*1024, 2),
     _256k(3, 256*1024, 4),
     _1024k(4, 1024*1024, 4),
-    _10m(5, 10*1024*1024, 4),
+    _8m(5, 8*1024*1024, 4),
     ;
 
     private final int type;
@@ -54,8 +54,8 @@ public enum BlockType {
             return BlockType._256k;
         } else if (data.length + 4 + 4 < LocalStorageConstants._1024k) {
             return BlockType._1024k;
-        } else if (data.length + 4 + 4 < LocalStorageConstants._10m) {
-            return BlockType._10m;
+        } else if (data.length + 4 + 4 < LocalStorageConstants._8m) {
+            return BlockType._8m;
         } else {
             throw new IllegalArgumentException("data too long");
         }
