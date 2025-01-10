@@ -10,9 +10,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.IKeyManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.SlotInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.util.KeyHashUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.*;
 
@@ -20,6 +23,8 @@ import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.consta
  * Created by caojiajun on 2025/1/2
  */
 public class KeyBlockReadWrite implements IKeyBlockReadWrite {
+
+    private static final Logger logger = LoggerFactory.getLogger(KeyBlockReadWrite.class);
 
     private static final String READ_CACHE_CONFIG_KEY = "local.storage.key.block.read.cache.capacity";
     private static final String WRITE_CACHE_CONFIG_KEY = "local.storage.key.block.write.cache.capacity";
@@ -34,10 +39,26 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         this.keyManifest = keyManifest;
         this.readCache = new LRUCache<>("key-read-block-cache", READ_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
         this.writeCache = new LRUCache<>("key-write-block-cache", WRITE_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
+        warm();
     }
 
     private String file(long fileId) {
         return FileNames.keyFile(keyManifest.dir(), fileId);
+    }
+
+    private void warm() {
+        try {
+            Set<Long> fileIds = keyManifest.getFileIds();
+            for (Long fileId : fileIds) {
+                try {
+                    readBlocks(fileId, 0, _4k);
+                } catch (Exception e) {
+                    logger.error("warm error, fileId = {}", fileId, e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("warm error");
+        }
     }
 
     @Override

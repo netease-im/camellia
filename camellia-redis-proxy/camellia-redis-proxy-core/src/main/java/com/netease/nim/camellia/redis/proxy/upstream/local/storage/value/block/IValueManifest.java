@@ -2,7 +2,9 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by caojiajun on 2025/1/6
@@ -22,6 +24,14 @@ public interface IValueManifest {
      * @throws IOException exception
      */
     default void load() throws IOException {
+    }
+
+    /**
+     * get fileId list
+     * @return list
+     */
+    default Map<Long, BlockType> getFileIds() {
+        return new HashMap<>();
     }
 
     /**

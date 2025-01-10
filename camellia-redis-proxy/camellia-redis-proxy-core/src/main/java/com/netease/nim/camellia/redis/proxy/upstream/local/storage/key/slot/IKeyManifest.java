@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Created by caojiajun on 2025/1/6
@@ -12,6 +13,12 @@ public interface IKeyManifest {
      * @return dir
      */
     String dir();
+
+    /**
+     * get fileId list
+     * @return list
+     */
+    Set<Long> getFileIds();
 
     /**
      * init and load

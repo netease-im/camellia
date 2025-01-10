@@ -28,17 +28,17 @@ public class SlotKeyReadWrite {
 
     private final short slot;
     private final KeyFlushExecutor executor;
-    private final KeyBlockReadWrite blockCache;
+    private final KeyBlockReadWrite keyBlockReadWrite;
 
     private final Map<Key, KeyInfo> mutable = new HashMap<>();
     private final Map<Key, KeyInfo> immutable = new HashMap<>();
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
-    public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockReadWrite blockCache) {
+    public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockReadWrite keyBlockReadWrite) {
         this.slot = slot;
         this.executor = executor;
-        this.blockCache = blockCache;
+        this.keyBlockReadWrite = keyBlockReadWrite;
     }
 
     /**
@@ -55,7 +55,7 @@ public class SlotKeyReadWrite {
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
-        keyInfo = blockCache.get(slot, key);
+        keyInfo = keyBlockReadWrite.get(slot, key);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
@@ -76,7 +76,7 @@ public class SlotKeyReadWrite {
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
-        keyInfo = blockCache.getForCompact(slot, key);
+        keyInfo = keyBlockReadWrite.getForCompact(slot, key);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
@@ -89,16 +89,16 @@ public class SlotKeyReadWrite {
      * @return key
      */
     public ValueWrapper<KeyInfo> getForRunToCompletion(Key key) {
-        KeyInfo keyInfo = mutable.get(key);
-        if (keyInfo == KeyInfo.DELETE) {
+        KeyInfo keyInfo1 = mutable.get(key);
+        if (keyInfo1 == KeyInfo.DELETE) {
             return () -> null;
         }
-        keyInfo = immutable.get(key);
-        if (keyInfo == KeyInfo.DELETE) {
+        KeyInfo keyInfo2 = immutable.get(key);
+        if (keyInfo2 == KeyInfo.DELETE) {
             return () -> null;
         }
-        if (keyInfo.isExpire()) {
-            return () -> null;
+        if (keyInfo2 != null) {
+            return () -> keyInfo2;
         }
         return null;
     }

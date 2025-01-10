@@ -37,18 +37,25 @@ public class KeyReadWrite {
     }
 
     public ValueWrapper<KeyInfo> getForRunToCompletion(short slot, Key key) {
-        KeyInfo keyInfo = cache.get(key);
-        if (keyInfo != null) {
-            if (keyInfo == KeyInfo.DELETE) {
+        KeyInfo keyInfo1 = cache.get(key);
+        if (keyInfo1 != null) {
+            if (keyInfo1 == KeyInfo.DELETE) {
                 return () -> null;
             }
-            if (keyInfo.isExpire()) {
+            if (keyInfo1.isExpire()) {
                 cache.put(key, KeyInfo.DELETE);
                 return () -> null;
             }
-            return () -> keyInfo;
+            return () -> keyInfo1;
         }
-        return get(slot).getForRunToCompletion(key);
+        ValueWrapper<KeyInfo> valueWrapper = get(slot).getForRunToCompletion(key);
+        if (valueWrapper != null) {
+            KeyInfo keyInfo2 = valueWrapper.get();
+            if (keyInfo2 != null && keyInfo2.isExpire()) {
+                return () -> null;
+            }
+        }
+        return valueWrapper;
     }
 
     public KeyInfo get(short slot, Key key) throws IOException {

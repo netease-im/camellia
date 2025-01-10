@@ -106,6 +106,11 @@ public class KeyManifest implements IKeyManifest {
     }
 
     @Override
+    public Set<Long> getFileIds() {
+        return new HashSet<>(fileBitsMap.keySet());
+    }
+
+    @Override
     public SlotInfo get(short slot) {
         readWriteLock.readLock().lock();
         try {

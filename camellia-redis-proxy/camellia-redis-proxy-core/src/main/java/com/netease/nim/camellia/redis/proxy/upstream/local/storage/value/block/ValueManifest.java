@@ -11,10 +11,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
@@ -64,6 +61,11 @@ public class ValueManifest implements IValueManifest {
             }
         }
         logger.info("value manifest load success, dir = {}, index.file.count = {}", dir, typeMap.size());
+    }
+
+    @Override
+    public Map<Long, BlockType> getFileIds() {
+        return new HashMap<>(typeMap);
     }
 
     @Override
