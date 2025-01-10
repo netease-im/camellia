@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants;
 /**
  * Created by caojiajun on 2025/1/2
  */
-public class EmbeddedStorageConstants {
+public class LocalStorageConstants {
 
     public static final int _4k = 4*1024;
     public static final int _32k = 32*1024;

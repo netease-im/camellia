@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -38,7 +38,7 @@ public class KeyManifest implements IKeyManifest {
 
     public KeyManifest(String dir) {
         this.dir = dir;
-        this.fileName = dir + "/key.manifest";
+        this.fileName = FileNames.keyManifestFile(dir);
     }
 
     @Override
@@ -49,11 +49,7 @@ public class KeyManifest implements IKeyManifest {
     @Override
     public void load() throws IOException {
         logger.info("try load key.manifest.file = {}", fileName);
-        File file = new File(fileName);
-        if (!file.exists()) {
-            boolean newFile = file.createNewFile();
-            logger.info("create key.manifest.file = {}, result = {}", fileName, newFile);
-        }
+        FileNames.createKeyManifestFileIfNotExists(dir);
         fileChannel = FileChannel.open(Paths.get(fileName), StandardOpenOption.READ, StandardOpenOption.WRITE);
         if (fileChannel.size() == 0) {
             ByteBuffer buffer1 = ByteBuffer.wrap(magic_header);
@@ -87,9 +83,9 @@ public class KeyManifest implements IKeyManifest {
                 if (fileId == 0) {
                     continue;
                 }
-                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(EmbeddedStorageConstants.key_manifest_bit_size));
-                int bitsStart = (int)(offset / EmbeddedStorageConstants._64k);
-                int bitsEnd = (int)((offset + capacity) / EmbeddedStorageConstants._64k);
+                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(LocalStorageConstants.key_manifest_bit_size));
+                int bitsStart = (int)(offset / LocalStorageConstants._64k);
+                int bitsEnd = (int)((offset + capacity) / LocalStorageConstants._64k);
                 for (int index=bitsStart; index<bitsEnd; index++) {
                     bits.set(index, true);
                 }
@@ -130,17 +126,17 @@ public class KeyManifest implements IKeyManifest {
             for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
                 Long fileId = entry.getKey();
                 BitSet bits = entry.getValue();
-                for (int i = 0; i< EmbeddedStorageConstants.key_manifest_bit_size; i++) {
+                for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size; i++) {
                     boolean used = bits.get(i);
                     if (!used) {
-                        update(slot, fileId, (long) i * EmbeddedStorageConstants._64k, EmbeddedStorageConstants._64k);
+                        update(slot, fileId, (long) i * LocalStorageConstants._64k, LocalStorageConstants._64k);
                         bits.set(i, true);
                         return slotInfoMap.get(slot);
                     }
                 }
             }
             long fileId = initFileId();
-            update(slot, fileId, 0, EmbeddedStorageConstants._64k);
+            update(slot, fileId, 0, LocalStorageConstants._64k);
             fileBitsMap.get(fileId).set(0, true);
             return slotInfoMap.get(slot);
         } finally {
@@ -159,12 +155,12 @@ public class KeyManifest implements IKeyManifest {
             long fileId = slotInfo.fileId();
             long offset = slotInfo.offset();
             int capacity = slotInfo.capacity();
-            int bitsStep = capacity / EmbeddedStorageConstants._64k;
+            int bitsStep = capacity / LocalStorageConstants._64k;
             BitSet bits = fileBitsMap.get(fileId);
-            int bitsStart = (int)(offset / EmbeddedStorageConstants._64k);
-            int bitsEnd = (int)((offset + capacity) / EmbeddedStorageConstants._64k);
+            int bitsStart = (int)(offset / LocalStorageConstants._64k);
+            int bitsEnd = (int)((offset + capacity) / LocalStorageConstants._64k);
             //直接顺延扩容
-            if (bitsStart + (bitsEnd - bitsStart) * 2 < EmbeddedStorageConstants.key_manifest_bit_size) {
+            if (bitsStart + (bitsEnd - bitsStart) * 2 < LocalStorageConstants.key_manifest_bit_size) {
                 boolean directExpand = true;
                 for (int i=bitsEnd; i<bitsEnd + bitsStep; i++) {
                     boolean used = bits.get(i);
@@ -184,8 +180,8 @@ public class KeyManifest implements IKeyManifest {
                 }
             }
             //使用同一个文件的空闲区域，优先复用其他slot回收的区域
-            if (EmbeddedStorageConstants.key_manifest_bit_size - bits.cardinality() >= bitsStep*2) {
-                for (int i = 0; i< EmbeddedStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
+            if (LocalStorageConstants.key_manifest_bit_size - bits.cardinality() >= bitsStep*2) {
+                for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
                     if (bits.get(i, bitsStep * 2).cardinality() == 0) {
                         //clear old
                         for (int j=bitsStart; j<bitsEnd; j++) {
@@ -196,14 +192,14 @@ public class KeyManifest implements IKeyManifest {
                             bits.set(j, true);
                         }
                         //update
-                        update(slot, fileId, (long) i * EmbeddedStorageConstants._64k, capacity*2);
+                        update(slot, fileId, (long) i * LocalStorageConstants._64k, capacity*2);
                         return slotInfoMap.get(slot);
                     }
                 }
             }
             //分配不出来就使用新文件
             fileId = initFileId();
-            update(slot, fileId, 0, EmbeddedStorageConstants._64k);
+            update(slot, fileId, 0, LocalStorageConstants._64k);
             fileBitsMap.get(fileId).set(0, true);
             return slotInfoMap.get(slot);
         } finally {
@@ -211,12 +207,13 @@ public class KeyManifest implements IKeyManifest {
         }
     }
 
-    private long initFileId() {
+    private long initFileId() throws IOException {
         long fileId = System.currentTimeMillis();
         while (fileBitsMap.containsKey(fileId)) {
             fileId ++;
         }
-        fileBitsMap.put(fileId, new BitSet(EmbeddedStorageConstants.key_manifest_bit_size));
+        fileBitsMap.put(fileId, new BitSet(LocalStorageConstants.key_manifest_bit_size));
+        FileNames.createKeyFile(dir, fileId);
         return fileId;
     }
 

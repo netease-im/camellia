@@ -6,8 +6,9 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandOnLocalStorage;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.ICommand;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
@@ -18,10 +19,14 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  * SET key value [NX | XX] [GET] [EX seconds | PX milliseconds | EXAT unix-time-seconds | PXAT unix-time-milliseconds | KEEPTTL]
  * Created by caojiajun on 2025/1/3
  */
-public class Set extends CommandOnLocalStorage {
+public class SetCommand extends ICommand {
 
     private static final int nx = 1;
     private static final int xx = 2;
+
+    public SetCommand(CommandConfig commandConfig) {
+        super(commandConfig);
+    }
 
     @Override
     public RedisCommand redisCommand() {
@@ -37,7 +42,7 @@ public class Set extends CommandOnLocalStorage {
     @Override
     protected Reply execute(short slot, Command command) throws Exception {
         byte[][] objects = command.getObjects();
-        CacheKey key = new CacheKey(objects[1]);
+        Key key = new Key(objects[1]);
         byte[] value = objects[2];
         int nxxx = -1;
         long expireTime = -1;
@@ -101,16 +106,14 @@ public class Set extends CommandOnLocalStorage {
         byte[] oldValue = keyInfo == null ? null : keyInfo.getExtra();
         if (keepTtl) {
             expireTime = keyInfo == null ? -1 : keyInfo.getExpireTime();
-            keyInfo = new KeyInfo(DataType.string);
+            keyInfo = new KeyInfo(DataType.string, key.key());
             keyInfo.setExpireTime(expireTime);
         } else if (expireTime > 0) {
-            keyInfo = new KeyInfo(DataType.string);
+            keyInfo = new KeyInfo(DataType.string, key.key());
             keyInfo.setExpireTime(expireTime);
         } else {
-            keyInfo = new KeyInfo(DataType.string);
+            keyInfo = new KeyInfo(DataType.string, key.key());
         }
-
-        walGroup.append(slot, command);
 
         if (key.key().length + value.length <= 128) {
             keyInfo.setExtra(value);
@@ -119,8 +122,6 @@ public class Set extends CommandOnLocalStorage {
             stringReadWrite.put(slot, keyInfo, value);
         }
         keyReadWrite.put(slot, keyInfo);
-
-        afterWrite(slot);
 
         if (get) {
             return new BulkReply(oldValue);

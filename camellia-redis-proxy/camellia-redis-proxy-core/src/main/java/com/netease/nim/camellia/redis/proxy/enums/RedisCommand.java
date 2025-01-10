@@ -17,6 +17,7 @@ public enum RedisCommand {
     TIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     PROXY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.None),//for proxy self
     KV(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),//for proxy self in kv
+    MEMFLUSH(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.None),//for proxy self in local storage
     SENTINEL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     READONLY(CommandSupportType.FULL_SUPPORT,  Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),

@@ -5,8 +5,9 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandOnLocalStorage;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.ICommand;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 
@@ -15,7 +16,11 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
  * <p>
  * Created by caojiajun on 2025/1/3
  */
-public class Get extends CommandOnLocalStorage {
+public class GetCommand extends ICommand {
+
+    public GetCommand(CommandConfig commandConfig) {
+        super(commandConfig);
+    }
 
     @Override
     public RedisCommand redisCommand() {
@@ -31,7 +36,7 @@ public class Get extends CommandOnLocalStorage {
     @Override
     protected Reply execute(short slot, Command command) throws Exception {
         byte[][] objects = command.getObjects();
-        CacheKey key = new CacheKey(objects[1]);
+        Key key = new Key(objects[1]);
         KeyInfo keyInfo = keyReadWrite.get(slot, key);
         if (keyInfo == null) {
             return BulkReply.NIL_REPLY;

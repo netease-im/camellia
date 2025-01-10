@@ -1,12 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block.KeyBlockReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist.KeyFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist.KeyFlushTask;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +23,14 @@ public class SlotKeyReadWrite {
 
     private static final Logger logger = LoggerFactory.getLogger(SlotKeyReadWrite.class);
 
+    private long lastFlushTime = TimeCache.currentMillis;
+
     private final short slot;
     private final KeyFlushExecutor executor;
     private final KeyBlockReadWrite blockCache;
 
-    private final Map<CacheKey, KeyInfo> mutable = new HashMap<>();
-    private final Map<CacheKey, KeyInfo> immutable = new HashMap<>();
+    private final Map<Key, KeyInfo> mutable = new HashMap<>();
+    private final Map<Key, KeyInfo> immutable = new HashMap<>();
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
@@ -42,7 +45,7 @@ public class SlotKeyReadWrite {
      * @param key key
      * @return key
      */
-    public KeyInfo get(CacheKey key) throws IOException  {
+    public KeyInfo get(Key key) throws IOException  {
         KeyInfo keyInfo = mutable.get(key);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
@@ -63,7 +66,7 @@ public class SlotKeyReadWrite {
      * @param key key
      * @return key
      */
-    public KeyInfo getForCompact(CacheKey key) throws IOException  {
+    public KeyInfo getForCompact(Key key) throws IOException  {
         KeyInfo keyInfo = mutable.get(key);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
@@ -84,14 +87,14 @@ public class SlotKeyReadWrite {
      * @param key key
      */
     public void put(KeyInfo key) {
-        mutable.put(new CacheKey(key.getKey()), key);
+        mutable.put(new Key(key.getKey()), key);
     }
 
     /**
      * 删除一个key
      * @param key key
      */
-    public void delete(CacheKey key) {
+    public void delete(Key key) {
         mutable.put(key, KeyInfo.DELETE);
     }
 
@@ -136,11 +139,12 @@ public class SlotKeyReadWrite {
         if (flushStatus != FlushStatus.FLUSH_OK) {
             return false;
         }
-        return mutable.size() >= 200;
+        return mutable.size() >= 200 || TimeCache.currentMillis - lastFlushTime > 10*1000;
     }
 
     private void flushDone() {
         immutable.clear();
         flushStatus = FlushStatus.FLUSH_OK;
+        lastFlushTime = TimeCache.currentMillis;
     }
 }

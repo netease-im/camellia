@@ -7,22 +7,24 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.Compa
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.WalGroup;
-
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by caojiajun on 2025/1/3
  */
-public abstract class CommandOnLocalStorage {
-
-    protected WalGroup walGroup;
+public abstract class ICommand {
 
     protected CompactExecutor compactExecutor;
 
     protected KeyReadWrite keyReadWrite;
     protected StringReadWrite stringReadWrite;
+
+    public ICommand(CommandConfig commandConfig) {
+        compactExecutor = commandConfig.getCompactExecutor();
+        keyReadWrite = commandConfig.getReadWrite().getKeyReadWrite();
+        stringReadWrite = commandConfig.getReadWrite().getStringReadWrite();
+    }
 
     /**
      * redis command of commander
@@ -36,6 +38,16 @@ public abstract class CommandOnLocalStorage {
      * @return success or fail
      */
     protected abstract boolean parse(Command command);
+
+    /**
+     * for read command run to completion
+     * @param slot slot
+     * @param command command
+     * @return reply if run-to-completion success
+     */
+    public Reply runToCompletion(short slot, Command command) {
+        return null;
+    }
 
     /**
      * execute command

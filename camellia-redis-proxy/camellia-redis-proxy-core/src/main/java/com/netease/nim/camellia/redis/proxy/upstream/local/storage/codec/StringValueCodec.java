@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants.block_header_len;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.block_header_len;
 
 /**
  * Created by caojiajun on 2025/1/6

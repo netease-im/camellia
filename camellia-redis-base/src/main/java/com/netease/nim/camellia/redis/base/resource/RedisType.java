@@ -87,9 +87,9 @@ public enum RedisType {
     //仅camellia-redis-proxy支持
     RedisKV("redis-kv://", false),
 
-    //格式：embedded-storage:/home/data
+    //格式：redis-local-storage:/home/data
     //仅camellia-redis-proxy支持
-    EmbeddedStorage("embedded-storage:", false),
+    LocalStorage("redis-local-storage:", false),
 
     ;
     private final String prefix;

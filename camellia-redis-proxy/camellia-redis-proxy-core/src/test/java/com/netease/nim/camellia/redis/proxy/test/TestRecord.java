@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.test;
 
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockLocation;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.ValueLocation;
@@ -19,11 +19,11 @@ public class TestRecord {
 
     @Test
     public void test() {
-        int size = BlockType._4k.valueManifestSize(EmbeddedStorageConstants.data_file_size);
+        int size = BlockType._4k.valueManifestSize(LocalStorageConstants.data_file_size);
         String s = Utils.humanReadableByteCountBin(size);//*.index
         System.out.println(s);
 
-        int i = (int) (2 * EmbeddedStorageConstants.data_file_size / 4096);
+        int i = (int) (2 * LocalStorageConstants.data_file_size / 4096);
         String s1 = Utils.humanReadableByteCountBin(i);//*.slot
         System.out.println(s1);
     }
@@ -60,8 +60,8 @@ public class TestRecord {
 
     @Test
     public void test3() {
-        CacheKey cacheKey1 = new CacheKey("123".getBytes(StandardCharsets.UTF_8));
-        CacheKey cacheKey2 = new CacheKey("123".getBytes(StandardCharsets.UTF_8));
+        Key cacheKey1 = new Key("123".getBytes(StandardCharsets.UTF_8));
+        Key cacheKey2 = new Key("123".getBytes(StandardCharsets.UTF_8));
 
         Assert.assertEquals(cacheKey1, cacheKey2);
         Assert.assertEquals(cacheKey1.hashCode(), cacheKey2.hashCode());
@@ -69,8 +69,8 @@ public class TestRecord {
 
     @Test
     public void test4() {
-        CacheKey cacheKey1 = new CacheKey("123".getBytes(StandardCharsets.UTF_8));
-        CacheKey cacheKey2 = new CacheKey("1235".getBytes(StandardCharsets.UTF_8));
+        Key cacheKey1 = new Key("123".getBytes(StandardCharsets.UTF_8));
+        Key cacheKey2 = new Key("1235".getBytes(StandardCharsets.UTF_8));
 
         Assert.assertNotEquals(cacheKey1, cacheKey2);
         Assert.assertNotEquals(cacheKey1.hashCode(), cacheKey2.hashCode());

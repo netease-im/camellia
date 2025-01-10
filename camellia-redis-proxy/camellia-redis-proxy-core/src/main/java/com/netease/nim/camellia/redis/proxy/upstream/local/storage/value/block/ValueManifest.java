@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block;
 
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants.data_file_size;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.data_file_size;
 
 /**
  * Created by caojiajun on 2025/1/6
@@ -226,24 +227,11 @@ public class ValueManifest implements IValueManifest {
         bits2Map.put(fileId, new BitSet(bitSize));
         lockMap.put(fileId, new ReentrantLock());
         allocateOffsetMap.put(fileId, 0);
-        String indexFileName = dir + "/" + fileId + "_" + blockType.getType() + ".index";
-        String slotFileName = dir + "/" + fileId + "_" + blockType.getType() + ".slot";
-        String dataFileName = dir + "/" + fileId + "_" + blockType.getType() + ".data";
-        File indexFile = new File(indexFileName);
-        if (!indexFile.exists()) {
-            boolean newFile = indexFile.createNewFile();
-            logger.info("create index.file = {}, result = {}", indexFileName, newFile);
-        }
-        File slotFile = new File(slotFileName);
-        if (!slotFile.exists()) {
-            boolean newFile = slotFile.createNewFile();
-            logger.info("create slot.file = {}, result = {}", slotFileName, newFile);
-        }
-        File dataFile = new File(dataFileName);
-        if (!dataFile.exists()) {
-            boolean newFile = dataFile.createNewFile();
-            logger.info("create data.file = {}, result = {}", indexFileName, newFile);
-        }
+
+        String indexFileName = FileNames.createStringIndexFileIfNotExists(dir, blockType, fileId);
+        String slotFileName = FileNames.createStringSlotFileIfNotExists(dir, blockType, fileId);
+        FileNames.createStringDataFileIfNotExists(dir, blockType, fileId);
+
         {
             FileChannel fileChannel = FileChannel.open(Paths.get(indexFileName), StandardOpenOption.READ, StandardOpenOption.WRITE);
             MappedByteBuffer map = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, bitSize / 8);
@@ -293,12 +281,9 @@ public class ValueManifest implements IValueManifest {
         lockMap.put(fileId, new ReentrantLock());
         bitsMmp.put(fileId, fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, blockType.valueManifestSize(data_file_size)));
 
-        File slotFile = new File(dir + "/" + fileId + "_" + blockType.getType() + ".slot");
-        if (!slotFile.exists()) {
-            boolean newFile = slotFile.createNewFile();
-            logger.warn("create slot.file = {} for not exists, result = {}", slotFile.getName(), newFile);
-        }
-        FileChannel slotFileChannel = FileChannel.open(slotFile.getAbsoluteFile().toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE);
+        String slotFile = FileNames.createStringSlotFileIfNotExists(dir, blockType, fileId);
+
+        FileChannel slotFileChannel = FileChannel.open(Paths.get(slotFile), StandardOpenOption.READ, StandardOpenOption.WRITE);
         MappedByteBuffer map = slotFileChannel.map(FileChannel.MapMode.READ_WRITE, 0, blockType.valueSlotManifestSize(data_file_size));
         slotsMmp.put(fileId, map);
     }

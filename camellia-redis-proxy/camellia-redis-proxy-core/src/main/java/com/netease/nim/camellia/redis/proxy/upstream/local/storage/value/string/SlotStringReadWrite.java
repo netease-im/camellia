@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.StringValueFlushTask;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.ValueFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block.StringBlockReadWrite;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
  * Created by caojiajun on 2025/1/3
  */
 public class SlotStringReadWrite {
+
+    private long lastFlushTime = TimeCache.currentMillis;
 
     private final short slot;
     private final StringBlockReadWrite stringBlockReadWrite;
@@ -75,11 +78,12 @@ public class SlotStringReadWrite {
         if (flushStatus != FlushStatus.FLUSH_OK) {
             return false;
         }
-        return mutable.size() >= 200;
+        return mutable.size() >= 200 || TimeCache.currentMillis - lastFlushTime > 10*1000;
     }
 
     private void flushDone() {
         immutable.clear();
         flushStatus = FlushStatus.FLUSH_OK;
+        lastFlushTime = TimeCache.currentMillis;
     }
 }

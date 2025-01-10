@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key;
 
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
@@ -23,7 +22,7 @@ public class KeyReadWrite {
 
     private final ConcurrentHashMap<Short, SlotKeyReadWrite> map = new ConcurrentHashMap<>();
 
-    private final LRUCache<CacheKey, KeyInfo> cache;
+    private final LRUCache<Key, KeyInfo> cache;
 
     public KeyReadWrite(KeyFlushExecutor executor, KeyBlockReadWrite blockCache) {
         this.executor = executor;
@@ -36,10 +35,14 @@ public class KeyReadWrite {
         return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotKeyReadWrite(slot, executor, blockCache));
     }
 
-    public KeyInfo get(short slot, CacheKey key) throws IOException {
+    public KeyInfo get(short slot, Key key) throws IOException {
         KeyInfo keyInfo = cache.get(key);
         if (keyInfo != null) {
             if (keyInfo == KeyInfo.DELETE) {
+                return null;
+            }
+            if (keyInfo.isExpire()) {
+                cache.put(key, KeyInfo.DELETE);
                 return null;
             }
             return keyInfo;
@@ -57,7 +60,7 @@ public class KeyReadWrite {
         return keyInfo;
     }
 
-    public KeyInfo getForCompact(short slot, CacheKey key) throws IOException {
+    public KeyInfo getForCompact(short slot, Key key) throws IOException {
         KeyInfo keyInfo = cache.get(key);
         if (keyInfo != null) {
             if (keyInfo == KeyInfo.DELETE) {
@@ -76,11 +79,11 @@ public class KeyReadWrite {
     }
 
     public void put(short slot, KeyInfo keyInfo) {
-        cache.put(new CacheKey(keyInfo.getKey()), keyInfo);
+        cache.put(new Key(keyInfo.getKey()), keyInfo);
         get(slot).put(keyInfo);
     }
 
-    public void delete(short slot, CacheKey key) {
+    public void delete(short slot, Key key) {
         cache.put(key, KeyInfo.DELETE);
         get(slot).delete(key);
     }

@@ -1,7 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageReadWrite;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueDecodeResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
@@ -38,12 +39,11 @@ public class CompactExecutor {
     private final ConcurrentHashMap<String, Integer> nextOffsetMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Short, BlockType> nextBlockTypeMap = new ConcurrentHashMap<>();
 
-    public CompactExecutor(IValueManifest valueManifest, KeyReadWrite keyReadWrite,
-                           StringReadWrite stringReadWrite, StringBlockReadWrite stringBlockReadWrite) {
-        this.valueManifest = valueManifest;
-        this.keyReadWrite = keyReadWrite;
-        this.stringReadWrite = stringReadWrite;
-        this.stringBlockReadWrite = stringBlockReadWrite;
+    public CompactExecutor(LocalStorageReadWrite readWrite) {
+        this.valueManifest = readWrite.getValueManifest();
+        this.keyReadWrite = readWrite.getKeyReadWrite();
+        this.stringReadWrite = readWrite.getStringReadWrite();
+        this.stringBlockReadWrite = readWrite.getStringBlockReadWrite();
         updateConf();
         ProxyDynamicConf.registerCallback(this::updateConf);
     }
@@ -78,7 +78,7 @@ public class CompactExecutor {
                 boolean recycle = false;
                 for (byte[] data : list) {
                     StringValue stringValue = StringValue.decode(data);
-                    KeyInfo keyInfo = keyReadWrite.getForCompact(slot, new CacheKey(stringValue.key()));
+                    KeyInfo keyInfo = keyReadWrite.getForCompact(slot, new Key(stringValue.key()));
                     if (keyInfo == null) {
                         continue;
                     }

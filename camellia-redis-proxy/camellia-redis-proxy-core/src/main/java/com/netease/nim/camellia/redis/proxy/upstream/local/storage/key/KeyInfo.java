@@ -27,6 +27,9 @@ public class KeyInfo implements Marshallable, EstimateSizeValue {
 
     @Override
     public long estimateSize() {
+        if (this == DELETE) {
+            return 0;
+        }
         long size = 1 + 1 + key.length + 8;
         if (valueLocation != null) {
             size += 16;
@@ -67,8 +70,9 @@ public class KeyInfo implements Marshallable, EstimateSizeValue {
     public KeyInfo() {
     }
 
-    public KeyInfo(DataType dataType) {
+    public KeyInfo(DataType dataType, byte[] key) {
         this.dataType = dataType;
+        this.key = key;
     }
 
     public DataType getDataType() {

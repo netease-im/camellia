@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block;
 
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 
 
 /**
@@ -45,13 +45,13 @@ public enum BlockType {
     }
 
     public static BlockType fromData(byte[] data) {
-        if (data.length + 4 + 2 < EmbeddedStorageConstants._4k) {
+        if (data.length + 4 + 2 < LocalStorageConstants._4k) {
             return BlockType._4k;
-        } else if (data.length + 4 + 2 < EmbeddedStorageConstants._32k) {
+        } else if (data.length + 4 + 2 < LocalStorageConstants._32k) {
             return BlockType._32k;
-        } else if (data.length + 4 + 4 < EmbeddedStorageConstants._256k) {
+        } else if (data.length + 4 + 4 < LocalStorageConstants._256k) {
             return BlockType._256k;
-        } else if (data.length + 4 + 4 < EmbeddedStorageConstants._1024k) {
+        } else if (data.length + 4 + 4 < LocalStorageConstants._1024k) {
             return BlockType._1024k;
         } else {
             throw new IllegalArgumentException("data too long");

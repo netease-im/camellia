@@ -1,13 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist;
 
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheKey;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.KeyCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.IKeyManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.util.KeyHashUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block.KeyBlockReadWrite;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.KeyManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.SlotInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants.*;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.*;
 
 /**
  * Created by caojiajun on 2025/1/2
@@ -26,10 +26,10 @@ public class KeyFlushExecutor {
     private static final Logger logger = LoggerFactory.getLogger(KeyFlushExecutor.class);
 
     private final FlushExecutor executor;
-    private final KeyManifest keyManifest;
+    private final IKeyManifest keyManifest;
     private final KeyBlockReadWrite keyBlockReadWrite;
 
-    public KeyFlushExecutor(FlushExecutor executor, KeyManifest keyManifest, KeyBlockReadWrite keyBlockReadWrite) {
+    public KeyFlushExecutor(FlushExecutor executor, IKeyManifest keyManifest, KeyBlockReadWrite keyBlockReadWrite) {
         this.executor = executor;
         this.keyManifest = keyManifest;
         this.keyBlockReadWrite = keyBlockReadWrite;
@@ -56,7 +56,7 @@ public class KeyFlushExecutor {
 
     private void execute(KeyFlushTask task) throws Exception {
         short slot = task.slot();
-        Map<CacheKey, KeyInfo> flushKeys = task.flushKeys();
+        Map<Key, KeyInfo> flushKeys = task.flushKeys();
         SlotInfo source = keyManifest.get(slot);
         if (source == null) {
             source = keyManifest.init(slot);
@@ -80,16 +80,16 @@ public class KeyFlushExecutor {
         keyBlockReadWrite.writeBlocks(fileId, offset, new byte[capacity]);
     }
 
-    private WriteResult writeTo(SlotInfo source, SlotInfo target, Map<CacheKey, KeyInfo> flushKeys, WriteResult lastWrite) throws IOException {
-        Map<Integer, Map<CacheKey, KeyInfo>> writeBuffer = new HashMap<>();
+    private WriteResult writeTo(SlotInfo source, SlotInfo target, Map<Key, KeyInfo> flushKeys, WriteResult lastWrite) throws IOException {
+        Map<Integer, Map<Key, KeyInfo>> writeBuffer = new HashMap<>();
         int capacity = target.capacity();
         int bucketSize = capacity / _4k;
         {
-            for (Map.Entry<CacheKey, KeyInfo> entry : flushKeys.entrySet()) {
-                CacheKey key = entry.getKey();
+            for (Map.Entry<Key, KeyInfo> entry : flushKeys.entrySet()) {
+                Key key = entry.getKey();
                 KeyInfo data = entry.getValue();
                 int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
-                Map<CacheKey, KeyInfo> keys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
+                Map<Key, KeyInfo> keys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
                 keys.put(key, data);
             }
         }
@@ -100,11 +100,11 @@ public class KeyFlushExecutor {
         if (source.equals(target)) {
             long fileId = source.fileId();
             long offset = source.offset();
-            for (Map.Entry<Integer, Map<CacheKey, KeyInfo>> entry : writeBuffer.entrySet()) {
+            for (Map.Entry<Integer, Map<Key, KeyInfo>> entry : writeBuffer.entrySet()) {
                 Integer bucket = entry.getKey();
-                Map<CacheKey, KeyInfo> newKeys = entry.getValue();
+                Map<Key, KeyInfo> newKeys = entry.getValue();
                 long bucketOffset = offset + bucket * _4k;
-                Map<CacheKey, KeyInfo> oldKeys = null;
+                Map<Key, KeyInfo> oldKeys = null;
                 if (lastWrite != null) {
                     oldKeys = lastWrite.oldBucketKeys.get(bucket);
                 }
@@ -122,19 +122,19 @@ public class KeyFlushExecutor {
                 tasks.put(bucketOffset, new WriteTask(bucketOffset, encoded));
             }
         } else {
-            Map<CacheKey, KeyInfo> oldAllKeys;
+            Map<Key, KeyInfo> oldAllKeys;
             if (lastWrite == null || lastWrite.oldAllKeys == null) {
                 byte[] oldAll = keyBlockReadWrite.readBlocks(source.fileId(), source.offset(), source.capacity());
                 oldAllKeys = KeyCodec.decodeSlot(oldAll);
             } else {
                 oldAllKeys = lastWrite.oldAllKeys;
             }
-            for (Map.Entry<CacheKey, KeyInfo> entry : oldAllKeys.entrySet()) {
+            for (Map.Entry<Key, KeyInfo> entry : oldAllKeys.entrySet()) {
                 int bucket = KeyHashUtils.hash(entry.getKey().key()) % bucketSize;
-                Map<CacheKey, KeyInfo> newKeys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
+                Map<Key, KeyInfo> newKeys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
                 merge(newKeys, entry);
             }
-            for (Map.Entry<Integer, Map<CacheKey, KeyInfo>> entry : writeBuffer.entrySet()) {
+            for (Map.Entry<Integer, Map<Key, KeyInfo>> entry : writeBuffer.entrySet()) {
                 Integer bucket = entry.getKey();
                 byte[] encoded = KeyCodec.encodeBucket(entry.getValue());
                 if (encoded == null) {
@@ -157,8 +157,8 @@ public class KeyFlushExecutor {
 
     private static class WriteResult {
         boolean success;
-        Map<CacheKey, KeyInfo> oldAllKeys;
-        Map<Integer, Map<CacheKey, KeyInfo>> oldBucketKeys = new HashMap<>();
+        Map<Key, KeyInfo> oldAllKeys;
+        Map<Integer, Map<Key, KeyInfo>> oldBucketKeys = new HashMap<>();
     }
 
     private static class WriteTask {
@@ -210,7 +210,7 @@ public class KeyFlushExecutor {
         }
     }
 
-    private void merge(Map<CacheKey, KeyInfo> newKeys, Map.Entry<CacheKey, KeyInfo> entry) {
+    private void merge(Map<Key, KeyInfo> newKeys, Map.Entry<Key, KeyInfo> entry) {
         KeyInfo key = newKeys.get(entry.getKey());
         if (key == KeyInfo.DELETE) {
             return;
@@ -220,8 +220,8 @@ public class KeyFlushExecutor {
         }
     }
 
-    private void merge(Map<CacheKey, KeyInfo> newKeys, Map<CacheKey, KeyInfo> oldKeys) {
-        for (Map.Entry<CacheKey, KeyInfo> entry : oldKeys.entrySet()) {
+    private void merge(Map<Key, KeyInfo> newKeys, Map<Key, KeyInfo> oldKeys) {
+        for (Map.Entry<Key, KeyInfo> entry : oldKeys.entrySet()) {
             merge(newKeys, entry);
         }
     }

@@ -35,6 +35,7 @@ camellia-redis-proxy:
     local:
       type: simple #simple、complex
       resource: redis://@127.0.0.1:6379
+#      resource: redis-local-storage:/Users/caojiajun/temp/local_storage
 #      resource: redis-uds://@/Users/caojiajun/temp/redis.sock
 #      resource: rediss://@127.0.0.1:6379
 #      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605

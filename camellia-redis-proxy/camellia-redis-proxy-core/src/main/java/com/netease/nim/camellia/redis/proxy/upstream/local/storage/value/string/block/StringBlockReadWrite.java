@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCach
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.SizeCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueDecodeResult;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockLocation;
@@ -13,7 +14,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.I
 import java.io.IOException;
 import java.util.List;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.EmbeddedStorageConstants._4k;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._4k;
 
 /**
  * Created by caojiajun on 2025/1/6
@@ -36,7 +37,7 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
     }
 
     private String file(BlockType blockType, long fileId) {
-        return valueManifest.dir() + "/" + fileId + "_" + blockType.getType() + ".data";
+        return FileNames.stringBlockFile(valueManifest.dir(), blockType, fileId);
     }
 
     @Override
@@ -94,7 +95,7 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
         }
         String file = file(blockType, fileId);
         block = fileReadWrite.read(file, offset, blockType.getBlockSize());
-        writeCache.put(cacheKey, block);;
+        writeCache.put(cacheKey, block);
         return block;
     }
 

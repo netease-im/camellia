@@ -31,7 +31,7 @@ public class CacheCapacityConfigParser {
     }
 
     private static long bytes(String string) {
-        int size = Integer.parseInt(string.substring(string.length() - 2));
+        int size = Integer.parseInt(string.substring(0, string.length() - 1));
         if (string.endsWith("M")) {
             return size * 1024 * 1024L;
         } else if (string.endsWith("G")) {
