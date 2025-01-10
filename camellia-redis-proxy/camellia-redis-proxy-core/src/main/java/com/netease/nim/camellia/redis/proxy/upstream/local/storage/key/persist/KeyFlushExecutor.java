@@ -77,6 +77,10 @@ public class KeyFlushExecutor {
         long fileId = slotInfo.fileId();
         long offset = slotInfo.offset();
         int capacity = slotInfo.capacity();
+        int bucketSize = capacity / _4k;
+        for (int i=0; i<bucketSize; i++) {
+            keyBlockReadWrite.clearBlockCache(fileId, offset + i * _4k);
+        }
         keyBlockReadWrite.writeBlocks(fileId, offset, new byte[capacity]);
     }
 

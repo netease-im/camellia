@@ -114,6 +114,13 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
     }
 
     @Override
+    public void clearBlockCache(long fileId, long offset) {
+        String key = fileId + "|" + offset;
+        readCache.delete(key);
+        writeCache.delete(key);
+    }
+
+    @Override
     public byte[] getBlock(BlockType blockType, long fileId, long offset) throws IOException {
         String cacheKey = fileId + "|" + offset;
         byte[] block = readCache.get(cacheKey);

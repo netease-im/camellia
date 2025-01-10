@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.*;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._4k;
 
 /**
  * Created by caojiajun on 2025/1/2
@@ -72,8 +72,9 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         int capacity = slotInfo.capacity();
         int bucketSize = capacity / _4k;
         int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
+        long bucketOffset = offset + bucket * _4k;
 
-        String cacheKey = fileId + "|" + offset;
+        String cacheKey = fileId + "|" + bucketOffset;
         byte[] block = readCache.get(cacheKey);
         if (block == null) {
             block = writeCache.get(cacheKey);
@@ -83,7 +84,7 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
             }
         }
         if (block == null) {
-            block = fileReadWrite.read(file(fileId), offset + bucket * _4k, _4k);
+            block = fileReadWrite.read(file(fileId), bucketOffset, _4k);
             readCache.put(cacheKey, block);
         }
         Map<Key, KeyInfo> map = KeyCodec.decodeBucket(block);
@@ -105,14 +106,15 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         int capacity = slotInfo.capacity();
         int bucketSize = capacity / _4k;
         int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
+        long bucketOffset = offset + bucket * _4k;
 
-        String cacheKey = fileId + "|" + offset;
+        String cacheKey = fileId + "|" + bucketOffset;
         byte[] block = readCache.get(cacheKey);
         if (block == null) {
             block = writeCache.get(cacheKey);
         }
         if (block == null) {
-            block = fileReadWrite.read(file(fileId), offset, bucket * _4k);
+            block = fileReadWrite.read(file(fileId), bucketOffset, _4k);
             writeCache.put(cacheKey, block);
         }
         Map<Key, KeyInfo> map = KeyCodec.decodeBucket(block);
@@ -124,11 +126,18 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
     }
 
     @Override
-    public void updateBlockCache(long fileId, long offset, byte[] block) {
+    public void clearBlockCache(long fileId, long bucketOffset) {
+        String cacheKey = fileId + "|" + bucketOffset;
+        readCache.delete(cacheKey);
+        writeCache.delete(cacheKey);
+    }
+
+    @Override
+    public void updateBlockCache(long fileId, long bucketOffset, byte[] block) {
         if (block.length != _4k) {
             return;
         }
-        String cacheKey = fileId + "|" + offset;
+        String cacheKey = fileId + "|" + bucketOffset;
         byte[] cache = readCache.get(cacheKey);
         if (cache != null) {
             readCache.put(cacheKey, block);
@@ -138,8 +147,8 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
     }
 
     @Override
-    public byte[] getBlock(long fileId, long offset) throws IOException {
-        String cacheKey = fileId + "|" + offset;
+    public byte[] getBlock(long fileId, long bucketOffset) throws IOException {
+        String cacheKey = fileId + "|" + bucketOffset;
         byte[] block = readCache.get(cacheKey);
         if (block == null) {
             block = writeCache.get(cacheKey);
@@ -147,7 +156,7 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         if (block != null) {
             return block;
         }
-        return fileReadWrite.read(file(fileId), offset, _4k);
+        return fileReadWrite.read(file(fileId), bucketOffset, _4k);
     }
 
     @Override

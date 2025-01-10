@@ -17,6 +17,13 @@ public interface IBlockReadWrite {
     void updateBlockCache(long fileId, long offset, byte[] block);
 
     /**
+     * clear block cche
+     * @param fileId fileId
+     * @param offset offset
+     */
+    void clearBlockCache(long fileId, long offset);
+
+    /**
      * write one or more blocks
      * @param fileId fileId
      * @param offset offset
