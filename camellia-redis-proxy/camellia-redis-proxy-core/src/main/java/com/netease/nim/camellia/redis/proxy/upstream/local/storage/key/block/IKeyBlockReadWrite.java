@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block;
 
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.IBlockReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
@@ -12,23 +13,16 @@ import java.io.IOException;
  */
 public interface IKeyBlockReadWrite extends IBlockReadWrite {
 
-    /**
-     * 获取一个key
-     * @param slot slot
-     * @param key key
-     * @return key
-     * @throws IOException exception
-     */
-    KeyInfo get(short slot, Key key) throws IOException;
 
     /**
      * 获取一个key
      * @param slot slot
      * @param key key
+     * @param cacheType cache type
      * @return key
      * @throws IOException exception
      */
-    KeyInfo getForCompact(short slot, Key key) throws IOException;
+    KeyInfo get(short slot, Key key, CacheType cacheType) throws IOException;
 
     /**
      * get block

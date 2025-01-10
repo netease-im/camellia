@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushStatus;
@@ -55,7 +56,7 @@ public class SlotKeyReadWrite {
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
-        keyInfo = keyBlockReadWrite.get(slot, key);
+        keyInfo = keyBlockReadWrite.get(slot, key, CacheType.read);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
@@ -76,7 +77,7 @@ public class SlotKeyReadWrite {
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }
-        keyInfo = keyBlockReadWrite.getForCompact(slot, key);
+        keyInfo = keyBlockReadWrite.get(slot, key, CacheType.write);
         if (keyInfo == KeyInfo.DELETE) {
             return null;
         }

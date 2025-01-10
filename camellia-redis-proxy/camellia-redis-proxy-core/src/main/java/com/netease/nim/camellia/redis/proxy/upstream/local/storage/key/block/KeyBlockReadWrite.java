@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block;
 
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
@@ -62,13 +63,37 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
     }
 
     @Override
-    public KeyInfo get(short slot, Key key) throws IOException {
-        return get0(slot, key, CacheType.read);
-    }
+    public KeyInfo get(short slot, Key key, CacheType cacheType) throws IOException {
+        SlotInfo slotInfo = keyManifest.get(slot);
+        if (slotInfo == null) {
+            return null;
+        }
+        long fileId = slotInfo.fileId();
+        long offset = slotInfo.offset();
+        int capacity = slotInfo.capacity();
+        int bucketSize = capacity / _4k;
+        int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
+        long bucketOffset = offset + bucket * _4k;
 
-    @Override
-    public KeyInfo getForCompact(short slot, Key key) throws IOException {
-        return get0(slot, key, CacheType.write);
+        String cacheKey = fileId + "|" + bucketOffset;
+        byte[] block = readCache.get(cacheKey);
+        if (block == null) {
+            block = writeCache.get(cacheKey);
+        }
+        if (block == null) {
+            block = fileReadWrite.read(file(fileId), bucketOffset, _4k);
+            if (cacheType == CacheType.write) {
+                writeCache.put(cacheKey, block);
+            } else if (cacheType == CacheType.read) {
+                readCache.put(cacheKey, block);
+            }
+        }
+        Map<Key, KeyInfo> map = KeyCodec.decodeBucket(block);
+        KeyInfo data = map.get(key);
+        if (data == null) {
+            return KeyInfo.DELETE;
+        }
+        return data;
     }
 
     @Override
@@ -115,43 +140,4 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         return fileReadWrite.read(file(fileId), offset, size);
     }
 
-    private static enum CacheType {
-        read,
-        write,
-        none,
-        ;
-    }
-
-    private KeyInfo get0(short slot, Key key, CacheType cacheType) throws IOException {
-        SlotInfo slotInfo = keyManifest.get(slot);
-        if (slotInfo == null) {
-            return null;
-        }
-        long fileId = slotInfo.fileId();
-        long offset = slotInfo.offset();
-        int capacity = slotInfo.capacity();
-        int bucketSize = capacity / _4k;
-        int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
-        long bucketOffset = offset + bucket * _4k;
-
-        String cacheKey = fileId + "|" + bucketOffset;
-        byte[] block = readCache.get(cacheKey);
-        if (block == null) {
-            block = writeCache.get(cacheKey);
-        }
-        if (block == null) {
-            block = fileReadWrite.read(file(fileId), bucketOffset, _4k);
-            if (cacheType == CacheType.write) {
-                writeCache.put(cacheKey, block);
-            } else if (cacheType == CacheType.read) {
-                readCache.put(cacheKey, block);
-            }
-        }
-        Map<Key, KeyInfo> map = KeyCodec.decodeBucket(block);
-        KeyInfo data = map.get(key);
-        if (data == null) {
-            return KeyInfo.DELETE;
-        }
-        return data;
-    }
 }
