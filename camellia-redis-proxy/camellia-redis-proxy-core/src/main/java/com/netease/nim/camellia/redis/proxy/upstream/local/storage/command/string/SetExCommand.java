@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.stri
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandConfig;
@@ -9,6 +10,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.IComm
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._1024k;
 
 /**
  * SETEX key seconds value
@@ -38,6 +41,10 @@ public class SetExCommand extends ICommand {
         byte[] key = objects[1];
         long seconds = Utils.bytesToNum(objects[2]);
         byte[] value = objects[3];
+
+        if (value.length > _1024k) {
+            return ErrorReply.VALUE_TOO_LONG;
+        }
 
         long expireTime = System.currentTimeMillis() + seconds * 1000L;
         KeyInfo keyInfo = new KeyInfo(DataType.string, key);

@@ -15,6 +15,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetComman
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._1024k;
+
 /**
  * SET key value [NX | XX] [GET] [EX seconds | PX milliseconds | EXAT unix-time-seconds | PXAT unix-time-milliseconds | KEEPTTL]
  * Created by caojiajun on 2025/1/3
@@ -44,6 +46,9 @@ public class SetCommand extends ICommand {
         byte[][] objects = command.getObjects();
         Key key = new Key(objects[1]);
         byte[] value = objects[2];
+        if (value.length > _1024k) {
+            return ErrorReply.VALUE_TOO_LONG;
+        }
         int nxxx = -1;
         long expireTime = -1;
         boolean get = false;

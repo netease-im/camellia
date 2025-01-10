@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string
 
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.SizeCalculator;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueDecodeResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
@@ -12,6 +13,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.B
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.IValueManifest;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._4k;
@@ -66,10 +68,15 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
         if (list.isEmpty()) {
             return null;
         }
-        if (list.size() > keyInfo.getValueLocation().offset()) {
+        if (list.size() <= keyInfo.getValueLocation().offset()) {
             return null;
         }
-        return list.get(keyInfo.getValueLocation().offset());
+        byte[] bytes = list.get(keyInfo.getValueLocation().offset());
+        StringValue stringValue = StringValue.decode(bytes);
+        if (Arrays.equals(stringValue.key(), keyInfo.getKey())) {
+            return stringValue.value();
+        }
+        return null;
     }
 
     @Override

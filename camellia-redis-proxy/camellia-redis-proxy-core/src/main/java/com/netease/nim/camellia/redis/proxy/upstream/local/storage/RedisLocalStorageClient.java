@@ -61,6 +61,12 @@ public class RedisLocalStorageClient implements IUpstreamClient {
                 sendNoneKeyCommand(redisCommand, command, future);
             } else {
                 List<byte[]> keys = command.getKeys();
+                for (byte[] key : keys) {
+                    if (key.length > 1024) {
+                        future.complete(ErrorReply.KEY_TOO_LONG);
+                        return;
+                    }
+                }
                 if (keys.size() == 1) {
                     byte[] key = keys.getFirst();
                     sendCommand(redisCommand, key, command, future);

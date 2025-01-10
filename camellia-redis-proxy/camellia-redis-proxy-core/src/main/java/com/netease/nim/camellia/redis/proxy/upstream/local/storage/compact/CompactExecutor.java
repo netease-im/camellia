@@ -100,6 +100,8 @@ public class CompactExecutor {
                         recycle = decodeResult.remaining() > BlockType._32k.getBlockSize();
                     } else if (blockType == BlockType._1024k) {
                         recycle = decodeResult.remaining() > BlockType._256k.getBlockSize();
+                    } else if (blockType == BlockType._10m) {
+                        recycle = decodeResult.remaining() > BlockType._1024k.getBlockSize();
                     }
                 }
                 if (recycle) {
@@ -149,7 +151,8 @@ public class CompactExecutor {
             case _4k -> nextBlockTypeMap.put(slot, BlockType._32k);
             case _32k -> nextBlockTypeMap.put(slot, BlockType._256k);
             case _256k -> nextBlockTypeMap.put(slot, BlockType._1024k);
-            case _1024k -> nextBlockTypeMap.put(slot, BlockType._4k);
+            case _1024k -> nextBlockTypeMap.put(slot, BlockType._10m);
+            case _10m -> nextBlockTypeMap.put(slot, BlockType._4k);
         }
         return blockType;
     }

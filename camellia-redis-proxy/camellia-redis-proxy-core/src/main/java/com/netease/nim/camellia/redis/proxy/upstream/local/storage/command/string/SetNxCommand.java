@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.stri
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.CommandConfig;
@@ -9,6 +10,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.IComm
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
+
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._1024k;
 
 /**
  * SETNX key value
@@ -37,6 +40,10 @@ public class SetNxCommand extends ICommand {
         byte[][] objects = command.getObjects();
         Key key = new Key(objects[1]);
         byte[] value = objects[2];
+
+        if (value.length > _1024k) {
+            return ErrorReply.VALUE_TOO_LONG;
+        }
 
         KeyInfo keyInfo = keyReadWrite.get(slot, key);
         if (keyInfo == null) {

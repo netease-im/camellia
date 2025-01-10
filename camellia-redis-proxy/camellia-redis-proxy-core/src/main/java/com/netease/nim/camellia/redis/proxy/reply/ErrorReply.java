@@ -45,6 +45,7 @@ public class ErrorReply implements Reply {
     public static final ErrorReply ILLEGAL_CLUSTER_HEATBEAT = new ErrorReply("ERR illegal cluster heatbeat");
 
     public static final ErrorReply KEY_TOO_LONG = new ErrorReply("ERR key too long");
+    public static final ErrorReply VALUE_TOO_LONG = new ErrorReply("ERR value too long");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
     private final String error;
