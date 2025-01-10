@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string;
 
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.SizeCalculator;
@@ -62,6 +63,21 @@ public class StringReadWrite {
             return bytes;
         }
         return get(slot).get(keyInfo);
+    }
+
+    public ValueWrapper<byte[]> getForRunToCompletion(short slot, KeyInfo keyInfo) {
+        Key key = new Key(keyInfo.getKey());
+        byte[] bytes1 = readCache.get(key);
+        if (bytes1 != null) {
+            return () -> bytes1;
+        }
+        byte[] bytes2 = writeCache.get(key);
+        if (bytes2 != null) {
+            readCache.put(key, bytes2);
+            writeCache.delete(key);
+            return () -> bytes2;
+        }
+        return get(slot).getForRunToCompletion(keyInfo);
     }
 
     public CompletableFuture<FlushResult> flush(short slot) throws IOException {

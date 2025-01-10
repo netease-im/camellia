@@ -106,7 +106,7 @@ public class KeyManifest implements IKeyManifest {
     }
 
     @Override
-    public SlotInfo get(short slot) throws IOException {
+    public SlotInfo get(short slot) {
         readWriteLock.readLock().lock();
         try {
             return slotInfoMap.get(slot);

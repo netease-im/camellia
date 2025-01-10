@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string;
 
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushStatus;
@@ -53,6 +54,18 @@ public class SlotStringReadWrite {
             return data;
         }
         return stringBlockReadWrite.get(keyInfo);
+    }
+
+    public ValueWrapper<byte[]> getForRunToCompletion(KeyInfo keyInfo) {
+        byte[] bytes1 = mutable.get(keyInfo);
+        if (bytes1 != null) {
+            return () -> bytes1;
+        }
+        byte[] bytes2 = immutable.get(keyInfo);
+        if (bytes2 != null) {
+            return () -> bytes2;
+        }
+        return null;
     }
 
     public CompletableFuture<FlushResult> flush() throws IOException {

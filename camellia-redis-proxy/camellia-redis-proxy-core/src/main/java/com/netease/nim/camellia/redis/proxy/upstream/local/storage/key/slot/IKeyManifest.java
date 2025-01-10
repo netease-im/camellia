@@ -25,9 +25,8 @@ public interface IKeyManifest {
      * 获取slot-info
      * @param slot slot
      * @return slot info
-     * @throws IOException exception
      */
-    SlotInfo get(short slot) throws IOException;
+    SlotInfo get(short slot) ;
 
     /**
      * init slot info

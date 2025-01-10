@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key;
 
+import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
@@ -33,6 +34,21 @@ public class KeyReadWrite {
 
     private SlotKeyReadWrite get(short slot) {
         return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotKeyReadWrite(slot, executor, blockCache));
+    }
+
+    public ValueWrapper<KeyInfo> getForRunToCompletion(short slot, Key key) {
+        KeyInfo keyInfo = cache.get(key);
+        if (keyInfo != null) {
+            if (keyInfo == KeyInfo.DELETE) {
+                return () -> null;
+            }
+            if (keyInfo.isExpire()) {
+                cache.put(key, KeyInfo.DELETE);
+                return () -> null;
+            }
+            return () -> keyInfo;
+        }
+        return get(slot).getForRunToCompletion(key);
     }
 
     public KeyInfo get(short slot, Key key) throws IOException {
