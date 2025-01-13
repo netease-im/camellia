@@ -186,7 +186,9 @@ public class ValueManifest implements IValueManifest {
         try {
             BitSet bitSet = bits1Map.get(fileId);
             Integer start = allocateOffsetMap.get(fileId);
-            for (int i=start; i<bitSet.size(); i++) {
+            BlockType blockType = blockType(fileId);
+            int size = blockType.valueBitSize(data_file_size);
+            for (int i=start; i<size; i++) {
                 boolean used = bitSet.get(i);
                 if (!used) {
                     bitSet.set(i, true);
@@ -218,7 +220,7 @@ public class ValueManifest implements IValueManifest {
     private long init(BlockType blockType) throws IOException {
         long fileId = System.currentTimeMillis();
         typeMap.put(fileId, blockType);
-        int bitSize = (int) (data_file_size / blockType.getBlockSize());
+        int bitSize = blockType.valueBitSize(data_file_size);
         bits1Map.put(fileId, new BitSet(bitSize));
         bits2Map.put(fileId, new BitSet(bitSize));
         lockMap.put(fileId, new ReentrantLock());

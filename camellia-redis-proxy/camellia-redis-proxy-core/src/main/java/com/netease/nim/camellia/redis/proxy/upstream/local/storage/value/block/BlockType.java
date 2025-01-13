@@ -70,4 +70,8 @@ public enum BlockType {
         int blockCount = (int) (dataFileCapacity / getBlockSize());
         return blockCount * 2;
     }
+
+    public int valueBitSize(long dataFileCapacity) {
+        return (int) (dataFileCapacity / blockSize);
+    }
 }

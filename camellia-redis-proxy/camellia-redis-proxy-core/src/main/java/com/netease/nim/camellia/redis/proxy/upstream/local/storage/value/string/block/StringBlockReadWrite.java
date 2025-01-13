@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.B
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.IValueManifest;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.ValueLocation;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +71,7 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
     public byte[] get(KeyInfo keyInfo) throws IOException {
         ValueLocation valueLocation = keyInfo.getValueLocation();
         if (valueLocation == null) {
+            ErrorLogCollector.collect(StringBlockReadWrite.class, "value location is null");
             return null;
         }
         BlockLocation blockLocation = valueLocation.blockLocation();
