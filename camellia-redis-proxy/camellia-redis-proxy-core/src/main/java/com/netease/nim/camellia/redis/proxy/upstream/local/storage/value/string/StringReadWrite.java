@@ -53,19 +53,21 @@ public class StringReadWrite {
 
     public byte[] get(short slot, KeyInfo keyInfo) throws IOException {
         Key key = new Key(keyInfo.getKey());
-        byte[] bytes = readCache.get(key);
-        if (bytes != null) {
-            return bytes;
+        byte[] data = readCache.get(key);
+        if (data != null) {
+            return data;
         }
-        bytes = writeCache.get(key);
-        if (bytes != null) {
-            readCache.put(key, bytes);
+        data = writeCache.get(key);
+        if (data != null) {
+            readCache.put(key, data);
             writeCache.delete(key);
-            return bytes;
+            return data;
         }
-        bytes = get(slot).get(keyInfo);
-        readCache.put(key, bytes);
-        return bytes;
+        data = get(slot).get(keyInfo);
+        if (data != null) {
+            readCache.put(key, data);
+        }
+        return data;
     }
 
     public ValueWrapper<byte[]> getForRunToCompletion(short slot, KeyInfo keyInfo) {

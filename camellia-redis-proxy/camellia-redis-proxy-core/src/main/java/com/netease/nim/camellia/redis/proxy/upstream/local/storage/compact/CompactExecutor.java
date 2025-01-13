@@ -108,11 +108,6 @@ public class CompactExecutor {
                 for (Pair<KeyInfo, byte[]> pair : surviving) {
                     stringReadWrite.put(slot, pair.getFirst(), pair.getSecond());
                     keyReadWrite.put(slot, pair.getFirst());
-                    if (Utils.bytesToString(pair.getFirst().getKey()).startsWith("k")) {
-                        ValueLocation valueLocation = pair.getFirst().getValueLocation();
-                        logger.info("compact put, key = {}, fileId = {}, blockId = {}, offset = {}",
-                                Utils.bytesToString(pair.getFirst().getKey()), valueLocation.blockLocation().fileId(), valueLocation.blockLocation().blockId(), valueLocation.offset());
-                    }
                 }
             }
             for (BlockLocation block : blocks) {

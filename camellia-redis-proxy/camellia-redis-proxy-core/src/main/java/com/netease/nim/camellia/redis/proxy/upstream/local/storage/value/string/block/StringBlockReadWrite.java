@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockLocation;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.IValueManifest;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.ValueLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +68,11 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
 
     @Override
     public byte[] get(KeyInfo keyInfo) throws IOException {
-        BlockLocation blockLocation = keyInfo.getValueLocation().blockLocation();
+        ValueLocation valueLocation = keyInfo.getValueLocation();
+        if (valueLocation == null) {
+            return null;
+        }
+        BlockLocation blockLocation = valueLocation.blockLocation();
         BlockType blockType = valueManifest.blockType(blockLocation.fileId());
         long fileId = blockLocation.fileId();
         long fileOffset = (long) blockType.getBlockSize() * blockLocation.blockId();
