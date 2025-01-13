@@ -28,7 +28,7 @@ public class SlotStringReadWrite {
     private final ValueFlushExecutor flushExecutor;
 
     private final Map<KeyInfo, byte[]> mutable = new HashMap<>();
-    private Map<KeyInfo, byte[]> immutable = new HashMap<>();
+    private final Map<KeyInfo, byte[]> immutable = new HashMap<>();
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
     public SlotStringReadWrite(short slot, ValueFlushExecutor flushExecutor, StringBlockReadWrite slotStringBlockCache) {
@@ -78,7 +78,7 @@ public class SlotStringReadWrite {
         }
         CompletableFuture<FlushResult> future = new CompletableFuture<>();
         Map<Key, byte[]> encodeMap = StringValue.encodeMap(mutable);
-        immutable = mutable;
+        immutable.putAll(mutable);
         mutable.clear();
         flushStatus = FlushStatus.FLUSHING;
         CompletableFuture<FlushResult> submit = flushExecutor.submit(new StringValueFlushTask(slot, encodeMap, keyMap));
