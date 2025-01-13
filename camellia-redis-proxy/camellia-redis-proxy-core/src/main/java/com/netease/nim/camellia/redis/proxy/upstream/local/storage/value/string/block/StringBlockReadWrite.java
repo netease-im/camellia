@@ -70,7 +70,7 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
         BlockLocation blockLocation = keyInfo.getValueLocation().blockLocation();
         BlockType blockType = valueManifest.blockType(blockLocation.fileId());
         long fileId = blockLocation.fileId();
-        long fileOffset = (long) blockType.getBlockSize() * keyInfo.getValueLocation().offset();
+        long fileOffset = (long) blockType.getBlockSize() * blockLocation.blockId();
         String key = fileId + "|" + fileOffset;
         byte[] block = readCache.get(key);
         if (block == null) {
@@ -91,10 +91,11 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
         if (list.isEmpty()) {
             return null;
         }
-        if (list.size() <= keyInfo.getValueLocation().offset()) {
+        int offset = keyInfo.getValueLocation().offset();
+        if (list.size() <= offset) {
             return null;
         }
-        byte[] bytes = list.get(keyInfo.getValueLocation().offset());
+        byte[] bytes = list.get(offset);
         StringValue stringValue = StringValue.decode(bytes);
         if (Arrays.equals(stringValue.key(), keyInfo.getKey())) {
             return stringValue.value();

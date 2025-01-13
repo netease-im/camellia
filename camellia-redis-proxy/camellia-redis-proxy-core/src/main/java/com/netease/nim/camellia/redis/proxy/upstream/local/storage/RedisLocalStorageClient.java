@@ -19,10 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.key_max_len;
@@ -107,12 +104,12 @@ public class RedisLocalStorageClient implements IUpstreamClient {
         try {
             int seconds = ProxyDynamicConf.getInt("local.storage.flush.max.interval.seconds", 10);
             for (short slot=0; slot<RedisClusterCRC16Utils.SLOT_SIZE; slot++) {
-                Long lastWriteCommandTime = timeMap.get(slot);
                 boolean flush;
+                Long lastWriteCommandTime = timeMap.get(slot);
                 if (lastWriteCommandTime == null) {
                     flush = true;
                 } else {
-                    flush = TimeCache.currentMillis - lastWriteCommandTime >= seconds*1000L;
+                    flush = TimeCache.currentMillis - lastWriteCommandTime >= seconds * 1000L;
                 }
                 if (!flush) continue;
                 final short flushSlot = slot;
@@ -120,6 +117,7 @@ public class RedisLocalStorageClient implements IUpstreamClient {
                     try {
                         ICommand invoker = commands.getCommandInvoker(RedisCommand.MEMFLUSH);
                         commands.execute(invoker, flushSlot, MemFlushCommand.command);
+                        timeMap.put(flushSlot, TimeCache.currentMillis);
                     } catch (Exception e) {
                         ErrorLogCollector.collect(RedisLocalStorageClient.class, "send memflush command error, slot = " + flushSlot, e);
                     }

@@ -4,11 +4,8 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by caojiajun on 2025/1/3
@@ -56,23 +53,4 @@ public abstract class ICommand {
      * @return reply
      */
     protected abstract Reply execute(short slot, Command command) throws Exception;
-
-    /**
-     * check and flush after write
-     * @param slot slot
-     * @throws IOException exception
-     */
-    protected void afterWrite(short slot) throws IOException {
-        //compact
-        compactExecutor.compact(slot);
-        //flush
-        if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
-            //key flush prepare
-            keyReadWrite.flushPrepare(slot);
-            //flush string value
-            CompletableFuture<FlushResult> future1 = stringReadWrite.flush(slot);
-            //flush key
-            future1.thenAccept(result -> keyReadWrite.flush(slot));
-        }
-    }
 }

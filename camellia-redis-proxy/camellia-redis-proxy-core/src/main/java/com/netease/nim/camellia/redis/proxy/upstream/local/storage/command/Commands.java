@@ -8,18 +8,36 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.db.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.string.*;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyReadWrite;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by caojiajun on 2025/1/10
  */
 public class Commands {
+
     private final Map<RedisCommand, ICommand> map = new HashMap<>();
 
+    protected CompactExecutor compactExecutor;
+
+    protected KeyReadWrite keyReadWrite;
+    protected StringReadWrite stringReadWrite;
+
     public Commands(CommandConfig commandConfig) {
+        compactExecutor = commandConfig.getCompactExecutor();
+        keyReadWrite = commandConfig.getReadWrite().getKeyReadWrite();
+        stringReadWrite = commandConfig.getReadWrite().getStringReadWrite();
+
         //db
         initCommand(new MemFlushCommand(commandConfig));
         initCommand(new PExpireCommand(commandConfig));
@@ -62,11 +80,25 @@ public class Commands {
                 return invoker.execute(slot, command);
             } finally {
                 if (invoker.redisCommand().getType() == RedisCommand.Type.WRITE) {
-                    invoker.afterWrite(slot);
+                    afterWrite(slot);
                 }
             }
         } catch (Throwable e) {
             return onException(command.getRedisCommand(), e);
+        }
+    }
+
+    private void afterWrite(short slot) throws IOException {
+        //compact
+        compactExecutor.compact(slot);
+        //flush
+        if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
+            //key flush prepare
+            Map<Key, KeyInfo> keyMap = keyReadWrite.flushPrepare(slot);
+            //flush string value
+            CompletableFuture<FlushResult> future = stringReadWrite.flush(slot, keyMap);
+            //flush key
+            future.thenAccept(result -> keyReadWrite.flush(slot));
         }
     }
 

@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringV
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueEncodeResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block.StringBlockReadWrite;
@@ -52,13 +53,15 @@ public class ValueFlushExecutor {
 
     private void execute(StringValueFlushTask task) throws Exception {
         short slot = task.slot();
-        Map<KeyInfo, byte[]> flushValues = task.flushValues();
+        Map<Key, byte[]> flushValues = task.flushValues();
         Map<BlockType, List<Pair<KeyInfo, byte[]>>> blockMap = new HashMap<>();
-        for (Map.Entry<KeyInfo, byte[]> entry : flushValues.entrySet()) {
+
+        Map<Key, KeyInfo> keyMap = task.keyMap();
+        for (Map.Entry<Key, byte[]> entry : flushValues.entrySet()) {
             byte[] data = entry.getValue();
             BlockType blockType = BlockType.fromData(data);
             List<Pair<KeyInfo, byte[]>> buffers = blockMap.computeIfAbsent(blockType, k -> new ArrayList<>());
-            buffers.add(new Pair<>(entry.getKey(), entry.getValue()));
+            buffers.add(new Pair<>(keyMap.get(entry.getKey()), entry.getValue()));
         }
         List<BlockInfo> list = new ArrayList<>();
         for (Map.Entry<BlockType, List<Pair<KeyInfo, byte[]>>> entry : blockMap.entrySet()) {

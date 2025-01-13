@@ -48,19 +48,7 @@ public class SlotKeyReadWrite {
      * @return key
      */
     public KeyInfo get(Key key) throws IOException  {
-        KeyInfo keyInfo = mutable.get(key);
-        if (keyInfo == KeyInfo.DELETE) {
-            return null;
-        }
-        keyInfo = immutable.get(key);
-        if (keyInfo == KeyInfo.DELETE) {
-            return null;
-        }
-        keyInfo = keyBlockReadWrite.get(slot, key, CacheType.read);
-        if (keyInfo == KeyInfo.DELETE) {
-            return null;
-        }
-        return keyInfo;
+        return get0(CacheType.read, key);
     }
 
     /**
@@ -69,19 +57,7 @@ public class SlotKeyReadWrite {
      * @return key
      */
     public KeyInfo getForCompact(Key key) throws IOException  {
-        KeyInfo keyInfo = mutable.get(key);
-        if (keyInfo == KeyInfo.DELETE) {
-            return null;
-        }
-        keyInfo = immutable.get(key);
-        if (keyInfo == KeyInfo.DELETE) {
-            return null;
-        }
-        keyInfo = keyBlockReadWrite.get(slot, key, CacheType.write);
-        if (keyInfo == KeyInfo.DELETE) {
-            return null;
-        }
-        return keyInfo;
+        return get0(CacheType.write, key);
     }
 
     /**
@@ -141,16 +117,17 @@ public class SlotKeyReadWrite {
     /**
      * flush prepare
      */
-    public void flushPrepare() {
+    public Map<Key, KeyInfo> flushPrepare() {
         if (flushStatus != FlushStatus.FLUSH_OK) {
-            return;
+            return Collections.emptyMap();
         }
         if (mutable.isEmpty()) {
-            return;
+            return Collections.emptyMap();
         }
         immutable.putAll(mutable);
         mutable.clear();
         flushStatus = FlushStatus.PREPARE;
+        return immutable;
     }
 
     /**
@@ -162,6 +139,28 @@ public class SlotKeyReadWrite {
             return false;
         }
         return mutable.size() >= 200 || TimeCache.currentMillis - lastFlushTime > 10*1000;
+    }
+
+    private KeyInfo get0(CacheType cacheType, Key key) throws IOException {
+        KeyInfo keyInfo = mutable.get(key);
+        if (keyInfo == KeyInfo.DELETE) {
+            return null;
+        }
+        if (keyInfo != null) {
+            return keyInfo;
+        }
+        keyInfo = immutable.get(key);
+        if (keyInfo == KeyInfo.DELETE) {
+            return null;
+        }
+        if (keyInfo != null) {
+            return keyInfo.duplicate();
+        }
+        keyInfo = keyBlockReadWrite.get(slot, key, cacheType);
+        if (keyInfo == KeyInfo.DELETE) {
+            return null;
+        }
+        return keyInfo;
     }
 
     private void flushDone() {

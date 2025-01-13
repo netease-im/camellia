@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,15 +56,16 @@ public class CompactExecutor {
         }
         BlockType blockType = nextBlockType(slot);
         int offset = nextOffset(blockType, slot);
-        int limit = blockLimit.getOrDefault(blockType, 1);
+        int limit = blockLimit.getOrDefault(blockType, 2);
         try {
             List<BlockLocation> blocks = valueManifest.getBlocks(slot, blockType, offset, limit);
-            if (blocks.isEmpty()) {
+            if (blocks.isEmpty() || blocks.size() == 1) {
                 updateNextOffset(blockType, slot, 0);
                 return;
             }
-            List<Pair<KeyInfo, byte[]>> values = new ArrayList<>();
-            List<BlockLocation> recycleBlocks = new ArrayList<>();
+
+            int remaining = 0;
+            List<Pair<KeyInfo, byte[]>> surviving = new ArrayList<>();
 
             for (BlockLocation blockLocation : blocks) {
                 long fileId = blockLocation.fileId();
@@ -71,11 +73,10 @@ public class CompactExecutor {
                 byte[] block = stringBlockReadWrite.getBlock(blockType, fileId, (long) blockId * blockType.getBlockSize());
 
                 StringValueDecodeResult decodeResult = StringValueCodec.decode(block, blockType);
+
                 List<byte[]> list = decodeResult.values();
 
-                List<Pair<KeyInfo, byte[]>> surviving = new ArrayList<>();
-
-                boolean recycle = false;
+                int survivingCount = 0;
                 for (byte[] data : list) {
                     StringValue stringValue = StringValue.decode(data);
                     KeyInfo keyInfo = keyReadWrite.getForCompact(slot, new Key(stringValue.key()));
@@ -85,42 +86,39 @@ public class CompactExecutor {
                     if (keyInfo.getValueLocation() != null) {
                         if (keyInfo.getValueLocation().blockLocation().equals(blockLocation)) {
                             surviving.add(new Pair<>(keyInfo, stringValue.value()));
+                            survivingCount ++;
                         }
                     }
                 }
-                if (surviving.size() < list.size()) {
-                    recycle = true;
+
+                long used = blockType.getBlockSize() - decodeResult.remaining();
+                if (list.isEmpty()) {
+                    remaining = blockType.getBlockSize();
+                } else {
+                    remaining += (int) (used * survivingCount / list.size());
+                    remaining += decodeResult.remaining();
                 }
-                if (!recycle) {
-                    if (blockType == BlockType._4k) {
-                        recycle = decodeResult.remaining() > 256;
-                    } else if (blockType == BlockType._32k) {
-                        recycle = decodeResult.remaining() > BlockType._4k.getBlockSize();
-                    } else if (blockType == BlockType._256k) {
-                        recycle = decodeResult.remaining() > BlockType._32k.getBlockSize();
-                    } else if (blockType == BlockType._1024k) {
-                        recycle = decodeResult.remaining() > BlockType._256k.getBlockSize();
-                    } else if (blockType == BlockType._8m) {
-                        recycle = decodeResult.remaining() > BlockType._1024k.getBlockSize();
+            }
+
+            if (remaining < blockType.getBlockSize()) {
+                return;
+            }
+
+            if (!surviving.isEmpty()) {
+                for (Pair<KeyInfo, byte[]> pair : surviving) {
+                    stringReadWrite.put(slot, pair.getFirst(), pair.getSecond());
+                    keyReadWrite.put(slot, pair.getFirst());
+                    if (Utils.bytesToString(pair.getFirst().getKey()).startsWith("k")) {
+                        ValueLocation valueLocation = pair.getFirst().getValueLocation();
+                        logger.info("compact put, key = {}, fileId = {}, blockId = {}, offset = {}",
+                                Utils.bytesToString(pair.getFirst().getKey()), valueLocation.blockLocation().fileId(), valueLocation.blockLocation().blockId(), valueLocation.offset());
                     }
                 }
-                if (recycle) {
-                    values.addAll(surviving);
-                    recycleBlocks.add(blockLocation);
-                }
             }
-            if (!values.isEmpty()) {
-                for (Pair<KeyInfo, byte[]> pair : values) {
-                    keyReadWrite.put(slot, pair.getFirst());
-                    stringReadWrite.put(slot, pair.getFirst(), pair.getSecond());
-                }
-            }
-            for (BlockLocation block : recycleBlocks) {
+            for (BlockLocation block : blocks) {
                 valueManifest.recycle(slot, block);
             }
-            if (recycleBlocks.isEmpty()) {
-                updateNextOffset(blockType, slot, offset + limit);
-            }
+            updateNextOffset(blockType, slot, offset + limit);
         } catch (Exception e) {
             logger.error("compact error, slot = {}, blockType = {}, offset = {}, limit = {}", slot, blockType, offset, limit, e);
         } finally {
@@ -134,9 +132,9 @@ public class CompactExecutor {
         for (BlockType type : BlockType.values()) {
             String key = "local.storage.compact.block.type." + type.getType() + ".limit";
             if (type == BlockType._4k) {
-                blockLimit.put(type, ProxyDynamicConf.getInt(key, 4));
+                blockLimit.put(type, ProxyDynamicConf.getInt(key, 6));
             } else {
-                blockLimit.put(type, ProxyDynamicConf.getInt(key, 1));
+                blockLimit.put(type, ProxyDynamicConf.getInt(key, 3));
             }
         }
         this.blockLimit = blockLimit;

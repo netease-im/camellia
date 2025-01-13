@@ -10,6 +10,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot.Slot
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,12 +113,12 @@ public class KeyReadWrite {
         get(slot).delete(key);
     }
 
-    public void flushPrepare(short slot) {
+    public Map<Key, KeyInfo> flushPrepare(short slot) {
         SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
         if (slotKeyReadWrite == null) {
-            return;
+            return Collections.emptyMap();
         }
-        slotKeyReadWrite.flushPrepare();
+        return slotKeyReadWrite.flushPrepare();
     }
 
     public CompletableFuture<FlushResult> flush(short slot) {

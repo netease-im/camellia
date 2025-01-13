@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -62,7 +63,9 @@ public class StringReadWrite {
             writeCache.delete(key);
             return bytes;
         }
-        return get(slot).get(keyInfo);
+        bytes = get(slot).get(keyInfo);
+        readCache.put(key, bytes);
+        return bytes;
     }
 
     public ValueWrapper<byte[]> getForRunToCompletion(short slot, KeyInfo keyInfo) {
@@ -80,12 +83,12 @@ public class StringReadWrite {
         return get(slot).getForRunToCompletion(keyInfo);
     }
 
-    public CompletableFuture<FlushResult> flush(short slot) throws IOException {
+    public CompletableFuture<FlushResult> flush(short slot, Map<Key, KeyInfo> keyMap) throws IOException {
         SlotStringReadWrite slotStringReadWrite = get(slot);
         if (slotStringReadWrite == null) {
             return CompletableFuture.completedFuture(FlushResult.OK);
         }
-        return slotStringReadWrite.flush();
+        return slotStringReadWrite.flush(keyMap);
     }
 
     public boolean needFlush(short slot) {

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec;
 
 import com.netease.nim.camellia.codec.Pack;
 import com.netease.nim.camellia.codec.Unpack;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 
 import java.util.HashMap;
@@ -27,10 +28,10 @@ public record StringValue(byte[] key, byte[] value) {
         return new StringValue(key, value);
     }
 
-    public static Map<KeyInfo, byte[]> encodeMap(Map<KeyInfo, byte[]> map) {
-        Map<KeyInfo, byte[]> result = new HashMap<>();
+    public static Map<Key, byte[]> encodeMap(Map<KeyInfo, byte[]> map) {
+        Map<Key, byte[]> result = new HashMap<>();
         for (Map.Entry<KeyInfo, byte[]> entry : map.entrySet()) {
-            result.put(entry.getKey(), StringValue.encode(entry.getKey().getKey(), entry.getValue()));
+            result.put(new Key(entry.getKey().getKey()), StringValue.encode(entry.getKey().getKey(), entry.getValue()));
         }
         return result;
     }

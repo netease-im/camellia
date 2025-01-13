@@ -187,7 +187,7 @@ public class KeyManifest implements IKeyManifest {
             //使用同一个文件的空闲区域，优先复用其他slot回收的区域
             if (LocalStorageConstants.key_manifest_bit_size - bits.cardinality() >= bitsStep*2) {
                 for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
-                    if (bits.get(i, bitsStep * 2).cardinality() == 0) {
+                    if (bits.get(i, i + bitsStep * 2).cardinality() == 0) {
                         //clear old
                         for (int j=bitsStart; j<bitsEnd; j++) {
                             bits.set(j, false);

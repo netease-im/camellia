@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushStatus;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.StringValueFlushTask;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.ValueFlushExecutor;
@@ -27,7 +28,7 @@ public class SlotStringReadWrite {
     private final ValueFlushExecutor flushExecutor;
 
     private final Map<KeyInfo, byte[]> mutable = new HashMap<>();
-    private final Map<KeyInfo, byte[]> immutable = new HashMap<>();
+    private Map<KeyInfo, byte[]> immutable = new HashMap<>();
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
     public SlotStringReadWrite(short slot, ValueFlushExecutor flushExecutor, StringBlockReadWrite slotStringBlockCache) {
@@ -68,7 +69,7 @@ public class SlotStringReadWrite {
         return null;
     }
 
-    public CompletableFuture<FlushResult> flush() throws IOException {
+    public CompletableFuture<FlushResult> flush(Map<Key, KeyInfo> keyMap) throws IOException {
         if (flushStatus != FlushStatus.FLUSH_OK) {
             return CompletableFuture.completedFuture(FlushResult.SKIP);
         }
@@ -76,10 +77,11 @@ public class SlotStringReadWrite {
             return CompletableFuture.completedFuture(FlushResult.OK);
         }
         CompletableFuture<FlushResult> future = new CompletableFuture<>();
-        immutable.putAll(mutable);
+        Map<Key, byte[]> encodeMap = StringValue.encodeMap(mutable);
+        immutable = mutable;
         mutable.clear();
         flushStatus = FlushStatus.FLUSHING;
-        CompletableFuture<FlushResult> submit = flushExecutor.submit(new StringValueFlushTask(slot, StringValue.encodeMap(immutable)));
+        CompletableFuture<FlushResult> submit = flushExecutor.submit(new StringValueFlushTask(slot, encodeMap, keyMap));
         submit.thenAccept(flushResult -> {
             flushDone();
             future.complete(flushResult);

@@ -40,6 +40,17 @@ public class KeyInfo implements Marshallable, EstimateSizeValue {
         return size;
     }
 
+    public KeyInfo duplicate() {
+        KeyInfo keyInfo = new KeyInfo();
+        keyInfo.dataType = dataType;
+        keyInfo.flag = flag;
+        keyInfo.key = key;
+        keyInfo.expireTime = expireTime;
+        keyInfo.valueLocation = valueLocation;
+        keyInfo.extra = extra;
+        return keyInfo;
+    }
+
     public static enum FlagType {
         DEFAULT((byte) 0),
         CONTAINS_EXPIRE_TIME((byte) 1),

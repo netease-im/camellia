@@ -13,9 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.data_file_size;
 
@@ -37,7 +35,7 @@ public class ValueManifest implements IValueManifest {
     private final ConcurrentHashMap<Long, MappedByteBuffer> bitsMmp = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, MappedByteBuffer> slotsMmp = new ConcurrentHashMap<>();
 
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     public ValueManifest(String dir) {
         this.dir = dir;
@@ -157,6 +155,7 @@ public class ValueManifest implements IValueManifest {
                     if (noAllocateBlocks >= 512) {
                         break;
                     }
+                    continue;
                 }
                 short allocateSlot = buffer.getShort(i*2);
                 if (allocateSlot == slot) {
@@ -202,22 +201,17 @@ public class ValueManifest implements IValueManifest {
     }
 
     private long selectFileId(BlockType blockType, int index) throws IOException {
-        List<Long> list = fileIdMap.computeIfAbsent(blockType, k -> new CopyOnWriteArrayList<>());
-        lock.readLock().lock();
+        lock.lock();
         try {
+            List<Long> list = fileIdMap.computeIfAbsent(blockType, k -> new ArrayList<>());
             if (index < list.size()) {
                 return list.get(index);
             }
-        } finally {
-            lock.readLock().unlock();
-        }
-        lock.writeLock().lock();
-        try {
             long fileId = init(blockType);
             list.add(fileId);
             return fileId;
         } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
@@ -244,6 +238,7 @@ public class ValueManifest implements IValueManifest {
             MappedByteBuffer map = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, bitSize * 2L);
             slotsMmp.put(fileId, map);
         }
+        logger.info("init string value file, fileId = {}", fileId);
         return fileId;
     }
 
