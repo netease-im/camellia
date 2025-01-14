@@ -14,6 +14,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.data_file_size;
 
@@ -35,7 +36,7 @@ public class ValueManifest implements IValueManifest {
     private final ConcurrentHashMap<Long, MappedByteBuffer> bitsMmp = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, MappedByteBuffer> slotsMmp = new ConcurrentHashMap<>();
 
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public ValueManifest(String dir) {
         this.dir = dir;
@@ -203,7 +204,18 @@ public class ValueManifest implements IValueManifest {
     }
 
     private long selectFileId(BlockType blockType, int index) throws IOException {
-        lock.lock();
+        lock.readLock().lock();
+        try {
+            List<Long> list = fileIdMap.get(blockType);
+            if (list != null && index < list.size()) {
+                return list.get(index);
+            }
+        } catch (Exception e) {
+            logger.error("select fileId error", e);
+        } finally {
+            lock.readLock().unlock();
+        }
+        lock.writeLock().lock();
         try {
             List<Long> list = fileIdMap.computeIfAbsent(blockType, k -> new ArrayList<>());
             if (index < list.size()) {
@@ -213,7 +225,7 @@ public class ValueManifest implements IValueManifest {
             list.add(fileId);
             return fileId;
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -285,5 +297,7 @@ public class ValueManifest implements IValueManifest {
         FileChannel slotFileChannel = FileChannel.open(Paths.get(slotFile), StandardOpenOption.READ, StandardOpenOption.WRITE);
         MappedByteBuffer map = slotFileChannel.map(FileChannel.MapMode.READ_WRITE, 0, blockType.valueSlotManifestSize(data_file_size));
         slotsMmp.put(fileId, map);
+
+        logger.info("load index file = {}", file.getName());
     }
 }

@@ -160,6 +160,9 @@ public class KeyManifest implements IKeyManifest {
             long fileId = slotInfo.fileId();
             long offset = slotInfo.offset();
             int capacity = slotInfo.capacity();
+            if (capacity * 2 <= 0) {
+                throw new IOException("slot capacity exceed");
+            }
             int bitsStep = capacity / LocalStorageConstants._64k;
             BitSet bits = fileBitsMap.get(fileId);
             int bitsStart = (int)(offset / LocalStorageConstants._64k);
