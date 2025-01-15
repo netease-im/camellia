@@ -18,7 +18,7 @@ CamelliaLoadingCache适合于一些特定的使用场景，请按需使用
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-tools</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
 </dependency>
 ```
 

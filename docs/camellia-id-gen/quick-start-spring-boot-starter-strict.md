@@ -4,7 +4,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-proxy-hot-key-discovery</artifactId>
-        <version>1.3.2-SNAPSHOT</version>
+        <version>1.3.2</version>
     </parent>
 
     <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
@@ -15,12 +15,12 @@
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-hot-key-discovery-eureka</artifactId>
-            <version>1.3.2-SNAPSHOT</version>
+            <version>1.3.2</version>
         </dependency>
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-redis-proxy-hot-key-common</artifactId>
-            <version>1.3.2-SNAPSHOT</version>
+            <version>1.3.2</version>
         </dependency>
     </dependencies>
 

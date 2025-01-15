@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.3.2（2025/01/15）
+### 新增
+* camellia-redis-proxy，kv，支持kv-client读写降级
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy，kv，修复了zset的range by rank排序错误问题
+
+
 # 1.3.1（2024/12/23）
 ### 新增
 * camellia-hbase-client，支持obkv-hbase

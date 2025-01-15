@@ -1,10 +1,10 @@
 
 
-下载最新版安装包并解压（v1.3.1）：
+下载最新版安装包并解压（v1.3.2）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.3.1/camellia-id-gen-strict-server-1.3.1.tar.gz
-tar zxvf camellia-id-gen-strict-server-1.3.1.tar.gz
-cd camellia-id-gen-strict-server-1.3.1/
+wget https://github.com/netease-im/camellia/releases/download/1.3.2/camellia-id-gen-strict-server-1.3.2.tar.gz
+tar zxvf camellia-id-gen-strict-server-1.3.2.tar.gz
+cd camellia-id-gen-strict-server-1.3.2/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
