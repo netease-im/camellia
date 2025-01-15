@@ -17,7 +17,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.tools.utils.Pair;
 
@@ -177,7 +176,8 @@ public class ZRankCommander extends ZSet0Commander {
                 }
                 startKey = keyValue.getKey();
                 if (Arrays.equals(keyDesign.decodeZSetMemberBySubKey2(startKey, key), member.getKey())) {
-                    return new Pair<>(index, new ZSetTuple(member, Utils.bytesToDouble(keyValue.getValue())));
+                    double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
+                    return new Pair<>(index, new ZSetTuple(member, score));
                 }
                 index++;
             }

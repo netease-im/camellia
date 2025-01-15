@@ -27,7 +27,7 @@ public class TestZSetV0 {
                 .build();
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, ResourceTableUtil.simpleTable(new Resource(url)));
 
-        testZSet(template);
+        testZSet(template, true);
 
         sleep(100);
         System.exit(-1);
@@ -43,9 +43,17 @@ public class TestZSetV0 {
 
     private static final ThreadLocal<String> keyThreadLocal = new ThreadLocal<>();
 
-    public static void testZSet(CamelliaRedisTemplate template) {
+    public static void testZSet(CamelliaRedisTemplate template, boolean mscore) {
 
         round.get().incrementAndGet();
+
+        String v1 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
+        String v2 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
+        String v3 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
+        String v4 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
+        String v5 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
+        String v6 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
+        String v7 = UUID.randomUUID().toString() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID() + UUID.randomUUID();
 
         try {
             String key = UUID.randomUUID().toString().replace("-", "");
@@ -55,19 +63,19 @@ public class TestZSetV0 {
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("v1", 1.0);
-                map1.put("v2", 2.0);
-                map1.put("v3", 3.0);
-                map1.put("v4", 4.0);
-                map1.put("v5", 5.0);
-                map1.put("v6", 6.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 6L);
 
                 Long zadd1 = template.zadd(key, map1);
                 assertEquals(zadd1, 0L);
 
-                map1.put("v7", 7.0);
+                map1.put(v7, 7.0);
 
                 Long zadd2 = template.zadd(key, map1);
                 assertEquals(zadd2, 1L);
@@ -82,12 +90,12 @@ public class TestZSetV0 {
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("v1", 1.0);
-                map1.put("v2", 2.0);
-                map1.put("v3", 3.0);
-                map1.put("v4", 4.0);
-                map1.put("v5", 5.0);
-                map1.put("v6", 6.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 6L);
             }
@@ -97,8 +105,8 @@ public class TestZSetV0 {
             }
             {
                 Map<String, Double> map2 = new HashMap<>();
-                map2.put("v6", 6.0);
-                map2.put("v7", 7.0);
+                map2.put(v6, 6.0);
+                map2.put(v7, 7.0);
                 Long zadd = template.zadd(key, map2);
                 assertEquals(zadd, 1L);
             }
@@ -107,8 +115,8 @@ public class TestZSetV0 {
                 assertEquals(zcard, 7L);
             }
             {
-                Double v1 = template.zscore(key, "v1");
-                assertEquals(v1, 1.0);
+                Double v1S = template.zscore(key, v1);
+                assertEquals(v1S, 1.0);
             }
             {
                 Set<String> set = template.zrange(key, 0, -1);
@@ -118,26 +126,26 @@ public class TestZSetV0 {
                 Set<String> set = template.zrange(key, 1, 3);
                 assertEquals(set.size(), 3);
                 Iterator<String> iterator = set.iterator();
-                assertEquals(iterator.next(), "v2");
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v4");
+                assertEquals(iterator.next(), v2);
+                assertEquals(iterator.next(), v3);
+                assertEquals(iterator.next(), v4);
             }
             {
                 Set<String> set = template.zrevrange(key, -4, -2);
                 assertEquals(set.size(), 3);
                 Iterator<String> iterator = set.iterator();
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v2");
+                assertEquals(iterator.next(), v4);
+                assertEquals(iterator.next(), v3);
+                assertEquals(iterator.next(), v2);
             }
             {
                 Set<Tuple> tuples = template.zrangeWithScores(key, 2, 5);
                 assertEquals(tuples.size(), 4);
                 Iterator<Tuple> iterator1 = tuples.iterator();
-                assertEquals(iterator1.next().getElement(), "v3");
-                assertEquals(iterator1.next().getElement(), "v4");
-                assertEquals(iterator1.next().getElement(), "v5");
-                assertEquals(iterator1.next().getElement(), "v6");
+                assertEquals(iterator1.next().getElement(), v3);
+                assertEquals(iterator1.next().getElement(), v4);
+                assertEquals(iterator1.next().getElement(), v5);
+                assertEquals(iterator1.next().getElement(), v6);
 
                 Iterator<Tuple> iterator2 = tuples.iterator();
                 assertEquals(iterator2.next().getScore(), 3.0);
@@ -149,10 +157,10 @@ public class TestZSetV0 {
                 Set<Tuple> tuples = template.zrevrangeWithScores(key, 2, 5);
                 assertEquals(tuples.size(), 4);
                 Iterator<Tuple> iterator1 = tuples.iterator();
-                assertEquals(iterator1.next().getElement(), "v5");
-                assertEquals(iterator1.next().getElement(), "v4");
-                assertEquals(iterator1.next().getElement(), "v3");
-                assertEquals(iterator1.next().getElement(), "v2");
+                assertEquals(iterator1.next().getElement(), v5);
+                assertEquals(iterator1.next().getElement(), v4);
+                assertEquals(iterator1.next().getElement(), v3);
+                assertEquals(iterator1.next().getElement(), v2);
 
 
                 Iterator<Tuple> iterator2 = tuples.iterator();
@@ -165,18 +173,33 @@ public class TestZSetV0 {
                 Set<String> set = template.zrangeByScore(key, 1.0, 3.0);
                 assertEquals(set.size(), 3);
                 Iterator<String> iterator = set.iterator();
-                assertEquals(iterator.next(), "v1");
-                assertEquals(iterator.next(), "v2");
-                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), v1);
+                assertEquals(iterator.next(), v2);
+                assertEquals(iterator.next(), v3);
             }
             {
                 Set<String> set = template.zrevrangeByScore(key, 5.0, 3.0);
                 assertEquals(set.size(), 3);
                 Iterator<String> iterator = set.iterator();
-                assertEquals(iterator.next(), "v5");
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v3");
+                assertEquals(iterator.next(), v5);
+                assertEquals(iterator.next(), v4);
+                assertEquals(iterator.next(), v3);
             }
+            template.del(key);
+
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put("v1", 1.0);
+                map1.put("v2", 2.0);
+                map1.put("v3", 3.0);
+                map1.put("v4", 4.0);
+                map1.put("v5", 5.0);
+                map1.put("v6", 6.0);
+                map1.put("v7", 7.0);
+                Long zadd = template.zadd(key, map1);
+                assertEquals(zadd, 7L);
+            }
+
             {
                 Set<String> strings = template.zrangeByLex(key, "[v2", "[v5");
                 assertEquals(strings.size(), 4);
@@ -210,6 +233,20 @@ public class TestZSetV0 {
                 assertEquals(iterator.next(), "v2");
                 assertEquals(iterator.next(), "v1");
             }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
+                map1.put(v7, 6.0);
+                template.zadd(key, map1);
+            }
+
             {
                 Long zremrange = template.zremrangeByRank(key, 1, 2);
                 assertEquals(zremrange, 2L);
@@ -223,18 +260,20 @@ public class TestZSetV0 {
                 assertEquals(zremrange, 0L);
             }
             {
-                Long zrem = template.zrem(key, "v1", "v6");
+                Long zrem = template.zrem(key, v1, v6);
                 assertEquals(zrem, 2L);
             }
             {
-                Long zrem = template.zrem(key, "v1", "v6");
+                Long zrem = template.zrem(key, v1, v6);
                 assertEquals(zrem, 0L);
             }
             {
                 Long zcard = template.zcard(key);
                 assertEquals(zcard, 1L);
             }
+
             template.del(key);
+
             {
                 Map<String, Double> map1 = new HashMap<>();
                 map1.put("v1", 1.0);
@@ -255,56 +294,68 @@ public class TestZSetV0 {
                 Long zremrange = template.zremrangeByLex(key, "(v1", "(v3");
                 assertEquals(zremrange, 1L);
             }
+
+            template.del(key);
+            {
+                Map<String, Double> map1 = new HashMap<>();
+                map1.put(v1, 1.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
+                template.zadd(key, map1);
+            }
+
             {
                 Set<String> set = template.zrange(key, 0, -1);
                 assertEquals(set.size(), 5);
                 Iterator<String> iterator = set.iterator();
-                assertEquals(iterator.next(), "v1");
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v5");
-                assertEquals(iterator.next(), "v6");
+                assertEquals(iterator.next(), v1);
+                assertEquals(iterator.next(), v3);
+                assertEquals(iterator.next(), v4);
+                assertEquals(iterator.next(), v5);
+                assertEquals(iterator.next(), v6);
             }
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("v1", 1.0);
-                map1.put("v2", 2.0);
-                map1.put("v3", 3.0);
-                map1.put("v4", 4.0);
-                map1.put("v5", 5.0);
-                map1.put("v6", 6.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 6L);
                 Set<String> strings = template.zrangeByScore(key, "3.0", "5.0");
                 assertEquals(strings.size(), 3);
                 Iterator<String> iterator = strings.iterator();
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v5");
+                assertEquals(iterator.next(), v3);
+                assertEquals(iterator.next(), v4);
+                assertEquals(iterator.next(), v5);
 
                 Set<String> strings1 = template.zrangeByScore(key, "(3.0", "5.0");
                 assertEquals(strings1.size(), 2);
                 Iterator<String> iterator1 = strings1.iterator();
-                assertEquals(iterator1.next(), "v4");
-                assertEquals(iterator1.next(), "v5");
+                assertEquals(iterator1.next(), v4);
+                assertEquals(iterator1.next(), v5);
 
                 Set<String> strings2 = template.zrangeByScore(key, "(3.0", "+inf");
                 assertEquals(strings2.size(), 3);
                 Iterator<String> iterator2 = strings2.iterator();
-                assertEquals(iterator2.next(), "v4");
-                assertEquals(iterator2.next(), "v5");
-                assertEquals(iterator2.next(), "v6");
+                assertEquals(iterator2.next(), v4);
+                assertEquals(iterator2.next(), v5);
+                assertEquals(iterator2.next(), v6);
             }
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("v1", 1.0);
-                map1.put("v2", 2.0);
-                map1.put("v3", 3.0);
-                map1.put("v4", 4.0);
-                map1.put("v5", 5.0);
-                map1.put("v6", 6.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 6L);
                 Long zcount = template.zcount(key, 1, 3);
@@ -335,43 +386,45 @@ public class TestZSetV0 {
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("a", 1.0);
-                map1.put("b", 2.0);
-                map1.put("c", 3.0);
-                map1.put("d", 4.0);
-                map1.put("e", 5.0);
-                map1.put("f", 6.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 6L);
                 Double zscore = template.zscore(key, "g");
                 assertEquals(zscore, null);
 
-                List<Double> list = template.zmscore(key, "a", "b", "c", "h", "d");
-                assertEquals(list.size(), 5);
-                assertEquals(list.get(0), 1.0);
-                assertEquals(list.get(1), 2.0);
-                assertEquals(list.get(2), 3.0);
-                assertEquals(list.get(3), null);
-                assertEquals(list.get(4), 4.0);
+                if (mscore) {
+                    List<Double> list = template.zmscore(key, v1, v2, v3, "h", v4);
+                    assertEquals(list.size(), 5);
+                    assertEquals(list.get(0), 1.0);
+                    assertEquals(list.get(1), 2.0);
+                    assertEquals(list.get(2), 3.0);
+                    assertEquals(list.get(3), null);
+                    assertEquals(list.get(4), 4.0);
+                }
             }
 
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("a", 1.0);
-                map1.put("b", 2.0);
-                map1.put("c", 3.0);
-                map1.put("d", 4.0);
-                map1.put("e", 5.0);
-                map1.put("f", 6.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
+                map1.put(v4, 4.0);
+                map1.put(v5, 5.0);
+                map1.put(v6, 6.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 6L);
 
                 {
-                    Long a = template.zrank(key, "a");
+                    Long a = template.zrank(key, v1);
                     assertEquals(a, 0L);
 
-                    Long c = template.zrank(key, "c");
+                    Long c = template.zrank(key, v3);
                     assertEquals(c, 2L);
 
                     Long g = template.zrank(key, "g");
@@ -379,10 +432,10 @@ public class TestZSetV0 {
                 }
 
                 {
-                    Long a = template.zrevrank(key, "a");
+                    Long a = template.zrevrank(key, v1);
                     assertEquals(a, 5L);
 
-                    Long c = template.zrevrank(key, "c");
+                    Long c = template.zrevrank(key, v3);
                     assertEquals(c, 3L);
 
                     Long g = template.zrevrank(key, "g");
@@ -393,17 +446,17 @@ public class TestZSetV0 {
             template.del(key);
             {
                 Map<String, Double> map1 = new HashMap<>();
-                map1.put("a", 1.0);
-                map1.put("b", 2.0);
-                map1.put("c", 3.0);
+                map1.put(v1, 1.0);
+                map1.put(v2, 2.0);
+                map1.put(v3, 3.0);
                 Long zadd = template.zadd(key, map1);
                 assertEquals(zadd, 3L);
 
                 Set<String> zrange = template.zrange(key, 0, -1);
                 assertEquals(zrange.size(), 3);
 
-                template.zrem(key, "a", "b");
-                template.zrem(key, "c");
+                template.zrem(key, v1, v2);
+                template.zrem(key, v3);
 
                 String type = template.type(key);
                 assertEquals(type, "none");

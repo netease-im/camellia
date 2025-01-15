@@ -13,6 +13,7 @@ public class TestAll {
 
     public static void main(String[] args) {
         String url = "redis://pass123@127.0.0.1:6381";
+//        String url = "redis://@127.0.0.1:6379";
 
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
                 .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000))
@@ -24,8 +25,9 @@ public class TestAll {
 
         int stringVersion = 0;
         int hashVersion = 0;
-        int zsetVersion = 0;
         int setVersion = 0;
+        int zsetVersion = 0;
+        boolean zsetMscore = true;
 
         for (int i = 0; i<threads; i++) {
             new Thread(() -> {
@@ -41,10 +43,8 @@ public class TestAll {
 
             new Thread(() -> {
                 while (true) {
-                    if (zsetVersion == 0) {
-                        TestZSetV0.testZSet(template);
-                    } else if (zsetVersion == 1) {
-                        TestZSetV1.testZSet(template);
+                    if (zsetVersion == 0 || zsetVersion == 1) {
+                        TestZSetV0.testZSet(template, zsetMscore);
                     }
                     sleep(100);
                 }

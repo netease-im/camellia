@@ -192,7 +192,8 @@ public class ZRevRankCommander extends ZSet0Commander {
                 }
                 startKey = keyValue.getKey();
                 if (Arrays.equals(keyDesign.decodeZSetMemberBySubKey2(startKey, key), member.getKey())) {
-                    return new Pair<>(index, new ZSetTuple(member, Utils.bytesToDouble(keyValue.getValue())));
+                    double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
+                    return new Pair<>(index, new ZSetTuple(member, score));
                 }
                 index++;
             }
