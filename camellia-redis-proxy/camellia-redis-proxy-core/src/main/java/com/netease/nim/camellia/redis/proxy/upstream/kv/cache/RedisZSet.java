@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class RedisZSet implements EstimateSizeValue {
 
-    private static final Comparator<BytesKey> rankComparator = (o1, o2) -> BytesUtils.compare(o1.getKey(), o2.getKey());
+    private static final Comparator<BytesKey> lexComparator = (o1, o2) -> BytesUtils.compare(o1.getKey(), o2.getKey());
     private static final Comparator<ZSetTuple> scoreComparator = (o1, o2) -> {
         if (o1.getMember().equals(o2.getMember())) {
             return 0;
@@ -24,7 +24,7 @@ public class RedisZSet implements EstimateSizeValue {
         return BytesUtils.compare(o1.getMember().getKey(), o2.getMember().getKey());
     };
 
-    private final TreeMap<BytesKey, Double> memberMap = new TreeMap<>(rankComparator);
+    private final TreeMap<BytesKey, Double> memberMap = new TreeMap<>(lexComparator);
     private final TreeSet<ZSetTuple> scoreSet = new TreeSet<>(scoreComparator);
 
     private long estimateSize = 0;
@@ -63,7 +63,7 @@ public class RedisZSet implements EstimateSizeValue {
     }
 
     public List<ZSetTuple> zrange(int start, int stop) {
-        ZSetRank rank = new ZSetRank(start, stop, memberMap.size());
+        ZSetRank rank = new ZSetRank(start, stop, scoreSet.size());
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
@@ -71,9 +71,9 @@ public class RedisZSet implements EstimateSizeValue {
         stop = rank.getStop();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
+        for (ZSetTuple zSetTuple : scoreSet) {
             if (count >= start) {
-                result.add(new ZSetTuple(entry.getKey(), entry.getValue()));
+                result.add(zSetTuple);
             }
             if (count >= stop) {
                 return result;
@@ -84,7 +84,7 @@ public class RedisZSet implements EstimateSizeValue {
     }
 
     public List<ZSetTuple> zrevrange(int start, int stop) {
-        ZSetRank rank = new ZSetRank(start, stop, memberMap.size());
+        ZSetRank rank = new ZSetRank(start, stop, scoreSet.size());
         if (rank.isEmptyRank()) {
             return Collections.emptyList();
         }
@@ -92,9 +92,9 @@ public class RedisZSet implements EstimateSizeValue {
         stop = rank.getStop();
         List<ZSetTuple> result = new ArrayList<>();
         int count = 0;
-        for (Map.Entry<BytesKey, Double> entry : memberMap.descendingMap().entrySet()) {
+        for (ZSetTuple zSetTuple : scoreSet.descendingSet()) {
             if (count >= start) {
-                result.add(new ZSetTuple(entry.getKey(), entry.getValue()));
+                result.add(zSetTuple);
             }
             if (count >= stop) {
                 return result;
@@ -225,9 +225,9 @@ public class RedisZSet implements EstimateSizeValue {
             return null;
         }
         int i=0;
-        for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
-            if (entry.getKey().equals(member)) {
-                return new Pair<>(i, new ZSetTuple(entry.getKey(), entry.getValue()));
+        for (ZSetTuple zSetTuple : scoreSet) {
+            if (zSetTuple.getMember().equals(member)) {
+                return new Pair<>(i, zSetTuple);
             }
             i ++;
         }
@@ -240,9 +240,9 @@ public class RedisZSet implements EstimateSizeValue {
             return null;
         }
         int i=0;
-        for (Map.Entry<BytesKey, Double> entry : memberMap.descendingMap().entrySet()) {
-            if (entry.getKey().equals(member)) {
-                return new Pair<>(i, new ZSetTuple(entry.getKey(), entry.getValue()));
+        for (ZSetTuple zSetTuple : scoreSet.descendingSet()) {
+            if (zSetTuple.getMember().equals(member)) {
+                return new Pair<>(i, zSetTuple);
             }
             i++;
         }
@@ -280,7 +280,7 @@ public class RedisZSet implements EstimateSizeValue {
     }
 
     public Map<BytesKey, Double> zremrangeByRank(int start, int stop) {
-        ZSetRank rank = new ZSetRank(start, stop, memberMap.size());
+        ZSetRank rank = new ZSetRank(start, stop, scoreSet.size());
         if (rank.isEmptyRank()) {
             return new HashMap<>();
         }
@@ -289,10 +289,11 @@ public class RedisZSet implements EstimateSizeValue {
         Map<BytesKey, Double> map = new HashMap<>();
         List<ZSetTuple> removed = new ArrayList<>();
         int count = 0;
-        for (Map.Entry<BytesKey, Double> entry : memberMap.entrySet()) {
+
+        for (ZSetTuple zSetTuple : scoreSet) {
             if (count >= start) {
-                map.put(entry.getKey(), entry.getValue());
-                removed.add(new ZSetTuple(entry.getKey(), entry.getValue()));
+                map.put(zSetTuple.getMember(), zSetTuple.getScore());
+                removed.add(zSetTuple);
             }
             if (count >= stop) {
                 break;
