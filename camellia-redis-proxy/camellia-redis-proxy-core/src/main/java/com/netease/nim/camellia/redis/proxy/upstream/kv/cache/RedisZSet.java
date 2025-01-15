@@ -14,9 +14,6 @@ public class RedisZSet implements EstimateSizeValue {
 
     private static final Comparator<BytesKey> lexComparator = (o1, o2) -> BytesUtils.compare(o1.getKey(), o2.getKey());
     private static final Comparator<ZSetTuple> scoreComparator = (o1, o2) -> {
-        if (o1.getMember().equals(o2.getMember())) {
-            return 0;
-        }
         int compare = Double.compare(o1.getScore(), o2.getScore());
         if (compare != 0) {
             return compare;
@@ -55,8 +52,10 @@ public class RedisZSet implements EstimateSizeValue {
                 estimateSize += 8;
                 estimateSize += entry.getKey().getKey().length;
             }
+            if (put != null) {
+                scoreSet.remove(new ZSetTuple(entry.getKey(), put));
+            }
             ZSetTuple zSetTuple = new ZSetTuple(entry.getKey(), entry.getValue());
-            scoreSet.remove(zSetTuple);
             scoreSet.add(zSetTuple);
         }
         return existsMap;

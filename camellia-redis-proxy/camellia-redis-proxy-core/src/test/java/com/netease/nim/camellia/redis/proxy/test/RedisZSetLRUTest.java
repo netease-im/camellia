@@ -30,6 +30,13 @@ public class RedisZSetLRUTest {
 
     @Test
     public void test() {
+        System.out.println("a=" + Utils.bytesToString(a.getKey()));
+        System.out.println("b=" + Utils.bytesToString(b.getKey()));
+        System.out.println("c=" + Utils.bytesToString(c.getKey()));
+        System.out.println("d=" + Utils.bytesToString(d.getKey()));
+        System.out.println("e=" + Utils.bytesToString(e.getKey()));
+        System.out.println("f=" + Utils.bytesToString(f.getKey()));
+
         Map<BytesKey, Double> map = new HashMap<>();
         map.put(a, 1.0);
         map.put(b, 2.0);
@@ -91,7 +98,9 @@ public class RedisZSetLRUTest {
             assertEquals(zrange.get(2).getScore(), 5.0, 0.00001);
 
             List<ZSetTuple> zrange1 = redisZSet.zrange(2, 10);
+
             assertEquals(zrange1.size(), 4);
+
             assertEquals(zrange1.get(0).getMember(), c);
             assertEquals(zrange1.get(0).getScore(), 3.0, 0.00001);
             assertEquals(zrange1.get(1).getMember(), d);
