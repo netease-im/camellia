@@ -199,7 +199,7 @@ public class ZRevRangeCommander extends ZSet0Commander {
         start = rank.getStart();
         stop = rank.getStop();
 
-        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], new byte[0]);
         List<ZSetTuple> list = zrevrange0(slot, key, BytesUtils.nextBytes(startKey), startKey, start, stop, withScores);
 
         return ZSetTupleUtils.toReply(list, withScores);
@@ -221,9 +221,9 @@ public class ZRevRangeCommander extends ZSet0Commander {
                 }
                 startKey = keyValue.getKey();
                 if (count >= start) {
-                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+                    byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
                     if (withScores) {
-                        double score = Utils.bytesToDouble(keyValue.getValue());
+                        double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
                         list.add(new ZSetTuple(new BytesKey(member), score));
                     } else {
                         list.add(new ZSetTuple(new BytesKey(member), null));

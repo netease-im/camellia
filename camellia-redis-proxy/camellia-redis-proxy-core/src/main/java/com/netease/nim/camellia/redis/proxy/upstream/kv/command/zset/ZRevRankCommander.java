@@ -177,7 +177,7 @@ public class ZRevRankCommander extends ZSet0Commander {
 
     private Pair<Integer, ZSetTuple> zrevrankFromKv(int slot, KeyMeta keyMeta, byte[] key, BytesKey member) {
         int scanBatch = kvConfig.scanBatch();
-        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], new byte[0]);
         byte[] prefix = startKey;
         startKey = BytesUtils.nextBytes(startKey);
         int index = 0;
@@ -191,7 +191,7 @@ public class ZRevRankCommander extends ZSet0Commander {
                     continue;
                 }
                 startKey = keyValue.getKey();
-                if (Arrays.equals(keyDesign.decodeZSetMemberBySubKey1(startKey, key), member.getKey())) {
+                if (Arrays.equals(keyDesign.decodeZSetMemberBySubKey2(startKey, key), member.getKey())) {
                     return new Pair<>(index, new ZSetTuple(member, Utils.bytesToDouble(keyValue.getValue())));
                 }
                 index++;

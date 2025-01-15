@@ -32,7 +32,7 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
         start = zSetRank.getStart();
         stop = zSetRank.getStop();
 
-        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], new byte[0]);
         byte[] prefix = startKey;
         int targetSize = stop - start + 1;
 
@@ -51,9 +51,9 @@ public abstract class ZRangeByRank0Commander extends ZRem0Commander {
                 }
                 startKey = keyValue.getKey();
                 if (count >= start) {
-                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+                    byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
                     if (withScores) {
-                        double score = Utils.bytesToDouble(keyValue.getValue());
+                        double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
                         result.add(new ZSetTuple(new BytesKey(member), score));
                     } else {
                         result.add(new ZSetTuple(new BytesKey(member), null));
