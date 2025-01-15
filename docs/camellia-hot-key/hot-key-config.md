@@ -150,7 +150,7 @@ camellia-config下每个key代表一个hot-key的namespace，value代表config�
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-config-nacos</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
 </dependency>
 ```
 
@@ -196,7 +196,7 @@ camellia-hot-key-server:
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-config-etcd</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
 </dependency>
 ```
 

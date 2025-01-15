@@ -1,7 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.kv;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.KvStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,14 +15,28 @@ import java.util.List;
  */
 public class DecoratorKVClient implements KVClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(DecoratorKVClient.class);
+
     private final String namespace;
     private final KVClient kvClient;
     private final String name;
+
+    private boolean degradation = false;
 
     public DecoratorKVClient(String namespace, KVClient kvClient) {
         this.namespace = namespace;
         this.kvClient = kvClient;
         this.name = kvClient.getClass().getSimpleName();
+        updateConf();
+        ProxyDynamicConf.registerCallback(this::updateConf);
+    }
+
+    private void updateConf() {
+        boolean degradation = RedisKvConf.getBoolean(namespace, "kv.client.degradation.enable", this.degradation);
+        if (degradation != this.degradation) {
+            this.degradation = degradation;
+            logger.info("kv client degradation = {}, namespace = {}", degradation, namespace);
+        }
     }
 
     @Override
@@ -32,6 +50,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void put(int slot, byte[] key, byte[] value, long ttl) {
+        if (degradation) {
+            return;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -47,6 +68,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void put(int slot, byte[] key, byte[] value) {
+        if (degradation) {
+            return;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -62,6 +86,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void batchPut(int slot, List<KeyValue> list) {
+        if (degradation) {
+            return;
+        }
         if (list.isEmpty()) {
             return;
         }
@@ -81,6 +108,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public KeyValue get(int slot, byte[] key) {
+        if (degradation) {
+            return null;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -96,6 +126,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public boolean exists(int slot, byte[] key) {
+        if (degradation) {
+            return false;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -111,6 +144,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public boolean[] exists(int slot, byte[]... keys) {
+        if (degradation) {
+            return new boolean[keys.length];
+        }
         if (keys.length == 0) {
             return new boolean[0];
         }
@@ -130,6 +166,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public List<KeyValue> batchGet(int slot, byte[]... keys) {
+        if (degradation) {
+            return Collections.emptyList();
+        }
         if (keys.length == 0) {
             return Collections.emptyList();
         }
@@ -149,6 +188,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void delete(int slot, byte[] key) {
+        if (degradation) {
+            return;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -164,6 +206,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void batchDelete(int slot, byte[]... keys) {
+        if (degradation) {
+            return;
+        }
         if (keys.length == 0) {
             return;
         }
@@ -188,6 +233,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public void checkAndDelete(int slot, byte[] key, byte[] value) {
+        if (degradation) {
+            return;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -208,6 +256,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public List<KeyValue> scanByPrefix(int slot, byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+        if (degradation) {
+            return Collections.emptyList();
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -223,6 +274,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public long countByPrefix(int slot, byte[] startKey, byte[] prefix, boolean includeStartKey) {
+        if (degradation) {
+            return 0;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -238,6 +292,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public List<KeyValue> scanByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+        if (degradation) {
+            return Collections.emptyList();
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {
@@ -253,6 +310,9 @@ public class DecoratorKVClient implements KVClient {
 
     @Override
     public long countByStartEnd(int slot, byte[] startKey, byte[] endKey, byte[] prefix, boolean includeStartKey) {
+        if (degradation) {
+            return 0;
+        }
         if (ProxyMonitorCollector.isMonitorEnable()) {
             long start = System.nanoTime();
             try {

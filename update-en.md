@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.3.2（2025/01/15）
+### add
+* camellia-redis-proxy, kv, support kv-client degradation
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy, kv, fix zset range by rank error
+
+
 # 1.3.1（2024/12/23）
 ### add
 * camellia-hbase-client, support obkv-hbase
