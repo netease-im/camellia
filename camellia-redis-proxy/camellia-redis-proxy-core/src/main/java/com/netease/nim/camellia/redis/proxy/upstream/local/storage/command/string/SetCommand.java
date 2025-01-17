@@ -12,8 +12,13 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.IComm
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.DataType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.StringWalEntry;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.WalWriteResult;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._1024k;
 
@@ -120,14 +125,29 @@ public class SetCommand extends ICommand {
             keyInfo = new KeyInfo(DataType.string, key.key());
         }
 
+        byte[] bigValue = null;
         if (key.key().length + value.length <= 128) {
             keyInfo.setExtra(value);
         } else {
             keyInfo.setExtra(null);
+            bigValue = value;
+        }
+
+        //写入wal
+        StringWalEntry walEntry = new StringWalEntry(keyInfo, bigValue);
+        CompletableFuture<WalWriteResult> future = wal.append(slot, walEntry);
+        WalWriteResult result = future.get(30, TimeUnit.SECONDS);
+        if (result != WalWriteResult.success) {
+            return ErrorReply.INTERNAL_ERROR;
+        }
+
+        //写入memtable
+        if (bigValue != null) {
             stringReadWrite.put(slot, keyInfo, value);
         }
         keyReadWrite.put(slot, keyInfo);
 
+        //响应
         if (get) {
             return new BulkReply(oldValue);
         } else {

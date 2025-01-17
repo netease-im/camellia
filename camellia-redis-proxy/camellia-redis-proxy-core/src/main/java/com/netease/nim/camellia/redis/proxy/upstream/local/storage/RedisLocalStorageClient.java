@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.db.MemFlushCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.Wal;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
@@ -84,9 +85,13 @@ public class RedisLocalStorageClient implements IUpstreamClient {
             LocalStorageReadWrite readWrite = new LocalStorageReadWrite(dir);
             CompactExecutor compactExecutor = new CompactExecutor(readWrite);
 
+            Wal wal = new Wal(readWrite);
+            wal.recover();
+
             CommandConfig commandConfig = new CommandConfig();
             commandConfig.setCompactExecutor(compactExecutor);
             commandConfig.setReadWrite(readWrite);
+            commandConfig.setWal(wal);
 
             commands = new Commands(commandConfig);
 

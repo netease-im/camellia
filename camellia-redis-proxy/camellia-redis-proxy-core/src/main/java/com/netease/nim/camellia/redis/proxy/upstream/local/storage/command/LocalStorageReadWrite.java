@@ -11,6 +11,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.V
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.ValueFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block.StringBlockReadWrite;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.IWalManifest;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.WalManifest;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.WalReadWrite;
 
 import java.io.IOException;
 
@@ -19,6 +22,9 @@ import java.io.IOException;
  */
 public class LocalStorageReadWrite {
 
+    //
+    private WalReadWrite walReadWrite;
+    private IWalManifest walManifest;
     //
     private final IKeyManifest keyManifest;
     private final IValueManifest valueManifest;
@@ -48,6 +54,14 @@ public class LocalStorageReadWrite {
 
         keyReadWrite = new KeyReadWrite(keyFlushExecutor, keyBlockReadWrite);
         stringReadWrite = new StringReadWrite(valueFlushExecutor, stringBlockReadWrite);
+    }
+
+    public WalReadWrite getWalReadWrite() {
+        return walReadWrite;
+    }
+
+    public IWalManifest getWalManifest() {
+        return walManifest;
     }
 
     public IKeyManifest getKeyManifest() {

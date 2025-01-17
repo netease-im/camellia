@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.Wal;
 
 /**
  * Created by caojiajun on 2025/1/3
@@ -16,11 +17,13 @@ public abstract class ICommand {
 
     protected KeyReadWrite keyReadWrite;
     protected StringReadWrite stringReadWrite;
+    protected Wal wal;
 
     public ICommand(CommandConfig commandConfig) {
         compactExecutor = commandConfig.getCompactExecutor();
         keyReadWrite = commandConfig.getReadWrite().getKeyReadWrite();
         stringReadWrite = commandConfig.getReadWrite().getStringReadWrite();
+        wal = commandConfig.getWal();
     }
 
     /**

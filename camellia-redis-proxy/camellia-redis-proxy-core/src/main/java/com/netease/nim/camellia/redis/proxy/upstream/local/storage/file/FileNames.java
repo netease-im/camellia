@@ -15,42 +15,39 @@ public class FileNames {
 
     private static final Logger logger = LoggerFactory.getLogger(FileNames.class);
 
-    public static String createKeyManifestFileIfNotExists(String dir) throws IOException {
+    public static void createKeyManifestFileIfNotExists(String dir) throws IOException {
         String fileName = keyManifestFile(dir);
         File file = new File(fileName);
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create key manifest file, file = {}, result = {}", fileName, result);
         }
-        return fileName;
     }
 
     public static String keyManifestFile(String dir) {
         return dir + "/" + "key.manifest";
     }
 
-    public static String createKeyFile(String dir, long fileId) throws IOException {
+    public static void createKeyFile(String dir, long fileId) throws IOException {
         String fileName = keyFile(dir, fileId);
         File file = new File(fileName);
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create key file, file = {}, result = {}", file, result);
         }
-        return fileName;
     }
 
     public static String keyFile(String dir, long fileId) {
         return dir + "/" + fileId + ".key";
     }
 
-    public static String createStringDataFileIfNotExists(String dir, BlockType blockType, long fileId) throws IOException {
+    public static void createStringDataFileIfNotExists(String dir, BlockType blockType, long fileId) throws IOException {
         String fileName = stringBlockFile(dir, blockType, fileId);
         File file = new File(fileName);
         if (!file.exists()) {
             boolean result = file.createNewFile();
-            logger.info("create string block file, file = {}, result = {}", file, result);
+            logger.info("create string data file, file = {}, result = {}", file, result);
         }
-        return fileName;
     }
 
     public static String stringBlockFile(String dir, BlockType blockType, long fileId) {

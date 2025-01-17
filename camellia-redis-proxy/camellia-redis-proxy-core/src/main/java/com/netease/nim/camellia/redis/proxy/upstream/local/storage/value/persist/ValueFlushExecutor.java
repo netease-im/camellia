@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persis
 
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueEncodeResult;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;

@@ -9,11 +9,13 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.db.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.string.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.SlotWalOffset;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal.Wal;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 import java.io.IOException;
@@ -33,10 +35,13 @@ public class Commands {
     protected KeyReadWrite keyReadWrite;
     protected StringReadWrite stringReadWrite;
 
+    protected Wal wal;
+
     public Commands(CommandConfig commandConfig) {
         compactExecutor = commandConfig.getCompactExecutor();
         keyReadWrite = commandConfig.getReadWrite().getKeyReadWrite();
         stringReadWrite = commandConfig.getReadWrite().getStringReadWrite();
+        wal = commandConfig.getWal();
 
         //db
         initCommand(new MemFlushCommand(commandConfig));
@@ -93,12 +98,18 @@ public class Commands {
         compactExecutor.compact(slot);
         //flush
         if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
+            //获取slot当前wal写到哪里了
+            SlotWalOffset slotWalOffset = wal.getSlotWalOffsetEnd(slot);
             //key flush prepare
             Map<Key, KeyInfo> keyMap = keyReadWrite.flushPrepare(slot);
             //flush string value
-            CompletableFuture<FlushResult> future = stringReadWrite.flush(slot, keyMap);
-            //flush key
-            future.thenAccept(result -> keyReadWrite.flush(slot));
+            CompletableFuture<FlushResult> future1 = stringReadWrite.flush(slot, keyMap);
+            future1.thenAccept(flushResult1 -> {
+                //flush key
+                CompletableFuture<FlushResult> future2 = keyReadWrite.flush(slot);
+                //flush wal，表示这个offset之前的关于指定slot的日志条目都无效了
+                future2.thenAccept(flushResult2 -> wal.flush(slot, slotWalOffset));
+            });
         }
     }
 

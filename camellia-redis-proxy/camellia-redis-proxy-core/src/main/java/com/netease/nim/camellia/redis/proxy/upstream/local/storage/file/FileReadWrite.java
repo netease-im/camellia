@@ -45,4 +45,14 @@ public class FileReadWrite {
         fileChannel.read(buffer, offset);
         return buffer.array();
     }
+
+    public int readInt(String file, long offset) throws IOException {
+        FileChannel fileChannel = getFileChannel(file);
+        if (offset >= fileChannel.size()) {
+            return -1;
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        fileChannel.read(buffer, offset);
+        return buffer.getInt();
+    }
 }

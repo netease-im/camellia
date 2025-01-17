@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.SizeCalculator;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.enums.FlushResult;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist.ValueFlushExecutor;

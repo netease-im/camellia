@@ -12,7 +12,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.StringReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
