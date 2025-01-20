@@ -107,12 +107,13 @@ public class RedisLocalStorageClient implements IUpstreamClient {
 
     private void flush() {
         try {
-            int seconds = ProxyDynamicConf.getInt("local.storage.flush.max.interval.seconds", 10);
+            int seconds = ProxyDynamicConf.getInt("local.storage.flush.max.interval.seconds", 600);
             for (short slot=0; slot<RedisClusterCRC16Utils.SLOT_SIZE; slot++) {
                 boolean flush;
                 Long lastWriteCommandTime = timeMap.get(slot);
                 if (lastWriteCommandTime == null) {
-                    flush = true;
+                    flush = false;
+                    timeMap.put(slot, TimeCache.currentMillis);
                 } else {
                     flush = TimeCache.currentMillis - lastWriteCommandTime >= seconds * 1000L;
                 }

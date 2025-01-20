@@ -53,6 +53,7 @@ public class FileReadWrite {
         }
         ByteBuffer buffer = ByteBuffer.allocate(4);
         fileChannel.read(buffer, offset);
+        buffer.flip();
         return buffer.getInt();
     }
 }

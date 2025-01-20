@@ -15,6 +15,40 @@ public class FileNames {
 
     private static final Logger logger = LoggerFactory.getLogger(FileNames.class);
 
+    public static String walFileDictionary(String dir) {
+        return dir;
+    }
+
+    public static String dataFileDictionary(String dir) {
+        return dir;
+    }
+
+    public static void createWalFileIfNotExists(String dir, long fileId) throws IOException {
+        String fileName = walFile(dir, fileId);
+        File file = new File(fileName);
+        if (!file.exists()) {
+            boolean result = file.createNewFile();
+            logger.info("create wal file, file = {}, result = {}", fileName, result);
+        }
+    }
+
+    public static String walFile(String dir, long fileId) {
+        return walFileDictionary(dir) + "/" + fileId + ".wal";
+    }
+
+    public static void createWalManifestFileIfNotExists(String dir) throws IOException {
+        String fileName = walManifestFile(dir);
+        File file = new File(fileName);
+        if (!file.exists()) {
+            boolean result = file.createNewFile();
+            logger.info("create wal manifest file, file = {}, result = {}", fileName, result);
+        }
+    }
+
+    public static String walManifestFile(String dir) {
+        return walFileDictionary(dir) + "/wal.manifest";
+    }
+
     public static void createKeyManifestFileIfNotExists(String dir) throws IOException {
         String fileName = keyManifestFile(dir);
         File file = new File(fileName);
@@ -25,7 +59,7 @@ public class FileNames {
     }
 
     public static String keyManifestFile(String dir) {
-        return dir + "/" + "key.manifest";
+        return dataFileDictionary(dir) + "/key.manifest";
     }
 
     public static void createKeyFile(String dir, long fileId) throws IOException {
@@ -38,7 +72,7 @@ public class FileNames {
     }
 
     public static String keyFile(String dir, long fileId) {
-        return dir + "/" + fileId + ".key";
+        return dataFileDictionary(dir) + "/" + fileId + ".key";
     }
 
     public static void createStringDataFileIfNotExists(String dir, BlockType blockType, long fileId) throws IOException {
@@ -51,7 +85,7 @@ public class FileNames {
     }
 
     public static String stringBlockFile(String dir, BlockType blockType, long fileId) {
-        return dir + "/" + fileId + "_" + blockType.getType() + ".data";
+        return dataFileDictionary(dir) + "/" + fileId + "_" + blockType.getType() + ".data";
     }
 
     public static String createStringSlotFileIfNotExists(String dir, BlockType blockType, long fileId) throws IOException {
@@ -65,7 +99,7 @@ public class FileNames {
     }
 
     public static String stringSlotFile(String dir, BlockType blockType, long fileId) {
-        return dir + "/" + fileId + "_" + blockType.getType() + ".slot";
+        return dataFileDictionary(dir) + "/" + fileId + "_" + blockType.getType() + ".slot";
     }
 
     public static String createStringIndexFileIfNotExists(String dir, BlockType blockType, long fileId) throws IOException {
@@ -79,6 +113,6 @@ public class FileNames {
     }
 
     public static String stringIndexFile(String dir, BlockType blockType, long fileId) {
-        return dir + "/" + fileId + "_" + blockType.getType() + ".index";
+        return dataFileDictionary(dir) + "/" + fileId + "_" + blockType.getType() + ".index";
     }
 }

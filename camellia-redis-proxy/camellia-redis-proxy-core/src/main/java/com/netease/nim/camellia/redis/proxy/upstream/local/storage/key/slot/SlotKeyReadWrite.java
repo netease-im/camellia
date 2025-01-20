@@ -138,7 +138,7 @@ public class SlotKeyReadWrite {
         if (flushStatus != FlushStatus.FLUSH_OK) {
             return false;
         }
-        return mutable.size() >= 200 || TimeCache.currentMillis - lastFlushTime > 10*1000;
+        return mutable.size() >= 200 || TimeCache.currentMillis - lastFlushTime > 600*1000L;
     }
 
     private KeyInfo get0(CacheType cacheType, Key key) throws IOException {

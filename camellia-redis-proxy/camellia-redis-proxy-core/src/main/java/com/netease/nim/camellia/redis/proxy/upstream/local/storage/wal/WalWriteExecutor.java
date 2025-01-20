@@ -45,9 +45,20 @@ public class WalWriteExecutor {
         List<WalWriteTask> tasks = new ArrayList<>();
         while (true) {
             try {
-                WalWriteTask task = queue.take();
-                tasks.add(task);
-                queue.drainTo(tasks, 100);
+                {
+                    WalWriteTask task = queue.take();
+                    tasks.add(task);
+                }
+                while (true) {
+                    WalWriteTask task = queue.poll();
+                    if (task == null) {
+                        break;
+                    }
+                    tasks.add(task);
+                    if (tasks.size() >= 100) {
+                        break;
+                    }
+                }
                 try {
                     flush(tasks);
                 } finally {
@@ -77,7 +88,7 @@ public class WalWriteExecutor {
                 walManifest.updateFileWriteNextOffset(fileId, nextOffset);
                 Map<Short, SlotWalOffset> slotWalOffsetMap = new HashMap<>();
                 for (LogRecord logRecord : entry.getValue()) {
-                    slotWalOffsetMap.put(logRecord.getSlot(), new SlotWalOffset(logRecord.getId(), fileId, nextOffset));
+                    slotWalOffsetMap.put(logRecord.getSlot(), new SlotWalOffset(logRecord.getId(), fileId, offset));
                 }
                 for (Map.Entry<Short, SlotWalOffset> walOffsetEntry : slotWalOffsetMap.entrySet()) {
                     Short slot = walOffsetEntry.getKey();

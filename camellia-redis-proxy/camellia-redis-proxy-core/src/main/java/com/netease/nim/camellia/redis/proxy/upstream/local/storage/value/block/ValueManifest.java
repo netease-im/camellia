@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block;
 
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +50,9 @@ public class ValueManifest implements IValueManifest {
 
     @Override
     public void load() throws IOException {
-        File dict = new File(dir);
+        File dict = new File(FileNames.dataFileDictionary(dir));
         if (dict.isFile()) {
-            throw new IOException(dir + " is not dict");
+            throw new IOException(FileNames.dataFileDictionary(dir) + " is not dict");
         }
         File[] files = dict.listFiles();
         if (files != null) {

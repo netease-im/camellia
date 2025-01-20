@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -10,14 +11,14 @@ public interface IWalManifest {
     /**
      * 初始化加载
      */
-    void load();
+    void load() throws IOException;
 
     /**
      * 这个slot的wal应该写在哪个文件上
      * @param slot slot
      * @return 文件id
      */
-    long fileId(short slot);
+    long fileId(short slot) throws IOException;
 
     /**
      * wal文件已经写到哪里了

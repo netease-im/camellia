@@ -23,8 +23,8 @@ import java.io.IOException;
 public class LocalStorageReadWrite {
 
     //
-    private WalReadWrite walReadWrite;
-    private IWalManifest walManifest;
+    private final WalReadWrite walReadWrite;
+    private final IWalManifest walManifest;
     //
     private final IKeyManifest keyManifest;
     private final IValueManifest valueManifest;
@@ -41,10 +41,14 @@ public class LocalStorageReadWrite {
     public LocalStorageReadWrite(String dir) throws IOException {
         FlushExecutor flushExecutor = LocalStorageExecutors.getInstance().getFlushExecutor();
 
+        walManifest = new WalManifest(dir);
+        walManifest.load();
         keyManifest = new KeyManifest(dir);
         keyManifest.load();
         valueManifest = new ValueManifest(dir);
         valueManifest.load();
+
+        walReadWrite = new WalReadWrite(dir);
 
         keyBlockReadWrite = new KeyBlockReadWrite(keyManifest);
         stringBlockReadWrite = new StringBlockReadWrite(valueManifest);

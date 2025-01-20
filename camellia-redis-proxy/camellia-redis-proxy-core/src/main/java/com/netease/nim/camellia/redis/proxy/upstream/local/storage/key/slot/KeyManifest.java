@@ -99,7 +99,7 @@ public class KeyManifest implements IKeyManifest {
             byte[] realMagicFooter = new byte[magic_footer.length];
             buffer.get(realMagicFooter);
             if (!Arrays.equals(realMagicFooter, magic_footer)) {
-                throw new IOException("slot map file magic_footer not match!");
+                throw new IOException("key.manifest.file magic_footer not match!");
             }
             logger.info("load key.manifest.file success, key.manifest.file = {}, slot.count = {}", fileName, slotInfoMap.size());
         }

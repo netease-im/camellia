@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.Local
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -29,6 +30,7 @@ public class Wal {
         this.walManifest = readWrite.getWalManifest();
         this.walReadWrite = readWrite.getWalReadWrite();
         this.executor = new WalWriteExecutor(walManifest, walReadWrite);
+        this.executor.start();
     }
 
     /**
@@ -94,24 +96,31 @@ public class Wal {
             for (Map.Entry<Long, Long> entry : fileIdOffsetMap.entrySet()) {
                 Long fileId = entry.getKey();
                 Long offset = entry.getValue();
-                List<LogRecord> records = walReadWrite.read(fileId, offset);
-                if (records == null) {
-                    continue;
-                }
-                for (LogRecord record : records) {
-                    short slot = record.getSlot();
-                    if (record.getId() <= walOffsetMap.get(slot).recordId()) {
-                        continue;
-                    }
-                    byte[] data = record.getData();
-                    WalEntry walEntry = WalEntryCodec.decode(data);
-                    walEntry.recover(slot, readWrite);
-                }
+                recover(fileId, offset, walOffsetMap);
             }
             logger.info("recover from wal success, spendMs = {}", System.currentTimeMillis() - start);
         } catch (Exception e) {
             logger.error("recover from wal error, spendMs = {}", System.currentTimeMillis() - start);
             throw e;
+        }
+    }
+
+    private void recover(long fileId, long offset, Map<Short, SlotWalOffset> walOffsetMap) throws Exception {
+        while (true) {
+            WalReadResult result = walReadWrite.read(fileId, offset);
+            if (result == null) {
+                return;
+            }
+            for (LogRecord record : result.records()) {
+                short slot = record.getSlot();
+                if (record.getId() <= walOffsetMap.get(slot).recordId()) {
+                    continue;
+                }
+                byte[] data = record.getData();
+                WalEntry walEntry = WalEntryCodec.decode(data);
+                walEntry.recover(slot, readWrite);
+            }
+            offset = result.nextOffset();
         }
     }
 }
