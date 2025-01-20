@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
@@ -36,10 +37,30 @@ public class SlotKeyReadWrite {
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
+    private int keyFlushSize;
+    private int keyFlushIntervalSeconds;
+
+    private CompletableFuture<FlushResult> flushFuture;
+
     public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockReadWrite keyBlockReadWrite) {
         this.slot = slot;
         this.executor = executor;
         this.keyBlockReadWrite = keyBlockReadWrite;
+        updateConf();
+        ProxyDynamicConf.registerCallback(this::updateConf);
+    }
+
+    private void updateConf() {
+        int keyFlushSize = ProxyDynamicConf.getInt("local.storage.key.flush.size", 200);
+        if (this.keyFlushSize != keyFlushSize) {
+            this.keyFlushSize = keyFlushSize;
+            logger.info("local.storage.key.flush.size, update to {}", keyFlushSize);
+        }
+        int keyFlushIntervalSeconds = ProxyDynamicConf.getInt("local.storage.key.flush.interval.seconds", 300);
+        if (this.keyFlushIntervalSeconds != keyFlushIntervalSeconds) {
+            this.keyFlushIntervalSeconds = keyFlushIntervalSeconds;
+            logger.info("local.storage.key.flush.interval.seconds, update to {}", keyFlushIntervalSeconds);
+        }
     }
 
     /**
@@ -86,6 +107,9 @@ public class SlotKeyReadWrite {
      */
     public void put(KeyInfo key) {
         mutable.put(new Key(key.getKey()), key);
+        if (mutable.size() >= keyFlushSize * 2) {
+            waitForFlush();
+        }
     }
 
     /**
@@ -94,6 +118,9 @@ public class SlotKeyReadWrite {
      */
     public void delete(Key key) {
         mutable.put(key, KeyInfo.DELETE);
+        if (mutable.size() >= keyFlushSize * 2) {
+            waitForFlush();
+        }
     }
 
     /**
@@ -111,6 +138,7 @@ public class SlotKeyReadWrite {
             flushDone();
             future.complete(b);
         });
+        this.flushFuture = submit;
         return future;
     }
 
@@ -138,7 +166,7 @@ public class SlotKeyReadWrite {
         if (flushStatus != FlushStatus.FLUSH_OK) {
             return false;
         }
-        return mutable.size() >= 200 || TimeCache.currentMillis - lastFlushTime > 600*1000L;
+        return mutable.size() >= keyFlushSize || TimeCache.currentMillis - lastFlushTime > keyFlushIntervalSeconds*1000L;
     }
 
     private KeyInfo get0(CacheType cacheType, Key key) throws IOException {
@@ -165,7 +193,18 @@ public class SlotKeyReadWrite {
 
     private void flushDone() {
         immutable.clear();
+        flushFuture = null;
         flushStatus = FlushStatus.FLUSH_OK;
         lastFlushTime = TimeCache.currentMillis;
+    }
+
+    private void waitForFlush() {
+        if (flushFuture != null) {
+            try {
+                flushFuture.get();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
     }
 }

@@ -34,10 +34,12 @@ public class KeyReadWrite {
                 128, new EstimateSizeValueCalculator<>(), new EstimateSizeValueCalculator<>());
     }
 
-    private SlotKeyReadWrite get(short slot) {
-        return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotKeyReadWrite(slot, executor, blockCache));
-    }
-
+    /**
+     * get for run to completion
+     * @param slot slot
+     * @param key key
+     * @return key info
+     */
     public ValueWrapper<KeyInfo> getForRunToCompletion(short slot, Key key) {
         KeyInfo keyInfo1 = cache.get(key);
         if (keyInfo1 != null) {
@@ -60,6 +62,13 @@ public class KeyReadWrite {
         return valueWrapper;
     }
 
+    /**
+     * get key info
+     * @param slot slot
+     * @param key key
+     * @return key info
+     * @throws IOException exception
+     */
     public KeyInfo get(short slot, Key key) throws IOException {
         KeyInfo keyInfo = cache.get(key);
         if (keyInfo != null) {
@@ -85,6 +94,13 @@ public class KeyReadWrite {
         return keyInfo;
     }
 
+    /**
+     * get for compact
+     * @param slot slot
+     * @param key ley
+     * @return key info
+     * @throws IOException exception
+     */
     public KeyInfo getForCompact(short slot, Key key) throws IOException {
         KeyInfo keyInfo = cache.get(key);
         if (keyInfo != null) {
@@ -103,16 +119,31 @@ public class KeyReadWrite {
         return keyInfo;
     }
 
+    /**
+     * put
+     * @param slot slot
+     * @param keyInfo key info
+     */
     public void put(short slot, KeyInfo keyInfo) {
         cache.put(new Key(keyInfo.getKey()), keyInfo);
         get(slot).put(keyInfo);
     }
 
+    /**
+     * delete
+     * @param slot slot
+     * @param key key
+     */
     public void delete(short slot, Key key) {
         cache.put(key, KeyInfo.DELETE);
         get(slot).delete(key);
     }
 
+    /**
+     * flush prepare
+     * @param slot slot
+     * @return key info map
+     */
     public Map<Key, KeyInfo> flushPrepare(short slot) {
         SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
         if (slotKeyReadWrite == null) {
@@ -121,6 +152,11 @@ public class KeyReadWrite {
         return slotKeyReadWrite.flushPrepare();
     }
 
+    /**
+     * flush key to disk
+     * @param slot slot
+     * @return flush result
+     */
     public CompletableFuture<FlushResult> flush(short slot) {
         SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
         if (slotKeyReadWrite == null) {
@@ -129,11 +165,20 @@ public class KeyReadWrite {
         return slotKeyReadWrite.flush();
     }
 
+    /**
+     * check need flush
+     * @param slot slot
+     * @return result
+     */
     public boolean needFlush(short slot) {
         SlotKeyReadWrite slotKeyReadWrite = map.get(slot);
         if (slotKeyReadWrite == null) {
             return false;
         }
         return slotKeyReadWrite.needFlush();
+    }
+
+    private SlotKeyReadWrite get(short slot) {
+        return CamelliaMapUtils.computeIfAbsent(map, slot, s -> new SlotKeyReadWrite(slot, executor, blockCache));
     }
 }

@@ -40,6 +40,13 @@ public class StringReadWrite {
         this.writeCache = new LRUCache<>("string-write-cache", WRITE_CACHE_CONFIG_KEY, "32M", 1024, new EstimateSizeValueCalculator<>(), SizeCalculator.BYTES_INSTANCE);
     }
 
+    /**
+     * put data
+     * @param slot slot
+     * @param keyInfo key info
+     * @param data data
+     * @throws IOException exception
+     */
     public void put(short slot, KeyInfo keyInfo, byte[] data) throws IOException {
         Key key = new Key(keyInfo.getKey());
         byte[] bytes = readCache.get(key);
@@ -51,6 +58,13 @@ public class StringReadWrite {
         get(slot).put(keyInfo, data);
     }
 
+    /**
+     * get
+     * @param slot slot
+     * @param keyInfo key info
+     * @return data
+     * @throws IOException exception
+     */
     public byte[] get(short slot, KeyInfo keyInfo) throws IOException {
         Key key = new Key(keyInfo.getKey());
         byte[] data = readCache.get(key);
@@ -70,6 +84,12 @@ public class StringReadWrite {
         return data;
     }
 
+    /**
+     * get for run to completion
+     * @param slot slot
+     * @param keyInfo key info
+     * @return data
+     */
     public ValueWrapper<byte[]> getForRunToCompletion(short slot, KeyInfo keyInfo) {
         Key key = new Key(keyInfo.getKey());
         byte[] bytes1 = readCache.get(key);
@@ -85,6 +105,13 @@ public class StringReadWrite {
         return get(slot).getForRunToCompletion(keyInfo);
     }
 
+    /**
+     * flush to disk
+     * @param slot slot
+     * @param keyMap key info map
+     * @return flush result
+     * @throws IOException exception
+     */
     public CompletableFuture<FlushResult> flush(short slot, Map<Key, KeyInfo> keyMap) throws IOException {
         SlotStringReadWrite slotStringReadWrite = get(slot);
         if (slotStringReadWrite == null) {
@@ -93,6 +120,11 @@ public class StringReadWrite {
         return slotStringReadWrite.flush(keyMap);
     }
 
+    /**
+     * check need to flush
+     * @param slot slot
+     * @return result
+     */
     public boolean needFlush(short slot) {
         SlotStringReadWrite slotStringReadWrite = get(slot);
         if (slotStringReadWrite == null) {

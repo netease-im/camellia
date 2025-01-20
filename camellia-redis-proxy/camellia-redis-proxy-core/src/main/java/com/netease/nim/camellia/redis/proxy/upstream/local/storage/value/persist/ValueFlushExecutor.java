@@ -60,8 +60,12 @@ public class ValueFlushExecutor {
         for (Map.Entry<Key, byte[]> entry : flushValues.entrySet()) {
             byte[] data = entry.getValue();
             BlockType blockType = BlockType.fromData(data);
+            KeyInfo keyInfo = keyMap.get(entry.getKey());
+            if (keyInfo.isExpire() || keyInfo == KeyInfo.DELETE) {
+                continue;
+            }
             List<Pair<KeyInfo, byte[]>> buffers = blockMap.computeIfAbsent(blockType, k -> new ArrayList<>());
-            buffers.add(new Pair<>(keyMap.get(entry.getKey()), entry.getValue()));
+            buffers.add(new Pair<>(keyInfo, entry.getValue()));
         }
         List<BlockInfo> list = new ArrayList<>();
         for (Map.Entry<BlockType, List<Pair<KeyInfo, byte[]>>> entry : blockMap.entrySet()) {

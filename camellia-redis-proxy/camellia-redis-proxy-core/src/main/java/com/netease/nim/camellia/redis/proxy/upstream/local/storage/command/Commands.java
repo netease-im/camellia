@@ -96,7 +96,7 @@ public class Commands {
     private void afterWrite(short slot) throws IOException {
         //compact
         compactExecutor.compact(slot);
-        //flush
+        //check need flush
         if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
             //获取slot当前wal写到哪里了
             SlotWalOffset slotWalOffset = wal.getSlotWalOffsetEnd(slot);

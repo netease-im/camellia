@@ -91,10 +91,13 @@ public class KeyFlushExecutor {
         {
             for (Map.Entry<Key, KeyInfo> entry : flushKeys.entrySet()) {
                 Key key = entry.getKey();
-                KeyInfo data = entry.getValue();
+                KeyInfo keyInfo = entry.getValue();
+                if (keyInfo.isExpire() || keyInfo == KeyInfo.DELETE) {
+                    continue;
+                }
                 int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
                 Map<Key, KeyInfo> keys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
-                keys.put(key, data);
+                keys.put(key, keyInfo);
             }
         }
         boolean expand = false;
