@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCacheName;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist.KeyFlushExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block.KeyBlockReadWrite;
@@ -30,8 +31,7 @@ public class KeyReadWrite {
     public KeyReadWrite(KeyFlushExecutor executor, KeyBlockReadWrite blockCache) {
         this.executor = executor;
         this.blockCache = blockCache;
-        this.cache = new LRUCache<>("key-cache", "embedded.storage.key.cache.capacity", "32M",
-                128, new EstimateSizeValueCalculator<>(), new EstimateSizeValueCalculator<>());
+        this.cache = new LRUCache<>(LRUCacheName.key_cache, 128, new EstimateSizeValueCalculator<>(), new EstimateSizeValueCalculator<>());
     }
 
     /**

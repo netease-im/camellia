@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block;
 
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCacheName;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
@@ -27,9 +28,6 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
 
     private static final Logger logger = LoggerFactory.getLogger(KeyBlockReadWrite.class);
 
-    private static final String READ_CACHE_CONFIG_KEY = "local.storage.key.block.read.cache.capacity";
-    private static final String WRITE_CACHE_CONFIG_KEY = "local.storage.key.block.write.cache.capacity";
-
     private final IKeyManifest keyManifest;
     private final FileReadWrite fileReadWrite = new FileReadWrite();
 
@@ -38,8 +36,8 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
 
     public KeyBlockReadWrite(IKeyManifest keyManifest) {
         this.keyManifest = keyManifest;
-        this.readCache = new LRUCache<>("key-read-block-cache", READ_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
-        this.writeCache = new LRUCache<>("key-write-block-cache", WRITE_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
+        this.readCache = new LRUCache<>(LRUCacheName.key_read_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
+        this.writeCache = new LRUCache<>(LRUCacheName.key_write_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
         warm();
     }
 

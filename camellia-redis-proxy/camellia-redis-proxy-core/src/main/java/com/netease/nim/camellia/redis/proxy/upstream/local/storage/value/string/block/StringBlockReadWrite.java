@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block;
 
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCacheName;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.SizeCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
@@ -30,9 +31,6 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
 
     private static final Logger logger = LoggerFactory.getLogger(StringBlockReadWrite.class);
 
-    private static final String READ_CACHE_CONFIG_KEY = "local.storage.string.block.read.cache.capacity";
-    private static final String WRITE_CACHE_CONFIG_KEY = "local.storage.string.block.write.cache.capacity";
-
     private final IValueManifest valueManifest;
     private final FileReadWrite fileReadWrite = new FileReadWrite();
 
@@ -41,8 +39,8 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
 
     public StringBlockReadWrite(IValueManifest valueManifest) {
         this.valueManifest = valueManifest;
-        this.readCache = new LRUCache<>("string-read-block-cache", READ_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
-        this.writeCache = new LRUCache<>("string-write-block-cache", WRITE_CACHE_CONFIG_KEY, "32M", _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
+        this.readCache = new LRUCache<>(LRUCacheName.string_read_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
+        this.writeCache = new LRUCache<>(LRUCacheName.string_write_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
         warm();
     }
 

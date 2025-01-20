@@ -20,8 +20,7 @@ public class LRUCache<K, V> {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("lru-cache-scheduler"));
 
-    private final String name;
-    private final String configKey;
+    private final LRUCacheName name;
     private final SizeCalculator<K> keySizeCalculator;
     private final SizeCalculator<V> valueSizeCalculator;
 
@@ -34,14 +33,12 @@ public class LRUCache<K, V> {
 
     private int loop = 0;
 
-    public LRUCache(String name, String configKey, String defaultConfig, int estimateSizePerKV,
+    public LRUCache(LRUCacheName name, int estimateSizePerKV,
                     SizeCalculator<K> keySizeCalculator, SizeCalculator<V> valueSizeCalculator) {
         this.name = name;
-        this.configKey = configKey;
-        this.config = defaultConfig;
         this.keySizeCalculator = keySizeCalculator;
         this.valueSizeCalculator = valueSizeCalculator;
-        this.capacity = CacheCapacityConfigParser.parse(configKey, defaultConfig);
+        this.capacity = name.getCapacity(-1);
         this.config = CacheCapacityConfigParser.toString(capacity);
         this.maxKeyCount = (int) (capacity / estimateSizePerKV);
         this.cache = new ConcurrentLinkedHashMap.Builder<K, V>()
@@ -49,6 +46,7 @@ public class LRUCache<K, V> {
                 .maximumWeightedCapacity(maxKeyCount)
                 .build();
         scheduler.scheduleAtFixedRate(this::schedule, 10, 10, TimeUnit.SECONDS);
+        logger.info("lru-cache init, name = {}, capacity = {}, key.max.count = {}", name, CacheCapacityConfigParser.toString(capacity), maxKeyCount);
     }
 
     public void put(K key, V value) {
@@ -65,7 +63,7 @@ public class LRUCache<K, V> {
 
     private void schedule() {
         try {
-            this.capacity = CacheCapacityConfigParser.parse(configKey, config);
+            this.capacity = name.getCapacity(capacity);
             this.config = CacheCapacityConfigParser.toString(capacity);
             long estimateSize = 0;
             long keyCount = cache.size();
