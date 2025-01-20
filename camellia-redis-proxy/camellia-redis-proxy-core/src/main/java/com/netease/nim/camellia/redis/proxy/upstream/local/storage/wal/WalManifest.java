@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -136,12 +139,9 @@ public class WalManifest implements IWalManifest {
                 FileNames.createWalFileIfNotExists(dir, fileId);
             }
         }
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("wal-schedule"))
+                .scheduleAtFixedRate(this::schedule, 60, 60, TimeUnit.SECONDS);
     }
-
-    private int walFileSize() {
-        return ProxyDynamicConf.getInt("local.storage.wal.file.size", 4);
-    }
-
 
     @Override
     public long fileId(short slot) throws IOException {
@@ -244,5 +244,36 @@ public class WalManifest implements IWalManifest {
     @Override
     public Map<Short, SlotWalOffset> getSlotWalOffsetStartMap() {
         return slotWalOffsetStartMap;
+    }
+
+    private int walFileSize() {
+        return ProxyDynamicConf.getInt("local.storage.wal.file.size", 4);
+    }
+
+    private void schedule() {
+        try {
+            Set<Long> walFiles = new HashSet<>(fileOffsetMap.keySet());
+            long minFileId = Long.MAX_VALUE;
+            for (Map.Entry<Short, SlotWalOffset> entry : slotWalOffsetStartMap.entrySet()) {
+                long fileId = entry.getValue().fileId();
+                walFiles.remove(fileId);
+                if (fileId < minFileId) {
+                    minFileId = fileId;
+                }
+            }
+            Set<Long> toDeleteWalFiles = new HashSet<>();
+            for (Long fileId : walFiles) {
+                if (!activeWalFileMap.containsKey(fileId) && fileId < minFileId) {
+                    toDeleteWalFiles.add(fileId);
+                }
+            }
+            for (Long fileId : toDeleteWalFiles) {
+                boolean delete = new File(FileNames.walFile(dir, fileId)).delete();
+                logger.info("delete wal file, file = {}, result = {}", FileNames.walFile(dir, fileId), delete);
+                fileOffsetMap.remove(fileId);
+            }
+        } catch (Exception e) {
+            logger.error("wal schedule error", e);
+        }
     }
 }
