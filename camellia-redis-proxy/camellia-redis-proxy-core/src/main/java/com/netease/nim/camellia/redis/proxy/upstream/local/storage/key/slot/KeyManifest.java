@@ -81,7 +81,7 @@ public class KeyManifest implements IKeyManifest {
             for (short slot=0; slot<RedisClusterCRC16Utils.SLOT_SIZE; slot++) {
                 long fileId = buffer.getLong();
                 long offset = buffer.getLong();
-                int capacity = buffer.getInt();
+                long capacity = buffer.getLong();
                 if (fileId == 0) {
                     continue;
                 }
@@ -175,6 +175,9 @@ public class KeyManifest implements IKeyManifest {
             BitSet bits = fileBitsMap.get(fileId);
             int bitsStart = (int)(offset / LocalStorageConstants._64k);
             int bitsEnd = (int)((offset + capacity) / LocalStorageConstants._64k);
+            if (bitsStart < 0 || bitsEnd < 0) {
+                throw new IOException("slot capacity exceed");
+            }
             //直接顺延扩容
             if (bitsStart + (bitsEnd - bitsStart) * 2 < LocalStorageConstants.key_manifest_bit_size) {
                 boolean directExpand = true;

@@ -14,8 +14,8 @@ public class LocalStorageConstants {
     public static final int _1024k = 1024*1024;
     public static final int _8m = 8*1024*1024;
     public static final long max_key_capacity = (long) Integer.MAX_VALUE * _4k;
-    public static final int key_manifest_bit_size = (int) (16*1024*1024*1024L / _64k);//16Gib
-    public static final long data_file_size = 192*1024*1024*1024L;//128Gib
+    public static final int key_manifest_bit_size = (int) (32*1024*1024*1024L / _64k);//32Gib
+    public static final long data_file_size = 256*1024*1024*1024L;//256Gib
     public static final long wal_file_size = 1024*1024*1024;//1Gib
     public static final int block_header_len = 4+4+2+1+4+4;
 
