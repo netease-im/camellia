@@ -26,6 +26,25 @@ public class SlotKeyReadWrite {
 
     private static final Logger logger = LoggerFactory.getLogger(SlotKeyReadWrite.class);
 
+    private static int keyFlushSize;
+    private static int keyFlushIntervalSeconds;
+    static {
+        updateConf();
+        ProxyDynamicConf.registerCallback(SlotKeyReadWrite::updateConf);
+    }
+    private static void updateConf() {
+        int keyFlushSize = ProxyDynamicConf.getInt("local.storage.key.flush.size", 200);
+        if (SlotKeyReadWrite.keyFlushSize != keyFlushSize) {
+            SlotKeyReadWrite.keyFlushSize = keyFlushSize;
+            logger.info("local.storage.key.flush.size, update to {}", keyFlushSize);
+        }
+        int keyFlushIntervalSeconds = ProxyDynamicConf.getInt("local.storage.key.flush.interval.seconds", 300);
+        if (SlotKeyReadWrite.keyFlushIntervalSeconds != keyFlushIntervalSeconds) {
+            SlotKeyReadWrite.keyFlushIntervalSeconds = keyFlushIntervalSeconds;
+            logger.info("local.storage.key.flush.interval.seconds, update to {}", keyFlushIntervalSeconds);
+        }
+    }
+
     private long lastFlushTime = TimeCache.currentMillis;
 
     private final short slot;
@@ -37,9 +56,6 @@ public class SlotKeyReadWrite {
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
-    private int keyFlushSize;
-    private int keyFlushIntervalSeconds;
-
     private CompletableFuture<FlushResult> flushFuture;
 
     public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockReadWrite keyBlockReadWrite) {
@@ -47,20 +63,6 @@ public class SlotKeyReadWrite {
         this.executor = executor;
         this.keyBlockReadWrite = keyBlockReadWrite;
         updateConf();
-        ProxyDynamicConf.registerCallback(this::updateConf);
-    }
-
-    private void updateConf() {
-        int keyFlushSize = ProxyDynamicConf.getInt("local.storage.key.flush.size", 200);
-        if (this.keyFlushSize != keyFlushSize) {
-            this.keyFlushSize = keyFlushSize;
-            logger.info("local.storage.key.flush.size, update to {}", keyFlushSize);
-        }
-        int keyFlushIntervalSeconds = ProxyDynamicConf.getInt("local.storage.key.flush.interval.seconds", 300);
-        if (this.keyFlushIntervalSeconds != keyFlushIntervalSeconds) {
-            this.keyFlushIntervalSeconds = keyFlushIntervalSeconds;
-            logger.info("local.storage.key.flush.interval.seconds, update to {}", keyFlushIntervalSeconds);
-        }
     }
 
     /**

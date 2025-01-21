@@ -26,6 +26,25 @@ public class SlotStringReadWrite {
 
     private static final Logger logger = LoggerFactory.getLogger(SlotStringReadWrite.class);
 
+    private static int stringValueFlushSize;
+    private static int stringValueFlushIntervalSeconds;
+    static {
+        updateConf();
+        ProxyDynamicConf.registerCallback(SlotStringReadWrite::updateConf);
+    }
+    private static void updateConf() {
+        int stringValueFlushSize = ProxyDynamicConf.getInt("local.storage.string.value.flush.size", 200);
+        if (SlotStringReadWrite.stringValueFlushSize != stringValueFlushSize) {
+            SlotStringReadWrite.stringValueFlushSize = stringValueFlushSize;
+            logger.info("local.storage.string.value.flush.size, update to {}", stringValueFlushSize);
+        }
+        int stringValueFlushIntervalSeconds = ProxyDynamicConf.getInt("local.storage.string.value.flush.interval.seconds", 300);
+        if (SlotStringReadWrite.stringValueFlushIntervalSeconds != stringValueFlushIntervalSeconds) {
+            SlotStringReadWrite.stringValueFlushIntervalSeconds = stringValueFlushIntervalSeconds;
+            logger.info("local.storage.string.value.flush.interval.seconds, update to {}", stringValueFlushIntervalSeconds);
+        }
+    }
+
     private long lastFlushTime = TimeCache.currentMillis;
 
     private final short slot;
@@ -38,28 +57,11 @@ public class SlotStringReadWrite {
 
     private CompletableFuture<FlushResult> flushFuture;
 
-    private int stringValueFlushSize;
-    private int stringValueFlushIntervalSeconds;
-
     public SlotStringReadWrite(short slot, ValueFlushExecutor flushExecutor, StringBlockReadWrite slotStringBlockCache) {
         this.slot = slot;
         this.flushExecutor = flushExecutor;
         this.stringBlockReadWrite = slotStringBlockCache;
         updateConf();
-        ProxyDynamicConf.registerCallback(this::updateConf);
-    }
-
-    private void updateConf() {
-        int stringValueFlushSize = ProxyDynamicConf.getInt("local.storage.string.value.flush.size", 200);
-        if (this.stringValueFlushSize != stringValueFlushSize) {
-            this.stringValueFlushSize = stringValueFlushSize;
-            logger.info("local.storage.string.value.flush.size, update to {}", stringValueFlushSize);
-        }
-        int stringValueFlushIntervalSeconds = ProxyDynamicConf.getInt("local.storage.string.value.flush.interval.seconds", 300);
-        if (this.stringValueFlushIntervalSeconds != stringValueFlushIntervalSeconds) {
-            this.stringValueFlushIntervalSeconds = stringValueFlushIntervalSeconds;
-            logger.info("local.storage.string.value.flush.interval.seconds, update to {}", stringValueFlushIntervalSeconds);
-        }
     }
 
     /**

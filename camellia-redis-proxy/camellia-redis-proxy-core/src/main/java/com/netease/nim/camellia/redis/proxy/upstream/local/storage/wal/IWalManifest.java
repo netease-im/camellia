@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2025/1/17
@@ -19,6 +20,13 @@ public interface IWalManifest {
      * @return 文件id
      */
     long fileId(short slot) throws IOException;
+
+    /**
+     * get write lock
+     * @param fileId fileId
+     * @return lock
+     */
+    ReentrantLock getWriteLock(long fileId);
 
     /**
      * wal文件已经写到哪里了

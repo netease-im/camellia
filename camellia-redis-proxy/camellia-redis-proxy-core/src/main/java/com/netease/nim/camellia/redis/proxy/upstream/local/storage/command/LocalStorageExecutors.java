@@ -23,7 +23,8 @@ public class LocalStorageExecutors {
 
     private final MpscSlotHashExecutor commandExecutor;
     private final FlushExecutor flushExecutor;
-    private final ScheduledExecutorService scheduler;
+    private final ScheduledExecutorService flushScheduler;
+    private final ScheduledExecutorService walScheduler;
 
     private LocalStorageExecutors() {
         {
@@ -39,8 +40,12 @@ public class LocalStorageExecutors {
             logger.info("local storage flush executor init success, threads = {}, queueSize = {}", threads, queueSize);
         }
         {
-            scheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("local-storage-schedule"));
+            flushScheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("local-storage-flush-schedule"));
             logger.info("local storage flush scheduler init success");
+        }
+        {
+            walScheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("local-storage-wal-schedule"));
+            logger.info("local storage wal scheduler init success");
         }
     }
 
@@ -63,7 +68,11 @@ public class LocalStorageExecutors {
         return flushExecutor;
     }
 
-    public ScheduledExecutorService getScheduler() {
-        return scheduler;
+    public ScheduledExecutorService getFlushScheduler() {
+        return flushScheduler;
+    }
+
+    public ScheduledExecutorService getWalScheduler() {
+        return walScheduler;
     }
 }

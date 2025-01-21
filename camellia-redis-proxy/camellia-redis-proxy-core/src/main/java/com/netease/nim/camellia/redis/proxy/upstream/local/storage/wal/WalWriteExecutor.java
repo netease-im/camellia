@@ -1,12 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
-import com.netease.nim.camellia.tools.utils.SysUtils;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import org.jctools.queues.MpscBlockingConsumerArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2025/1/17
@@ -27,7 +28,7 @@ public class WalWriteExecutor {
     }
 
     public void start() {
-        threads = SysUtils.getCpuNum();
+        threads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", 4);
         for (int i=0; i<threads; i++) {
             BlockingQueue<WalWriteTask> queue = new MpscBlockingConsumerArrayQueue<>(10240);
             queueList.add(queue);
@@ -80,12 +81,19 @@ public class WalWriteExecutor {
             }
             for (Map.Entry<Long, List<LogRecord>> entry : map.entrySet()) {
                 Long fileId = entry.getKey();
-                //获取文件已经写到哪里了
-                long offset = walManifest.getFileWriteNextOffset(fileId);
-                //批量写入
-                long nextOffset = walReadWrite.write(fileId, offset, entry.getValue());
-                //更新文件已经写到哪里了
-                walManifest.updateFileWriteNextOffset(fileId, nextOffset);
+                ReentrantLock lock = walManifest.getWriteLock(fileId);
+                lock.lock();
+                long offset;
+                try {
+                    //获取文件已经写到哪里了
+                    offset = walManifest.getFileWriteNextOffset(fileId);
+                    //批量写入
+                    long nextOffset = walReadWrite.write(fileId, offset, entry.getValue());
+                    //更新文件已经写到哪里了
+                    walManifest.updateFileWriteNextOffset(fileId, nextOffset);
+                } finally {
+                    lock.unlock();
+                }
                 Map<Short, SlotWalOffset> slotWalOffsetMap = new HashMap<>();
                 for (LogRecord logRecord : entry.getValue()) {
                     slotWalOffsetMap.put(logRecord.getSlot(), new SlotWalOffset(logRecord.getId(), fileId, offset));

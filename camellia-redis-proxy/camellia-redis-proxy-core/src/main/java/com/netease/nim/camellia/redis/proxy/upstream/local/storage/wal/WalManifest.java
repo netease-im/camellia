@@ -1,10 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -39,7 +42,9 @@ public class WalManifest implements IWalManifest {
     private final ConcurrentHashMap<Short, SlotWalOffset> slotWalOffsetStartMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Short, SlotWalOffset> slotWalOffsetEndMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Short, Long> slotFileMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Short, ReentrantReadWriteLock> slotLockMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, Long> fileOffsetMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, ReentrantLock> lockMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, Boolean> activeWalFileMap = new ConcurrentHashMap<>();
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -62,12 +67,12 @@ public class WalManifest implements IWalManifest {
             ByteBuffer buffer1 = ByteBuffer.wrap(magic_header);
             while (buffer1.hasRemaining()) {
                 int write = fileChannel.write(buffer1);
-                logger.info("init wal.manifest.file, magic_header, key.manifest.file = {}, result = {}", fileName, write);
+                logger.info("init wal.manifest.file, magic_header, key.manifest.file = {}, write.len = {}", fileName, write);
             }
             ByteBuffer buffer2 = ByteBuffer.wrap(magic_footer);
             while (buffer2.hasRemaining()) {
                 int write = fileChannel.write(buffer2, magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+8) * 2);
-                logger.info("init wal.manifest.file, magic_footer, key.manifest.file = {}, result = {}", fileName, write);
+                logger.info("init wal.manifest.file, magic_footer, key.manifest.file = {}, write.len = {}", fileName, write);
             }
             mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, len);
         } else {
@@ -123,6 +128,7 @@ public class WalManifest implements IWalManifest {
                 }
                 long length = file.length();
                 fileOffsetMap.put(walFile.fileId(), length);
+                lockMap.computeIfAbsent(walFile.fileId(), k -> new ReentrantLock());
                 if (length < LocalStorageConstants.wal_file_size) {
                     activeWalFileMap.put(walFile.fileId(), Boolean.TRUE);
                 }
@@ -136,10 +142,11 @@ public class WalManifest implements IWalManifest {
                 long fileId = time + i;
                 activeWalFileMap.put(fileId, Boolean.TRUE);
                 fileOffsetMap.put(fileId, 0L);
+                lockMap.computeIfAbsent(fileId, k -> new ReentrantLock());
                 FileNames.createWalFileIfNotExists(dir, fileId);
             }
         }
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("wal-schedule"))
+        LocalStorageExecutors.getInstance().getWalScheduler()
                 .scheduleAtFixedRate(this::schedule, 60, 60, TimeUnit.SECONDS);
     }
 
@@ -163,6 +170,7 @@ public class WalManifest implements IWalManifest {
                         fileId++;
                     }
                     fileOffsetMap.put(fileId, 0L);
+                    lockMap.computeIfAbsent(fileId, k -> new ReentrantLock());
                     slotFileMap.put(slot, fileId);
                     activeWalFileMap.put(fileId, Boolean.TRUE);
                     FileNames.createWalFileIfNotExists(dir, fileId);
@@ -194,7 +202,15 @@ public class WalManifest implements IWalManifest {
     }
 
     @Override
+    public ReentrantLock getWriteLock(long fileId) {
+        ReentrantLock lock = lockMap.get(fileId);
+        if (lock != null) return lock;
+        return lockMap.computeIfAbsent(fileId, k -> new ReentrantLock());
+    }
+
+    @Override
     public long getFileWriteNextOffset(long fileId) {
+
         return fileOffsetMap.get(fileId);
     }
 
@@ -213,32 +229,50 @@ public class WalManifest implements IWalManifest {
 
     @Override
     public SlotWalOffset getSlotWalOffsetEnd(short slot) {
-        return slotWalOffsetEndMap.get(slot);
+        ReentrantReadWriteLock readWriteLock = CamelliaMapUtils.computeIfAbsent(slotLockMap, slot, k -> new ReentrantReadWriteLock());
+        readWriteLock.readLock().lock();
+        try {
+            return slotWalOffsetEndMap.get(slot);
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
     }
 
     @Override
     public void updateSlotWalOffsetEnd(short slot, SlotWalOffset offset) {
-        slotWalOffsetEndMap.put(slot, offset);
-        ByteBuffer buffer = ByteBuffer.allocate(24);
-        buffer.putLong(offset.recordId());
-        buffer.putLong(offset.fileId());
-        buffer.putLong(offset.fileOffset());
-        int index = magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+8) + slot * 24;
-        mappedByteBuffer.put(index, buffer.array());
-        if (!slotWalOffsetStartMap.containsKey(slot)) {
-            updateSlotWalOffsetStart(slot, new SlotWalOffset(0L, offset.fileId(), 0));
+        ReentrantReadWriteLock readWriteLock = CamelliaMapUtils.computeIfAbsent(slotLockMap, slot, k -> new ReentrantReadWriteLock());
+        readWriteLock.writeLock().lock();
+        try {
+            slotWalOffsetEndMap.put(slot, offset);
+            ByteBuffer buffer = ByteBuffer.allocate(24);
+            buffer.putLong(offset.recordId());
+            buffer.putLong(offset.fileId());
+            buffer.putLong(offset.fileOffset());
+            int index = magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+8) + slot * 24;
+            mappedByteBuffer.put(index, buffer.array());
+            if (!slotWalOffsetStartMap.containsKey(slot)) {
+                updateSlotWalOffsetStart(slot, new SlotWalOffset(0L, offset.fileId(), 0));
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
         }
     }
 
     @Override
     public void updateSlotWalOffsetStart(short slot, SlotWalOffset offset) {
-        slotWalOffsetStartMap.put(slot, offset);
-        ByteBuffer buffer = ByteBuffer.allocate(24);
-        buffer.putLong(offset.recordId());
-        buffer.putLong(offset.fileId());
-        buffer.putLong(offset.fileOffset());
-        int index = magic_header.length + slot * 24;
-        mappedByteBuffer.put(index, buffer.array());
+        ReentrantReadWriteLock readWriteLock = CamelliaMapUtils.computeIfAbsent(slotLockMap, slot, k -> new ReentrantReadWriteLock());
+        readWriteLock.writeLock().lock();
+        try {
+            slotWalOffsetStartMap.put(slot, offset);
+            ByteBuffer buffer = ByteBuffer.allocate(24);
+            buffer.putLong(offset.recordId());
+            buffer.putLong(offset.fileId());
+            buffer.putLong(offset.fileOffset());
+            int index = magic_header.length + slot * 24;
+            mappedByteBuffer.put(index, buffer.array());
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -271,6 +305,7 @@ public class WalManifest implements IWalManifest {
                 boolean delete = new File(FileNames.walFile(dir, fileId)).delete();
                 logger.info("delete wal file, file = {}, result = {}", FileNames.walFile(dir, fileId), delete);
                 fileOffsetMap.remove(fileId);
+                lockMap.remove(fileId);
             }
         } catch (Exception e) {
             logger.error("wal schedule error", e);

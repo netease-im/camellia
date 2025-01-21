@@ -95,8 +95,8 @@ public class RedisLocalStorageClient implements IUpstreamClient {
 
             commands = new Commands(commandConfig);
 
-            ScheduledExecutorService scheduler = LocalStorageExecutors.getInstance().getScheduler();
-            scheduler.scheduleAtFixedRate(this::flush, 1, 1, TimeUnit.SECONDS);
+            ScheduledExecutorService scheduler = LocalStorageExecutors.getInstance().getFlushScheduler();
+            scheduler.scheduleAtFixedRate(this::flush, 10, 10, TimeUnit.SECONDS);
 
             logger.info("local storage client start success, dir = {}", dir);
         } catch (Exception e) {

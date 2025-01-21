@@ -55,12 +55,12 @@ public class KeyManifest implements IKeyManifest {
             ByteBuffer buffer1 = ByteBuffer.wrap(magic_header);
             while (buffer1.hasRemaining()) {
                 int write = fileChannel.write(buffer1);
-                logger.info("init key.manifest.file, magic_header, key.manifest.file = {}, result = {}", fileName, write);
+                logger.info("init key.manifest.file, magic_header, key.manifest.file = {}, write.len = {}", fileName, write);
             }
             ByteBuffer buffer2 = ByteBuffer.wrap(magic_footer);
             while (buffer2.hasRemaining()) {
                 int write = fileChannel.write(buffer2, magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+4));
-                logger.info("init key.manifest.file, magic_footer, key.manifest.file = {}, result = {}", fileName, write);
+                logger.info("init key.manifest.file, magic_footer, key.manifest.file = {}, write.len = {}", fileName, write);
             }
         } else {
             int len = magic_header.length + magic_footer.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+4);
@@ -205,10 +205,38 @@ public class KeyManifest implements IKeyManifest {
                     }
                 }
             }
+            //尝试其他文件
+            for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
+                Long otherFileId = entry.getKey();
+                if (otherFileId == fileId) {
+                    continue;
+                }
+                BitSet bitSet = entry.getValue();
+                if (LocalStorageConstants.key_manifest_bit_size - bitSet.cardinality() >= bitsStep*2) {
+                    for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
+                        if (bitSet.get(i, i + bitsStep * 2).cardinality() == 0) {
+                            //clear old
+                            for (int j=bitsStart; j<bitsEnd; j++) {
+                                bitSet.set(j, false);
+                            }
+                            //set new
+                            for (int j=i; j<i+bitsStep*2; j++) {
+                                bitSet.set(j, true);
+                            }
+                            //update
+                            update(slot, otherFileId, (long) i * LocalStorageConstants._64k, capacity*2);
+                            return slotInfoMap.get(slot);
+                        }
+                    }
+                }
+            }
             //分配不出来就使用新文件
             fileId = initFileId();
-            update(slot, fileId, 0, LocalStorageConstants._64k);
-            fileBitsMap.get(fileId).set(0, true);
+            update(slot, fileId, 0, capacity*2);
+            BitSet bitSet = fileBitsMap.get(fileId);
+            for (int i=0; i<bitsStep*2; i++) {
+                bitSet.set(i, true);
+            }
             return slotInfoMap.get(slot);
         } finally {
             readWriteLock.writeLock().unlock();
