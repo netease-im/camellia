@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist;
 
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.KeyCodec;
@@ -76,18 +77,32 @@ public class KeyFlushExecutor {
     private void clear(SlotInfo slotInfo) throws IOException {
         long fileId = slotInfo.fileId();
         long offset = slotInfo.offset();
-        int capacity = slotInfo.capacity();
-        int bucketSize = capacity / _4k;
+        long capacity = slotInfo.capacity();
+        int bucketSize = (int) (capacity / _4k);
         for (int i=0; i<bucketSize; i++) {
-            keyBlockReadWrite.clearBlockCache(fileId, offset + i * _4k);
+            keyBlockReadWrite.clearBlockCache(fileId, offset + (long) i * _4k);
         }
-        keyBlockReadWrite.writeBlocks(fileId, offset, new byte[capacity]);
+        if (capacity < _64k) {
+            byte[] empty = LocalStorageConstants.emptyBytes((int) capacity);
+            keyBlockReadWrite.writeBlocks(fileId, offset, empty);
+        } else {
+            long clearOffset = offset;
+            while (true) {
+                int size = (int) Math.min(_64k, capacity + offset - clearOffset);
+                if (size <= 0) {
+                    break;
+                }
+                byte[] empty = LocalStorageConstants.emptyBytes(size);
+                keyBlockReadWrite.writeBlocks(fileId, clearOffset, empty);
+                clearOffset = clearOffset + size;
+            }
+        }
     }
 
     private WriteResult writeTo(SlotInfo source, SlotInfo target, Map<Key, KeyInfo> flushKeys, WriteResult lastWrite) throws IOException {
         Map<Integer, Map<Key, KeyInfo>> writeBuffer = new HashMap<>();
-        int capacity = target.capacity();
-        int bucketSize = capacity / _4k;
+        long capacity = target.capacity();
+        int bucketSize = (int) (capacity / _4k);
         {
             for (Map.Entry<Key, KeyInfo> entry : flushKeys.entrySet()) {
                 Key key = entry.getKey();
@@ -131,8 +146,18 @@ public class KeyFlushExecutor {
         } else {
             Map<Key, KeyInfo> oldAllKeys;
             if (lastWrite == null || lastWrite.oldAllKeys == null) {
-                byte[] oldAll = keyBlockReadWrite.readBlocks(source.fileId(), source.offset(), source.capacity());
-                oldAllKeys = KeyCodec.decodeSlot(oldAll);
+                oldAllKeys = new HashMap<>();
+                long readOffset = source.offset();
+                while (true) {
+                    int size = (int) Math.min(_64k, source.capacity() - readOffset);
+                    if (size <= 0) {
+                        break;
+                    }
+                    byte[] data = keyBlockReadWrite.readBlocks(source.fileId(), readOffset, size);
+                    Map<Key, KeyInfo> map = KeyCodec.decodeBuckets(data);
+                    oldAllKeys.putAll(map);
+                    readOffset += size;
+                }
             } else {
                 oldAllKeys = lastWrite.oldAllKeys;
             }

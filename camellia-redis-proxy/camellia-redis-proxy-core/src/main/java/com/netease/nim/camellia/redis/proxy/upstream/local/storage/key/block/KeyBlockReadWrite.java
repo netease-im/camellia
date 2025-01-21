@@ -68,10 +68,10 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         }
         long fileId = slotInfo.fileId();
         long offset = slotInfo.offset();
-        int capacity = slotInfo.capacity();
-        int bucketSize = capacity / _4k;
+        long capacity = slotInfo.capacity();
+        int bucketSize = (int) (capacity / _4k);
         int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
-        long bucketOffset = offset + bucket * _4k;
+        long bucketOffset = offset + (long) bucket * _4k;
 
         String cacheKey = fileId + "|" + bucketOffset;
         byte[] block = readCache.get(cacheKey);

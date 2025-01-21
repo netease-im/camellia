@@ -23,13 +23,13 @@ import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.consta
 public class KeyCodec {
 
     /**
-     * 解码一整个slot
-     * @param all data
+     * 解码多个bucket
+     * @param data data
      * @return 解码结果
      */
-    public static Map<Key, KeyInfo> decodeSlot(byte[] all) {
-        ByteBuffer buffer = ByteBuffer.wrap(all);
-        int bucketSize = all.length / LocalStorageConstants._4k;
+    public static Map<Key, KeyInfo> decodeBuckets(byte[] data) {
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+        int bucketSize = data.length / LocalStorageConstants._4k;
         Map<Key, KeyInfo> result = new HashMap<>();
         for (int i=0; i<bucketSize; i++) {
             byte[] bytes = new byte[LocalStorageConstants._4k];

@@ -16,6 +16,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.max_key_capacity;
+
 
 /**
  * Created by caojiajun on 2024/12/31
@@ -59,11 +61,11 @@ public class KeyManifest implements IKeyManifest {
             }
             ByteBuffer buffer2 = ByteBuffer.wrap(magic_footer);
             while (buffer2.hasRemaining()) {
-                int write = fileChannel.write(buffer2, magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+4));
+                int write = fileChannel.write(buffer2, magic_header.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+8));
                 logger.info("init key.manifest.file, magic_footer, key.manifest.file = {}, write.len = {}", fileName, write);
             }
         } else {
-            int len = magic_header.length + magic_footer.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+4);
+            int len = magic_header.length + magic_footer.length + RedisClusterCRC16Utils.SLOT_SIZE * (8+8+8);
             if (fileChannel.size() != len) {
                 throw new IOException("key.manifest.file illegal size");
             }
@@ -159,11 +161,17 @@ public class KeyManifest implements IKeyManifest {
             }
             long fileId = slotInfo.fileId();
             long offset = slotInfo.offset();
-            int capacity = slotInfo.capacity();
+            long capacity = slotInfo.capacity();
             if (capacity * 2 <= 0) {
                 throw new IOException("slot capacity exceed");
             }
-            int bitsStep = capacity / LocalStorageConstants._64k;
+            if (capacity * 2 > max_key_capacity) {
+                throw new IOException("slot capacity exceed");
+            }
+            int bitsStep = (int) (capacity / LocalStorageConstants._64k);
+            if (bitsStep <= 0) {
+                throw new IOException("slot capacity exceed");
+            }
             BitSet bits = fileBitsMap.get(fileId);
             int bitsStart = (int)(offset / LocalStorageConstants._64k);
             int bitsEnd = (int)((offset + capacity) / LocalStorageConstants._64k);
@@ -231,6 +239,9 @@ public class KeyManifest implements IKeyManifest {
                 }
             }
             //分配不出来就使用新文件
+            for (int i=bitsStart; i<bitsEnd; i++) {
+                bits.set(i, false);
+            }
             fileId = initFileId();
             update(slot, fileId, 0, capacity*2);
             BitSet bitSet = fileBitsMap.get(fileId);
@@ -253,14 +264,14 @@ public class KeyManifest implements IKeyManifest {
         return fileId;
     }
 
-    private void update(short slot, long fileId, long offset, int capacity) throws IOException {
+    private void update(short slot, long fileId, long offset, long capacity) throws IOException {
         slotInfoMap.put(slot, new SlotInfo(fileId, offset, capacity));
-        ByteBuffer buffer = ByteBuffer.allocate(8+8+4);
+        ByteBuffer buffer = ByteBuffer.allocate(8+8+8);
         buffer.putLong(fileId);
         buffer.putLong(offset);
-        buffer.putInt(capacity);
+        buffer.putLong(capacity);
         buffer.flip();
-        long position = magic_header.length + slot * (8+8+4);
+        long position = magic_header.length + slot * (8+8+8);
         while (buffer.hasRemaining()) {
             int write = fileChannel.write(buffer, position);
             if (logger.isDebugEnabled()) {
