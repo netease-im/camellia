@@ -1,11 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush;
 
 
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -15,17 +10,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class FlushExecutor {
 
-    private static final Logger logger = LoggerFactory.getLogger(FlushExecutor.class);
-
     private final ThreadPoolExecutor executor;
 
     public FlushExecutor(int poolSize, int queueSize) {
         this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(queueSize), new FlushThreadFactory("flush", false));
-        ExecutorUtils.scheduleAtFixedRate(() -> {
-            int size = executor.getQueue().size();
-            logger.info("flush executor, size = {}", size);
-        }, 10, 10, TimeUnit.SECONDS);
+    }
+
+    public int size() {
+        return executor.getQueue().size();
     }
 
     public boolean isInFlushThread() {

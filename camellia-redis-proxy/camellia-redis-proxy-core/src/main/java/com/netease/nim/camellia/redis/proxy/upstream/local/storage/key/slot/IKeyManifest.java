@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -33,7 +34,7 @@ public interface IKeyManifest {
      * @param slot slot
      * @return slot info
      */
-    SlotInfo get(short slot) ;
+    SlotInfo get(short slot);
 
     /**
      * init slot info
@@ -48,8 +49,18 @@ public interface IKeyManifest {
      * expand slot info, capacity will expand to double size
      * 扩容slot-info，容量会在当前基础上加倍
      * @param slot slot
+     * @param slotInfo slot info
      * @return slot info
      * @throws IOException exception
      */
-    SlotInfo expand(short slot) throws IOException;
+    SlotInfo expand(short slot, SlotInfo slotInfo) throws IOException;
+
+    /**
+     * commit new slot info
+     * @param slot slot
+     * @param newSlotInfo new slot info
+     * @param rollBackSlotInfos new slot info
+     * @throws IOException exception
+     */
+    void commit(short slot, SlotInfo newSlotInfo, Set<SlotInfo> rollBackSlotInfos) throws IOException;
 }

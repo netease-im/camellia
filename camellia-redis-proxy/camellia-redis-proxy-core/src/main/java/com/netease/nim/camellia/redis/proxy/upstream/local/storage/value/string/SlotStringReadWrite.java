@@ -176,7 +176,7 @@ public class SlotStringReadWrite {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             } finally {
-                LocalStorageMonitor.valueWaitFlushTime(System.nanoTime() - startTime);
+                LocalStorageMonitor.time("string_value_wait_flush", System.nanoTime() - startTime);
             }
         }
     }

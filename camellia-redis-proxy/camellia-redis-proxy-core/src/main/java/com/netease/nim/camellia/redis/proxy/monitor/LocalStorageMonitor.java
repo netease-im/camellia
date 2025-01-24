@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageExecutors;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -18,90 +19,23 @@ public class LocalStorageMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalStorageMonitor.class);
 
-    private static final Time compactTime = new Time();
-    private static final Time flushTime = new Time();
-    private static final Time keyFlushTime = new Time();
-    private static final Time valueFlushTime = new Time();
-    private static final Time walFlushTime = new Time();
-    private static final Time walAppendTime = new Time();
-    private static final Time valueWaitFlushTime = new Time();
-    private static final Time keyWaitFlushTime = new Time();
+    private static final ConcurrentHashMap<String, FileReadWriteCollector> fileMap = new ConcurrentHashMap<>();
 
-    private static final Time fileReadTime = new Time();
-    private static final Time fileWriteTime = new Time();
-
-    private static final ConcurrentHashMap<String, LongAdder> fileReadMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> fileWriteMap = new ConcurrentHashMap<>();
-
-    private static final LongAdder slotInit= new LongAdder();
+    private static final LongAdder slotInit = new LongAdder();
     private static final LongAdder slotExpand = new LongAdder();
 
-    public static void compactTime(long time) {
+    private static final ConcurrentHashMap<String, TimeCollector> timeMap = new ConcurrentHashMap<>();
+
+    public static void fileRead(String file, long size, long time) {
         if (time < 0) return;
         time = time / 10000;
-        compactTime.update(time);
+        CamelliaMapUtils.computeIfAbsent(fileMap, file, k -> new FileReadWriteCollector()).updateRead(size, time);
     }
 
-    public static void flushTime(long time) {
+    public static void fileWrite(String file, long size, long time) {
         if (time < 0) return;
         time = time / 10000;
-        flushTime.update(time);
-    }
-
-    public static void keyFlushTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        keyFlushTime.update(time);
-    }
-
-    public static void valueFlushTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        valueFlushTime.update(time);
-    }
-
-    public static void walFlushTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        walFlushTime.update(time);
-    }
-
-    public static void walAppendTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        walAppendTime.update(time);
-    }
-
-    public static void valueWaitFlushTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        valueWaitFlushTime.update(time);
-    }
-
-    public static void keyWaitFlushTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        keyWaitFlushTime.update(time);
-    }
-
-    public static void fileReadTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        fileReadTime.update(time);
-    }
-
-    public static void fileWriteTime(long time) {
-        if (time < 0) return;
-        time = time / 10000;
-        fileWriteTime.update(time);
-    }
-
-    public static void fileRead(String file, long size) {
-        CamelliaMapUtils.computeIfAbsent(fileReadMap, file, k -> new LongAdder()).add(size);
-    }
-
-    public static void fileWrite(String file, long size) {
-        CamelliaMapUtils.computeIfAbsent(fileWriteMap, file, k -> new LongAdder()).add(size);
+        CamelliaMapUtils.computeIfAbsent(fileMap, file, k -> new FileReadWriteCollector()).updateWrite(size, time);
     }
 
     public static void slotInit() {
@@ -112,74 +46,46 @@ public class LocalStorageMonitor {
         slotExpand.increment();
     }
 
+    public static void time(String item, long time) {
+        if (time < 0) return;
+        time = time / 10000;
+        CamelliaMapUtils.computeIfAbsent(timeMap, item, k -> new TimeCollector()).update(time);
+    }
+
     static {
         ExecutorUtils.scheduleAtFixedRate(() -> {
-            {
-                Stats stats = compactTime.getStats();
-                logger.info("compact stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = flushTime.getStats();
-                logger.info("flush stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = keyFlushTime.getStats();
-                logger.info("key flush stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = valueFlushTime.getStats();
-                logger.info("value flush stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = walFlushTime.getStats();
-                logger.info("wal flush stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = walAppendTime.getStats();
-                logger.info("wal append stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = keyWaitFlushTime.getStats();
-                logger.info("key wait flush stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = valueWaitFlushTime.getStats();
-                logger.info("value wait flush stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = fileReadTime.getStats();
-                logger.info("file read stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                Stats stats = fileWriteTime.getStats();
-                logger.info("file write stats, count = {}, avg = {}", stats.count, stats.avg);
-            }
-            {
-                for (Map.Entry<String, LongAdder> entry : fileWriteMap.entrySet()) {
-                    long size = entry.getValue().sumThenReset();
-                    if (size == 0) {
-                        continue;
-                    }
-                    logger.info("file write, file = {}, size = {}", entry.getKey(), Utils.humanReadableByteCountBin(size));
-                }
-            }
-            {
-                for (Map.Entry<String, LongAdder> entry : fileReadMap.entrySet()) {
-                    long size = entry.getValue().sumThenReset();
-                    if (size == 0) {
-                        continue;
-                    }
-                    logger.info("file read, file = {}, size = {}", entry.getKey(), Utils.humanReadableByteCountBin(size));
-                }
-            }
+            logger.info("##############");
             {
                 logger.info("slot init, count = {}", slotInit.sumThenReset());
                 logger.info("slot expand, count = {}", slotExpand.sumThenReset());
+                logger.info("flush executor, queue.size = {}", LocalStorageExecutors.getInstance().getFlushExecutor().size());
             }
+            {
+                for (Map.Entry<String, TimeCollector> entry : timeMap.entrySet()) {
+                    TimeCollector time = entry.getValue();
+                    TimeStats stats = time.getStats();
+                    if (stats.count == 0) {
+                        continue;
+                    }
+                    logger.info("time monitor, item = {}, count = {}, avg = {}", entry.getKey(), stats.count, stats.avg);
+                }
+            }
+            for (Map.Entry<String, FileReadWriteCollector> entry : fileMap.entrySet()) {
+                FileReadWriteCollector collector = entry.getValue();
+                FileReadWriteStats stats = collector.getStats();
+                if (stats.readSize == 0 && stats.writeSize == 0) {
+                    continue;
+                }
+                logger.info("file read, file = {}, read.count = {}, read.size = {}, read.time.avg = {}",
+                        entry.getKey(), stats.readTime.count, Utils.humanReadableByteCountBin(stats.readSize), stats.readTime.avg);
+                logger.info("file write, file = {}, write.count = {}, write.size = {}, write.time.avg = {}",
+                        entry.getKey(), stats.writeTime.count, Utils.humanReadableByteCountBin(stats.writeSize), stats.writeTime.avg);
+            }
+            logger.info("##############");
         }, 10, 10, TimeUnit.SECONDS);
     }
 
-    private static class Time {
+    private static class TimeCollector {
         LongAdder time = new LongAdder();
         LongAdder count = new LongAdder();
 
@@ -188,21 +94,55 @@ public class LocalStorageMonitor {
             this.count.increment();
         }
 
-        Stats getStats() {
+        TimeStats getStats() {
             long time = this.time.sumThenReset();
             long count = this.count.sumThenReset();
             if (count == 0) {
-                return new Stats();
+                return new TimeStats();
             }
-            Stats stats = new Stats();
+            TimeStats stats = new TimeStats();
             stats.avg = ((double) time / count) / 100;
             stats.count = count;
             return stats;
         }
     }
 
-    private static class Stats {
+    private static class FileReadWriteCollector {
+        TimeCollector readTime = new TimeCollector();
+        LongAdder readSize = new LongAdder();
+
+        TimeCollector writeTime = new TimeCollector();
+        LongAdder writeSize = new LongAdder();
+
+        void updateRead(long size, long time) {
+            readTime.update(time);
+            readSize.add(size);
+        }
+
+        void updateWrite(long size, long time) {
+            writeTime.update(time);
+            writeSize.add(size);
+        }
+
+        FileReadWriteStats getStats() {
+            FileReadWriteStats stats = new FileReadWriteStats();
+            stats.readTime = readTime.getStats();
+            stats.writeTime = writeTime.getStats();
+            stats.readSize = readSize.sumThenReset();
+            stats.writeSize = writeSize.sumThenReset();
+            return stats;
+        }
+    }
+
+    private static class TimeStats {
         long count;
         double avg;
+    }
+
+    private static class FileReadWriteStats {
+        TimeStats readTime;
+        long readSize;
+        TimeStats writeTime;
+        long writeSize;
     }
 }

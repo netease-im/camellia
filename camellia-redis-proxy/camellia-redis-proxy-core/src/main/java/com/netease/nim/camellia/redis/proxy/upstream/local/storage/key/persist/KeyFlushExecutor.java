@@ -44,12 +44,12 @@ public class KeyFlushExecutor {
                 long startTime = System.nanoTime();
                 try {
                     execute(flushTask);
+                    LocalStorageMonitor.time("key_flush", System.nanoTime() - startTime);
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
+                    LocalStorageMonitor.time("key_flush", System.nanoTime() - startTime);
                     logger.error("key flush error, slot = {}", flushTask.slot(), e);
                     future.complete(FlushResult.ERROR);
-                } finally {
-                    LocalStorageMonitor.keyFlushTime(System.nanoTime() - startTime);
                 }
             });
         } catch (Exception e) {
@@ -62,20 +62,46 @@ public class KeyFlushExecutor {
     private void execute(KeyFlushTask task) throws Exception {
         short slot = task.slot();
         Map<Key, KeyInfo> flushKeys = task.flushKeys();
+        //get
+        long time1 = System.nanoTime();
         SlotInfo source = keyManifest.get(slot);
+        LocalStorageMonitor.time("key_manifest_get", System.nanoTime() - time1);
         if (source == null) {
+            //init
+            long time2 = System.nanoTime();
             source = keyManifest.init(slot);
+            LocalStorageMonitor.time("key_manifest_init", System.nanoTime() - time2);
+            //clear
+            long time3 = System.nanoTime();
             clear(source);
+            LocalStorageMonitor.time("key_init_clear", System.nanoTime() - time3);
         }
         SlotInfo target = source;
         WriteResult lastWrite = null;
+        Set<SlotInfo> expandSlotInfos = new HashSet<>();
         while (true) {
+            long time4 = System.nanoTime();
+            //write to
             lastWrite = writeTo(source, target, flushKeys, lastWrite);
+            LocalStorageMonitor.time("key_write_to", System.nanoTime() - time4);
             if (lastWrite.success) {
                 break;
             }
-            target = keyManifest.expand(slot);
+            //expand
+            long time5 = System.nanoTime();
+            target = keyManifest.expand(slot, target);
+            expandSlotInfos.add(target);
+            LocalStorageMonitor.time("key_manifest_expand", System.nanoTime() - time5);
+            //clear expand
+            long time6 = System.nanoTime();
+            clear(target);
+            LocalStorageMonitor.time("key_expand_clear", System.nanoTime() - time6);
         }
+        //commit
+        expandSlotInfos.remove(target);
+        long time7 = System.nanoTime();
+        keyManifest.commit(slot, target, expandSlotInfos);
+        LocalStorageMonitor.time("key_manifest_commit", System.nanoTime() - time7);
     }
 
     private void clear(SlotInfo slotInfo) throws IOException {

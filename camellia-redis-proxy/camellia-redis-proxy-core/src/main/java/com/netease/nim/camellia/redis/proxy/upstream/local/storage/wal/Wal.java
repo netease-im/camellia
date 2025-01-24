@@ -52,7 +52,7 @@ public class Wal {
         //异步批量落盘
         CompletableFuture<WalWriteResult> future = new CompletableFuture<>();
         executor.submit(slot, new WalWriteTask(record, fileId, future));
-        future.thenAccept(result -> LocalStorageMonitor.walAppendTime(System.nanoTime() - startTime));
+        future.thenAccept(result -> LocalStorageMonitor.time("wal_append", System.nanoTime() - startTime));
         return future;
     }
 
@@ -74,12 +74,7 @@ public class Wal {
         if (offset == null) {
             return;
         }
-        long time = System.nanoTime();
-        try {
-            walManifest.updateSlotWalOffsetStart(slot, offset);
-        } finally {
-            LocalStorageMonitor.walFlushTime(System.nanoTime() - time);
-        }
+        walManifest.updateSlotWalOffsetStart(slot, offset);
     }
 
     /**

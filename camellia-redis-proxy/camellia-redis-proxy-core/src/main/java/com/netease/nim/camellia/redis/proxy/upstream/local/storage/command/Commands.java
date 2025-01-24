@@ -114,7 +114,7 @@ public class Commands {
                     try {
                         wal.flush(slot, slotWalOffset);
                     } finally {
-                        LocalStorageMonitor.flushTime(System.nanoTime() - startTime);
+                        LocalStorageMonitor.time("flush", System.nanoTime() - startTime);
                     }
                 });
             });

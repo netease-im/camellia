@@ -51,9 +51,8 @@ public class FileReadWrite {
                 int write = fileChannel.write(buffer, position);
                 position += write;
             }
-            LocalStorageMonitor.fileWrite(file, data.length);
         } finally {
-            LocalStorageMonitor.fileWriteTime(System.nanoTime() - startTime);
+            LocalStorageMonitor.fileWrite(file, data.length, System.nanoTime() - startTime);
         }
     }
 
@@ -63,10 +62,9 @@ public class FileReadWrite {
             FileChannel fileChannel = getFileChannel(file);
             ByteBuffer buffer = ByteBuffer.allocate(size);
             fileChannel.read(buffer, offset);
-            LocalStorageMonitor.fileRead(file, size);
             return buffer.array();
         } finally {
-            LocalStorageMonitor.fileReadTime(System.nanoTime() - startTime);
+            LocalStorageMonitor.fileRead(file, size, System.nanoTime() - startTime);
         }
     }
 
@@ -80,10 +78,9 @@ public class FileReadWrite {
             ByteBuffer buffer = ByteBuffer.allocate(4);
             fileChannel.read(buffer, offset);
             buffer.flip();
-            LocalStorageMonitor.fileRead(file, 4);
             return buffer.getInt();
         } finally {
-            LocalStorageMonitor.fileReadTime(System.nanoTime() - startTime);
+            LocalStorageMonitor.fileRead(file, 4, System.nanoTime() - startTime);
         }
     }
 

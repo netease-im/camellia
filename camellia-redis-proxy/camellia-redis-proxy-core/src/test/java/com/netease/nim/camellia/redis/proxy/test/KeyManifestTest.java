@@ -29,29 +29,35 @@ public class KeyManifestTest {
     @Test
     public void test() throws IOException {
 
-        KeyManifest keySlotMap = new KeyManifest(dir);
-        keySlotMap.load();
+        KeyManifest keyManifest = new KeyManifest(dir);
+        keyManifest.load();
 
         short slot = (short)ThreadLocalRandom.current().nextInt(RedisClusterCRC16Utils.SLOT_SIZE / 2);
-        SlotInfo slotInfo1 = keySlotMap.init(slot);
-        SlotInfo slotInfo2 = keySlotMap.init((short) (slot + 100));
+        SlotInfo slotInfo1 = keyManifest.init(slot);
+        SlotInfo slotInfo2 = keyManifest.init((short) (slot + 100));
         Assert.assertEquals(slotInfo1.fileId(), slotInfo2.fileId());
         Assert.assertEquals(slotInfo1.capacity(), _64k);
         Assert.assertEquals(slotInfo2.capacity(), _64k);
         Assert.assertEquals(slotInfo1.offset(), 0);
         Assert.assertEquals(slotInfo2.offset(), _64k);
 
-        SlotInfo slotInfo = keySlotMap.get(slot);
+        keyManifest.commit(slot, slotInfo1, null);
+        keyManifest.commit((short) (slot + 100), slotInfo2, null);
+
+        SlotInfo slotInfo = keyManifest.get(slot);
         Assert.assertEquals(slotInfo, slotInfo1);
 
-        SlotInfo expand = keySlotMap.expand(slot);
+        SlotInfo expand = keyManifest.expand(slot, slotInfo);
         Assert.assertEquals(expand.fileId(), slotInfo.fileId());
         Assert.assertEquals(expand.offset(), _64k * 2);
         Assert.assertEquals(expand.capacity(), _64k * 2);
+        keyManifest.commit(slot, expand, null);
+
         slotInfo1 = expand;
 
-        SlotInfo slotInfo3 = keySlotMap.init((short) (slot + 200));
+        SlotInfo slotInfo3 = keyManifest.init((short) (slot + 200));
         Assert.assertEquals(slotInfo3, slotInfo);
+        keyManifest.commit((short) (slot + 200), slotInfo3, null);
 
         KeyManifest keySlotMap2 = new KeyManifest(dir);
         keySlotMap2.load();
@@ -68,19 +74,21 @@ public class KeyManifestTest {
 
     @Test
     public void test2() throws IOException {
-        KeyManifest keySlotMap = new KeyManifest(dir);
-        keySlotMap.load();
+        KeyManifest keyManifest = new KeyManifest(dir);
+        keyManifest.load();
 
         long time1 = System.nanoTime();
         for (short i = 0; i<RedisClusterCRC16Utils.SLOT_SIZE; i++) {
-            keySlotMap.init(i);
+            SlotInfo slotInfo = keyManifest.init(i);
+            keyManifest.commit(i, slotInfo, null);
         }
         long time2 = System.nanoTime();
         System.out.println("init all, spend = " + (time2 - time1) / 1000000.0);
 
         for (int i=0; i<1000; i++) {
             short slot = (short) ThreadLocalRandom.current().nextInt(RedisClusterCRC16Utils.SLOT_SIZE);
-            keySlotMap.expand(slot);
+            SlotInfo expand = keyManifest.expand(slot, keyManifest.get(slot));
+            keyManifest.commit(slot, expand, null);
         }
         long time3 = System.nanoTime();
         System.out.println("rand expand 1000 slot, spend = " + (time3 - time2) / 1000000.0);

@@ -40,12 +40,12 @@ public class ValueFlushExecutor {
                 long startTime = System.nanoTime();
                 try {
                     execute(flushTask);
+                    LocalStorageMonitor.time("value_flush", System.nanoTime() - startTime);
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
                     logger.error("string value flush error, slot = {}", flushTask.slot(), e);
+                    LocalStorageMonitor.time("value_flush", System.nanoTime() - startTime);
                     future.complete(FlushResult.ERROR);
-                } finally {
-                    LocalStorageMonitor.valueFlushTime(System.nanoTime() - startTime);
                 }
             });
         } catch (Exception e) {
@@ -73,16 +73,27 @@ public class ValueFlushExecutor {
         }
         List<BlockInfo> list = new ArrayList<>();
         for (Map.Entry<BlockType, List<Pair<KeyInfo, byte[]>>> entry : blockMap.entrySet()) {
-            StringValueEncodeResult result = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
+            long time1 = System.nanoTime();
+            StringValueEncodeResult result;
+            try {
+                result = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
+            } finally {
+                LocalStorageMonitor.time("string_value_encode", System.nanoTime() - time1);
+            }
             list.addAll(result.blockInfos());
         }
         for (BlockInfo blockInfo : list) {
-            BlockLocation blockLocation = blockInfo.blockLocation();
-            long fileId = blockLocation.fileId();
-            long offset = (long) blockLocation.blockId() * blockInfo.blockType().getBlockSize();
-            stringBlockReadWrite.writeBlocks(fileId, offset, blockInfo.data());
-            stringBlockReadWrite.updateBlockCache(fileId, offset, blockInfo.data());
-            valueManifest.commit(slot, blockLocation);
+            long time2 = System.nanoTime();
+            try {
+                BlockLocation blockLocation = blockInfo.blockLocation();
+                long fileId = blockLocation.fileId();
+                long offset = (long) blockLocation.blockId() * blockInfo.blockType().getBlockSize();
+                stringBlockReadWrite.writeBlocks(fileId, offset, blockInfo.data());
+                stringBlockReadWrite.updateBlockCache(fileId, offset, blockInfo.data());
+                valueManifest.commit(slot, blockLocation);
+            } finally {
+                LocalStorageMonitor.time("string_value_write", System.nanoTime() - time2);
+            }
         }
     }
 

@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
 import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -15,9 +14,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.max_key_capacity;
+import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.*;
 
 
 /**
@@ -30,10 +29,11 @@ public class KeyManifest implements IKeyManifest {
     private static final byte[] magic_header = "camellia_header".getBytes(StandardCharsets.UTF_8);
     private static final byte[] magic_footer = "camellia_footer".getBytes(StandardCharsets.UTF_8);
 
-    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     private final Map<Short, SlotInfo> slotInfoMap = new HashMap<>();//slot -> slotInfo
-    private final Map<Long, BitSet> fileBitsMap = new TreeMap<>();
+    private final Map<Long, BitSet> fileBitsMap1 = new TreeMap<>();//prepare
+    private final Map<Long, BitSet> fileBitsMap2 = new TreeMap<>();//commit
 
     private final String dir;
     private final String fileName;
@@ -86,9 +86,9 @@ public class KeyManifest implements IKeyManifest {
                 if (fileId == 0) {
                     continue;
                 }
-                BitSet bits = fileBitsMap.computeIfAbsent(fileId, k -> new BitSet(LocalStorageConstants.key_manifest_bit_size));
-                int bitsStart = (int)(offset / LocalStorageConstants._64k);
-                int bitsEnd = (int)((offset + capacity) / LocalStorageConstants._64k);
+                BitSet bits = fileBitsMap2.computeIfAbsent(fileId, k -> new BitSet(key_manifest_bit_size));
+                int bitsStart = (int)(offset / _64k);
+                int bitsEnd = (int)((offset + capacity) / _64k);
                 for (int index=bitsStart; index<bitsEnd; index++) {
                     bits.set(index, true);
                 }
@@ -97,8 +97,13 @@ public class KeyManifest implements IKeyManifest {
                 logger.info("load slot info, slot = {}, fileId = {}, offset = {}, capacity = {}", slot, fileId, offset, capacity);
                 totalCapacity += capacity;
             }
+            for (Map.Entry<Long, BitSet> entry : fileBitsMap2.entrySet()) {
+                fileBitsMap1.put(entry.getKey(), BitSet.valueOf(entry.getValue().toLongArray()));
+            }
+            //
             logger.info("load slot info, key.file.count = {}, key.file.size = {}/{}",
-                    fileBitsMap.size(), totalCapacity, Utils.humanReadableByteCountBin(totalCapacity));
+                    fileBitsMap2.size(), totalCapacity, Utils.humanReadableByteCountBin(totalCapacity));
+
             byte[] realMagicFooter = new byte[magic_footer.length];
             buffer.get(realMagicFooter);
             if (!Arrays.equals(realMagicFooter, magic_footer)) {
@@ -110,57 +115,46 @@ public class KeyManifest implements IKeyManifest {
 
     @Override
     public Set<Long> getFileIds() {
-        return new HashSet<>(fileBitsMap.keySet());
+        return new HashSet<>(fileBitsMap1.keySet());
     }
 
     @Override
     public SlotInfo get(short slot) {
-        readWriteLock.readLock().lock();
-        try {
-            return slotInfoMap.get(slot);
-        } finally {
-            readWriteLock.readLock().unlock();
-        }
+        return slotInfoMap.get(slot);
     }
 
     @Override
     public SlotInfo init(short slot) throws IOException {
-        readWriteLock.writeLock().lock();
+        lock.lock();
         try {
             SlotInfo slotInfo = slotInfoMap.get(slot);
             if (slotInfo != null) {
                 throw new IOException("slot has init");
             }
             LocalStorageMonitor.slotInit();
-            for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
+            for (Map.Entry<Long, BitSet> entry : fileBitsMap1.entrySet()) {
                 Long fileId = entry.getKey();
                 BitSet bits = entry.getValue();
-                for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size; i++) {
+                for (int i = 0; i< key_manifest_bit_size; i++) {
                     boolean used = bits.get(i);
                     if (!used) {
-                        update(slot, fileId, (long) i * LocalStorageConstants._64k, LocalStorageConstants._64k);
                         bits.set(i, true);
-                        return slotInfoMap.get(slot);
+                        return new SlotInfo(fileId, (long) i * _64k, _64k);
                     }
                 }
             }
             long fileId = initFileId();
-            update(slot, fileId, 0, LocalStorageConstants._64k);
-            fileBitsMap.get(fileId).set(0, true);
-            return slotInfoMap.get(slot);
+            fileBitsMap1.get(fileId).set(0, true);
+            return new SlotInfo(fileId, 0, _64k);
         } finally {
-            readWriteLock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
     @Override
-    public SlotInfo expand(short slot) throws IOException {
-        readWriteLock.writeLock().lock();
+    public SlotInfo expand(short slot, SlotInfo slotInfo) throws IOException {
+        lock.lock();
         try {
-            SlotInfo slotInfo = slotInfoMap.get(slot);
-            if (slotInfo == null) {
-                throw new IllegalArgumentException("slot not init");
-            }
             long fileId = slotInfo.fileId();
             long offset = slotInfo.offset();
             long capacity = slotInfo.capacity();
@@ -170,22 +164,23 @@ public class KeyManifest implements IKeyManifest {
             if (capacity * 2 > max_key_capacity) {
                 throw new IOException("slot capacity exceed");
             }
-            int bitsStep = (int) (capacity / LocalStorageConstants._64k);
+            int bitsStep = (int) (capacity / _64k);
             if (bitsStep <= 0) {
                 throw new IOException("slot capacity exceed");
             }
-            BitSet bits = fileBitsMap.get(fileId);
-            int bitsStart = (int)(offset / LocalStorageConstants._64k);
-            int bitsEnd = (int)((offset + capacity) / LocalStorageConstants._64k);
+            BitSet currentBitSet = fileBitsMap1.get(fileId);
+            int bitsStart = (int)(offset / _64k);
+            int bitsEnd = (int)((offset + capacity) / _64k);
             if (bitsStart < 0 || bitsEnd < 0) {
                 throw new IOException("slot capacity exceed");
             }
             LocalStorageMonitor.slotExpand();
             //直接顺延扩容
-            if (bitsStart + (bitsEnd - bitsStart) * 2 < LocalStorageConstants.key_manifest_bit_size) {
+            if (bitsStart + (bitsEnd - bitsStart) * 2 < key_manifest_bit_size) {
+                long time = System.nanoTime();
                 boolean directExpand = true;
                 for (int i=bitsEnd; i<bitsEnd + bitsStep; i++) {
-                    boolean used = bits.get(i);
+                    boolean used = currentBitSet.get(i);
                     if (used) {
                         directExpand = false;
                         break;
@@ -194,84 +189,134 @@ public class KeyManifest implements IKeyManifest {
                 if (directExpand) {
                     //set new
                     for (int i=bitsEnd; i<bitsEnd + bitsStep; i++) {
-                        bits.set(i, true);
+                        currentBitSet.set(i, true);
                     }
-                    //update
-                    update(slot, fileId, offset, capacity*2);
-                    return slotInfoMap.get(slot);
+                    LocalStorageMonitor.time("key_manifest_expand_direct", System.nanoTime() - time);
+                    return new SlotInfo(fileId, offset, capacity*2);
                 }
+                LocalStorageMonitor.time("key_manifest_expand_direct_failed", System.nanoTime() - time);
             }
             //使用同一个文件的空闲区域，优先复用其他slot回收的区域
-            if (LocalStorageConstants.key_manifest_bit_size - bits.cardinality() >= bitsStep*2) {
-                for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
-                    if (bits.get(i, i + bitsStep * 2).cardinality() == 0) {
-                        //clear old
-                        for (int j=bitsStart; j<bitsEnd; j++) {
-                            bits.set(j, false);
-                        }
+            if (key_manifest_bit_size - currentBitSet.cardinality() >= bitsStep*2) {
+                long time = System.nanoTime();
+                for (int i = 0; i< key_manifest_bit_size -bitsStep*2; i++) {
+                    if (currentBitSet.get(i, i + bitsStep * 2).cardinality() == 0) {
                         //set new
                         for (int j=i; j<i+bitsStep*2; j++) {
-                            bits.set(j, true);
+                            currentBitSet.set(j, true);
                         }
                         //update
-                        update(slot, fileId, (long) i * LocalStorageConstants._64k, capacity*2);
-                        return slotInfoMap.get(slot);
+                        LocalStorageMonitor.time("key_manifest_expand_same_file", System.nanoTime() - time);
+                        return new SlotInfo(fileId, (long) i * _64k, capacity*2);
                     }
                 }
+                LocalStorageMonitor.time("key_manifest_expand_same_file_failed", System.nanoTime() - time);
             }
             //尝试其他文件
-            for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
+            for (Map.Entry<Long, BitSet> entry : fileBitsMap1.entrySet()) {
+                long time = System.nanoTime();
                 Long otherFileId = entry.getKey();
                 if (otherFileId == fileId) {
                     continue;
                 }
-                BitSet bitSet = entry.getValue();
-                if (LocalStorageConstants.key_manifest_bit_size - bitSet.cardinality() >= bitsStep*2) {
-                    for (int i = 0; i< LocalStorageConstants.key_manifest_bit_size -bitsStep*2; i++) {
-                        if (bitSet.get(i, i + bitsStep * 2).cardinality() == 0) {
-                            //clear old
-                            for (int j=bitsStart; j<bitsEnd; j++) {
-                                bitSet.set(j, false);
-                            }
+                BitSet newBitSet = entry.getValue();
+                if (key_manifest_bit_size - newBitSet.cardinality() >= bitsStep*2) {
+                    for (int i = 0; i< key_manifest_bit_size -bitsStep*2; i++) {
+                        if (newBitSet.get(i, i + bitsStep * 2).cardinality() == 0) {
                             //set new
                             for (int j=i; j<i+bitsStep*2; j++) {
-                                bitSet.set(j, true);
+                                newBitSet.set(j, true);
                             }
                             //update
-                            update(slot, otherFileId, (long) i * LocalStorageConstants._64k, capacity*2);
-                            return slotInfoMap.get(slot);
+                            LocalStorageMonitor.time("key_manifest_expand_other_file", System.nanoTime() - time);
+                            return new SlotInfo(otherFileId, (long) i * _64k, capacity*2);
                         }
                     }
                 }
+                LocalStorageMonitor.time("key_manifest_expand_other_file_failed", System.nanoTime() - time);
             }
-            //分配不出来就使用新文件
-            for (int i=bitsStart; i<bitsEnd; i++) {
-                bits.set(i, false);
-            }
-            fileId = initFileId();
-            update(slot, fileId, 0, capacity*2);
-            BitSet bitSet = fileBitsMap.get(fileId);
+            long time = System.nanoTime();
+            long newFileId = initFileId();
+            BitSet newBitSet = fileBitsMap1.get(newFileId);
             for (int i=0; i<bitsStep*2; i++) {
-                bitSet.set(i, true);
+                newBitSet.set(i, true);
             }
-            return slotInfoMap.get(slot);
+            LocalStorageMonitor.time("key_manifest_expand_new_file", System.nanoTime() - time);
+            return new SlotInfo(newFileId, 0, capacity*2);
         } finally {
-            readWriteLock.writeLock().unlock();
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void commit(short slot, SlotInfo newSlotInfo, Set<SlotInfo> rollBackSlotInfos) throws IOException {
+        lock.lock();
+        try {
+            Set<SlotInfo> toClearList = new HashSet<>();
+            if (rollBackSlotInfos != null && !rollBackSlotInfos.isEmpty()) {
+                toClearList.addAll(rollBackSlotInfos);
+            }
+
+            SlotInfo oldSlotInfo = slotInfoMap.get(slot);
+            if (oldSlotInfo != null && !oldSlotInfo.equals(newSlotInfo)) {
+                toClearList.add(oldSlotInfo);
+            }
+
+            for (SlotInfo toClearSlotInfo : toClearList) {
+                //clear bits1/bits2
+                long fileId = toClearSlotInfo.fileId();
+                long offset = toClearSlotInfo.offset();
+                long capacity = toClearSlotInfo.capacity();
+                BitSet bitSet1 = fileBitsMap1.get(fileId);
+                BitSet bitSet2 = fileBitsMap2.get(fileId);
+                int bitsStart = (int) (offset / _64k);
+                int bitsEnd = (int) ((offset + capacity) / _64k);
+                for (int i = bitsStart; i < bitsEnd; i++) {
+                    bitSet1.set(i, false);
+                    bitSet2.set(i, false);
+                }
+            }
+
+            //
+            if (oldSlotInfo != null && oldSlotInfo.equals(newSlotInfo)) {
+                return;
+            }
+            {
+                //update bits2
+                long fileId = newSlotInfo.fileId();
+                long offset = newSlotInfo.offset();
+                long capacity = newSlotInfo.capacity();
+                BitSet bitSet2 = fileBitsMap2.get(fileId);
+                int bitsStart = (int) (offset / _64k);
+                int bitsEnd = (int) ((offset + capacity) / _64k);
+                for (int i = bitsStart; i < bitsEnd; i++) {
+                    bitSet2.set(i, true);
+                }
+            }
+            //persist
+            persist(slot, newSlotInfo);
+            //update cache
+            slotInfoMap.put(slot, newSlotInfo);
+        } finally {
+            lock.unlock();
         }
     }
 
     private long initFileId() throws IOException {
         long fileId = System.currentTimeMillis();
-        while (fileBitsMap.containsKey(fileId)) {
+        while (fileBitsMap1.containsKey(fileId)) {
             fileId ++;
         }
-        fileBitsMap.put(fileId, new BitSet(LocalStorageConstants.key_manifest_bit_size));
+        fileBitsMap1.put(fileId, new BitSet(key_manifest_bit_size));
+        fileBitsMap2.put(fileId, new BitSet(key_manifest_bit_size));
         FileNames.createKeyFile(dir, fileId);
         return fileId;
     }
 
-    private void update(short slot, long fileId, long offset, long capacity) throws IOException {
-        slotInfoMap.put(slot, new SlotInfo(fileId, offset, capacity));
+    private void persist(short slot, SlotInfo slotInfo) throws IOException {
+        long fileId = slotInfo.fileId();
+        long offset = slotInfo.offset();
+        long capacity = slotInfo.capacity();
         ByteBuffer buffer = ByteBuffer.allocate(8+8+8);
         buffer.putLong(fileId);
         buffer.putLong(offset);

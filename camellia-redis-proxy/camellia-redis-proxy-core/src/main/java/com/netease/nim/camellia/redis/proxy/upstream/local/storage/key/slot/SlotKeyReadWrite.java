@@ -209,7 +209,7 @@ public class SlotKeyReadWrite {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             } finally {
-                LocalStorageMonitor.keyWaitFlushTime(System.nanoTime() - startTime);
+                LocalStorageMonitor.time("key_wait_flush", System.nanoTime() - startTime);
             }
         }
     }

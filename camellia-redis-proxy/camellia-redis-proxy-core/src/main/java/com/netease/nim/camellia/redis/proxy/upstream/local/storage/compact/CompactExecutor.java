@@ -119,7 +119,7 @@ public class CompactExecutor {
             logger.error("compact error, slot = {}, blockType = {}, offset = {}, limit = {}", slot, blockType, offset, limit, e);
         } finally {
             lastCompactTimeMap.put(slot, TimeCache.currentMillis);
-            LocalStorageMonitor.compactTime(System.nanoTime() - startTime);
+            LocalStorageMonitor.time("compact", System.nanoTime() - startTime);
         }
     }
 
