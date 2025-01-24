@@ -32,7 +32,7 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
     private static final Logger logger = LoggerFactory.getLogger(StringBlockReadWrite.class);
 
     private final IValueManifest valueManifest;
-    private final FileReadWrite fileReadWrite = new FileReadWrite();
+    private final FileReadWrite fileReadWrite = FileReadWrite.getInstance();
 
     private final LRUCache<String, byte[]> readCache;
     private final LRUCache<String, byte[]> writeCache;

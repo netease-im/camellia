@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
@@ -55,7 +56,7 @@ public class SlotStringReadWrite {
     private final Map<KeyInfo, byte[]> immutable = new HashMap<>();
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
 
-    private CompletableFuture<FlushResult> flushFuture;
+    private CompletableFuture<Boolean> flushFuture;
 
     public SlotStringReadWrite(short slot, ValueFlushExecutor flushExecutor, StringBlockReadWrite slotStringBlockCache) {
         this.slot = slot;
@@ -134,6 +135,7 @@ public class SlotStringReadWrite {
         if (mutable.isEmpty()) {
             return CompletableFuture.completedFuture(FlushResult.OK);
         }
+        flushFuture = new CompletableFuture<>();
         CompletableFuture<FlushResult> future = new CompletableFuture<>();
         Map<Key, byte[]> encodeMap = StringValue.encodeMap(mutable);
         immutable.putAll(mutable);
@@ -144,7 +146,6 @@ public class SlotStringReadWrite {
             flushDone();
             future.complete(flushResult);
         });
-        this.flushFuture = submit;
         return future;
     }
 
@@ -161,6 +162,7 @@ public class SlotStringReadWrite {
 
     private void flushDone() {
         immutable.clear();
+        flushFuture.complete(true);
         flushFuture = null;
         flushStatus = FlushStatus.FLUSH_OK;
         lastFlushTime = TimeCache.currentMillis;
@@ -168,10 +170,13 @@ public class SlotStringReadWrite {
 
     private void waitForFlush() {
         if (flushFuture != null) {
+            long startTime = System.nanoTime();
             try {
                 flushFuture.get();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
+            } finally {
+                LocalStorageMonitor.valueWaitFlushTime(System.nanoTime() - startTime);
             }
         }
     }

@@ -98,14 +98,20 @@ public class KeyCodec {
         short compressLen;
         if (compressType == CompressType.none) {
             compressed = array;
-            compressLen = (short) compressed.length;
         } else {
             ICompressor compressor = CompressUtils.get(compressType);
             compressed = compressor.compress(array, 0, array.length);
-            compressLen = (short) compressed.length;
-            if (compressed.length + 9 > _4k) {
-                return null;
+            if (compressed.length >= array.length) {
+                compressed = array;
+                compressType = CompressType.none;
             }
+        }
+        if (compressed.length > Short.MAX_VALUE) {
+            return null;
+        }
+        compressLen = (short) compressed.length;
+        if (compressed.length + 9 > _4k) {
+            return null;
         }
         ByteBuffer buffer = ByteBuffer.allocate(_4k);
         buffer.putInt(0);//0,1,2,3

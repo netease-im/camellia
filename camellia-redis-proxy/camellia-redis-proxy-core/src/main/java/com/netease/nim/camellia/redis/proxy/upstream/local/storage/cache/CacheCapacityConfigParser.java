@@ -17,8 +17,8 @@ public class CacheCapacityConfigParser {
             long bytes = bytes(string);
             if (bytes < 0) {
                 logger.warn("illegal config = {} for config-key = {}, use default config = {}", string, configKey, defaultValue);
+                bytes = bytes(defaultValue);
             }
-            bytes = bytes(defaultValue);
             return bytes;
         } catch (Exception e) {
             logger.warn("error config = {} parse for config-key = {}, use default config = {}", string, configKey, defaultValue);

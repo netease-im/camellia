@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.command;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
@@ -98,6 +99,7 @@ public class Commands {
         compactExecutor.compact(slot);
         //check need flush
         if (keyReadWrite.needFlush(slot) || stringReadWrite.needFlush(slot)) {
+            long startTime = System.nanoTime();
             //获取slot当前wal写到哪里了
             SlotWalOffset slotWalOffset = wal.getSlotWalOffsetEnd(slot);
             //key flush prepare
@@ -108,7 +110,13 @@ public class Commands {
                 //flush key
                 CompletableFuture<FlushResult> future2 = keyReadWrite.flush(slot);
                 //flush wal，表示这个offset之前的关于指定slot的日志条目都无效了
-                future2.thenAccept(flushResult2 -> wal.flush(slot, slotWalOffset));
+                future2.thenAccept(flushResult2 -> {
+                    try {
+                        wal.flush(slot, slotWalOffset);
+                    } finally {
+                        LocalStorageMonitor.flushTime(System.nanoTime() - startTime);
+                    }
+                });
             });
         }
     }

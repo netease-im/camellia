@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
@@ -55,8 +56,7 @@ public class SlotKeyReadWrite {
     private final Map<Key, KeyInfo> immutable = new HashMap<>();
 
     private volatile FlushStatus flushStatus = FlushStatus.FLUSH_OK;
-
-    private CompletableFuture<FlushResult> flushFuture;
+    private volatile CompletableFuture<Boolean> flushFuture;
 
     public SlotKeyReadWrite(short slot, KeyFlushExecutor executor, KeyBlockReadWrite keyBlockReadWrite) {
         this.slot = slot;
@@ -140,7 +140,6 @@ public class SlotKeyReadWrite {
             flushDone();
             future.complete(b);
         });
-        this.flushFuture = submit;
         return future;
     }
 
@@ -157,6 +156,7 @@ public class SlotKeyReadWrite {
         immutable.putAll(mutable);
         mutable.clear();
         flushStatus = FlushStatus.PREPARE;
+        flushFuture = new CompletableFuture<>();
         return immutable;
     }
 
@@ -195,6 +195,7 @@ public class SlotKeyReadWrite {
 
     private void flushDone() {
         immutable.clear();
+        flushFuture.complete(true);
         flushFuture = null;
         flushStatus = FlushStatus.FLUSH_OK;
         lastFlushTime = TimeCache.currentMillis;
@@ -202,10 +203,13 @@ public class SlotKeyReadWrite {
 
     private void waitForFlush() {
         if (flushFuture != null) {
+            long startTime = System.nanoTime();
             try {
                 flushFuture.get();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
+            } finally {
+                LocalStorageMonitor.keyWaitFlushTime(System.nanoTime() - startTime);
             }
         }
     }

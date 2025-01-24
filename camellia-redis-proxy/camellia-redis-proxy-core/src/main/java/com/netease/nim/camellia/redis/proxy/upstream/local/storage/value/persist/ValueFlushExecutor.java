@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueEncodeResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
@@ -36,12 +37,15 @@ public class ValueFlushExecutor {
         CompletableFuture<FlushResult> future = new CompletableFuture<>();
         try {
             executor.submit(() -> {
+                long startTime = System.nanoTime();
                 try {
                     execute(flushTask);
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
                     logger.error("string value flush error, slot = {}", flushTask.slot(), e);
                     future.complete(FlushResult.ERROR);
+                } finally {
+                    LocalStorageMonitor.valueFlushTime(System.nanoTime() - startTime);
                 }
             });
         } catch (Exception e) {
@@ -61,7 +65,7 @@ public class ValueFlushExecutor {
             byte[] data = entry.getValue();
             BlockType blockType = BlockType.fromData(data);
             KeyInfo keyInfo = keyMap.get(entry.getKey());
-            if (keyInfo.isExpire() || keyInfo == KeyInfo.DELETE) {
+            if (keyInfo == null || keyInfo.isExpire() || keyInfo == KeyInfo.DELETE) {
                 continue;
             }
             List<Pair<KeyInfo, byte[]>> buffers = blockMap.computeIfAbsent(blockType, k -> new ArrayList<>());

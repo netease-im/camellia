@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class WalReadWrite {
 
-    private final FileReadWrite fileReadWrite = new FileReadWrite();
+    private final FileReadWrite fileReadWrite = FileReadWrite.getInstance();
 
     private final String dir;
 

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageReadWrite;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
@@ -53,6 +54,7 @@ public class CompactExecutor {
         if (lastCompactTime != null && TimeCache.currentMillis - lastCompactTime < compactIntervalSeconds*1000L) {
             return;
         }
+        long startTime = System.nanoTime();
         BlockType blockType = nextBlockType(slot);
         int offset = nextOffset(blockType, slot);
         int limit = blockLimit.getOrDefault(blockType, 2);
@@ -117,6 +119,7 @@ public class CompactExecutor {
             logger.error("compact error, slot = {}, blockType = {}, offset = {}, limit = {}", slot, blockType, offset, limit, e);
         } finally {
             lastCompactTimeMap.put(slot, TimeCache.currentMillis);
+            LocalStorageMonitor.compactTime(System.nanoTime() - startTime);
         }
     }
 

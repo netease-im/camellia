@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
@@ -40,12 +41,15 @@ public class KeyFlushExecutor {
         CompletableFuture<FlushResult> future = new CompletableFuture<>();
         try {
             executor.submit(() -> {
+                long startTime = System.nanoTime();
                 try {
                     execute(flushTask);
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
                     logger.error("key flush error, slot = {}", flushTask.slot(), e);
                     future.complete(FlushResult.ERROR);
+                } finally {
+                    LocalStorageMonitor.keyFlushTime(System.nanoTime() - startTime);
                 }
             });
         } catch (Exception e) {
@@ -149,7 +153,7 @@ public class KeyFlushExecutor {
                 oldAllKeys = new HashMap<>();
                 long readOffset = source.offset();
                 while (true) {
-                    int size = (int) Math.min(_64k, source.capacity() - readOffset);
+                    int size = (int) Math.min(_64k, source.capacity() + source.offset() - readOffset);
                     if (size <= 0) {
                         break;
                     }

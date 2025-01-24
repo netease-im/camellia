@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
@@ -130,6 +131,7 @@ public class KeyManifest implements IKeyManifest {
             if (slotInfo != null) {
                 throw new IOException("slot has init");
             }
+            LocalStorageMonitor.slotInit();
             for (Map.Entry<Long, BitSet> entry : fileBitsMap.entrySet()) {
                 Long fileId = entry.getKey();
                 BitSet bits = entry.getValue();
@@ -178,6 +180,7 @@ public class KeyManifest implements IKeyManifest {
             if (bitsStart < 0 || bitsEnd < 0) {
                 throw new IOException("slot capacity exceed");
             }
+            LocalStorageMonitor.slotExpand();
             //直接顺延扩容
             if (bitsStart + (bitsEnd - bitsStart) * 2 < LocalStorageConstants.key_manifest_bit_size) {
                 boolean directExpand = true;
@@ -281,6 +284,8 @@ public class KeyManifest implements IKeyManifest {
                 logger.debug("write slot info, slot = {}, result = {}", slot, write);
             }
         }
-        logger.info("update slot info, slot = {}, fileId = {}, offset = {}, capacity = {}", slot, fileId, offset, capacity);
+        if (logger.isDebugEnabled()) {
+            logger.debug("update slot info, slot = {}, fileId = {}, offset = {}, capacity = {}", slot, fileId, offset, capacity);
+        }
     }
 }

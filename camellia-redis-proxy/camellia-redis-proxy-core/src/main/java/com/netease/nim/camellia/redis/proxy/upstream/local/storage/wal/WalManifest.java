@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -306,6 +307,7 @@ public class WalManifest implements IWalManifest {
                 logger.info("delete wal file, file = {}, result = {}", FileNames.walFile(dir, fileId), delete);
                 fileOffsetMap.remove(fileId);
                 lockMap.remove(fileId);
+                FileReadWrite.getInstance().close(FileNames.walFile(dir, fileId));
             }
         } catch (Exception e) {
             logger.error("wal schedule error", e);

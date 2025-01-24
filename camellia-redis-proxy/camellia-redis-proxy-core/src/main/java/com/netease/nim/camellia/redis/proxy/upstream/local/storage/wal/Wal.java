@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.WalEntryCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageReadWrite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -41,6 +41,7 @@ public class Wal {
      * @throws Exception 异常
      */
     public CompletableFuture<WalWriteResult> append(short slot, WalEntry walEntry) throws Exception {
+        long startTime = System.nanoTime();
         //获取log_record_id
         long recordId = idGen.nextId();
         //构造record
@@ -51,6 +52,7 @@ public class Wal {
         //异步批量落盘
         CompletableFuture<WalWriteResult> future = new CompletableFuture<>();
         executor.submit(slot, new WalWriteTask(record, fileId, future));
+        future.thenAccept(result -> LocalStorageMonitor.walAppendTime(System.nanoTime() - startTime));
         return future;
     }
 
@@ -72,7 +74,12 @@ public class Wal {
         if (offset == null) {
             return;
         }
-        walManifest.updateSlotWalOffsetStart(slot, offset);
+        long time = System.nanoTime();
+        try {
+            walManifest.updateSlotWalOffsetStart(slot, offset);
+        } finally {
+            LocalStorageMonitor.walFlushTime(System.nanoTime() - time);
+        }
     }
 
     /**

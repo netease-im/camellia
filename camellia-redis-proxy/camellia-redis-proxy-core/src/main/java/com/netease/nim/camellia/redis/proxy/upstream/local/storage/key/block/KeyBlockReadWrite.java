@@ -29,7 +29,7 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
     private static final Logger logger = LoggerFactory.getLogger(KeyBlockReadWrite.class);
 
     private final IKeyManifest keyManifest;
-    private final FileReadWrite fileReadWrite = new FileReadWrite();
+    private final FileReadWrite fileReadWrite = FileReadWrite.getInstance();
 
     private final LRUCache<String, byte[]> readCache;
     private final LRUCache<String, byte[]> writeCache;
