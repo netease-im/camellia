@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.persist;
 
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValueEncodeResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
@@ -40,11 +40,11 @@ public class ValueFlushExecutor {
                 long startTime = System.nanoTime();
                 try {
                     execute(flushTask);
-                    LocalStorageMonitor.time("value_flush", System.nanoTime() - startTime);
+                    LocalStorageTimeMonitor.time("flush_string_value", System.nanoTime() - startTime);
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
                     logger.error("string value flush error, slot = {}", flushTask.slot(), e);
-                    LocalStorageMonitor.time("value_flush", System.nanoTime() - startTime);
+                    LocalStorageTimeMonitor.time("flush_value", System.nanoTime() - startTime);
                     future.complete(FlushResult.ERROR);
                 }
             });
@@ -78,7 +78,7 @@ public class ValueFlushExecutor {
             try {
                 result = StringValueCodec.encode(slot, entry.getKey(), valueManifest, entry.getValue());
             } finally {
-                LocalStorageMonitor.time("string_value_encode", System.nanoTime() - time1);
+                LocalStorageTimeMonitor.time("string_value_encode", System.nanoTime() - time1);
             }
             list.addAll(result.blockInfos());
         }
@@ -92,7 +92,7 @@ public class ValueFlushExecutor {
                 stringBlockReadWrite.updateBlockCache(fileId, offset, blockInfo.data());
                 valueManifest.commit(slot, blockLocation);
             } finally {
-                LocalStorageMonitor.time("string_value_write", System.nanoTime() - time2);
+                LocalStorageTimeMonitor.time("string_value_write", System.nanoTime() - time2);
             }
         }
     }

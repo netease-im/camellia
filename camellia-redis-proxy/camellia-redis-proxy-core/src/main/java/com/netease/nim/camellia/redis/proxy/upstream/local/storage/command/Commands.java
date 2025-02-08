@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.command;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
@@ -114,7 +114,7 @@ public class Commands {
                     try {
                         wal.flush(slot, slotWalOffset);
                     } finally {
-                        LocalStorageMonitor.time("flush", System.nanoTime() - startTime);
+                        LocalStorageTimeMonitor.time("flush", System.nanoTime() - startTime);
                     }
                 });
             });

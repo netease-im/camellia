@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
@@ -44,12 +45,15 @@ public class KeyReadWrite {
         KeyInfo keyInfo1 = cache.get(key);
         if (keyInfo1 != null) {
             if (keyInfo1 == KeyInfo.DELETE) {
+                LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "key");
                 return () -> null;
             }
             if (keyInfo1.isExpire()) {
                 cache.put(key, KeyInfo.DELETE);
+                LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "key");
                 return () -> null;
             }
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "key");
             return () -> keyInfo1;
         }
         ValueWrapper<KeyInfo> valueWrapper = get(slot).getForRunToCompletion(key);

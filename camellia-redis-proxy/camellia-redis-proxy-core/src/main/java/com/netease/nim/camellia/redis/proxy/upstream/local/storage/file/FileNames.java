@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.file;
 
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCountMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block.BlockType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create wal file, file = {}, result = {}", fileName, result);
+            LocalStorageCountMonitor.count("wal_file_create");
         }
     }
 
@@ -42,6 +44,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create wal manifest file, file = {}, result = {}", fileName, result);
+            LocalStorageCountMonitor.count("wal_manifest_file_create");
         }
     }
 
@@ -55,6 +58,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create key manifest file, file = {}, result = {}", fileName, result);
+            LocalStorageCountMonitor.count("key_manifest_file_create");
         }
     }
 
@@ -68,6 +72,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create key file, file = {}, result = {}", file, result);
+            LocalStorageCountMonitor.count("key_file_create");
         }
     }
 
@@ -81,6 +86,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create string data file, file = {}, result = {}", file, result);
+            LocalStorageCountMonitor.count("string_data_file_create");
         }
     }
 
@@ -94,6 +100,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create string slot file, file = {}, result = {}", file, result);
+            LocalStorageCountMonitor.count("string_slot_file_create");
         }
         return fileName;
     }
@@ -108,6 +115,7 @@ public class FileNames {
         if (!file.exists()) {
             boolean result = file.createNewFile();
             logger.info("create string index file, file = {}, result = {}", file, result);
+            LocalStorageCountMonitor.count("string_index_file_create");
         }
         return fileName;
     }

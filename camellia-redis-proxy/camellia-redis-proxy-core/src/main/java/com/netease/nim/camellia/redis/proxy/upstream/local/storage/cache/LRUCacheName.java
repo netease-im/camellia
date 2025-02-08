@@ -29,7 +29,7 @@ public enum LRUCacheName {
     public long getCapacity(long defaultSize) {
         if (defaultSize < 0) {
             long heapMemoryMax = MemoryInfoCollector.getMemoryInfo().getHeapMemoryMax();
-            long size = heapMemoryMax * 2 / 5 / LRUCacheName.values().length;
+            long size = heapMemoryMax * 2 / 10 / LRUCacheName.values().length;
             if (size <= 0) {
                 size = 32 * 1024 * 1024L;
             }

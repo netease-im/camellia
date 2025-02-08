@@ -1,7 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.slot;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
@@ -91,13 +92,16 @@ public class SlotKeyReadWrite {
     public ValueWrapper<KeyInfo> getForRunToCompletion(Key key) {
         KeyInfo keyInfo1 = mutable.get(key);
         if (keyInfo1 == KeyInfo.DELETE) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return () -> null;
         }
         KeyInfo keyInfo2 = immutable.get(key);
         if (keyInfo2 == KeyInfo.DELETE) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return () -> null;
         }
         if (keyInfo2 != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return () -> keyInfo2;
         }
         return null;
@@ -174,16 +178,20 @@ public class SlotKeyReadWrite {
     private KeyInfo get0(CacheType cacheType, Key key) throws IOException {
         KeyInfo keyInfo = mutable.get(key);
         if (keyInfo == KeyInfo.DELETE) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return null;
         }
         if (keyInfo != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return keyInfo;
         }
         keyInfo = immutable.get(key);
         if (keyInfo == KeyInfo.DELETE) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return null;
         }
         if (keyInfo != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "key");
             return keyInfo.duplicate();
         }
         keyInfo = keyBlockReadWrite.get(slot, key, cacheType);
@@ -209,7 +217,7 @@ public class SlotKeyReadWrite {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             } finally {
-                LocalStorageMonitor.time("key_wait_flush", System.nanoTime() - startTime);
+                LocalStorageTimeMonitor.time("key_wait_flush", System.nanoTime() - startTime);
             }
         }
     }

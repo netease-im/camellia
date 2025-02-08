@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisLocalStorageResource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageRunToCompletionMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
@@ -161,10 +162,12 @@ public class RedisLocalStorageClient implements IUpstreamClient {
                         readLock.unlock();
                     }
                     if (reply != null) {
+                        LocalStorageRunToCompletionMonitor.update(command.getName(), true);
                         future.complete(reply);
                         return;
                     }
                 }
+                LocalStorageRunToCompletionMonitor.update(command.getName(), true);
             } else {
                 timeMap.put(slot, TimeCache.currentMillis);
             }

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.EstimateSizeValueCalculator;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
@@ -67,12 +68,14 @@ public class StringReadWrite {
         Key key = new Key(keyInfo.getKey());
         byte[] data = readCache.get(key);
         if (data != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "string");
             return data;
         }
         data = writeCache.get(key);
         if (data != null) {
             readCache.put(key, data);
             writeCache.delete(key);
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "string");
             return data;
         }
         data = get(slot).get(keyInfo);
@@ -92,10 +95,12 @@ public class StringReadWrite {
         Key key = new Key(keyInfo.getKey());
         byte[] bytes1 = readCache.get(key);
         if (bytes1 != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "string");
             return () -> bytes1;
         }
         byte[] bytes2 = writeCache.get(key);
         if (bytes2 != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.row_cache, "string");
             readCache.put(key, bytes2);
             writeCache.delete(key);
             return () -> bytes2;

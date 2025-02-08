@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,135 +64,150 @@ public class ValueManifest implements IValueManifest {
     }
 
     @Override
-    public Map<Long, BlockType> getFileIds() {
-        return new HashMap<>(typeMap);
-    }
-
-    @Override
     public BlockLocation allocate(short slot, BlockType blockType) throws IOException {
-        int index = 0;
-        while (true) {
-            long fileId = selectFileId(blockType, index);
-            BlockLocation blockLocation = allocate0(fileId);
-            if (blockLocation == null) {
-                index ++;
-                continue;
+        long time = System.nanoTime();
+        try {
+            int index = 0;
+            while (true) {
+                long fileId = selectFileId(slot, blockType, index);
+                BlockLocation blockLocation = allocate0(fileId);
+                if (blockLocation == null) {
+                    index ++;
+                    continue;
+                }
+                return blockLocation;
             }
-            return blockLocation;
+        } finally {
+            LocalStorageTimeMonitor.time("value_block_allocate", System.nanoTime() - time);
         }
     }
 
     @Override
     public void commit(short slot, BlockLocation blockLocation) throws IOException {
-        long fileId = blockLocation.fileId();
-        int blockId = blockLocation.blockId();
-        ReentrantLock lock = lockMap.get(fileId);
-        lock.lock();
+        long time = System.nanoTime();
         try {
-            //
-            BitSet bitSet1 = bits1Map.get(fileId);
-            if (!bitSet1.get(blockId)) {
-                throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
+            long fileId = blockLocation.fileId();
+            int blockId = blockLocation.blockId();
+            ReentrantLock lock = lockMap.get(fileId);
+            lock.lock();
+            try {
+                //
+                BitSet bitSet1 = bits1Map.get(fileId);
+                if (!bitSet1.get(blockId)) {
+                    throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
+                }
+                //bits2
+                BitSet bitSet2 = bits2Map.get(fileId);
+                bitSet2.set(blockId, true);
+                //update file
+                //bits
+                int index = blockId / 64;
+                long changed = bitSet2.toLongArray()[index];
+                MappedByteBuffer buffer1 = bitsMmp.get(fileId);
+                buffer1.putLong(index*8, changed);
+                //slot
+                MappedByteBuffer buffer2 = slotsMmp.get(fileId);
+                buffer2.putShort(blockId*2, slot);
+            } finally {
+                lock.unlock();
             }
-            //bits2
-            BitSet bitSet2 = bits2Map.get(fileId);
-            bitSet2.set(blockId, true);
-            //update file
-            //bits
-            int index = blockId / 64;
-            long changed = bitSet2.toLongArray()[index];
-            MappedByteBuffer buffer1 = bitsMmp.get(fileId);
-            buffer1.putLong(index*8, changed);
-            //slot
-            MappedByteBuffer buffer2 = slotsMmp.get(fileId);
-            buffer2.putShort(blockId*2, slot);
         } finally {
-            lock.unlock();
+            LocalStorageTimeMonitor.time("value_block_commit", System.nanoTime() - time);
         }
     }
 
     @Override
     public void recycle(short slot, BlockLocation blockLocation) throws IOException {
-        long fileId = blockLocation.fileId();
-        int blockId = blockLocation.blockId();
-        ReentrantLock lock = lockMap.get(fileId);
-        lock.lock();
+        long time = System.nanoTime();
         try {
-            //bits1
-            BitSet bitSet1 = bits1Map.get(fileId);
-            if (!bitSet1.get(blockId)) {
-                throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
-            }
-            bitSet1.set(blockId, false);
-            Integer offset = allocateOffsetMap.get(fileId);
-            if (offset > blockId) {
-                allocateOffsetMap.put(fileId, blockId);
-            }
-            //bits2
-            BitSet bitSet2 = bits2Map.get(fileId);
-            bitSet2.set(blockId, false);
-            //update file
-            int index = blockId / 64;
-            long[] longArray = bitSet2.toLongArray();
-            long changed;
-            if (longArray.length > index) {
-                changed = longArray[index];
-            } else {
-                changed = 0;
-            }
-            MappedByteBuffer buffer1 = bitsMmp.get(fileId);
-            buffer1.putLong(index*8, changed);
+            long fileId = blockLocation.fileId();
+            int blockId = blockLocation.blockId();
+            ReentrantLock lock = lockMap.get(fileId);
+            lock.lock();
+            try {
+                //bits1
+                BitSet bitSet1 = bits1Map.get(fileId);
+                if (!bitSet1.get(blockId)) {
+                    throw new IOException("fileId=" + fileId + ",blockId=" + blockId + " not allocated");
+                }
+                bitSet1.set(blockId, false);
+                Integer offset = allocateOffsetMap.get(fileId);
+                if (offset > blockId) {
+                    allocateOffsetMap.put(fileId, blockId);
+                }
+                //bits2
+                BitSet bitSet2 = bits2Map.get(fileId);
+                bitSet2.set(blockId, false);
+                //update file
+                int index = blockId / 64;
+                long[] longArray = bitSet2.toLongArray();
+                long changed;
+                if (longArray.length > index) {
+                    changed = longArray[index];
+                } else {
+                    changed = 0;
+                }
+                MappedByteBuffer buffer1 = bitsMmp.get(fileId);
+                buffer1.putLong(index*8, changed);
 
-            MappedByteBuffer buffer2 = slotsMmp.get(fileId);
-            buffer2.putShort(blockId*2, (short) -1);
+                MappedByteBuffer buffer2 = slotsMmp.get(fileId);
+                buffer2.putShort(blockId*2, (short) -1);
+            } finally {
+                lock.unlock();
+            }
         } finally {
-            lock.unlock();
+            LocalStorageTimeMonitor.time("value_block_recycle", System.nanoTime() - time);
         }
     }
 
     @Override
     public List<BlockLocation> getBlocks(short slot, BlockType blockType, int offset, int limit) {
-        List<BlockLocation> list = new ArrayList<>();
-        int count = 0;
-        for (Map.Entry<Long, MappedByteBuffer> entry : slotsMmp.entrySet()) {
-            Long fileId = entry.getKey();
-            if (typeMap.get(fileId) != blockType) {
-                continue;
-            }
-            ReentrantLock lock = lockMap.get(fileId);
-            lock.lock();
-            try {
-                BitSet bitSet = bits1Map.get(fileId);
-                MappedByteBuffer buffer = entry.getValue();
-                int size = blockType.valueSlotManifestSize(data_file_size);
-                int noAllocateBlocks = 0;
-                for (int i=0; i<size/2; i++) {
-                    if (!bitSet.get(i)) {
-                        noAllocateBlocks ++;
-                        if (noAllocateBlocks >= 512) {
-                            break;
-                        }
-                        continue;
-                    }
-                    short allocateSlot = buffer.getShort(i*2);
-                    if (allocateSlot == slot) {
-                        count ++;
-                        if (count >= offset) {
-                            list.add(new BlockLocation(fileId, i));
-                            if (list.size() >= limit) {
+        long time = System.nanoTime();
+        try {
+            List<BlockLocation> list = new ArrayList<>();
+            int count = 0;
+            for (Map.Entry<Long, MappedByteBuffer> entry : slotsMmp.entrySet()) {
+                Long fileId = entry.getKey();
+                if (typeMap.get(fileId) != blockType) {
+                    continue;
+                }
+                ReentrantLock lock = lockMap.get(fileId);
+                lock.lock();
+                try {
+                    BitSet bitSet = bits1Map.get(fileId);
+                    MappedByteBuffer buffer = entry.getValue();
+                    int size = blockType.valueSlotManifestSize(data_file_size);
+                    int noAllocateBlocks = 0;
+                    for (int i=0; i<size/2; i++) {
+                        if (!bitSet.get(i)) {
+                            noAllocateBlocks ++;
+                            if (noAllocateBlocks >= 512) {
                                 break;
+                            }
+                            continue;
+                        }
+                        short allocateSlot = buffer.getShort(i*2);
+                        if (allocateSlot == slot) {
+                            count ++;
+                            if (count >= offset) {
+                                list.add(new BlockLocation(fileId, i));
+                                if (list.size() >= limit) {
+                                    break;
+                                }
                             }
                         }
                     }
+                    if (list.size() >= limit) {
+                        break;
+                    }
+                } finally {
+                    lock.unlock();
                 }
-                if (list.size() >= limit) {
-                    break;
-                }
-            } finally {
-                lock.unlock();
             }
+            return list;
+        } finally {
+            LocalStorageTimeMonitor.time("value_block_get_list", System.nanoTime() - time);
         }
-        return list;
     }
 
     @Override
@@ -221,12 +237,13 @@ public class ValueManifest implements IValueManifest {
         }
     }
 
-    private long selectFileId(BlockType blockType, int index) throws IOException {
+    private long selectFileId(short slot, BlockType blockType, int index) throws IOException {
         lock.readLock().lock();
         try {
             List<Long> list = fileIdMap.get(blockType);
             if (list != null && index < list.size()) {
-                return list.get(index);
+                int hash = (slot + index) % list.size();
+                return list.get(hash);
             }
         } catch (Exception e) {
             logger.error("select fileId error", e);
@@ -239,9 +256,12 @@ public class ValueManifest implements IValueManifest {
             if (index < list.size()) {
                 return list.get(index);
             }
-            long fileId = init(blockType);
-            list.add(fileId);
-            return fileId;
+            for (int i=0; i<4; i++) {
+                long fileId = init(blockType);
+                list.add(fileId);
+            }
+            int hash = (slot + index) % list.size();
+            return list.get(hash);
         } finally {
             lock.writeLock().unlock();
         }
@@ -299,6 +319,7 @@ public class ValueManifest implements IValueManifest {
         typeMap.put(fileId, blockType);
         List<Long> list = fileIdMap.computeIfAbsent(blockType, k -> new ArrayList<>());
         list.add(fileId);
+        Collections.sort(list);
         int offset = 0;
         for (int i=0; i<bitSet1.size(); i++) {
             if (!bitSet1.get(i)) {

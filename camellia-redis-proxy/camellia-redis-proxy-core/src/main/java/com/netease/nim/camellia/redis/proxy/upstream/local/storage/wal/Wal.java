@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
 
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.WalEntryCodec;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageReadWrite;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class Wal {
         //异步批量落盘
         CompletableFuture<WalWriteResult> future = new CompletableFuture<>();
         executor.submit(slot, new WalWriteTask(record, fileId, future));
-        future.thenAccept(result -> LocalStorageMonitor.time("wal_append", System.nanoTime() - startTime));
+        future.thenAccept(result -> LocalStorageTimeMonitor.time("wal_append", System.nanoTime() - startTime));
         return future;
     }
 

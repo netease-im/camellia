@@ -17,7 +17,7 @@ public class FlushExecutor {
                 new LinkedBlockingQueue<>(queueSize), new FlushThreadFactory("flush", false));
     }
 
-    public int size() {
+    public int getQueueSize() {
         return executor.getQueue().size();
     }
 

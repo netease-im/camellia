@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCountMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileReadWrite;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -147,7 +146,7 @@ public class WalManifest implements IWalManifest {
                 FileNames.createWalFileIfNotExists(dir, fileId);
             }
         }
-        LocalStorageExecutors.getInstance().getWalScheduler()
+        LocalStorageExecutors.getInstance().getScheduler()
                 .scheduleAtFixedRate(this::schedule, 60, 60, TimeUnit.SECONDS);
     }
 
@@ -211,7 +210,6 @@ public class WalManifest implements IWalManifest {
 
     @Override
     public long getFileWriteNextOffset(long fileId) {
-
         return fileOffsetMap.get(fileId);
     }
 
@@ -303,11 +301,18 @@ public class WalManifest implements IWalManifest {
                 }
             }
             for (Long fileId : toDeleteWalFiles) {
-                boolean delete = new File(FileNames.walFile(dir, fileId)).delete();
-                logger.info("delete wal file, file = {}, result = {}", FileNames.walFile(dir, fileId), delete);
-                fileOffsetMap.remove(fileId);
-                lockMap.remove(fileId);
-                FileReadWrite.getInstance().close(FileNames.walFile(dir, fileId));
+                String fileName = FileNames.walFile(dir, fileId);
+                try {
+                    logger.info("try delete expire wal file, file = {}", fileName);
+                    FileReadWrite.getInstance().close(fileName);
+                    fileOffsetMap.remove(fileId);
+                    lockMap.remove(fileId);
+                    boolean delete = new File(fileName).delete();
+                    logger.info("delete expire wal file, file = {}, result = {}", fileName, delete);
+                    LocalStorageCountMonitor.count("wal_file_delete");
+                } catch (Exception e) {
+                    logger.info("delete expire wal file, file = {} error", fileName, e);
+                }
             }
         } catch (Exception e) {
             logger.error("wal schedule error", e);

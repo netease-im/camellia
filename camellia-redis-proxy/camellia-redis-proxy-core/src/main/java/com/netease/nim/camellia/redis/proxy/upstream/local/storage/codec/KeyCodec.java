@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec;
 
 import com.netease.nim.camellia.codec.Pack;
 import com.netease.nim.camellia.codec.Unpack;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageKeyBucketMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compress.CompressType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compress.CompressUtils;
@@ -10,6 +11,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.Loc
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.KeyInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -21,6 +24,8 @@ import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.consta
  * Created by caojiajun on 2025/1/3
  */
 public class KeyCodec {
+
+    private static final Logger logger = LoggerFactory.getLogger(KeyCodec.class);
 
     /**
      * 解码多个bucket
@@ -81,13 +86,18 @@ public class KeyCodec {
      */
     public static byte[] encodeBucket(Map<Key, KeyInfo> keys) {
         Pack pack = new Pack();
+        keys.entrySet().removeIf(entry -> entry.getValue().isExpire() || entry.getValue() == KeyInfo.DELETE);
         pack.putVarUint(keys.size());
         for (Map.Entry<Key, KeyInfo> entry : keys.entrySet()) {
             pack.putMarshallable(entry.getValue());
         }
         pack.getBuffer().capacity(pack.getBuffer().readableBytes());
         byte[] array = pack.getBuffer().array();
-        short decompressLen = (short) array.length;
+        int decompressLen = array.length;
+        if (decompressLen > Short.MAX_VALUE) {
+            logger.warn("key bucket, decompressLen = {}", decompressLen);
+            return null;
+        }
         CompressType compressType;
         if (decompressLen + 9 > _4k) {//4k装不下，才压缩
             compressType = CompressType.zstd;
@@ -95,7 +105,6 @@ public class KeyCodec {
             compressType = CompressType.none;
         }
         byte[] compressed;
-        short compressLen;
         if (compressType == CompressType.none) {
             compressed = array;
         } else {
@@ -106,17 +115,17 @@ public class KeyCodec {
                 compressType = CompressType.none;
             }
         }
-        if (compressed.length > Short.MAX_VALUE) {
+        int compressLen = compressed.length;
+        if (compressLen > Short.MAX_VALUE || compressLen + 9 > _4k) {
             return null;
         }
-        compressLen = (short) compressed.length;
-        if (compressed.length + 9 > _4k) {
-            return null;
-        }
+        //
+        LocalStorageKeyBucketMonitor.update(compressType, keys.size(), decompressLen, compressLen);
+        //
         ByteBuffer buffer = ByteBuffer.allocate(_4k);
         buffer.putInt(0);//0,1,2,3
-        buffer.putShort(decompressLen);//4,5
-        buffer.putShort(compressLen);//6,7
+        buffer.putShort((short) decompressLen);//4,5
+        buffer.putShort((short) compressLen);//6,7
         buffer.put(compressType.getType());//8
         buffer.put(compressed);
         byte[] bytes = buffer.array();

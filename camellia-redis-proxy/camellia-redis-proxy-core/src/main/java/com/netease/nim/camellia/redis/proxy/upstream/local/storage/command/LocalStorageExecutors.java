@@ -24,17 +24,33 @@ public class LocalStorageExecutors {
     private final MpscSlotHashExecutor commandExecutor;
     private final FlushExecutor flushExecutor;
     private final ScheduledExecutorService flushScheduler;
-    private final ScheduledExecutorService walScheduler;
+    private final ScheduledExecutorService scheduler;
+    private final int walThreads;
+    private final boolean walAsync;
 
     private LocalStorageExecutors() {
         {
-            int threads = ProxyDynamicConf.getInt("local.storage.command.executor.threads", SysUtils.getCpuNum() * 4);
+            walAsync = ProxyDynamicConf.getBoolean("local.storage.wal.async.enable", false);
+            if (walAsync) {
+                walThreads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", 4);
+            } else {
+                walThreads = 0;
+            }
+        }
+        {
+            int threads = ProxyDynamicConf.getInt("local.storage.command.executor.threads", SysUtils.getCpuNum() * 3 / 10 - (walThreads / 2));
+            if (threads <= 0) {
+                threads = 4;
+            }
             int queueSize = ProxyDynamicConf.getInt("local.storage.command.executor.queue.size", 1024 * 128);
             commandExecutor = new MpscSlotHashExecutor("local-storage-command-executor", threads, queueSize, new MpscSlotHashExecutor.AbortPolicy());
             logger.info("local storage command executor init success, threads = {}, queueSize = {}", threads, queueSize);
         }
         {
-            int threads = ProxyDynamicConf.getInt("local.storage.flush.executor.threads", SysUtils.getCpuNum());
+            int threads = ProxyDynamicConf.getInt("local.storage.flush.executor.threads", SysUtils.getCpuNum() * 2 / 10 - (walThreads / 2));
+            if (threads <= 0) {
+                threads = 1;
+            }
             int queueSize = ProxyDynamicConf.getInt("local.storage.flush.executor.queue.size", 1024 * 128);
             flushExecutor = new FlushExecutor(threads, queueSize);
             logger.info("local storage flush executor init success, threads = {}, queueSize = {}", threads, queueSize);
@@ -44,8 +60,8 @@ public class LocalStorageExecutors {
             logger.info("local storage flush scheduler init success");
         }
         {
-            walScheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("local-storage-wal-schedule"));
-            logger.info("local storage wal scheduler init success");
+            scheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("local-storage-schedule"));
+            logger.info("local storage scheduler init success");
         }
     }
 
@@ -60,6 +76,14 @@ public class LocalStorageExecutors {
         return INSTANCE;
     }
 
+    public int getWalThreads() {
+        return walThreads;
+    }
+
+    public boolean isWalAsync() {
+        return walAsync;
+    }
+
     public MpscSlotHashExecutor getCommandExecutor() {
         return commandExecutor;
     }
@@ -72,7 +96,7 @@ public class LocalStorageExecutors {
         return flushScheduler;
     }
 
-    public ScheduledExecutorService getWalScheduler() {
-        return walScheduler;
+    public ScheduledExecutorService getScheduler() {
+        return scheduler;
     }
 }

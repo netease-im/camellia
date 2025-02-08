@@ -1,7 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.ValueWrapper;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.StringValue;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
@@ -96,10 +97,12 @@ public class SlotStringReadWrite {
     public byte[] get(KeyInfo keyInfo) throws IOException {
         byte[] data = mutable.get(keyInfo);
         if (data != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "string");
             return data;
         }
         data = immutable.get(keyInfo);
         if (data != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "string");
             return data;
         }
         return stringBlockReadWrite.get(keyInfo);
@@ -113,10 +116,12 @@ public class SlotStringReadWrite {
     public ValueWrapper<byte[]> getForRunToCompletion(KeyInfo keyInfo) {
         byte[] bytes1 = mutable.get(keyInfo);
         if (bytes1 != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "string");
             return () -> bytes1;
         }
         byte[] bytes2 = immutable.get(keyInfo);
         if (bytes2 != null) {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.mem_table, "string");
             return () -> bytes2;
         }
         return null;
@@ -176,7 +181,7 @@ public class SlotStringReadWrite {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             } finally {
-                LocalStorageMonitor.time("string_value_wait_flush", System.nanoTime() - startTime);
+                LocalStorageTimeMonitor.time("string_value_wait_flush", System.nanoTime() - startTime);
             }
         }
     }

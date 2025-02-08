@@ -16,12 +16,6 @@ public interface IKeyManifest {
     String dir();
 
     /**
-     * get fileId list
-     * @return list
-     */
-    Set<Long> getFileIds();
-
-    /**
      * init and load
      * 初始化
      * @throws IOException exception

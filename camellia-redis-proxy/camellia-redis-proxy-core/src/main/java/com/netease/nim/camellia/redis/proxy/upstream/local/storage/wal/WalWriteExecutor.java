@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.wal;
 
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageExecutors;
 import org.jctools.queues.MpscBlockingConsumerArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +17,7 @@ public class WalWriteExecutor {
     private static final Logger logger = LoggerFactory.getLogger(WalWriteTask.class);
 
     private int threads = 0;
+    private boolean walAsync = false;
     private final List<BlockingQueue<WalWriteTask>> queueList = new ArrayList<>();
 
     private final IWalManifest walManifest;
@@ -28,18 +29,27 @@ public class WalWriteExecutor {
     }
 
     public void start() {
-        threads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", 4);
-        for (int i=0; i<threads; i++) {
-            BlockingQueue<WalWriteTask> queue = new MpscBlockingConsumerArrayQueue<>(10240);
-            queueList.add(queue);
-            new Thread(() -> write0(queue), "wal-flush-" + i).start();
+        walAsync = LocalStorageExecutors.getInstance().isWalAsync();
+        if (walAsync) {
+            threads = LocalStorageExecutors.getInstance().getWalThreads();
+            for (int i = 0; i < threads; i++) {
+                BlockingQueue<WalWriteTask> queue = new MpscBlockingConsumerArrayQueue<>(10240);
+                queueList.add(queue);
+                new Thread(() -> write0(queue), "wal-flush-" + i).start();
+            }
+            logger.info("wal write executor start in async, threads = {}", threads);
+        } else {
+            logger.info("wal write executor start in sync");
         }
-        logger.info("wal write executor start, threads = {}", threads);
     }
 
     public void submit(short slot, WalWriteTask task) throws Exception {
-        int index = slot % threads;
-        queueList.get(index).put(task);
+        if (!walAsync) {
+            flush(Collections.singletonList(task));
+        } else {
+            int index = slot % threads;
+            queueList.get(index).put(task);
+        }
     }
 
     private void write0(BlockingQueue<WalWriteTask> queue) {

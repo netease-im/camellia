@@ -39,6 +39,7 @@ public class ValueManifestTest {
 
             valueManifest.commit(slot, location1);
             valueManifest.commit(slot, location2);
+
         }
 
         {

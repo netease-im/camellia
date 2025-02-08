@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.persist;
 
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.Key;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushResult;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.codec.KeyCodec;
@@ -44,10 +43,10 @@ public class KeyFlushExecutor {
                 long startTime = System.nanoTime();
                 try {
                     execute(flushTask);
-                    LocalStorageMonitor.time("key_flush", System.nanoTime() - startTime);
+                    LocalStorageTimeMonitor.time("flush_key", System.nanoTime() - startTime);
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
-                    LocalStorageMonitor.time("key_flush", System.nanoTime() - startTime);
+                    LocalStorageTimeMonitor.time("flush_key", System.nanoTime() - startTime);
                     logger.error("key flush error, slot = {}", flushTask.slot(), e);
                     future.complete(FlushResult.ERROR);
                 }
@@ -63,70 +62,29 @@ public class KeyFlushExecutor {
         short slot = task.slot();
         Map<Key, KeyInfo> flushKeys = task.flushKeys();
         //get
-        long time1 = System.nanoTime();
         SlotInfo source = keyManifest.get(slot);
-        LocalStorageMonitor.time("key_manifest_get", System.nanoTime() - time1);
         if (source == null) {
             //init
-            long time2 = System.nanoTime();
             source = keyManifest.init(slot);
-            LocalStorageMonitor.time("key_manifest_init", System.nanoTime() - time2);
-            //clear
-            long time3 = System.nanoTime();
-            clear(source);
-            LocalStorageMonitor.time("key_init_clear", System.nanoTime() - time3);
         }
         SlotInfo target = source;
         WriteResult lastWrite = null;
         Set<SlotInfo> expandSlotInfos = new HashSet<>();
         while (true) {
-            long time4 = System.nanoTime();
+            long time = System.nanoTime();
             //write to
             lastWrite = writeTo(source, target, flushKeys, lastWrite);
-            LocalStorageMonitor.time("key_write_to", System.nanoTime() - time4);
+            LocalStorageTimeMonitor.time("key_write|" + lastWrite.success, System.nanoTime() - time);
             if (lastWrite.success) {
                 break;
             }
             //expand
-            long time5 = System.nanoTime();
             target = keyManifest.expand(slot, target);
             expandSlotInfos.add(target);
-            LocalStorageMonitor.time("key_manifest_expand", System.nanoTime() - time5);
-            //clear expand
-            long time6 = System.nanoTime();
-            clear(target);
-            LocalStorageMonitor.time("key_expand_clear", System.nanoTime() - time6);
         }
         //commit
         expandSlotInfos.remove(target);
-        long time7 = System.nanoTime();
         keyManifest.commit(slot, target, expandSlotInfos);
-        LocalStorageMonitor.time("key_manifest_commit", System.nanoTime() - time7);
-    }
-
-    private void clear(SlotInfo slotInfo) throws IOException {
-        long fileId = slotInfo.fileId();
-        long offset = slotInfo.offset();
-        long capacity = slotInfo.capacity();
-        int bucketSize = (int) (capacity / _4k);
-        for (int i=0; i<bucketSize; i++) {
-            keyBlockReadWrite.clearBlockCache(fileId, offset + (long) i * _4k);
-        }
-        if (capacity < _64k) {
-            byte[] empty = LocalStorageConstants.emptyBytes((int) capacity);
-            keyBlockReadWrite.writeBlocks(fileId, offset, empty);
-        } else {
-            long clearOffset = offset;
-            while (true) {
-                int size = (int) Math.min(_64k, capacity + offset - clearOffset);
-                if (size <= 0) {
-                    break;
-                }
-                byte[] empty = LocalStorageConstants.emptyBytes(size);
-                keyBlockReadWrite.writeBlocks(fileId, clearOffset, empty);
-                clearOffset = clearOffset + size;
-            }
-        }
     }
 
     private WriteResult writeTo(SlotInfo source, SlotInfo target, Map<Key, KeyInfo> flushKeys, WriteResult lastWrite) throws IOException {
@@ -137,9 +95,6 @@ public class KeyFlushExecutor {
             for (Map.Entry<Key, KeyInfo> entry : flushKeys.entrySet()) {
                 Key key = entry.getKey();
                 KeyInfo keyInfo = entry.getValue();
-                if (keyInfo.isExpire() || keyInfo == KeyInfo.DELETE) {
-                    continue;
-                }
                 int bucket = KeyHashUtils.hash(key.key()) % bucketSize;
                 Map<Key, KeyInfo> keys = writeBuffer.computeIfAbsent(bucket, k -> new HashMap<>());
                 keys.put(key, keyInfo);
@@ -273,11 +228,14 @@ public class KeyFlushExecutor {
     }
 
     private void merge(Map<Key, KeyInfo> newKeys, Map.Entry<Key, KeyInfo> entry) {
-        KeyInfo key = newKeys.get(entry.getKey());
-        if (key == KeyInfo.DELETE) {
+        KeyInfo keyInfo = newKeys.get(entry.getKey());
+        if (keyInfo != null && (keyInfo == KeyInfo.DELETE || keyInfo.isExpire())) {
             return;
         }
         if (!newKeys.containsKey(entry.getKey())) {
+            if (entry.getValue().isExpire()) {
+                return;
+            }
             newKeys.put(entry.getKey(), entry.getValue());
         }
     }

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.string.block;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCache;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCacheName;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.SizeCalculator;
@@ -41,28 +42,10 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
         this.valueManifest = valueManifest;
         this.readCache = new LRUCache<>(LRUCacheName.string_read_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
         this.writeCache = new LRUCache<>(LRUCacheName.string_write_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
-        warm();
     }
 
     private String file(BlockType blockType, long fileId) {
         return FileNames.stringBlockFile(valueManifest.dir(), blockType, fileId);
-    }
-
-    private void warm() {
-        try {
-            Map<Long, BlockType> fileIds = valueManifest.getFileIds();
-            for (Map.Entry<Long, BlockType> entry : fileIds.entrySet()) {
-                Long fileId = entry.getKey();
-                BlockType blockType = entry.getValue();
-                try {
-                    readBlocks(fileId, 0, blockType.getBlockSize());
-                } catch (Exception e) {
-                    logger.error("warm error, fileId = {}, blockType = {}", fileId, blockType, e);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("warm error", e);
-        }
     }
 
     @Override
@@ -89,6 +72,9 @@ public class StringBlockReadWrite implements IStringBlockReadWrite {
             String file = file(blockType, fileId);
             block = fileReadWrite.read(file, fileOffset, blockType.getBlockSize());
             readCache.put(key, block);
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.disk, "string");
+        } else {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.block_cache, "string");
         }
 
         StringValueDecodeResult decodeResult = StringValueCodec.decode(block, blockType);

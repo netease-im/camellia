@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.file;
 
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageFileMonitor;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -52,7 +52,7 @@ public class FileReadWrite {
                 position += write;
             }
         } finally {
-            LocalStorageMonitor.fileWrite(file, data.length, System.nanoTime() - startTime);
+            LocalStorageFileMonitor.fileWrite(file, data.length, System.nanoTime() - startTime);
         }
     }
 
@@ -64,7 +64,7 @@ public class FileReadWrite {
             fileChannel.read(buffer, offset);
             return buffer.array();
         } finally {
-            LocalStorageMonitor.fileRead(file, size, System.nanoTime() - startTime);
+            LocalStorageFileMonitor.fileRead(file, size, System.nanoTime() - startTime);
         }
     }
 
@@ -80,7 +80,7 @@ public class FileReadWrite {
             buffer.flip();
             return buffer.getInt();
         } finally {
-            LocalStorageMonitor.fileRead(file, 4, System.nanoTime() - startTime);
+            LocalStorageFileMonitor.fileRead(file, 4, System.nanoTime() - startTime);
         }
     }
 

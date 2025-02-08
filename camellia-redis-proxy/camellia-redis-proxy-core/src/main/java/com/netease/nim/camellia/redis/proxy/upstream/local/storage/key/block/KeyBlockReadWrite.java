@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.block;
 
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.CacheType;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache.LRUCacheName;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
@@ -17,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants._4k;
 
@@ -38,26 +38,10 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
         this.keyManifest = keyManifest;
         this.readCache = new LRUCache<>(LRUCacheName.key_read_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
         this.writeCache = new LRUCache<>(LRUCacheName.key_write_block_cache, _4k, SizeCalculator.STRING_INSTANCE, SizeCalculator.BYTES_INSTANCE);
-        warm();
     }
 
     private String file(long fileId) {
         return FileNames.keyFile(keyManifest.dir(), fileId);
-    }
-
-    private void warm() {
-        try {
-            Set<Long> fileIds = keyManifest.getFileIds();
-            for (Long fileId : fileIds) {
-                try {
-                    readBlocks(fileId, 0, _4k);
-                } catch (Exception e) {
-                    logger.error("warm error, fileId = {}", fileId, e);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("warm error");
-        }
     }
 
     @Override
@@ -85,6 +69,9 @@ public class KeyBlockReadWrite implements IKeyBlockReadWrite {
             } else if (cacheType == CacheType.read) {
                 readCache.put(cacheKey, block);
             }
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.disk, "key");
+        } else {
+            LocalStorageCacheMonitor.update(LocalStorageCacheMonitor.Type.block_cache, "key");
         }
         Map<Key, KeyInfo> map = KeyCodec.decodeBucket(block);
         KeyInfo data = map.get(key);

@@ -24,11 +24,11 @@ public class KeyCodecTest {
     public void test() {
         Map<Key, KeyInfo> map = new HashMap<>();
         KeyInfo keyInfo1 = keyInfo("k1", 0, null, "v1");
-        KeyInfo keyInfo2 = keyInfo("k2", 10000, null, "v2");
-        KeyInfo keyInfo3 = keyInfo("k3", 20000, null, null);
+        KeyInfo keyInfo2 = keyInfo("k2", System.currentTimeMillis() + 10000, null, "v2");
+        KeyInfo keyInfo3 = keyInfo("k3", System.currentTimeMillis() + 20000, null, null);
         KeyInfo keyInfo4 = keyInfo("k4", 0, new ValueLocation(new BlockLocation(1, 10), (short) 1000), null);
-        KeyInfo keyInfo5 = keyInfo("k5", 30000, new ValueLocation(new BlockLocation(2, 30), (short) 2000), "v5");
-        KeyInfo keyInfo6 = keyInfo("k6", 40000, new ValueLocation(new BlockLocation(1, 50), (short) 3000), null);
+        KeyInfo keyInfo5 = keyInfo("k5", System.currentTimeMillis() + 30000, new ValueLocation(new BlockLocation(2, 30), (short) 2000), "v5");
+        KeyInfo keyInfo6 = keyInfo("k6", System.currentTimeMillis() + 40000, new ValueLocation(new BlockLocation(1, 50), (short) 3000), null);
 
         map.put(new Key(keyInfo1.getKey()), keyInfo1);
         map.put(new Key(keyInfo2.getKey()), keyInfo2);

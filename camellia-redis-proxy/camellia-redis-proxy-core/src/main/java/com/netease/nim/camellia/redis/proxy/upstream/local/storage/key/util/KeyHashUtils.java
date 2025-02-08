@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.key.util;
 
-import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
+import java.util.Arrays;
 
 /**
  * Created by caojiajun on 2025/1/2
@@ -8,6 +8,6 @@ import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 public class KeyHashUtils {
 
     public static int hash(byte[] key) {
-        return Math.abs(RedisClusterCRC16Utils.getCRC16(key));
+        return Math.abs(Arrays.hashCode(key));
     }
 }
