@@ -11,10 +11,12 @@ import java.util.concurrent.TimeUnit;
 public class FlushExecutor {
 
     private final ThreadPoolExecutor executor;
+    private final boolean asyncEnable;
 
-    public FlushExecutor(int poolSize, int queueSize) {
+    public FlushExecutor(int poolSize, int queueSize, boolean asyncEnable) {
         this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(queueSize), new FlushThreadFactory("flush", false));
+        this.asyncEnable = asyncEnable;
     }
 
     public int getQueueSize() {
@@ -27,6 +29,10 @@ public class FlushExecutor {
     }
 
     public void submit(Runnable task) {
+        if (!asyncEnable) {
+            task.run();
+            return;
+        }
         if (isInFlushThread()) {
             task.run();
         } else {

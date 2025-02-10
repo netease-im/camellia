@@ -27,6 +27,7 @@ public class LocalStorageExecutors {
     private final ScheduledExecutorService scheduler;
     private final int walThreads;
     private final boolean walAsync;
+    private final int stringValueFileCount;
 
     private LocalStorageExecutors() {
         {
@@ -51,9 +52,11 @@ public class LocalStorageExecutors {
             if (threads <= 0) {
                 threads = 1;
             }
+            stringValueFileCount = threads;
             int queueSize = ProxyDynamicConf.getInt("local.storage.flush.executor.queue.size", 1024 * 128);
-            flushExecutor = new FlushExecutor(threads, queueSize);
-            logger.info("local storage flush executor init success, threads = {}, queueSize = {}", threads, queueSize);
+            boolean asyncEnable = ProxyDynamicConf.getBoolean("local.storage.flush.executor.async.enable", true);
+            flushExecutor = new FlushExecutor(threads, queueSize, asyncEnable);
+            logger.info("local storage flush executor init success, threads = {}, queueSize = {}, asyncEnable = {}", threads, queueSize, asyncEnable);
         }
         {
             flushScheduler = Executors.newScheduledThreadPool(1, new CamelliaThreadFactory("local-storage-flush-schedule"));
@@ -90,6 +93,10 @@ public class LocalStorageExecutors {
 
     public FlushExecutor getFlushExecutor() {
         return flushExecutor;
+    }
+
+    public int getStringValueFileCount() {
+        return stringValueFileCount;
     }
 
     public ScheduledExecutorService getFlushScheduler() {

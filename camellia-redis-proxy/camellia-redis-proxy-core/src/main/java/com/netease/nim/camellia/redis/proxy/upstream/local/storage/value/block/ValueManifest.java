@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.upstream.local.storage.value.block;
 
 import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageTimeMonitor;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.LocalStorageExecutors;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.file.FileNames;
+import com.netease.nim.camellia.redis.proxy.upstream.local.storage.flush.FlushThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -242,8 +244,7 @@ public class ValueManifest implements IValueManifest {
         try {
             List<Long> list = fileIdMap.get(blockType);
             if (list != null && index < list.size()) {
-                int hash = (slot + index) % list.size();
-                return list.get(hash);
+                return selectFileId0(slot, index, list);
             }
         } catch (Exception e) {
             logger.error("select fileId error", e);
@@ -254,17 +255,27 @@ public class ValueManifest implements IValueManifest {
         try {
             List<Long> list = fileIdMap.computeIfAbsent(blockType, k -> new ArrayList<>());
             if (index < list.size()) {
-                return list.get(index);
+                return selectFileId0(slot, index, list);
             }
-            for (int i=0; i<4; i++) {
+            for (int i=0; i< LocalStorageExecutors.getInstance().getStringValueFileCount(); i++) {
                 long fileId = init(blockType);
                 list.add(fileId);
             }
-            int hash = (slot + index) % list.size();
-            return list.get(hash);
+            return selectFileId0(slot, index, list);
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    private long selectFileId0(short slot, int index, List<Long> list) {
+        Thread thread = Thread.currentThread();
+        int hash;
+        if (thread instanceof FlushThread) {
+            hash = (((FlushThread) thread).getThreadId() + index * list.size()) % list.size();
+        } else {
+            hash = (slot + index * list.size()) % list.size();
+        }
+        return list.get(hash);
     }
 
     private long init(BlockType blockType) throws IOException {

@@ -44,7 +44,7 @@ public class ValueFlushExecutor {
                     future.complete(FlushResult.OK);
                 } catch (Exception e) {
                     logger.error("string value flush error, slot = {}", flushTask.slot(), e);
-                    LocalStorageTimeMonitor.time("flush_value", System.nanoTime() - startTime);
+                    LocalStorageTimeMonitor.time("flush_string_value", System.nanoTime() - startTime);
                     future.complete(FlushResult.ERROR);
                 }
             });
