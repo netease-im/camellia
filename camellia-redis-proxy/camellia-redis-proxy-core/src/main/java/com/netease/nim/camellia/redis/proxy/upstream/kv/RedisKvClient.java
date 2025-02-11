@@ -32,7 +32,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.DecoratorKVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotReadWriteLock;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
@@ -59,7 +59,7 @@ public class RedisKvClient implements IUpstreamClient {
     private final String namespace;
     private Commanders commanders;
     private boolean runToCompletionEnable;
-    private final SlotLock slotLock = new SlotLock();
+    private final SlotReadWriteLock slotReadWriteLock = new SlotReadWriteLock();
 
     public RedisKvClient(RedisKvResource resource) {
         this.resource = resource;
@@ -133,7 +133,7 @@ public class RedisKvClient implements IUpstreamClient {
             }
             ReentrantReadWriteLock lock;
             if (runToCompletionEnable) {
-                lock = slotLock.getLock(slot);
+                lock = slotReadWriteLock.getLock(slot);
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
                     ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
                     if (executor.canRunToCompletion(slot) && readLock.tryLock()) {

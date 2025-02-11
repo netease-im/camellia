@@ -6,10 +6,8 @@ import com.netease.nim.camellia.redis.base.resource.RedisLocalStorageResource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageRunToCompletionMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.*;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.command.db.MemFlushCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.local.storage.compact.CompactExecutor;
@@ -22,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.netease.nim.camellia.redis.proxy.upstream.local.storage.constants.LocalStorageConstants.key_max_len;
 
@@ -35,7 +33,6 @@ public class RedisLocalStorageClient implements IUpstreamClient {
 
     private final ConcurrentHashMap<Short, Long> timeMap = new ConcurrentHashMap<>();
 
-    private MpscSlotHashExecutor executor;
     private final Resource resource;
     private final String dir;
     private Commands commands;
@@ -81,8 +78,6 @@ public class RedisLocalStorageClient implements IUpstreamClient {
     @Override
     public void start() {
         try {
-            executor = LocalStorageExecutors.getInstance().getCommandExecutor();
-
             LocalStorageReadWrite readWrite = new LocalStorageReadWrite(dir);
             CompactExecutor compactExecutor = new CompactExecutor(readWrite);
 
@@ -96,7 +91,7 @@ public class RedisLocalStorageClient implements IUpstreamClient {
 
             commands = new Commands(commandConfig);
 
-            ScheduledExecutorService scheduler = LocalStorageExecutors.getInstance().getFlushScheduler();
+            ScheduledExecutorService scheduler = LocalStorageExecutors.getInstance().getScheduler();
             scheduler.scheduleAtFixedRate(this::flush, 10, 10, TimeUnit.SECONDS);
 
             logger.info("local storage client start success, dir = {}", dir);
@@ -119,16 +114,17 @@ public class RedisLocalStorageClient implements IUpstreamClient {
                     flush = TimeCache.currentMillis - lastWriteCommandTime >= seconds * 1000L;
                 }
                 if (!flush) continue;
-                final short flushSlot = slot;
-                executor.submit(slot, () -> {
-                    try {
-                        ICommand invoker = commands.getCommandInvoker(RedisCommand.MEMFLUSH);
-                        commands.execute(invoker, flushSlot, MemFlushCommand.command);
-                        timeMap.put(flushSlot, TimeCache.currentMillis);
-                    } catch (Exception e) {
-                        ErrorLogCollector.collect(RedisLocalStorageClient.class, "send memflush command error, slot = " + flushSlot, e);
-                    }
-                });
+                ReentrantLock lock = slotLock.getLock(slot);
+                lock.lock();
+                try {
+                    ICommand invoker = commands.getCommandInvoker(RedisCommand.MEMFLUSH);
+                    commands.execute(invoker, slot, MemFlushCommand.command);
+                    timeMap.put(slot, TimeCache.currentMillis);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisLocalStorageClient.class, "send memflush command error, slot = " + slot, e);
+                } finally {
+                    lock.unlock();
+                }
             }
         } catch (Exception e) {
             logger.error("send memflush command error", e);
@@ -147,58 +143,32 @@ public class RedisLocalStorageClient implements IUpstreamClient {
                 future.complete(ErrorReply.argNumWrong(redisCommand));
                 return;
             }
-            ReentrantReadWriteLock lock;
-            lock = slotLock.getLock(slot);
-            if (redisCommand.getType() == RedisCommand.Type.READ) {
-                ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
-                if (executor.canRunToCompletion(slot) && readLock.tryLock()) {
-                    Reply reply;
-                    try {
-                        reply = invoker.runToCompletion(slot, command);
-                    } catch (Exception e) {
-                        ErrorLogCollector.collect(RedisLocalStorageClient.class, "send command run to completion error, command = " + command.getName(), e);
-                        reply = ErrorReply.INTERNAL_ERROR;
-                    } finally {
-                        readLock.unlock();
-                    }
-                    if (reply != null) {
-                        LocalStorageRunToCompletionMonitor.update(command.getName(), true);
-                        future.complete(reply);
-                        return;
-                    }
-                }
-                LocalStorageRunToCompletionMonitor.update(command.getName(), true);
-            } else {
+
+            if (redisCommand.getType() == RedisCommand.Type.WRITE) {
                 timeMap.put(slot, TimeCache.currentMillis);
             }
 
-            executor.submit(slot, () -> {
+            try {
+                ReentrantLock lock = slotLock.getLock(slot);
+                lock.lock();
+                //
+                Reply reply;
                 try {
-                    ReentrantReadWriteLock.WriteLock writeLock = null;
-                    if (lock != null) {
-                        writeLock = lock.writeLock();
-                        writeLock.lock();
-                    }
-                    Reply reply;
-                    try {
-                        reply = commands.execute(invoker, slot, command);
-                    } finally {
-                        if (writeLock != null) {
-                            writeLock.unlock();
-                        }
-                    }
-                    if (reply == null) {
-                        ErrorLogCollector.collect(RedisLocalStorageClient.class, "command receive null reply, command = " + command.getName());
-                    }
-                    future.complete(reply);
-                } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisLocalStorageClient.class, "send command error, command = " + command.getName(), e);
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    reply = commands.execute(invoker, slot, command);
+                } finally {
+                    lock.unlock();
                 }
-            });
+                if (reply == null) {
+                    ErrorLogCollector.collect(RedisLocalStorageClient.class, "command receive null reply, command = " + command.getName());
+                }
+                future.complete(reply);
+            } catch (Exception e) {
+                ErrorLogCollector.collect(RedisLocalStorageClient.class, "send command error, command = " + command.getName(), e);
+                future.complete(ErrorReply.NOT_AVAILABLE);
+            }
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisLocalStorageClient.class, "send command error, command = " + command.getName(), e);
-            future.complete(ErrorReply.TOO_BUSY);
+            future.complete(ErrorReply.INTERNAL_ERROR);
         }
     }
 

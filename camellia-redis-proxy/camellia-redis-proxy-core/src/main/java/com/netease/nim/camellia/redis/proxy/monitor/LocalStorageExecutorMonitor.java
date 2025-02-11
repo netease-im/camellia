@@ -19,12 +19,6 @@ public class LocalStorageExecutorMonitor {
             stats.setPending(LocalStorageExecutors.getInstance().getFlushExecutor().getQueueSize());
             list.add(stats);
         }
-        {
-            LocalStorageExecutorStats stats = new LocalStorageExecutorStats();
-            stats.setName("command");
-            stats.setPending(LocalStorageExecutors.getInstance().getCommandExecutor().getQueueSize());
-            list.add(stats);
-        }
         return list;
     }
 }

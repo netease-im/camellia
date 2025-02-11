@@ -17,7 +17,7 @@ public class WalWriteExecutor {
     private static final Logger logger = LoggerFactory.getLogger(WalWriteTask.class);
 
     private int threads = 0;
-    private boolean walAsync = false;
+    private WalMode walMode;
     private final List<BlockingQueue<WalWriteTask>> queueList = new ArrayList<>();
 
     private final IWalManifest walManifest;
@@ -29,26 +29,30 @@ public class WalWriteExecutor {
     }
 
     public void start() {
-        walAsync = LocalStorageExecutors.getInstance().isWalAsync();
-        if (walAsync) {
+        walMode = LocalStorageExecutors.getInstance().getWalMode();
+        if (walMode == WalMode.async) {
             threads = LocalStorageExecutors.getInstance().getWalThreads();
             for (int i = 0; i < threads; i++) {
                 BlockingQueue<WalWriteTask> queue = new MpscBlockingConsumerArrayQueue<>(10240);
                 queueList.add(queue);
                 new Thread(() -> write0(queue), "wal-flush-" + i).start();
             }
-            logger.info("wal write executor start in async, threads = {}", threads);
+            logger.info("wal write executor start in {}, threads = {}", walMode, threads);
+        } else if (walMode == WalMode.sync) {
+            logger.info("wal write executor start in {}", walMode);
         } else {
-            logger.info("wal write executor start in sync");
+            throw new IllegalArgumentException("illegal wal mode");
         }
     }
 
     public void submit(short slot, WalWriteTask task) throws Exception {
-        if (!walAsync) {
+        if (walMode == WalMode.sync) {
             flush(Collections.singletonList(task));
-        } else {
+        } else if (walMode == WalMode.async) {
             int index = slot % threads;
             queueList.get(index).put(task);
+        } else {
+            throw new IllegalStateException("illegal wal mode");
         }
     }
 

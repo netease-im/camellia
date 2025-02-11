@@ -7,11 +7,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Created by caojiajun on 2024/9/10
  */
-public class SlotLock {
+public class SlotReadWriteLock {
 
     private final ReentrantReadWriteLock[] readWriteLocks = new ReentrantReadWriteLock[RedisClusterCRC16Utils.SLOT_SIZE];
 
-    public SlotLock() {
+    public SlotReadWriteLock() {
         for (int i=0; i<readWriteLocks.length; i++) {
             readWriteLocks[i] = new ReentrantReadWriteLock();
         }
