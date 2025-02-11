@@ -18,8 +18,6 @@ public class LocalStorageExecutors {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalStorageExecutors.class);
 
-    private static final int defaultThreads = Math.min(4, SysUtils.getCpuHalfNum());
-
     private static volatile LocalStorageExecutors INSTANCE;
 
     private final FlushExecutor flushExecutor;
@@ -31,13 +29,10 @@ public class LocalStorageExecutors {
     private LocalStorageExecutors() {
         {
             walMode = WalMode.byString(ProxyDynamicConf.getString("local.storage.wal.mode", WalMode.sync.name()));
-            walThreads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", defaultThreads);
+            walThreads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", Math.max(1, Math.min(4, SysUtils.getCpuNum() / 4)));
         }
         {
-            int threads = ProxyDynamicConf.getInt("local.storage.flush.executor.threads", defaultThreads);
-            if (threads <= 0) {
-                threads = 1;
-            }
+            int threads = ProxyDynamicConf.getInt("local.storage.flush.executor.threads", Math.max(1, Math.min(6, SysUtils.getCpuNum() / 3)));
             stringValueFileCount = threads;
             int queueSize = ProxyDynamicConf.getInt("local.storage.flush.executor.queue.size", 1024 * 128);
             boolean asyncEnable = ProxyDynamicConf.getBoolean("local.storage.flush.executor.async.enable", true);
