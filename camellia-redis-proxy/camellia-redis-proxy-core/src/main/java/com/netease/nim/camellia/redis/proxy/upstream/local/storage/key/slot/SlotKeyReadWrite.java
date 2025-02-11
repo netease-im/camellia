@@ -35,7 +35,7 @@ public class SlotKeyReadWrite {
         ProxyDynamicConf.registerCallback(SlotKeyReadWrite::updateConf);
     }
     private static void updateConf() {
-        int keyFlushSize = ProxyDynamicConf.getInt("local.storage.key.flush.size", 200);
+        int keyFlushSize = ProxyDynamicConf.getInt("local.storage.key.flush.size", 128);
         if (SlotKeyReadWrite.keyFlushSize != keyFlushSize) {
             SlotKeyReadWrite.keyFlushSize = keyFlushSize;
             logger.info("local.storage.key.flush.size, update to {}", keyFlushSize);

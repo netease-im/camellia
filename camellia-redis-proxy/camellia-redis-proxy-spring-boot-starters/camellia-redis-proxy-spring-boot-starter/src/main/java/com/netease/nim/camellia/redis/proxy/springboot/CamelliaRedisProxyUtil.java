@@ -61,7 +61,7 @@ public class CamelliaRedisProxyUtil {
             try {
                 Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(properties.getTranspond().getLocal().getResource()));
                 if (resource instanceof RedisLocalStorageResource) {
-                    serverProperties.setWorkThread(SysUtils.getCpuHalfNum());
+                    serverProperties.setWorkThread(Math.min(4, SysUtils.getCpuHalfNum()));
                 } else {
                     serverProperties.setWorkThread(SysUtils.getCpuNum());
                 }

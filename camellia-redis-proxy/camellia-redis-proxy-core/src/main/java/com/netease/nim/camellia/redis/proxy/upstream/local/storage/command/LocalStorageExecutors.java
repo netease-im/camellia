@@ -19,6 +19,8 @@ public class LocalStorageExecutors {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalStorageExecutors.class);
 
+    private static final int defaultThreads = Math.min(4, SysUtils.getCpuHalfNum());
+
     private static volatile LocalStorageExecutors INSTANCE;
 
     private final MpscSlotHashExecutor commandExecutor;
@@ -31,15 +33,11 @@ public class LocalStorageExecutors {
 
     private LocalStorageExecutors() {
         {
-            walAsync = ProxyDynamicConf.getBoolean("local.storage.wal.async.enable", false);
-            if (walAsync) {
-                walThreads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", 4);
-            } else {
-                walThreads = 0;
-            }
+            walAsync = ProxyDynamicConf.getBoolean("local.storage.wal.async.enable", true);
+            walThreads = ProxyDynamicConf.getInt("local.storage.wal.write.threads", defaultThreads);
         }
         {
-            int threads = ProxyDynamicConf.getInt("local.storage.command.executor.threads", SysUtils.getCpuNum() * 3 / 10 - (walThreads / 2));
+            int threads = ProxyDynamicConf.getInt("local.storage.command.executor.threads", defaultThreads);
             if (threads <= 0) {
                 threads = 4;
             }
@@ -48,7 +46,7 @@ public class LocalStorageExecutors {
             logger.info("local storage command executor init success, threads = {}, queueSize = {}", threads, queueSize);
         }
         {
-            int threads = ProxyDynamicConf.getInt("local.storage.flush.executor.threads", SysUtils.getCpuNum() * 2 / 10 - (walThreads / 2));
+            int threads = ProxyDynamicConf.getInt("local.storage.flush.executor.threads", defaultThreads);
             if (threads <= 0) {
                 threads = 1;
             }

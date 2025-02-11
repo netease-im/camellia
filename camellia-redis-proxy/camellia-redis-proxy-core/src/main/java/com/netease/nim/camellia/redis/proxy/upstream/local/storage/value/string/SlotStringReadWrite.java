@@ -35,7 +35,7 @@ public class SlotStringReadWrite {
         ProxyDynamicConf.registerCallback(SlotStringReadWrite::updateConf);
     }
     private static void updateConf() {
-        int stringValueFlushSize = ProxyDynamicConf.getInt("local.storage.string.value.flush.size", 200);
+        int stringValueFlushSize = ProxyDynamicConf.getInt("local.storage.string.value.flush.size", 128);
         if (SlotStringReadWrite.stringValueFlushSize != stringValueFlushSize) {
             SlotStringReadWrite.stringValueFlushSize = stringValueFlushSize;
             logger.info("local.storage.string.value.flush.size, update to {}", stringValueFlushSize);
