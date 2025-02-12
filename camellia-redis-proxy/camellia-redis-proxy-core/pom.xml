@@ -4,24 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-core</artifactId>
-	<version>1.4.0-SNAPSHOT</version>
+	<version>${revision}</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy</artifactId>
-		<version>1.4.0-SNAPSHOT</version>
+		<version>${revision}</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-base</artifactId>
-			<version>1.4.0-SNAPSHOT</version>
+			<version>${revision}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-codec</artifactId>
-			<version>1.4.0-SNAPSHOT</version>
+			<version>${revision}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jctools</groupId>
@@ -44,6 +44,11 @@
 			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis-base</artifactId>
+			<version>${revision}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
 			<artifactId>concurrentlinkedhashmap-lru</artifactId>
 			<version>${concurrentlinkedhashmap.version}</version>
@@ -51,7 +56,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-http-console</artifactId>
-			<version>1.4.0-SNAPSHOT</version>
+			<version>${revision}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.luben</groupId>

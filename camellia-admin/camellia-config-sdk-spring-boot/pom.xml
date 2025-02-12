@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-config-sdk-spring-boot</artifactId>
-	<version>1.4.0-SNAPSHOT</version>
+	<version>${revision}</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-admin</artifactId>
-		<version>1.4.0-SNAPSHOT</version>
+		<version>${revision}</version>
 	</parent>
 
 	<dependencyManagement>
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-core</artifactId>
-			<version>1.4.0-SNAPSHOT</version>
+			<version>${revision}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -30,3 +30,5 @@ compressed/
 *.DS_Store
 
 /bin/
+
+*.flattened-pom.xml
