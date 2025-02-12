@@ -19,11 +19,6 @@
 			<version>${revision}</version>
 		</dependency>
 		<dependency>
-			<groupId>net.minidev</groupId>
-			<artifactId>json-smart</artifactId>
-			<version>2.3</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase-client</artifactId>
 			<version>${hbase-client.version}</version>
