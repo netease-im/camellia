@@ -108,7 +108,7 @@ public class CacheConfig {
             }
             logger.info("kv.set.local.cache.enable = {}, namespace = {}", setLocalCacheEnable, namespace);
         }
-        boolean zsetVersion1KvWriteAsyncEnable = RedisKvConf.getBoolean(namespace, "kv.zset.version1.kv.async.write.enable", false);
+        boolean zsetVersion1KvWriteAsyncEnable = RedisKvConf.getBoolean(namespace, "kv.zset.version1.kv.async.write.enable", true);
         if ((this.zsetVersion1KvWriteAsyncEnable && !zsetVersion1KvWriteAsyncEnable) || (!this.zsetVersion1KvWriteAsyncEnable && zsetVersion1KvWriteAsyncEnable)) {
             this.zsetVersion1KvWriteAsyncEnable = zsetVersion1KvWriteAsyncEnable;
             logger.info("kv.zset.version1.kv.async.write.enable = {}, namespace = {}",zsetVersion1KvWriteAsyncEnable, namespace);

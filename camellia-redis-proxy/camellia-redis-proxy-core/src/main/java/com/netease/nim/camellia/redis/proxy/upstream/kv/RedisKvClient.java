@@ -335,7 +335,7 @@ public class RedisKvClient implements IUpstreamClient {
         gcExecutor.start();
 
         if (keyDesign.zsetEncodeVersion() == EncodeVersion.version_1 && !commandExecutorAsyncEnable) {
-            logger.warn("zset encode version 1 should config commandExecutorAsyncEnable = true");
+            logger.warn("zset encode version 1 should config 'kv.command.executor.async.enable' = true");
             commandExecutorAsyncEnable = true;
         }
 
@@ -405,7 +405,7 @@ public class RedisKvClient implements IUpstreamClient {
                 logger.info("namespace = {}, runToCompletionEnable = {}", namespace, runToCompletionEnable);
             }
         });
-        this.commandExecutorAsyncEnable = ProxyDynamicConf.getBoolean("kv.command.executor.async.enable", true);
+        this.commandExecutorAsyncEnable = ProxyDynamicConf.getBoolean("kv.command.executor.async.enable", false);
         logger.info("namespace = {}, commandExecutorAsyncEnable = {}", namespace, commandExecutorAsyncEnable);
     }
 
