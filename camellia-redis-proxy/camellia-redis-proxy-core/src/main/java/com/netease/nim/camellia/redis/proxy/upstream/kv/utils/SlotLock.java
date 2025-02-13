@@ -2,22 +2,19 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.utils;
 
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by caojiajun on 2024/9/10
- */
 public class SlotLock {
 
-    private final ReentrantReadWriteLock[] readWriteLocks = new ReentrantReadWriteLock[RedisClusterCRC16Utils.SLOT_SIZE];
+    private final ReentrantLock[] locks = new ReentrantLock[RedisClusterCRC16Utils.SLOT_SIZE];
 
     public SlotLock() {
-        for (int i=0; i<readWriteLocks.length; i++) {
-            readWriteLocks[i] = new ReentrantReadWriteLock();
+        for (int i = 0; i< locks.length; i++) {
+            locks[i] = new ReentrantLock();
         }
     }
 
-    public ReentrantReadWriteLock getLock(int slot) {
-        return readWriteLocks[slot];
+    public ReentrantLock getLock(int slot) {
+        return locks[slot];
     }
 }

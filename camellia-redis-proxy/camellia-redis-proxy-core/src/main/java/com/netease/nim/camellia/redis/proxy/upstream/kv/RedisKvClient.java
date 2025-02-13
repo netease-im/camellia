@@ -31,8 +31,10 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.DecoratorKVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotLock;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.SlotReadWriteLock;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
@@ -44,6 +46,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -59,7 +62,9 @@ public class RedisKvClient implements IUpstreamClient {
     private final String namespace;
     private Commanders commanders;
     private boolean runToCompletionEnable;
+    private final SlotReadWriteLock slotReadWriteLock = new SlotReadWriteLock();
     private final SlotLock slotLock = new SlotLock();
+    private boolean commandExecutorAsyncEnable;
 
     public RedisKvClient(RedisKvResource resource) {
         this.resource = resource;
@@ -100,7 +105,7 @@ public class RedisKvClient implements IUpstreamClient {
             } else {
                 List<byte[]> keys = command.getKeys();
                 if (keys.size() == 1) {
-                    byte[] key = keys.get(0);
+                    byte[] key = keys.getFirst();
                     sendCommand(redisCommand, key, command, future);
                 } else {
                     sendMultiKeyCommand(redisCommand, command, future);
@@ -113,8 +118,8 @@ public class RedisKvClient implements IUpstreamClient {
     public void start() {
         this.executor = KvExecutors.getInstance().getCommandExecutor();
         this.scanCommandExecutor = KvExecutors.getInstance().getScanCommandExecutor();
-        this.commanders = initCommanders();
         initConf();
+        this.commanders = initCommanders();
         logger.info("RedisKvClient start success, resource = {}", getResource());
     }
 
@@ -131,9 +136,32 @@ public class RedisKvClient implements IUpstreamClient {
                 future.complete(ErrorReply.argNumWrong(redisCommand));
                 return;
             }
+
+            if (!commandExecutorAsyncEnable) {
+                try {
+                    ReentrantLock lock = slotLock.getLock(slot);
+                    lock.lock();
+                    Reply reply;
+                    try {
+                        reply = commanders.execute(commander, slot, command);
+                    } finally {
+                        lock.unlock();
+                    }
+                    if (reply == null) {
+                        ErrorLogCollector.collect(RedisKvClient.class, "command receive null reply, command = " + command.getName());
+                        reply = ErrorReply.NOT_AVAILABLE;
+                    }
+                    future.complete(reply);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisKvClient.class, "send command error, command = " + command.getName(), e);
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+                return;
+            }
+
             ReentrantReadWriteLock lock;
             if (runToCompletionEnable) {
-                lock = slotLock.getLock(slot);
+                lock = slotReadWriteLock.getLock(slot);
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
                     ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
                     if (executor.canRunToCompletion(slot) && readLock.tryLock()) {
@@ -306,6 +334,11 @@ public class RedisKvClient implements IUpstreamClient {
         KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyDesign, kvConfig);
         gcExecutor.start();
 
+        if (keyDesign.zsetEncodeVersion() == EncodeVersion.version_1 && !commandExecutorAsyncEnable) {
+            logger.warn("zset encode version 1 should config commandExecutorAsyncEnable = true");
+            commandExecutorAsyncEnable = true;
+        }
+
         CacheConfig cacheConfig = new CacheConfig(namespace);
 
         RedisTemplate cacheRedisTemplate = initRedisTemplate("kv.redis.cache");
@@ -372,6 +405,8 @@ public class RedisKvClient implements IUpstreamClient {
                 logger.info("namespace = {}, runToCompletionEnable = {}", namespace, runToCompletionEnable);
             }
         });
+        this.commandExecutorAsyncEnable = ProxyDynamicConf.getBoolean("kv.command.executor.async.enable", true);
+        logger.info("namespace = {}, commandExecutorAsyncEnable = {}", namespace, commandExecutorAsyncEnable);
     }
 
     @Override
