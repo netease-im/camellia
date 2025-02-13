@@ -172,11 +172,14 @@ public abstract class ZSet0Commander extends Commander {
             }
         }
 
+        int redisCacheHit = 0;
+
         if (!missingMemberMap.isEmpty()) {
             BytesKey[] bytesKeys = missingMemberMap.keySet().toArray(new BytesKey[0]);
             List<Command> commandList = new ArrayList<>(bytesKeys.length * 2);
             for (BytesKey bytesKey : bytesKeys) {
                 Index index = missingMemberMap.get(bytesKey);
+                if (index == null) continue;
                 byte[] memberCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                 Command cmd1 = new Command(new byte[][]{RedisCommand.GET.raw(), memberCacheKey});
                 Command cmd2 = new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), memberCacheKey, zsetMemberCacheMillis()});
@@ -196,6 +199,7 @@ public abstract class ZSet0Commander extends Commander {
                 if (subReply instanceof BulkReply) {
                     byte[] raw = ((BulkReply) subReply).getRaw();
                     if (raw != null && raw.length > 0) {
+                        redisCacheHit ++;
                         memberMap.put(member, raw);
                         missingMemberMap.remove(member);
                         //
@@ -212,8 +216,6 @@ public abstract class ZSet0Commander extends Commander {
             }
         }
 
-        int redisCacheHit = indexTotal - missingMemberMap.size();
-
         if (!missingMemberMap.isEmpty()) {
             byte[][] batchGetKeys = new byte[missingMemberMap.size()][];
             int i=0;
@@ -229,6 +231,7 @@ public abstract class ZSet0Commander extends Commander {
             List<KeyValue> keyValues = kvClient.batchGet(slot, batchGetKeys);
             for (KeyValue keyValue : keyValues) {
                 BytesKey bytesKey = reverseMap.get(new BytesKey(keyValue.getKey()));
+                if (bytesKey == null) continue;
                 memberMap.put(bytesKey, keyValue.getValue());
 
                 //
@@ -259,7 +262,7 @@ public abstract class ZSet0Commander extends Commander {
 
         KvCacheMonitor.localCache(cacheConfig.getNamespace(), "zset_index", localCacheHit);
         KvCacheMonitor.redisCache(cacheConfig.getNamespace(), "zset_index", redisCacheHit);
-        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "zset_index", indexTotal - redisCacheHit);
+        KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "zset_index", indexTotal - localCacheHit - redisCacheHit);
 
         if (!missingMemberMap.isEmpty()) {
             ErrorLogCollector.collect(ZSet0Commander.class, "zrange kv index missing");
