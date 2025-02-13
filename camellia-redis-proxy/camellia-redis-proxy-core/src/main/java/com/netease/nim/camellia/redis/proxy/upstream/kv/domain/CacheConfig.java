@@ -4,7 +4,6 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,21 +62,11 @@ public class CacheConfig {
                 return;
             }
             lastCheckLruCacheEstimateSizeTime = TimeCache.currentMillis;
-            long keyMetaLRUCacheEstimateSize = keyMetaLRUCache.estimateSize();
-            long hashLRUCacheEstimateSize = hashLRUCache.estimateSize();
-            long setLRUCacheEstimateSize = setLRUCache.estimateSize();
-            long zSetLRUCacheEstimateSize = zSetLRUCache.estimateSize();
-            long zSetIndexLRUCacheEstimateSize = zSetIndexLRUCache.estimateSize();
-            logger.info("lru.cache.estimate.size, namespace = {}, type = key.meta, size = {}",
-                    namespace, Utils.humanReadableByteCountBin(keyMetaLRUCacheEstimateSize));
-            logger.info("lru.cache.estimate.size, namespace = {}, type = hash, size = {}",
-                    namespace, Utils.humanReadableByteCountBin(hashLRUCacheEstimateSize));
-            logger.info("lru.cache.estimate.size, namespace = {}, type = set, size = {}",
-                    namespace, Utils.humanReadableByteCountBin(setLRUCacheEstimateSize));
-            logger.info("lru.cache.estimate.size, namespace = {}, type = zset, size = {}",
-                    namespace, Utils.humanReadableByteCountBin(zSetLRUCacheEstimateSize));
-            logger.info("lru.cache.estimate.size, namespace = {}, type = zset.index, size = {}",
-                    namespace, Utils.humanReadableByteCountBin(zSetIndexLRUCacheEstimateSize));
+            logger.info("lru.cache.estimate.size, namespace = {}, type = key.meta, size.info = {}", namespace, keyMetaLRUCache.info());
+            logger.info("lru.cache.estimate.size, namespace = {}, type = hash, size.info = {}", namespace, hashLRUCache.info());
+            logger.info("lru.cache.estimate.size, namespace = {}, type = set, size.info = {}", namespace, setLRUCache.info());
+            logger.info("lru.cache.estimate.size, namespace = {}, type = zset, size.info = {}", namespace, zSetLRUCache.info());
+            logger.info("lru.cache.estimate.size, namespace = {}, type = zset.index, size.info = {}", namespace, zSetIndexLRUCache.info());
         } catch (Exception e) {
             logger.error("lru cache estimate size error", e);
         }

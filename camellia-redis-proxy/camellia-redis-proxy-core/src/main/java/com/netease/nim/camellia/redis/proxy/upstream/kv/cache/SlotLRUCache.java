@@ -17,8 +17,10 @@ public class SlotLRUCache<V> {
     private final ConcurrentLinkedHashMap<SlotCacheKey, V>[] array;
     private final int segmentSize;
     private final boolean is2Power;
+    private int capacity;
 
     public SlotLRUCache(int capacity) {
+        this.capacity = capacity;
         segmentSize = ProxyDynamicConf.getInt("kv.lru.cache.segment.size", 16);
         is2Power = MathUtil.is2Power(segmentSize);
         array = new ConcurrentLinkedHashMap[segmentSize];
@@ -66,6 +68,11 @@ public class SlotLRUCache<V> {
         for (ConcurrentLinkedHashMap<SlotCacheKey, V> subMap : array) {
             subMap.setCapacity(capacity / segmentSize);
         }
+        this.capacity = capacity;
+    }
+
+    public int getCapacity() {
+        return capacity;
     }
 
     public long size() {

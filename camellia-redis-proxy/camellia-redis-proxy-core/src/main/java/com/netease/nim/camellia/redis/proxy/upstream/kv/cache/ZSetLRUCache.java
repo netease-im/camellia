@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -8,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetL
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetScore;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,11 +182,33 @@ public class ZSetLRUCache {
         localCache.clear();
     }
 
-    public long estimateSize() {
-        long estimateSize = 0;
-        estimateSize += localCache.estimateSize();
-        estimateSize += localCacheForWrite.estimateSize();
-        estimateSize += hotKeyCalculator.estimateSize();
-        return estimateSize;
+    public JSONObject info() {
+        JSONObject json = new JSONObject(true);
+        long total = 0;
+        {
+            long estimateSize = localCache.estimateSize();
+            total += estimateSize;
+            json.put("read.cache.estimate.size", Utils.humanReadableByteCountBin(estimateSize));
+            json.put("read.cache.key.count", localCache.size());
+            json.put("read.cache.key.capacity", localCache.getCapacity());
+        }
+        {
+            long estimateSize = localCacheForWrite.estimateSize();
+            total += estimateSize;
+            json.put("write.cache.estimate.size", Utils.humanReadableByteCountBin(estimateSize));
+            json.put("write.cache.key.count", localCacheForWrite.size());
+            json.put("write.cache.key.capacity", localCacheForWrite.getCapacity());
+        }
+        {
+            long estimateSize = hotKeyCalculator.estimateSize();
+            total += estimateSize;
+            json.put("hot.key.calculator.estimate.size", Utils.humanReadableByteCountBin(estimateSize));
+            json.put("hot.key.calculator.key.count", hotKeyCalculator.size());
+            json.put("hot.key.calculator.key.capacity", hotKeyCalculator.getCapacity());
+        }
+        {
+            json.put("total.estimate.size", Utils.humanReadableByteCountBin(total));
+        }
+        return json;
     }
 }

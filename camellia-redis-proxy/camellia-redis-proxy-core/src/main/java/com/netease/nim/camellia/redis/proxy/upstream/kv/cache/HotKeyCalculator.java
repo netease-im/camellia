@@ -107,6 +107,14 @@ public class HotKeyCalculator {
         return estimateSize;
     }
 
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public long size() {
+        return cache.size();
+    }
+
     private static class Node {
         AtomicLong count = new AtomicLong();
         long time = System.currentTimeMillis();
