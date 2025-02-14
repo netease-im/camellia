@@ -42,7 +42,7 @@ public class Constants {
         public static final int commandDecodeMaxBatchSize = 256;
         public static final int commandDecodeBufferInitializerSize = 32;
 
-        public static final NettyTransportMode nettyTransportMode = NettyTransportMode.nio;
+        public static final NettyTransportMode nettyTransportMode = NettyTransportMode.auto;
         public static final boolean tcpNoDelay = true;
         public static final boolean tcpQuickAck = false;
         public static final int soBacklog = 1024;

@@ -135,7 +135,7 @@ public class CamelliaRedisProxyProperties {
     /**
      * netty的io模式，默认nio
      */
-    private NettyTransportMode nettyTransportMode = NettyTransportMode.nio;
+    private NettyTransportMode nettyTransportMode = Constants.Server.nettyTransportMode;
 
     /**
      * netty相关参数

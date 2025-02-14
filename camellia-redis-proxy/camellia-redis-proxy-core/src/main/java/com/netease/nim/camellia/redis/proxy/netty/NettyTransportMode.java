@@ -8,5 +8,6 @@ public enum NettyTransportMode {
     epoll,
     kqueue,
     io_uring,
+    auto,
     ;
 }

@@ -50,7 +50,7 @@ public class GlobalRedisProxyEnv {
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
 
-    private static NettyTransportMode nettyTransportMode = NettyTransportMode.nio;
+    private static NettyTransportMode nettyTransportMode = NettyTransportMode.auto;
 
     private static int bossThread;
     private static EventLoopGroup bossGroup;
@@ -94,6 +94,17 @@ public class GlobalRedisProxyEnv {
             GlobalRedisProxyEnv.transpondProperties = transpondProperties;
             GlobalRedisProxyEnv.nettyTransportMode = serverProperties.getNettyTransportMode();
             GlobalRedisProxyEnv.cportPassword = serverProperties.getCportPassword();
+            if (GlobalRedisProxyEnv.nettyTransportMode == NettyTransportMode.auto) {
+                if (isEpollAvailable()) {
+                    GlobalRedisProxyEnv.nettyTransportMode = NettyTransportMode.epoll;
+                } else if (isKQueueAvailable()) {
+                    GlobalRedisProxyEnv.nettyTransportMode = NettyTransportMode.kqueue;
+                } else if (isIOUringAvailable()) {
+                    GlobalRedisProxyEnv.nettyTransportMode = NettyTransportMode.io_uring;
+                } else {
+                    GlobalRedisProxyEnv.nettyTransportMode = NettyTransportMode.nio;
+                }
+            }
             if (nettyTransportMode == NettyTransportMode.epoll && isEpollAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
