@@ -57,7 +57,12 @@ public class CamelliaRedisProxyUdsServer {
                         //command decoder
                         pipeline.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
                         //reply encoder
-                        pipeline.addLast(new ReplyEncoder());
+                        if (ReplyBatchFlushUtils.enable()) {
+                            pipeline.addLast(new ReplyFlushEncoder());
+                            pipeline.addLast(new ReplyBufferEncoder());
+                        } else {
+                            pipeline.addLast(new ReplyEncoder());
+                        }
                         //connect manager
                         pipeline.addLast(udsInitHandler);
                         //command transponder

@@ -32,6 +32,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             if (!channelInfo.isFromCport()) {
                 ServerStatus.updateLastUseTime();
             }
+            ReplyFlushEncoder.commandReceive(ctx, commandList.size());
             invoker.invoke(ctx, channelInfo, commandList);
         } catch (Exception e) {
             ctx.close();
