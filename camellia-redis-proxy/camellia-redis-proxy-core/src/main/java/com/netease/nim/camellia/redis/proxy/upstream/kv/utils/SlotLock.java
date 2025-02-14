@@ -4,9 +4,6 @@ import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by caojiajun on 2024/9/10
- */
 public class SlotLock {
 
     private final ReentrantLock[] locks = new ReentrantLock[RedisClusterCRC16Utils.SLOT_SIZE];
