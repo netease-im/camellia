@@ -126,6 +126,9 @@ public class ChannelInfo {
     public static ChannelInfo init(ChannelHandlerContext ctx, ChannelType channelType) {
         ChannelInfo channelInfo = new ChannelInfo(ctx, channelType);
         ctx.channel().attr(ATTRIBUTE_KEY).set(channelInfo);
+        if (channelType != ChannelType.http) {
+            ReplyFlushEncoder.init(ctx);
+        }
         return channelInfo;
     }
 
@@ -484,6 +487,9 @@ public class ChannelInfo {
     }
 
     public void setInSubscribe(boolean inSubscribe) {
+        if (this.inSubscribe && !inSubscribe) {
+            ReplyFlushEncoder.reset(ctx);
+        }
         this.inSubscribe = inSubscribe;
     }
 

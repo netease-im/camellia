@@ -1,36 +1,31 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
-import com.netease.nim.camellia.redis.proxy.reply.ReplyPack;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import io.netty.buffer.ByteBuf;
+import com.netease.nim.camellia.redis.proxy.reply.ReplyPack;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.handler.codec.MessageToMessageEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Write a reply.
+ * Created by caojiajun on 2025/2/14
  */
-public class ReplyEncoder extends MessageToByteEncoder<Object> {
-
+public class ReplyBufferEncoder extends MessageToMessageEncoder<Object> {
     private static final Logger logger = LoggerFactory.getLogger(ReplyEncoder.class);
 
     private long id = 0;
     private final Map<Long, ReplyPack> packMap = new HashMap<>();
 
-    public ReplyEncoder() {
-        super();
-    }
-
     @Override
-    public void encode(ChannelHandlerContext ctx, Object object, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, Object object, List<Object> list) throws Exception {
         if (object instanceof ReplyPack pack) {
             if (ctx.channel().isActive()) {
                 if (ProxyMonitorCollector.isMonitorEnable()) {
@@ -49,12 +44,12 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
                 if (this.id == id - 1) {
                     this.id = id;
                     Reply reply = pack.getReply();
-                    reply.write(out);
+                    list.add(reply);
                     while (!packMap.isEmpty()) {
                         ReplyPack replyPack = packMap.remove(this.id + 1);
                         if (replyPack != null) {
                             this.id = replyPack.getId();
-                            replyPack.getReply().write(out);
+                            list.add(replyPack.getReply());
                         } else {
                             break;
                         }
@@ -75,7 +70,7 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
                         CommandFailMonitor.incr(((ErrorReply) reply).getError());
                     }
                 }
-                reply.write(out);
+                list.add(reply);
             } else {
                 if (ProxyMonitorCollector.isMonitorEnable()) {
                     CommandFailMonitor.incr("ChannelNotActive");
