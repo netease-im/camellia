@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/8/15
@@ -21,17 +22,17 @@ public class ZSetIndexLRUCache {
     private static final Logger logger = LoggerFactory.getLogger(ZSetIndexLRUCache.class);
 
     private final String namespace;
+    private final SlotLRUCache<byte[]> localCache = new SlotLRUCache<>(10000);
+    private final SlotLRUCache<byte[]> localCacheForWrite = new SlotLRUCache<>(10000);
 
     private int capacity;
-
-    private SlotLRUCache<byte[]> localCache;
-    private SlotLRUCache<byte[]> localCacheForWrite;
 
     public ZSetIndexLRUCache(String namespace) {
         this.namespace = namespace;
         //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
+        CacheCapacityCalculator.scheduleAtFixedRate(this::rebuild, 10, 10, TimeUnit.SECONDS);
         //
         ClusterModeStatus.registerClusterSlotMapChangeCallback((oldSlotMap, newSlotMap) -> {
             List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
@@ -43,21 +44,18 @@ public class ZSetIndexLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.zset.index.lru.cache.capacity", 10_0000);
-        if (this.capacity != capacity) {
-            if (this.localCache == null) {
-                this.localCache = new SlotLRUCache<>(capacity);
-            } else {
+        int capacity = RedisKvConf.getInt(namespace, "kv.zset.index.lru.cache.capacity", -1);
+        if (capacity > 0) {
+            if (this.capacity != capacity) {
                 this.localCache.setCapacity(capacity);
-            }
-            if (this.localCacheForWrite == null) {
-                this.localCacheForWrite = new SlotLRUCache<>(capacity);
-            } else {
                 this.localCacheForWrite.setCapacity(capacity);
+                logger.info("zset index lru cache build, namespace = {}, capacity = {}", namespace, capacity);
             }
-            logger.info("zset index lru cache build, namespace = {}, capacity = {}", namespace, capacity);
+            this.capacity = capacity;
+        } else {
+            CacheCapacityCalculator.update(localCache, namespace, "kv.zset.index.lru.read.cache.size");
+            CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.zset.index.lru.write.cache.size");
         }
-        this.capacity = capacity;
     }
 
     public byte[] getForRead(int slot, byte[] cacheKey, BytesKey ref) {

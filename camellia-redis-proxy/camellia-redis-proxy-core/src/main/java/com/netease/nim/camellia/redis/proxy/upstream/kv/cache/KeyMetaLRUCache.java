@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/5/21
@@ -20,15 +21,17 @@ public class KeyMetaLRUCache {
     private static final Logger logger = LoggerFactory.getLogger(KeyMetaLRUCache.class);
 
     private final String namespace;
+    private final SlotLRUCache<KeyMeta> localCache = new SlotLRUCache<>(10000);
+    private final SlotLRUCache<Boolean> nullCache = new SlotLRUCache<>(10000);
+
     private int capacity;
-    private SlotLRUCache<KeyMeta> localCache;
-    private SlotLRUCache<Boolean> nullCache;
 
     public KeyMetaLRUCache(String namespace) {
         this.namespace = namespace;
         //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
+        CacheCapacityCalculator.scheduleAtFixedRate(this::rebuild, 10, 10, TimeUnit.SECONDS);
         //
         ClusterModeStatus.registerClusterSlotMapChangeCallback((oldSlotMap, newSlotMap) -> {
             List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
@@ -40,21 +43,18 @@ public class KeyMetaLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.key.meta.lru.cache.capacity", 50_0000);
-        if (this.capacity != capacity) {
-            if (localCache == null) {
-                this.localCache = new SlotLRUCache<>(capacity);
-            } else {
+        int capacity = RedisKvConf.getInt(namespace, "kv.key.meta.lru.cache.capacity", -1);
+        if (capacity > 0) {
+            if (this.capacity != capacity) {
                 this.localCache.setCapacity(capacity);
-            }
-            if (nullCache == null) {
-                this.nullCache = new SlotLRUCache<>(capacity);
-            } else {
                 this.nullCache.setCapacity(capacity);
+                logger.info("key meta lru cache build, capacity = {}", capacity);
             }
-            logger.info("key meta lru cache build, capacity = {}", capacity);
+            this.capacity = capacity;
+        } else {
+            CacheCapacityCalculator.update(localCache, namespace, "kv.key.meta.lru.cache.size");
+            CacheCapacityCalculator.update(nullCache, namespace, "kv.key.meta.lru.null.cache.size");
         }
-        this.capacity = capacity;
     }
 
     public ValueWrapper<KeyMeta> get(int slot, byte[] key) {
