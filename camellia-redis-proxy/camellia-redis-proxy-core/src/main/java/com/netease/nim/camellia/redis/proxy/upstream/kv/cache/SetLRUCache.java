@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/5/21
@@ -25,9 +26,8 @@ public class SetLRUCache {
 
     private final String namespace;
     private final HotKeyCalculator hotKeyCalculator;
-
-    private SlotLRUCache<RedisSet> localCache;
-    private SlotLRUCache<RedisSet> localCacheForWrite;
+    private final SlotLRUCache<RedisSet> localCache = new SlotLRUCache<>(10000);
+    private final SlotLRUCache<RedisSet> localCacheForWrite = new SlotLRUCache<>(10000);
 
     private int capacity;
 
@@ -37,6 +37,7 @@ public class SetLRUCache {
         //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
+        CacheCapacityCalculator.scheduleAtFixedRate(this::rebuild, 10, 10, TimeUnit.SECONDS);
         //
         ClusterModeStatus.registerClusterSlotMapChangeCallback((oldSlotMap, newSlotMap) -> {
             List<Integer> removedSlots = ProxyClusterSlotMapUtils.removedSlots(oldSlotMap, newSlotMap);
@@ -48,21 +49,18 @@ public class SetLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.set.lru.cache.capacity", 10_0000);
-        if (this.capacity != capacity) {
-            if (this.localCache == null) {
-                this.localCache = new SlotLRUCache<>(capacity);
-            } else {
+        int capacity = RedisKvConf.getInt(namespace, "kv.set.lru.cache.capacity", -1);
+        if (capacity > 0) {
+            if (this.capacity != capacity) {
                 this.localCache.setCapacity(capacity);
-            }
-            if (this.localCacheForWrite == null) {
-                this.localCacheForWrite = new SlotLRUCache<>(capacity);
-            } else {
                 this.localCacheForWrite.setCapacity(capacity);
+                logger.info("set lru cache build, namespace = {}, capacity = {}", namespace, capacity);
             }
-            logger.info("set lru cache build, namespace = {}, capacity = {}", namespace, capacity);
+            this.capacity = capacity;
+        } else {
+            CacheCapacityCalculator.update(localCache, namespace, "kv.set.lru.read.cache.size");
+            CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.set.lru.write.cache.size");
         }
-        this.capacity = capacity;
     }
 
     public boolean isHotKey(byte[] key, RedisCommand redisCommand) {

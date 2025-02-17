@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/5/31
@@ -27,14 +28,15 @@ public class ZSetLRUCache {
 
     private final String namespace;
     private final HotKeyCalculator hotKeyCalculator;
+    private final SlotLRUCache<RedisZSet> localCache = new SlotLRUCache<>(10000);
+    private final SlotLRUCache<RedisZSet> localCacheForWrite = new SlotLRUCache<>(10000);
 
     private int capacity;
-    private SlotLRUCache<RedisZSet> localCache;
-    private SlotLRUCache<RedisZSet> localCacheForWrite;
 
     public ZSetLRUCache(String namespace) {
         this.namespace = namespace;
         this.hotKeyCalculator = new HotKeyCalculator(namespace, KeyType.zset);
+        CacheCapacityCalculator.scheduleAtFixedRate(this::rebuild, 10, 10, TimeUnit.SECONDS);
         //
         rebuild();
         ProxyDynamicConf.registerCallback(this::rebuild);
@@ -49,21 +51,18 @@ public class ZSetLRUCache {
     }
 
     private void rebuild() {
-        int capacity = RedisKvConf.getInt(namespace, "kv.zset.lru.cache.capacity", 10_0000);
-        if (this.capacity != capacity) {
-            if (this.localCache == null) {
-                this.localCache = new SlotLRUCache<>(capacity);
-            } else {
+        int capacity = RedisKvConf.getInt(namespace, "kv.zset.lru.cache.capacity", -1);
+        if (capacity > 0) {
+            if (this.capacity != capacity) {
                 this.localCache.setCapacity(capacity);
-            }
-            if (this.localCacheForWrite == null) {
-                this.localCacheForWrite = new SlotLRUCache<>(capacity);
-            } else {
                 this.localCacheForWrite.setCapacity(capacity);
+                logger.info("zset lru cache build, namespace = {}, capacity = {}", namespace, capacity);
             }
-            logger.info("zset lru cache build, namespace = {}, capacity = {}", namespace, capacity);
+            this.capacity = capacity;
+        } else {
+            CacheCapacityCalculator.update(localCache, namespace, "kv.zset.lru.read.cache.size");
+            CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.zset.lru.write.cache.size");
         }
-        this.capacity = capacity;
     }
 
     public boolean isHotKey(byte[] key, RedisCommand redisCommand) {
