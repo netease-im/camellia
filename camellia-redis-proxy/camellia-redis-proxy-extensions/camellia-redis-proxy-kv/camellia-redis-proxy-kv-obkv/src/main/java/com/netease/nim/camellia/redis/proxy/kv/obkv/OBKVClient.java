@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.kv.obkv;
 
 import com.alipay.oceanbase.rpc.ObTableClient;
 import com.alipay.oceanbase.rpc.filter.ObCompareOp;
-import com.alipay.oceanbase.rpc.filter.ObTableFilterList;
 import com.alipay.oceanbase.rpc.filter.ObTableValueFilter;
 import com.alipay.oceanbase.rpc.mutation.Row;
 import com.alipay.oceanbase.rpc.mutation.result.MutationResult;
@@ -16,10 +15,15 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/9/4
@@ -48,8 +52,19 @@ public class OBKVClient implements KVClient {
             obTableClient.setPassword(password);
             obTableClient.setSysUserName(sysUserName);
             obTableClient.setSysPassword(sysPassword);
-            obTableClient.init();
 
+            boolean executorEnable = RedisKvConf.getBoolean(namespace, "kv.obkv.runtime.batch.executor.enable", false);
+            if (executorEnable) {
+                int size = RedisKvConf.getInt(namespace, "kv.obkv.runtime.batch.executor.size", SysUtils.getCpuNum());
+                ThreadPoolExecutor executor = new ThreadPoolExecutor(size, size, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(128),
+                        new CamelliaThreadFactory(OBKVClient.class), new ThreadPoolExecutor.CallerRunsPolicy());
+                obTableClient.setRuntimeBatchExecutor(executor);
+            }
+
+            int slowQueryMonitorThreshold = RedisKvConf.getInt(namespace, "kv.obkv.slow.query.monitor.threshold", 2000);
+            obTableClient.setslowQueryMonitorThreshold(slowQueryMonitorThreshold);
+
+            obTableClient.init();
             this.obTableClient = obTableClient;
 
             this.obTableClient.addRowKeyElement(tableName, new String[]{"slot", "k"});
