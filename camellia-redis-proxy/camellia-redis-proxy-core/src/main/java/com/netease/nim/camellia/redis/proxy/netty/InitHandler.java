@@ -111,6 +111,7 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
                 bindConnection.stop(true);
             }
         }
+        ReplyFlushEncoder.release(ctx);
         if (logger.isDebugEnabled()) {
             logger.debug("channel close, consid = {}", channelInfo == null ? "null" : channelInfo.getConsid());
         }

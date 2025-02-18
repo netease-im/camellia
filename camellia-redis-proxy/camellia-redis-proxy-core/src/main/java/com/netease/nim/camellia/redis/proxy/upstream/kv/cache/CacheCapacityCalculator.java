@@ -73,6 +73,9 @@ public class CacheCapacityCalculator {
         if (currentKeyCount == 0) {
             return (int) currentCapacity;
         }
+        if (currentKeyCount <= 100 && currentSize < targetSize) {
+            return (int) currentCapacity;
+        }
         double sizePerKey = currentSize * 1.0 / currentKeyCount;
         long targetCapacity = (long) (targetSize / sizePerKey);
         if (targetCapacity > Integer.MAX_VALUE) {

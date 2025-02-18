@@ -22,6 +22,13 @@ public class ReplyFlushEncoder extends MessageToMessageEncoder<Reply> {
         }
     }
 
+    public static void release(ChannelHandlerContext ctx) {
+        ReplyFlushEncoder encoder = ctx.channel().pipeline().get(ReplyFlushEncoder.class);
+        if (encoder != null) {
+            encoder.release();
+        }
+    }
+
     public static void commandReceive(ChannelHandlerContext ctx, int count) {
         AtomicLong counter = ctx.channel().attr(ATTRIBUTE_KEY).get();
         if (counter != null) {
@@ -50,6 +57,12 @@ public class ReplyFlushEncoder extends MessageToMessageEncoder<Reply> {
             list.add(buf);
             buf = null;
             batch = 0;
+        }
+    }
+
+    private void release() {
+        if (buf != null) {
+            buf.release();
         }
     }
 
