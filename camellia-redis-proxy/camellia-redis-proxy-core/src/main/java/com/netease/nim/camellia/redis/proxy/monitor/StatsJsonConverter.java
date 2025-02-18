@@ -402,6 +402,19 @@ public class StatsJsonConverter {
         }
         monitorJson.put("kvRunToCompletionStats", runToCompletionStatsJsonArray);
 
+        List<KvLRUCacheStats> kvLRUCacheStatsList = stats.getKvLRUCacheStatsList();
+        JSONArray kvLRUCacheStatsListJsonArray = new JSONArray();
+        for (KvLRUCacheStats kvLRUCacheStats : kvLRUCacheStatsList) {
+            JSONObject json = new JSONObject();
+            json.put("namespace", kvLRUCacheStats.getNamespace());
+            json.put("name", kvLRUCacheStats.getName());
+            json.put("capacity", kvLRUCacheStats.getCapacity());
+            json.put("keyCount", kvLRUCacheStats.getKeyCount());
+            json.put("currentSize", kvLRUCacheStats.getCurrentSize());
+            json.put("targetSize", kvLRUCacheStats.getTargetSize());
+            kvLRUCacheStatsListJsonArray.add(json);
+        }
+        monitorJson.put("kvLRUCacheStats", kvLRUCacheStatsListJsonArray);
 
         List<LocalStorageExecutorStats> localStorageExecutorStatsList = stats.getLocalStorageExecutorStatsList();
         JSONArray localStorageExecutorStatsListJsonArray = new JSONArray();
@@ -515,8 +528,6 @@ public class StatsJsonConverter {
             localStorageKeyBucketStatsListJsonArray.add(json);
         }
         monitorJson.put("localStorageKeyBucketStats", localStorageKeyBucketStatsListJsonArray);
-
-
         return monitorJson.toJSONString();
     }
 }

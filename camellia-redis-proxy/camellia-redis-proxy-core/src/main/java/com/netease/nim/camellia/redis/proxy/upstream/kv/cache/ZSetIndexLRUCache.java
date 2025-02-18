@@ -1,12 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
-import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +51,8 @@ public class ZSetIndexLRUCache {
             }
             this.capacity = capacity;
         } else {
-            CacheCapacityCalculator.update(localCache, namespace, "kv.zset.index.lru.read.cache.size");
-            CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.zset.index.lru.write.cache.size");
+            CacheCapacityCalculator.update(localCache, namespace, "kv.zset.index.lru.read.cache");
+            CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.zset.index.lru.write.cache");
         }
     }
 
@@ -101,28 +99,5 @@ public class ZSetIndexLRUCache {
     public void clear() {
         localCache.clear();
         localCacheForWrite.clear();
-    }
-
-    public JSONObject info() {
-        JSONObject json = new JSONObject(true);
-        long total = 0;
-        {
-            long estimateSize = localCache.estimateSize();
-            total += estimateSize;
-            json.put("read.cache.estimate.size", Utils.humanReadableByteCountBin(estimateSize));
-            json.put("read.cache.key.count", localCache.size());
-            json.put("read.cache.key.capacity", localCache.getCapacity());
-        }
-        {
-            long estimateSize = localCacheForWrite.estimateSize();
-            total += estimateSize;
-            json.put("write.cache.estimate.size", Utils.humanReadableByteCountBin(estimateSize));
-            json.put("write.cache.key.count", localCacheForWrite.size());
-            json.put("write.cache.key.capacity", localCacheForWrite.getCapacity());
-        }
-        {
-            json.put("total.estimate.size", Utils.humanReadableByteCountBin(total));
-        }
-        return json;
     }
 }

@@ -45,6 +45,7 @@ public class Stats {
     private List<KvWriteBufferStats> kvWriteBufferStatsList = new ArrayList<>();
     private List<KvStorageSpendStats> kvStorageSpendStatsList = new ArrayList<>();
     private List<KvRunToCompletionStats> kvRunToCompletionStatsList = new ArrayList<>();
+    private List<KvLRUCacheStats> kvLRUCacheStatsList = new ArrayList<>();
     private List<LocalStorageFileStats> localStorageFileStatsList = new ArrayList<>();
     private List<LocalStorageCountStats> localStorageCountStatsList = new ArrayList<>();
     private List<LocalStorageTimeStats> localStorageTimeStatsList = new ArrayList<>();
@@ -317,6 +318,14 @@ public class Stats {
         this.kvRunToCompletionStatsList = kvRunToCompletionStatsList;
     }
 
+    public List<KvLRUCacheStats> getKvLRUCacheStatsList() {
+        return kvLRUCacheStatsList;
+    }
+
+    public void setKvLRUCacheStatsList(List<KvLRUCacheStats> kvLRUCacheStatsList) {
+        this.kvLRUCacheStatsList = kvLRUCacheStatsList;
+    }
+
     public List<LocalStorageFileStats> getLocalStorageFileStatsList() {
         return localStorageFileStatsList;
     }
@@ -372,4 +381,5 @@ public class Stats {
     public void setLocalStorageCacheStatsList(List<LocalStorageCacheStats> localStorageCacheStatsList) {
         this.localStorageCacheStatsList = localStorageCacheStatsList;
     }
+
 }
