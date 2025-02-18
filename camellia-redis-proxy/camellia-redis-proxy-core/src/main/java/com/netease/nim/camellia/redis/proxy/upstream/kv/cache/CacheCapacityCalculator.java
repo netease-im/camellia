@@ -61,7 +61,7 @@ public class CacheCapacityCalculator {
 
     private static String defaultTargetSize() {
         MemoryInfo memoryInfo = MemoryInfoCollector.getMemoryInfo();
-        long heapMemoryMax = memoryInfo.getHeapMemoryMax();
+        long heapMemoryMax = memoryInfo.getMaxMemory();
         long target = heapMemoryMax / 40 / 1024 / 1024;
         if (target <= 0) {
             target = 32;
