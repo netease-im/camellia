@@ -4,6 +4,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.tools.utils.MathUtil;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 
 import java.util.Map;
 
@@ -21,7 +22,8 @@ public class SlotLRUCache<V> {
 
     public SlotLRUCache(int capacity) {
         this.capacity = capacity;
-        segmentSize = ProxyDynamicConf.getInt("kv.lru.cache.segment.size", 4);
+        int size = Math.min(16, Math.max(4, SysUtils.getCpuNum() / 3));
+        segmentSize = ProxyDynamicConf.getInt("kv.lru.cache.segment.size", size);
         is2Power = MathUtil.is2Power(segmentSize);
         array = new ConcurrentLinkedHashMap[segmentSize];
         for (int i = 0; i< segmentSize; i++) {
@@ -34,20 +36,20 @@ public class SlotLRUCache<V> {
     }
 
     public V get(SlotCacheKey cacheKey) {
-        int index = MathUtil.mod(is2Power, cacheKey.getSlot(), segmentSize);
+        int index = MathUtil.mod(is2Power, cacheKey.slot(), segmentSize);
         ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
         return subMap.get(cacheKey);
     }
 
 
     public void put(SlotCacheKey cacheKey, V value) {
-        int index = MathUtil.mod(is2Power, cacheKey.getSlot(), segmentSize);
+        int index = MathUtil.mod(is2Power, cacheKey.slot(), segmentSize);
         ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
         subMap.put(cacheKey, value);
     }
 
     public void remove(SlotCacheKey cacheKey) {
-        int index = MathUtil.mod(is2Power, cacheKey.getSlot(), segmentSize);
+        int index = MathUtil.mod(is2Power, cacheKey.slot(), segmentSize);
         ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
         subMap.remove(cacheKey);
     }
@@ -61,7 +63,7 @@ public class SlotLRUCache<V> {
     public void clear(int slot) {
         int index = MathUtil.mod(is2Power, slot, segmentSize);
         ConcurrentLinkedHashMap<SlotCacheKey, V> subMap = array[index];
-        subMap.entrySet().removeIf(entry -> entry.getKey().getSlot() == slot);
+        subMap.entrySet().removeIf(entry -> entry.getKey().slot() == slot);
     }
 
     public void setCapacity(int capacity) {
@@ -88,7 +90,7 @@ public class SlotLRUCache<V> {
         for (ConcurrentLinkedHashMap<SlotCacheKey, V> map : array) {
             estimateSize += map.size() * 12L;
             for (Map.Entry<SlotCacheKey, V> entry : map.entrySet()) {
-                estimateSize += entry.getKey().getKey().length;
+                estimateSize += entry.getKey().key().length;
                 V value = entry.getValue();
                 if (value instanceof EstimateSizeValue) {
                     long size = ((EstimateSizeValue) value).estimateSize();
@@ -105,6 +107,8 @@ public class SlotLRUCache<V> {
                     estimateSize += 8;
                 } else if (value instanceof Double) {
                     estimateSize += 8;
+                } else if (value instanceof byte[]) {
+                    estimateSize += ((byte[]) value).length;
                 } else {
                     estimateSize += 4;
                 }

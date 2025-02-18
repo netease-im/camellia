@@ -9,7 +9,6 @@ import java.util.Arrays;
  */
 public class BytesKey {
     private final byte[] key;
-    private int hashCode;
 
     public BytesKey(byte[] key) {
         this.key = key;
@@ -31,10 +30,7 @@ public class BytesKey {
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            hashCode = Arrays.hashCode(key);
-        }
-        return hashCode;
+        return Arrays.hashCode(key);
     }
 
     @Override
