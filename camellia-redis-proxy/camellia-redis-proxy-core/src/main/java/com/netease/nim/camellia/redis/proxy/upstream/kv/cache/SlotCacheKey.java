@@ -6,23 +6,7 @@ import java.util.Arrays;
 /**
  * Created by caojiajun on 2024/9/9
  */
-public class SlotCacheKey {
-    private final byte[] key;
-    private final int slot;
-    private int hashCode;
-
-    public SlotCacheKey(int slot, byte[] key) {
-        this.slot = slot;
-        this.key = key;
-    }
-
-    public byte[] getKey() {
-        return key;
-    }
-
-    public int getSlot() {
-        return slot;
-    }
+public record SlotCacheKey(int slot, byte[] key) {
 
     @Override
     public boolean equals(Object object) {
@@ -36,10 +20,7 @@ public class SlotCacheKey {
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            hashCode = Arrays.hashCode(key);
-        }
-        return hashCode;
+        return Arrays.hashCode(key);
     }
 
     @Override
