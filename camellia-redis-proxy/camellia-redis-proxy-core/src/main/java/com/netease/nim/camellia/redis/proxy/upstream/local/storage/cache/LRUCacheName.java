@@ -26,15 +26,15 @@ public enum LRUCacheName {
         return configKey;
     }
 
-    public long getCapacity(long defaultSize) {
+    public long getTargetSize(long defaultSize) {
         if (defaultSize < 0) {
-            long heapMemoryMax = MemoryInfoCollector.getMemoryInfo().getHeapMemoryMax();
+            long heapMemoryMax = MemoryInfoCollector.getMemoryInfo().getMaxMemory();
             long size = heapMemoryMax * 2 / 10 / LRUCacheName.values().length;
             if (size <= 0) {
                 size = 32 * 1024 * 1024L;
             }
             defaultSize = size;
         }
-        return CacheCapacityConfigParser.parse(configKey + ".capacity", CacheCapacityConfigParser.toString(defaultSize));
+        return CacheCapacityConfigParser.parse(configKey + ".size", CacheCapacityConfigParser.toString(defaultSize));
     }
 }

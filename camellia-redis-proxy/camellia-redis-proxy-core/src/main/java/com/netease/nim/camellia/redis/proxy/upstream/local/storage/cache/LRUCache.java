@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageLRUCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class LRUCache<K, V> {
 
     private boolean enable;
     private final ConcurrentLinkedHashMap<K, V> cache;
-    private long capacity;
+    private long targetSize;
 
     private int maxKeyCount;
 
@@ -40,16 +41,16 @@ public class LRUCache<K, V> {
         this.name = name;
         this.keySizeCalculator = keySizeCalculator;
         this.valueSizeCalculator = valueSizeCalculator;
-        this.capacity = name.getCapacity(-1);
-        this.config = CacheCapacityConfigParser.toString(capacity);
-        this.maxKeyCount = (int) (capacity / estimateSizePerKV);
+        this.targetSize = name.getTargetSize(-1);
+        this.config = CacheCapacityConfigParser.toString(targetSize);
+        this.maxKeyCount = (int) (targetSize / estimateSizePerKV);
         this.cache = new ConcurrentLinkedHashMap.Builder<K, V>()
                 .initialCapacity(maxKeyCount)
                 .maximumWeightedCapacity(maxKeyCount)
                 .build();
         scheduler.scheduleAtFixedRate(this::schedule, 10, 10, TimeUnit.SECONDS);
         enable = ProxyDynamicConf.getBoolean(name.getConfigKey() + ".enable", true);
-        logger.info("lru-cache init, name = {}, capacity = {}, key.max.count = {}, enable = {}", name, CacheCapacityConfigParser.toString(capacity), maxKeyCount, enable);
+        logger.info("lru-cache init, name = {}, capacity = {}, key.max.count = {}, enable = {}", name, CacheCapacityConfigParser.toString(targetSize), maxKeyCount, enable);
     }
 
     public void put(K key, V value) {
@@ -79,8 +80,8 @@ public class LRUCache<K, V> {
             if (!enable) {
                 cache.clear();
             }
-            this.capacity = name.getCapacity(capacity);
-            this.config = CacheCapacityConfigParser.toString(capacity);
+            this.targetSize = name.getTargetSize(targetSize);
+            this.config = CacheCapacityConfigParser.toString(targetSize);
             long estimateSize = 0;
             long keyCount = cache.size();
             for (Map.Entry<K, V> entry : cache.entrySet()) {
@@ -88,23 +89,21 @@ public class LRUCache<K, V> {
                 estimateSize += valueSizeCalculator.size(entry.getValue());
             }
             estimateSize += keyCount * 8;
-            if (estimateSize > capacity) {
-                double ratio = estimateSize * 1.0 / capacity;
-                maxKeyCount = (int) (keyCount / ratio);
-                this.cache.setCapacity(maxKeyCount);
-            } else {
-                if (keyCount >= maxKeyCount) {
-                    double ratio = estimateSize * 1.0 / capacity;
-                    maxKeyCount = (int) (keyCount / ratio);
-                    this.cache.setCapacity(maxKeyCount);
-                }
+
+            LocalStorageLRUCacheMonitor.update(name.name(), cache.capacity(), keyCount, estimateSize, targetSize);
+
+            if (estimateSize != 0) {
+                long sizePerKey = estimateSize / keyCount;
+                maxKeyCount = (int) (targetSize / sizePerKey);
             }
+
             loop ++;
             if (loop == 6) {//print log every 60s
                 logger.info("lru-cache, name = {}, enable = {}, target.capacity = {}, current.estimate.size = {}, current.key.count = {}, current.key.max.count = {}",
                         name, enable, config, Utils.humanReadableByteCountBin(estimateSize), keyCount, maxKeyCount);
                 loop = 0;
             }
+
         } catch (Exception e) {
             logger.error("lru cache schedule error, name = {}", name, e);
         }
