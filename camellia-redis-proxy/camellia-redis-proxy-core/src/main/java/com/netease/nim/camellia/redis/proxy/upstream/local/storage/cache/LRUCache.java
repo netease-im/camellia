@@ -25,13 +25,13 @@ public class LRUCache<K, V> {
     private final LRUCacheName name;
     private final SizeCalculator<K> keySizeCalculator;
     private final SizeCalculator<V> valueSizeCalculator;
+    private final int estimateSizePerKV;
+    private final ConcurrentLinkedHashMap<K, V> cache;
 
     private String config;
 
     private boolean enable;
-    private final ConcurrentLinkedHashMap<K, V> cache;
     private long targetSize;
-
     private int maxKeyCount;
 
     private int loop = 0;
@@ -39,6 +39,7 @@ public class LRUCache<K, V> {
     public LRUCache(LRUCacheName name, int estimateSizePerKV,
                     SizeCalculator<K> keySizeCalculator, SizeCalculator<V> valueSizeCalculator) {
         this.name = name;
+        this.estimateSizePerKV = estimateSizePerKV;
         this.keySizeCalculator = keySizeCalculator;
         this.valueSizeCalculator = valueSizeCalculator;
         this.targetSize = name.getTargetSize(-1);
@@ -84,18 +85,17 @@ public class LRUCache<K, V> {
             this.config = CacheCapacityConfigParser.toString(targetSize);
             long estimateSize = 0;
             long keyCount = cache.size();
+            long currentCapacity = cache.capacity();
             for (Map.Entry<K, V> entry : cache.entrySet()) {
                 estimateSize += keySizeCalculator.size(entry.getKey());
                 estimateSize += valueSizeCalculator.size(entry.getValue());
             }
             estimateSize += keyCount * 8;
 
-            LocalStorageLRUCacheMonitor.update(name.name(), cache.capacity(), keyCount, estimateSize, targetSize);
+            LocalStorageLRUCacheMonitor.update(name.name(), currentCapacity, keyCount, estimateSize, targetSize);
 
-            if (estimateSize != 0) {
-                long sizePerKey = estimateSize / keyCount;
-                maxKeyCount = (int) (targetSize / sizePerKey);
-            }
+            maxKeyCount = calcCapacity(targetSize, currentCapacity, keyCount, estimateSize);
+            cache.setCapacity(maxKeyCount);
 
             loop ++;
             if (loop == 6) {//print log every 60s
@@ -103,9 +103,24 @@ public class LRUCache<K, V> {
                         name, enable, config, Utils.humanReadableByteCountBin(estimateSize), keyCount, maxKeyCount);
                 loop = 0;
             }
-
         } catch (Exception e) {
             logger.error("lru cache schedule error, name = {}", name, e);
         }
+    }
+
+    private int calcCapacity(long targetSize, long currentCapacity, long currentKeyCount, long currentSize) {
+        if (currentKeyCount == 0) {
+            return (int) currentCapacity;
+        }
+        if (currentKeyCount <= 100 && currentSize < targetSize) {
+            return (int) currentCapacity;
+        }
+        double sizePerKey = currentSize * 1.0 / currentKeyCount;
+        long targetCapacity = (long) (targetSize / sizePerKey);
+        if (targetCapacity > Integer.MAX_VALUE) {
+            return (int) (targetSize / estimateSizePerKV);
+        }
+        int maxCapacity = ProxyDynamicConf.getInt("local.storage.lru.cache.max.capacity", 100_0000);
+        return Math.min(maxCapacity, (int) targetCapacity);
     }
 }
