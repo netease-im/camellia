@@ -1,17 +1,21 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.KvLRUCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.sys.MemoryInfo;
 import com.netease.nim.camellia.tools.sys.MemoryInfoCollector;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by caojiajun on 2025/2/17
@@ -19,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 public class CacheCapacityCalculator {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheCapacityCalculator.class);
+
+    private static final ConcurrentHashMap<String, AtomicLong> loopMap = new ConcurrentHashMap<>();
 
     private static final ScheduledExecutorService scheduleService = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("kv-lru-cache-capacity-schedule"));
 
@@ -38,9 +44,13 @@ public class CacheCapacityCalculator {
         if (newCapacity <= 0) {
             newCapacity = 10000;
         }
-        logger.info("kv lru cache capacity update, targetSize = {}, currentSize = {}, currentCapacity = {}, currentKeyCount = {}, newCapacity = {}",
-                Utils.humanReadableByteCountBin(targetSize), Utils.humanReadableByteCountBin(currentSize), currentCapacity, currentKeyCount, newCapacity);
         cache.setCapacity(newCapacity);
+
+        long loop = Math.abs(CamelliaMapUtils.computeIfAbsent(loopMap, namespace + "|" + name, k -> new AtomicLong()).incrementAndGet());
+        if (loop % 6 == 0) {
+            logger.info("kv lru cache capacity update, namespace = {}, name = {}, targetSize = {}, currentSize = {}, currentCapacity = {}, currentKeyCount = {}, newCapacity = {}",
+                    namespace, name, Utils.humanReadableByteCountBin(targetSize), Utils.humanReadableByteCountBin(currentSize), currentCapacity, currentKeyCount, newCapacity);
+        }
     }
 
     private static long targetSize(String namespace, String name) {
@@ -81,7 +91,8 @@ public class CacheCapacityCalculator {
         if (targetCapacity > Integer.MAX_VALUE) {
             return 10000;
         }
-        return (int) targetCapacity;
+        int maxCapacity = ProxyDynamicConf.getInt("kv.lru.cache.max.capacity", 200_0000);
+        return Math.min(maxCapacity, (int) targetCapacity);
     }
 
 }
