@@ -11,7 +11,6 @@ import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -96,23 +95,6 @@ public class HotKeyCalculator {
             node.time = TimeCache.currentMillis;
         }
         return node.count.incrementAndGet() > targetThreshold;
-    }
-
-    public long estimateSize() {
-        long estimateSize = 0;
-        for (Map.Entry<BytesKey, Node> entry : cache.entrySet()) {
-            estimateSize += 24;
-            estimateSize += entry.getKey().getKey().length;
-        }
-        return estimateSize;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public long size() {
-        return cache.size();
     }
 
     private static class Node {

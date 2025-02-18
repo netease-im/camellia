@@ -144,6 +144,7 @@ public class ProxyMonitorCollector {
             stats.setKvWriteBufferStatsList(KvWriterBufferMonitor.collect());
             stats.setKvStorageSpendStatsList(KvStorageMonitor.collect());
             stats.setKvRunToCompletionStatsList(KvRunToCompletionMonitor.collect());
+            stats.setKvLRUCacheStatsList(KvLRUCacheMonitor.collect());
 
             ProxyMonitorCollector.stats = stats;
 

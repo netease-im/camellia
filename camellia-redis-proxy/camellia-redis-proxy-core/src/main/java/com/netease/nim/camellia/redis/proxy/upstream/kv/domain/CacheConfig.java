@@ -47,29 +47,6 @@ public class CacheConfig {
         this.zSetIndexLRUCache = new ZSetIndexLRUCache(namespace);
         this.setLRUCache = new SetLRUCache(namespace);
         ProxyDynamicConf.registerCallback(this::initCacheConfig);
-        scheduler.scheduleAtFixedRate(this::lruCacheEstimateSize, 10, 10, TimeUnit.SECONDS);
-    }
-
-    private long lastCheckLruCacheEstimateSizeTime = 0;
-
-    private void lruCacheEstimateSize() {
-        try {
-            int intervalSeconds = RedisKvConf.getInt(namespace, "kv.lru.cache.estimate.size.interval.seconds", 60);
-            if (intervalSeconds < 0) {
-                return;
-            }
-            if (TimeCache.currentMillis - lastCheckLruCacheEstimateSizeTime < intervalSeconds * 1000L) {
-                return;
-            }
-            lastCheckLruCacheEstimateSizeTime = TimeCache.currentMillis;
-            logger.info("lru.cache.estimate.size, namespace = {}, type = key.meta, size.info = {}", namespace, keyMetaLRUCache.info());
-            logger.info("lru.cache.estimate.size, namespace = {}, type = hash, size.info = {}", namespace, hashLRUCache.info());
-            logger.info("lru.cache.estimate.size, namespace = {}, type = set, size.info = {}", namespace, setLRUCache.info());
-            logger.info("lru.cache.estimate.size, namespace = {}, type = zset, size.info = {}", namespace, zSetLRUCache.info());
-            logger.info("lru.cache.estimate.size, namespace = {}, type = zset.index, size.info = {}", namespace, zSetIndexLRUCache.info());
-        } catch (Exception e) {
-            logger.error("lru cache estimate size error", e);
-        }
     }
 
     private void initCacheConfig() {
