@@ -46,7 +46,7 @@ public class CacheCapacityCalculator {
     private static long targetSize(String namespace, String name) {
         try {
             String size = RedisKvConf.getString(namespace, name + ".size", defaultTargetSize());
-            long num = Long.parseLong(size.substring(0, size.length() - 2));
+            long num = Long.parseLong(size.substring(0, size.length() - 1));
             if (size.endsWith("M")) {
                 return num * 1024 * 1024L;
             } else if (size.endsWith("G")) {
@@ -61,8 +61,8 @@ public class CacheCapacityCalculator {
 
     private static String defaultTargetSize() {
         MemoryInfo memoryInfo = MemoryInfoCollector.getMemoryInfo();
-        long heapMemoryMax = memoryInfo.getMaxMemory();
-        long target = heapMemoryMax / 40 / 1024 / 1024;
+        long totalMemory = memoryInfo.getHeapMemoryMax();
+        long target = totalMemory / 40 / 1024 / 1024;
         if (target <= 0) {
             target = 32;
         }
