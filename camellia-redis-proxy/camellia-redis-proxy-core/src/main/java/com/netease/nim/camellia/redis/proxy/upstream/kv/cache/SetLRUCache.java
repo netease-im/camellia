@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvLRUCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.tools.utils.BytesKey;
@@ -54,10 +55,13 @@ public class SetLRUCache {
                 this.localCacheForWrite.setCapacity(capacity);
                 logger.info("set lru cache build, namespace = {}, capacity = {}", namespace, capacity);
             }
+            KvLRUCacheMonitor.update(namespace, "kv.set.lru.read.cache", localCache.getCapacity(), localCache.size(), localCache.estimateSize(), 0);
+            KvLRUCacheMonitor.update(namespace, "kv.set.lru.write.cache", localCacheForWrite.getCapacity(), localCacheForWrite.size(), localCacheForWrite.estimateSize(), 0);
             this.capacity = capacity;
         } else {
             CacheCapacityCalculator.update(localCache, namespace, "kv.set.lru.read.cache");
             CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.set.lru.write.cache");
+            this.capacity = 0;
         }
     }
 
