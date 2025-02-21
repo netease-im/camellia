@@ -150,7 +150,7 @@ public class ProxyClusterSlotMap {
             builder.append(System.currentTimeMillis()).append(" ");
             builder.append(i).append(" ");
             builder.append("connected").append(" ");
-            List<Pair<Integer, Integer>> pairs = splitSlots(entry.getValue());
+            List<Pair<Integer, Integer>> pairs = SlotSplitUtils.splitSlots(entry.getValue());
             for (Pair<Integer, Integer> pair : pairs) {
                 if (Objects.equals(pair.getFirst(), pair.getSecond())) {
                     builder.append(pair.getFirst());
@@ -173,7 +173,7 @@ public class ProxyClusterSlotMap {
         for (Map.Entry<ProxyNode, List<Integer>> entry : map.entrySet()) {
             ProxyNode proxyNode = entry.getKey();
             List<Integer> slots = entry.getValue();
-            List<Pair<Integer, Integer>> pairs = splitSlots(slots);
+            List<Pair<Integer, Integer>> pairs = SlotSplitUtils.splitSlots(slots);
             for (Pair<Integer, Integer> pair : pairs) {
                 BulkReply host = new BulkReply(Utils.stringToBytes(proxyNode.getHost()));
                 IntegerReply port = new IntegerReply((long) proxyNode.getPort());
@@ -194,7 +194,7 @@ public class ProxyClusterSlotMap {
         JSONObject json = new JSONObject(true);
         for (ProxyNode node : onlineNodes) {
             List<Integer> integers = map.get(node);
-            List<Pair<Integer, Integer>> pairs = splitSlots(integers);
+            List<Pair<Integer, Integer>> pairs = SlotSplitUtils.splitSlots(integers);
             JSONArray slot = new JSONArray();
             for (Pair<Integer, Integer> pair : pairs) {
                 if (pair.getFirst().equals(pair.getSecond())) {
@@ -253,35 +253,5 @@ public class ProxyClusterSlotMap {
         } else {
             return false;
         }
-    }
-
-    private List<Pair<Integer, Integer>> splitSlots(List<Integer> slots) {
-        List<Pair<Integer, Integer>> list = new ArrayList<>();
-        int start = -1;
-        int stop = -1;
-        for (Integer slot : slots) {
-            if (start == -1) {
-                start = slot;
-                continue;
-            }
-            if (stop == -1) {
-                stop = slot;
-                continue;
-            }
-            if (slot == stop + 1) {
-                stop = slot;
-                continue;
-            }
-            list.add(new Pair<>(start, stop));
-            start = slot;
-            stop = -1;
-        }
-        if (start != -1 && stop == -1) {
-            list.add(new Pair<>(start, start));
-        }
-        if (start != -1 && stop != -1) {
-            list.add(new Pair<>(start, stop));
-        }
-        return list;
     }
 }
