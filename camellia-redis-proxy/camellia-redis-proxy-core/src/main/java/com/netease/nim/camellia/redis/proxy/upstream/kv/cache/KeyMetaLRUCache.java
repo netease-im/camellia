@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.cache;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.KvLRUCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import org.slf4j.Logger;
@@ -48,10 +49,13 @@ public class KeyMetaLRUCache {
                 this.nullCache.setCapacity(capacity);
                 logger.info("key meta lru cache build, capacity = {}", capacity);
             }
+            KvLRUCacheMonitor.update(namespace, "kv.key.meta.lru.cache", localCache.getCapacity(), localCache.size(), localCache.estimateSize(), 0);
+            KvLRUCacheMonitor.update(namespace, "kv.key.meta.lru.null.cache", nullCache.getCapacity(), nullCache.size(), nullCache.estimateSize(), 0);
             this.capacity = capacity;
         } else {
             CacheCapacityCalculator.update(localCache, namespace, "kv.key.meta.lru.cache");
             CacheCapacityCalculator.update(nullCache, namespace, "kv.key.meta.lru.null.cache");
+            this.capacity = 0;
         }
     }
 

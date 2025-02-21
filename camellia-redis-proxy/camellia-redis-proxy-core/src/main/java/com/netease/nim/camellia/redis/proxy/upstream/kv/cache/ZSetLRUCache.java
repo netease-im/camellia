@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterSlotMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.KvLRUCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetLex;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.utils.ZSetScore;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
@@ -56,10 +57,13 @@ public class ZSetLRUCache {
                 this.localCacheForWrite.setCapacity(capacity);
                 logger.info("zset lru cache build, namespace = {}, capacity = {}", namespace, capacity);
             }
+            KvLRUCacheMonitor.update(namespace, "kv.zset.lru.read.cache", localCache.getCapacity(), localCache.size(), localCache.estimateSize(), 0);
+            KvLRUCacheMonitor.update(namespace, "kv.zset.lru.write.cache", localCacheForWrite.getCapacity(), localCacheForWrite.size(), localCacheForWrite.estimateSize(), 0);
             this.capacity = capacity;
         } else {
             CacheCapacityCalculator.update(localCache, namespace, "kv.zset.lru.read.cache");
             CacheCapacityCalculator.update(localCacheForWrite, namespace, "kv.zset.lru.write.cache");
+            this.capacity = capacity;
         }
     }
 
