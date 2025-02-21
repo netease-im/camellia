@@ -26,6 +26,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
     private ThreadPoolExecutor executor;
     private MultiWriteFunc multiWriteFunc;
     private boolean skipDb;
+    private final ConcurrentHashMap<String, IUpstreamClient> clientMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ProxyBeanFactory factory) {
@@ -86,7 +87,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
             if (commandKeyType == RedisCommand.CommandKeyType.SIMPLE_SINGLE) {
                 List<byte[]> keys = command.getKeys();
                 if (!keys.isEmpty()) {
-                    byte[] key = keys.get(0);
+                    byte[] key = keys.getFirst();
                     doMultiWrite(key, keyContext, db, command, factory);
                 }
             } else if (commandKeyType == RedisCommand.CommandKeyType.SIMPLE_MULTI) {
@@ -133,15 +134,22 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                 if (urls != null && !urls.isEmpty()) {
                     for (String url : urls) {
                         try {
-                            executor.submit(() -> {
-                                try {
-                                    IUpstreamClient client = redisProxyEnv.getClientFactory().get(url);
-                                    client.sendCommand(db, Collections.singletonList(command),
-                                            Collections.singletonList(new CompletableFuture<>()));
-                                } catch (Exception e) {
-                                    ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "multi write error, url = " + url, e);
-                                }
-                            });
+                            IUpstreamClient upstreamClient = clientMap.get(url);
+                            if (upstreamClient != null) {
+                                upstreamClient.sendCommand(db, Collections.singletonList(command),
+                                        Collections.singletonList(new CompletableFuture<>()));
+                            } else {
+                                executor.submit(() -> {
+                                    try {
+                                        IUpstreamClient client = redisProxyEnv.getClientFactory().get(url);//maybe blocking
+                                        client.sendCommand(db, Collections.singletonList(command),
+                                                Collections.singletonList(new CompletableFuture<>()));
+                                        clientMap.put(url, client);
+                                    } catch (Exception e) {
+                                        ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "multi write error, url = " + url, e);
+                                    }
+                                });
+                            }
                         } catch (Exception e) {
                             ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "submit multi write error, url = " + url, e);
                         }
@@ -149,8 +157,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                 }
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(MultiWriteProxyPlugin.class,
-                    "multi write error, key = " + Utils.bytesToString(key), e);
+            ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "multi write error, key = " + Utils.bytesToString(key), e);
         }
     }
 
