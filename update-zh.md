@@ -1,5 +1,25 @@
 [ENGLISH](update-en.md)
 
+# 1.3.3（2025/02/xx）
+### 新增
+* camellia-redis-proxy，kv，command-executor默认开启run-in-completion模式
+* camellia-redis-proxy，kv，obkv-client支持设置runtimeBatchExecutor和slowQueryMonitorThreshold
+* camellia-redis-proxy，kv，支持根据内存使用量默认配置lru-cache-size，并且默认开启（自动根据最大堆内存动态调整）
+* camellia-redis-proxy，ReadOnlyProxyPlugin支持根据租户配置开启和关闭（默认开启）
+
+### 更新
+* camellia-redis-proxy，优化了pipeline请求的回包逻辑，优化了性能
+* camellia-redis-proxy，在系统支持的情况下，默认使用netty-native的epoll/kqueue
+* camellia-redis-proxy，MultiWriteProxyPlugin减少了线程切换，优化了性能
+* camellia-redis-proxy，kv，在zset的version=1下，在数据不一致时，增加了一个保护逻辑
+* camellia-redis-proxy，kv，优化了lru-cache的日志打印
+* camellia-redis-proxy，kv，在zset的version=1下，index默认开启异步写入
+* camellia-redis-proxy，kv，obkv-client升级版本到1.4.0
+
+### fix
+* camellia-redis-proxy，使用ConsensusProxyClusterModeProvider部署为redis-cluster模式时，修复边界情况下slot计算错误的问题
+
+
 # 1.3.2（2025/01/15）
 ### 新增
 * camellia-redis-proxy，kv，支持kv-client读写降级
