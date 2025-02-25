@@ -350,6 +350,8 @@ public class StatsJsonConverter {
             kvGcStatsJson.put("namespace", kvGcStats.getNamespace());
             kvGcStatsJson.put("deleteMetaKeys", kvGcStats.getDeleteMetaKeys());
             kvGcStatsJson.put("deleteSubKeys", kvGcStats.getDeleteSubKeys());
+            kvGcStatsJson.put("scanMetaKeys", kvGcStats.getScanMetaKeys());
+            kvGcStatsJson.put("scanSubKeys", kvGcStats.getScanSubKeys());
             kvGcStatsJsonArray.add(kvGcStatsJson);
         }
         monitorJson.put("kvGcStats", kvGcStatsJsonArray);

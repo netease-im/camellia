@@ -6,7 +6,9 @@ package com.netease.nim.camellia.redis.proxy.monitor.model;
 public class KvGcStats {
 
     private String namespace;
+    private long scanMetaKeys;
     private long deleteMetaKeys;
+    private long scanSubKeys;
     private long deleteSubKeys;
 
     public String getNamespace() {
@@ -15,6 +17,22 @@ public class KvGcStats {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public long getScanMetaKeys() {
+        return scanMetaKeys;
+    }
+
+    public void setScanMetaKeys(long scanMetaKeys) {
+        this.scanMetaKeys = scanMetaKeys;
+    }
+
+    public long getScanSubKeys() {
+        return scanSubKeys;
+    }
+
+    public void setScanSubKeys(long scanSubKeys) {
+        this.scanSubKeys = scanSubKeys;
     }
 
     public long getDeleteMetaKeys() {

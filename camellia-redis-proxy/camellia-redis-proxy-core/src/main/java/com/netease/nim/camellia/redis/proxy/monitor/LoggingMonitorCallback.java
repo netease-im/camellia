@@ -147,7 +147,8 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("====kv.gc.stats====");
             List<KvGcStats> kvGcStatsList = stats.getKvGcStatsList();
             for (KvGcStats kvGcStats : kvGcStatsList) {
-                logger.info("namespace={},deleteMetaKeys={},deleteSubKeys={}", kvGcStats.getNamespace(), kvGcStats.getDeleteMetaKeys(), kvGcStats.getDeleteSubKeys());
+                logger.info("namespace={},scanMetaKeys={},deleteMetaKeys={},scanSubKeys={},deleteSubKeys={}",
+                        kvGcStats.getNamespace(), kvGcStats.getScanMetaKeys(), kvGcStats.getDeleteMetaKeys(), kvGcStats.getScanSubKeys(), kvGcStats.getDeleteSubKeys());
             }
 
             logger.info("====kv.write.buffer.stats====");

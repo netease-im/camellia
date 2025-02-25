@@ -377,6 +377,10 @@ public class PrometheusMetrics {
         builder.append("# HELP kv_gc_stats Redis Proxy KV Gc Stats\n");
         builder.append("# TYPE kv_gc_stats gauge\n");
         for (KvGcStats kvGcStats : kvGcStatsList) {
+            builder.append(prefix).append(String.format("kv_gc_stats{namespace=\"%s\",type=\"scanMetaKeys\"} %d\n",
+                    kvGcStats.getNamespace(), kvGcStats.getScanMetaKeys()));
+            builder.append(prefix).append(String.format("kv_gc_stats{namespace=\"%s\",type=\"scanSubKeys\"} %d\n",
+                    kvGcStats.getNamespace(), kvGcStats.getScanSubKeys()));
             builder.append(prefix).append(String.format("kv_gc_stats{namespace=\"%s\",type=\"deleteMetaKeys\"} %d\n",
                     kvGcStats.getNamespace(), kvGcStats.getDeleteMetaKeys()));
             builder.append(prefix).append(String.format("kv_gc_stats{namespace=\"%s\",type=\"deleteSubKeys\"} %d\n",
