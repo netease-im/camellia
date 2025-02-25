@@ -160,6 +160,7 @@ public class KvGcExecutor {
                     startKey = metaPrefix;
                     continue;
                 }
+                KvGcMonitor.scanMetaKeys(namespace, scan.size());
                 for (KeyValue keyValue : scan) {
                     startKey = keyValue.getKey();
                     scanKeys ++;
@@ -281,6 +282,7 @@ public class KvGcExecutor {
                         startKey = prefixList.get(i);
                         continue;
                     }
+                    KvGcMonitor.scanSubKeys(namespace, scan.size());
                     List<byte[]> toDeleteKeys = new ArrayList<>();
                     for (KeyValue keyValue : scan) {
                         startKey = keyValue.getKey();
