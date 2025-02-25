@@ -1,5 +1,25 @@
 [中文版](update-zh.md)
 
+# 1.3.3（2025/02/xx）
+### add
+* camellia-redis-proxy, kv, command-executor run-in-completion as default
+* camellia-redis-proxy, kv, obkv-client support configure runtimeBatchExecutor and slowQueryMonitorThreshold
+* camellia-redis-proxy, kv, support configure lru-cache-size by memory usage int auto
+* camellia-redis-proxy, ReadOnlyProxyPlugin support configure by tenant
+
+### update
+* camellia-redis-proxy, improve performance in pipeline
+* camellia-redis-proxy, use netty-native epoll/kqueue as default when os support
+* camellia-redis-proxy, optimize MultiWriteProxyPlugin
+* camellia-redis-proxy, kv, when configure zset encode version=1, add protect logic in data not inconsistent
+* camellia-redis-proxy, kv, optimize log of lru-cache
+* camellia-redis-proxy, kv, when configure zset encode version=1, index write async in default
+* camellia-redis-proxy, kv, bump obkv-client to 1.4.0
+
+### fix
+* camellia-redis-proxy, when use ConsensusProxyClusterModeProvider to deploy redis-cluster-mode, fix slot calc wrong in some case
+
+
 # 1.3.2（2025/01/15）
 ### add
 * camellia-redis-proxy, kv, support kv-client degradation
