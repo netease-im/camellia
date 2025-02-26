@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.redis.proxy.monitor.model.*;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,6 +176,14 @@ public class LoggingMonitorCallback implements MonitorCallback {
                 logger.info("namespace={},command={},hit={},not_hit={},hit_rate={}",
                         kvRunToCompletionStats.getNamespace(), kvRunToCompletionStats.getCommand(),
                         kvRunToCompletionStats.getHit(), kvRunToCompletionStats.getNotHit(), kvRunToCompletionStats.getHitRate());
+            }
+
+            logger.info("====kv.lru.cache.stats====");
+            List<KvLRUCacheStats> kvLRUCacheStatsList = stats.getKvLRUCacheStatsList();
+            for (KvLRUCacheStats kvLRUCacheStats : kvLRUCacheStatsList) {
+                logger.info("namespace={},capacity={},keyCount={},currentSize={},targetSize={}",
+                        kvLRUCacheStats.getNamespace(), kvLRUCacheStats.getCapacity(),
+                        kvLRUCacheStats.getKeyCount(), Utils.humanReadableByteCountBin(kvLRUCacheStats.getCurrentSize()), Utils.humanReadableByteCountBin(kvLRUCacheStats.getTargetSize()));
             }
 
             logger.info("<<<<<<<END<<<<<<<");

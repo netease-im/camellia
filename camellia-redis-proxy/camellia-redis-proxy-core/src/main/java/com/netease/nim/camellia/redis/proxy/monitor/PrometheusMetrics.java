@@ -436,6 +436,20 @@ public class PrometheusMetrics {
                     kvRunToCompletionStats.getNamespace(), kvRunToCompletionStats.getCommand(), kvRunToCompletionStats.getHitRate()));
         }
 
+        List<KvLRUCacheStats> kvLRUCacheStatsList = stats.getKvLRUCacheStatsList();
+        builder.append("# HELP kv_lru_cache Redis Proxy KV LRU Cache Stats\n");
+        builder.append("# TYPE kv_lru_cache gauge\n");
+        for (KvLRUCacheStats kvLRUCacheStats : kvLRUCacheStatsList) {
+            builder.append(prefix).append(String.format("kv_lru_cache_stats{namespace=\"%s\", type=\"capacity\"} %d\n",
+                    kvLRUCacheStats.getNamespace(), kvLRUCacheStats.getCapacity()));
+            builder.append(prefix).append(String.format("kv_lru_cache_stats{namespace=\"%s\", type=\"key_count\"} %d\n",
+                    kvLRUCacheStats.getNamespace(), kvLRUCacheStats.getKeyCount()));
+            builder.append(prefix).append(String.format("kv_lru_cache_stats{namespace=\"%s\", type=\"current_size\"} %d\n",
+                    kvLRUCacheStats.getNamespace(), kvLRUCacheStats.getCurrentSize()));
+            builder.append(prefix).append(String.format("kv_lru_cache_stats{namespace=\"%s\", type=\"target_size\"} %d\n",
+                    kvLRUCacheStats.getNamespace(), kvLRUCacheStats.getTargetSize()));
+        }
+
         return builder.toString();
     }
 
