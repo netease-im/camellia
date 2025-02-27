@@ -17,6 +17,7 @@
 * camellia-redis-proxy，kv，obkv-client升级版本到1.4.0
 * camellia-redis-proxy，kv，增加gc扫描key数量的监控
 * camellia-redis-proxy，kv，gc扫描时，meta-key和sub-key并发执行
+* camellia-redis-proxy，kv，gc扫描时，sub-key删除时增加key版本号判断
 
 ### fix
 * camellia-redis-proxy，使用ConsensusProxyClusterModeProvider部署为redis-cluster模式时，修复边界情况下slot计算错误的问题
