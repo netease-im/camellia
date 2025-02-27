@@ -306,6 +306,9 @@ public class KvGcExecutor {
                             TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                             continue;
                         }
+                        if (keyVersion > System.currentTimeMillis() - 600*1000L) {
+                            continue;
+                        }
                         KeyStatus keyStatus = checkExpireOrNotExists(slot, cacheMap, key, keyVersion);
                         if (keyStatus == KeyStatus.NOT_EXISTS || keyStatus == KeyStatus.EXPIRE) {
                             toDeleteKeys.add(keyValue.getKey());
