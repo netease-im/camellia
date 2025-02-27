@@ -15,6 +15,8 @@
 * camellia-redis-proxy，kv，优化了lru-cache的日志打印
 * camellia-redis-proxy，kv，在zset的version=1下，index默认开启异步写入
 * camellia-redis-proxy，kv，obkv-client升级版本到1.4.0
+* camellia-redis-proxy，kv，增加gc扫描key数量的监控
+* camellia-redis-proxy，kv，gc扫描时，meta-key和sub-key并发执行
 
 ### fix
 * camellia-redis-proxy，使用ConsensusProxyClusterModeProvider部署为redis-cluster模式时，修复边界情况下slot计算错误的问题
