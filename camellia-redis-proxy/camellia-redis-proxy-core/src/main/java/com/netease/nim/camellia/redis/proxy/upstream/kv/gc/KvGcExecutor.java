@@ -43,7 +43,8 @@ public class KvGcExecutor {
     private final KvConfig kvConfig;
     private final MpscSlotHashExecutor deleteExecutor;
     private final ThreadPoolExecutor submitExecutor;
-    private final ScheduledThreadPoolExecutor scheduleExecutor;
+    private final ScheduledThreadPoolExecutor scheduler;
+    private final ThreadPoolExecutor scheduleExecutor;
     private RedisTemplate redisTemplate;
 
     public KvGcExecutor(KVClient kvClient, KeyDesign keyDesign, KvConfig kvConfig) {
@@ -55,7 +56,9 @@ public class KvGcExecutor {
                 kvConfig.gcExecutorQueueSize(), new MpscSlotHashExecutor.CallerRunsPolicy());
         this.submitExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(1024*128), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
-        this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
+        this.scheduler = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
+        this.scheduleExecutor = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(32), new CamelliaThreadFactory("camellia-kv-gc-scheduler-executor"));
 
         boolean gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);
         if (gcScheduleEnable) {
@@ -74,7 +77,7 @@ public class KvGcExecutor {
     }
 
     public void start() {
-        scheduleExecutor.scheduleAtFixedRate(() -> {
+        scheduler.scheduleAtFixedRate(() -> {
             try {
                 boolean gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);
                 if (!gcScheduleEnable) {
@@ -95,12 +98,17 @@ public class KvGcExecutor {
                     return;
                 }
 
-                boolean scanMetaKeysSuccess = true;
+                //meta-key scan
+                Future<Boolean> metaKeyScanFuture;
                 if (!kvClient.supportTTL()) {
-                    scanMetaKeysSuccess = scanMetaKeys();
+                    metaKeyScanFuture = scheduleExecutor.submit(this::scanMetaKeys);
+                } else {
+                    metaKeyScanFuture = CompletableFuture.completedFuture(true);
                 }
-                boolean scanSubKeysSuccess = scanSubKeys();
-                if (scanMetaKeysSuccess && scanSubKeysSuccess) {
+                //sub-key scan
+                Future<Boolean> subKeyScanFuture = scheduleExecutor.submit(this::scanSubKeys);
+                //
+                if (metaKeyScanFuture.get() && subKeyScanFuture.get()) {
                     KvGcEnv.updateGcTime(namespace, System.currentTimeMillis());
                 }
             } catch (Throwable e) {

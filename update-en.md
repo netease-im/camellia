@@ -15,6 +15,8 @@
 * camellia-redis-proxy, kv, optimize log of lru-cache
 * camellia-redis-proxy, kv, when configure zset encode version=1, index write async in default
 * camellia-redis-proxy, kv, bump obkv-client to 1.4.0
+* camellia-redis-proxy，kv, add gc scan keys count monitor
+* camellia-redis-proxy，kv, gc schedule task, scan meta key and sub key in concurrent
 
 ### fix
 * camellia-redis-proxy, when use ConsensusProxyClusterModeProvider to deploy redis-cluster-mode, fix slot calc wrong in some case
