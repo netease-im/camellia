@@ -265,7 +265,7 @@ public abstract class ZSet0Commander extends Commander {
         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), "zset_index", indexTotal - localCacheHit - redisCacheHit);
 
         if (!missingMemberMap.isEmpty()) {
-            ErrorLogCollector.collect(ZSet0Commander.class, "zrange kv index missing");
+            ErrorLogCollector.collect(ZSet0Commander.class, "zrange kv index missing, key = " + Utils.bytesToString(key));
         }
         List<Reply> list = new ArrayList<>(replies.length);
         if (withScores) {
