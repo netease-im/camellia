@@ -64,16 +64,16 @@ spec:
             protocol: TCP
         volumeMounts:
         - name: cm-db-camellia-test
-          mountPath: /home/camellia-redis-proxy/BOOT-INF/classes/application.yml
+          mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/application.yml
           subPath: application-sharding-singlewrite-multiread.yml
         # - name: cm-db-camellia-test
-        #   mountPath: /home/camellia-redis-proxy/BOOT-INF/classes/logback.xml
+        #   mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/logback.xml
         #   subPath: logback.xml
         # - name: cm-db-camellia-test
-        #   mountPath: /home/camellia-redis-proxy/BOOT-INF/classes/camellia-redis-proxy.properties
+        #   mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/camellia-redis-proxy.properties
         #   subPath: camellia-redis-proxy.properties
         - name: cm-db-camellia-test
-          mountPath: /home/camellia-redis-proxy/BOOT-INF/classes/resource-sharding-singlewrite-multiread.json
+          mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/resource-sharding-singlewrite-multiread.json
           subPath: resource-sharding-singlewrite-multiread.json
       volumes:
       - name: cm-db-camellia-test
