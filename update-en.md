@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.3.3（2025/02/xx）
+# 1.3.3（2025/03/05）
 ### add
 * camellia-redis-proxy, kv, command-executor run-in-completion as default
 * camellia-redis-proxy, kv, obkv-client support configure runtimeBatchExecutor and slowQueryMonitorThreshold

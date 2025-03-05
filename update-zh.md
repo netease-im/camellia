@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.3.3（2025/02/xx）
+# 1.3.3（2025/03/05）
 ### 新增
 * camellia-redis-proxy，kv，command-executor默认开启run-in-completion模式
 * camellia-redis-proxy，kv，obkv-client支持设置runtimeBatchExecutor和slowQueryMonitorThreshold
