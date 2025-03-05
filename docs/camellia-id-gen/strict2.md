@@ -22,7 +22,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-core</artifactId>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
 </dependency>
 ```
 示例如下：
