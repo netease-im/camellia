@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.upstream.local.storage.cache;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.LocalStorageLRUCacheMonitor;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,6 @@ public class LRUCache<K, V> {
     private boolean enable;
     private long targetSize;
     private int maxKeyCount;
-
-    private int loop = 0;
 
     public LRUCache(LRUCacheName name, int estimateSizePerKV,
                     SizeCalculator<K> keySizeCalculator, SizeCalculator<V> valueSizeCalculator) {
@@ -96,13 +93,6 @@ public class LRUCache<K, V> {
 
             maxKeyCount = calcCapacity(targetSize, currentCapacity, keyCount, estimateSize);
             cache.setCapacity(maxKeyCount);
-
-            loop ++;
-            if (loop == 6) {//print log every 60s
-                logger.info("lru-cache, name = {}, enable = {}, target.capacity = {}, current.estimate.size = {}, current.key.count = {}, current.key.max.count = {}",
-                        name, enable, config, Utils.humanReadableByteCountBin(estimateSize), keyCount, maxKeyCount);
-                loop = 0;
-            }
         } catch (Exception e) {
             logger.error("lru cache schedule error, name = {}", name, e);
         }
