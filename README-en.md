@@ -6,6 +6,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ![GitHub](https://img.shields.io/badge/license-MIT-blue.svg)
 [![GitHub release](https://img.shields.io/github/release/netease-im/camellia.svg)](https://github.com/netease-im/camellia/releases)
 ![java_language](https://img.shields.io/badge/java--language-1.8%20%7C%2021-blue.svg)
+[![docker pull](https://img.shields.io/docker/pulls/48n6e/camellia-redis-proxy.svg)](https://hub.docker.com/r/48n6e/camellia-redis-proxy)
   
 ## Summary
 
