@@ -435,7 +435,7 @@ public class CamelliaDelayQueueServer {
             Response<Long> hour6 = pipeline.zcount(waitingQueueKey, now + 60*60*1000L, now + 6*60*60*1000L);
             Response<Long> day1 = pipeline.zcount(waitingQueueKey, now + 6*60*60*1000L, now + 24*60*60*1000L);
             Response<Long> day7 = pipeline.zcount(waitingQueueKey, now + 24*60*60*1000L, now + 7*24*60*60*1000L);
-            Response<Long> day30 = pipeline.zcount(waitingQueueKey, now + 7*24*60*60*1000L, 30*24*60*60*1000L);
+            Response<Long> day30 = pipeline.zcount(waitingQueueKey, now + 7*24*60*60*1000L, now + 30*24*60*60*1000L);
             Response<Long> dayN = pipeline.zcount(waitingQueueKey, now + 30*24*60*60*1000L, Long.MAX_VALUE);
             Response<Long> waitingQueueSize = pipeline.zcard(waitingQueueKey);
             Response<Long> readyQueueSize = pipeline.llen(readyQueueKey);
