@@ -29,7 +29,8 @@ public class ZSetTupleUtils {
             int i = 0;
             for (ZSetTuple tuple : list) {
                 replies[i] = new BulkReply(tuple.getMember().getKey());
-                replies[i+1] = new BulkReply(String.valueOf(BigDecimal.valueOf(tuple.getScore())).getBytes(StandardCharsets.UTF_8));
+                double score = tuple.getScore();
+                replies[i+1] = new BulkReply(String.valueOf(new BigDecimal(score)).getBytes(StandardCharsets.UTF_8));
                 i+=2;
             }
         } else {
