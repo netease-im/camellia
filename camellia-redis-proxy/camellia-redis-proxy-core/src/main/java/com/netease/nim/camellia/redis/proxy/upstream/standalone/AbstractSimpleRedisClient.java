@@ -313,13 +313,6 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         RedisConnection connection = RedisConnectionHub.getInstance().get(this, addr);
         if (connection != null) {
             connection.sendCommand(commands, futureList);
-            if (!futureList.isEmpty()) {
-                futureList.getFirst().thenAccept(reply -> {
-                    if (reply instanceof ErrorReply) {
-                        renew();
-                    }
-                });
-            }
         } else {
             renew();
             String log = "RedisConnection[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, resource = " + PasswordMaskUtils.maskResource(getResource().getUrl());

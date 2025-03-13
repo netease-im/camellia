@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionConfig;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -14,27 +17,39 @@ import java.util.concurrent.CompletableFuture;
 public class ReplyHandler extends SimpleChannelInboundHandler<Reply> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReplyHandler.class);
+
+    private final IUpstreamClient upstreamClient;
     private final Queue<CompletableFuture<Reply>> queue;
-    private final String clientName;
+    private final String connectionName;
     private final boolean tcpQuickAck;
 
-    public ReplyHandler(Queue<CompletableFuture<Reply>> queue, String clientName, boolean tcpQuickAck) {
+    public ReplyHandler(RedisConnectionConfig config, Queue<CompletableFuture<Reply>> queue, String connectionName, boolean tcpQuickAck) {
+        this.upstreamClient = config.getUpstreamClient();
         this.queue = queue;
-        this.clientName = clientName;
+        this.connectionName = connectionName;
         this.tcpQuickAck = tcpQuickAck;
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Reply msg) {
+    protected void channelRead0(ChannelHandlerContext ctx, Reply reply) {
         if (logger.isDebugEnabled()) {
-            logger.debug("{} receive reply, type = {}", clientName, msg.getClass().getSimpleName());
+            logger.debug("{} receive reply, type = {}", connectionName, reply.getClass().getSimpleName());
         }
         try {
-            CompletableFuture<Reply> completableFuture = queue.poll();
-            if (completableFuture != null) {
-                completableFuture.complete(msg);
+            CompletableFuture<Reply> future = queue.poll();
+            if (future != null) {
+                future.complete(reply);
+                try {
+                    if (reply instanceof ErrorReply) {
+                        if (upstreamClient != null) {
+                            upstreamClient.renew();
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("upstream client renew fail by {}", connectionName, e);
+                }
             } else {
-                String log = clientName + " redis receive reply with null future";
+                String log = connectionName + " redis receive reply with null future";
                 ErrorLogCollector.collect(ReplyHandler.class, log);
             }
         } catch (Exception e) {
