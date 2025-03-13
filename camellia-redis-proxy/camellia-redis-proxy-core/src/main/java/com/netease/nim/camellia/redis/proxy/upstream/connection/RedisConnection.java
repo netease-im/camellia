@@ -174,7 +174,7 @@ public class RedisConnection {
                     }
                     pipeline.addLast(new ReplyDecoder());
                     pipeline.addLast(new ReplyAggregateDecoder());
-                    pipeline.addLast(new ReplyHandler(queue, connectionName, tcpQuickAck));
+                    pipeline.addLast(new ReplyHandler(config, queue, connectionName, tcpQuickAck));
                     pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
                 }
             });
