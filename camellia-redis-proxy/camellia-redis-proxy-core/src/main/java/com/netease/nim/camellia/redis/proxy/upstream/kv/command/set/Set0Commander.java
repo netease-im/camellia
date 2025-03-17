@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command.set;
 
+import com.netease.nim.camellia.redis.proxy.monitor.KvLoadCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.buffer.Result;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisSet;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
@@ -25,6 +26,7 @@ public abstract class Set0Commander extends Commander {
     }
 
     protected final RedisSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
+        KvLoadCacheMonitor.update(kvConfig.getNamespace(), redisCommand().strRaw());
         Set<BytesKey> set = smembersFromKv(slot, keyMeta, key);
         return new RedisSet(set);
     }

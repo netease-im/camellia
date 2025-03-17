@@ -139,8 +139,7 @@ public class HSetNxCommander extends Hash0Commander {
                     type = KvCacheMonitor.Type.kv_store;
                     KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                     //
-                    Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
-                    hash = new RedisHash(map);
+                    hash = loadLRUCache(slot, keyMeta, key);
                     hashLRUCache.putAllForWrite(slot, cacheKey, hash);
                 }
             } else {

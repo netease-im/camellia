@@ -450,6 +450,14 @@ public class PrometheusMetrics {
                     kvLRUCacheStats.getNamespace(), kvLRUCacheStats.getTargetSize()));
         }
 
+        List<KvLoadCacheStats> kvLoadCacheStatsList = stats.getKvLoadCacheStatsList();
+        builder.append("# HELP kv_load_cache Redis Proxy KV Load Cache Stats\n");
+        builder.append("# TYPE kv_load_cache gauge\n");
+        for (KvLoadCacheStats kvLoadCacheStats : kvLoadCacheStatsList) {
+            builder.append(prefix).append(String.format("kv_load_cache_stats{namespace=\"%s\", command=\"%s\"} %d\n",
+                    kvLoadCacheStats.getNamespace(), kvLoadCacheStats.getCommand(), kvLoadCacheStats.getCount()));
+        }
+
         return builder.toString();
     }
 

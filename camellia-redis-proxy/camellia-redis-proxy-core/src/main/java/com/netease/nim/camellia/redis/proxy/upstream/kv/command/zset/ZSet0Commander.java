@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.KvCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.KvLoadCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -39,6 +40,7 @@ public abstract class ZSet0Commander extends Commander {
     }
 
     protected final RedisZSet loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
+        KvLoadCacheMonitor.update(kvConfig.getNamespace(), redisCommand().strRaw());
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
             List<ZSetTuple> list = zrangeAllFromKv(slot, keyMeta, key);
