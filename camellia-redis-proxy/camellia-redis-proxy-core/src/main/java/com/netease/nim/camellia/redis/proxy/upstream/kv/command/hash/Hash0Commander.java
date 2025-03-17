@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
+import com.netease.nim.camellia.redis.proxy.monitor.KvLoadCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.cache.RedisHash;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -24,6 +25,7 @@ public abstract class Hash0Commander extends Commander {
     }
 
     protected final RedisHash loadLRUCache(int slot, KeyMeta keyMeta, byte[] key) {
+        KvLoadCacheMonitor.update(kvConfig.getNamespace(), redisCommand().strRaw());
         Map<BytesKey, byte[]> map = hgetallFromKv(slot, keyMeta, key);
         return new RedisHash(map);
     }

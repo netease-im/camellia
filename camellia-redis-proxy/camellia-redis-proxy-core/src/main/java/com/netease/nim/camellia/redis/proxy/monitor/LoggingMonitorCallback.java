@@ -186,6 +186,13 @@ public class LoggingMonitorCallback implements MonitorCallback {
                         kvLRUCacheStats.getKeyCount(), Utils.humanReadableByteCountBin(kvLRUCacheStats.getCurrentSize()), Utils.humanReadableByteCountBin(kvLRUCacheStats.getTargetSize()));
             }
 
+            logger.info("====kv.load.cache.stats====");
+            List<KvLoadCacheStats> kvLoadCacheStatsList = stats.getKvLoadCacheStatsList();
+            for (KvLoadCacheStats kvLoadCacheStats : kvLoadCacheStatsList) {
+                logger.info("namespace={},command={},count={}",
+                        kvLoadCacheStats.getNamespace(), kvLoadCacheStats.getCommand(), kvLoadCacheStats.getCount());
+            }
+
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

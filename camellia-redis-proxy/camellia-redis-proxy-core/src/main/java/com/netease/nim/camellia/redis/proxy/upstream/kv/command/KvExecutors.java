@@ -35,7 +35,7 @@ public class KvExecutors {
 
     private KvExecutors() {
         EventLoopGroup eventLoopGroup;
-        int nettyWorkThreads = ProxyDynamicConf.getInt("kv.redis.netty.work.threads", SysUtils.getCpuNum() * 2);
+        int nettyWorkThreads = ProxyDynamicConf.getInt("kv.redis.netty.work.threads", SysUtils.getCpuNum() * 4);
         NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
         if (nettyTransportMode == NettyTransportMode.epoll) {
             eventLoopGroup = new EpollEventLoopGroup(nettyWorkThreads, new DefaultThreadFactory("camellia-kv-redis-connection"));

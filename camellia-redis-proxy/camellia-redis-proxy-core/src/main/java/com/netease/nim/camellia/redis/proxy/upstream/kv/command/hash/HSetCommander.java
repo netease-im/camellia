@@ -126,9 +126,9 @@ public class HSetCommander extends Hash0Commander {
                         type = KvCacheMonitor.Type.kv_store;
                         KvCacheMonitor.kvStore(cacheConfig.getNamespace(), redisCommand().strRaw());
                         //
-                        Map<BytesKey, byte[]> hgetall = hgetallFromKv(slot, keyMeta, key);
-                        hashLRUCache.putAllForWrite(slot, cacheKey, new RedisHash(hgetall));
-                        existMapByCache = hashLRUCache.hset(slot, cacheKey, fieldMap);
+                        RedisHash redisHash = loadLRUCache(slot, keyMeta, key);
+                        hashLRUCache.putAllForWrite(slot, cacheKey, redisHash);
+                        existMapByCache = redisHash.hset(fieldMap);
                     }
                 } else {
                     KvCacheMonitor.localCache(cacheConfig.getNamespace(), redisCommand().strRaw());
