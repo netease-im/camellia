@@ -64,7 +64,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public IntegerReply del(byte[][] keys) {
         if (keys == null || keys.length == 0) {
-            throw Utils.illegalArgumentException();
+            throw Utils.errorReplyException();
         }
         Long del = commonMixClient.del(keys);
         return new IntegerReply(del);
@@ -184,7 +184,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public StatusReply mset(byte[][] kvs) {
         if (kvs == null || kvs.length % 2 != 0) {
-            throw Utils.illegalArgumentException();
+            throw Utils.errorReplyException();
         }
         String mset = stringMixClient.mset(kvs);
         return new StatusReply(mset);
@@ -214,7 +214,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public IntegerReply zadd(byte[] key, byte[][] args) {
         if (args.length < 2) {
-            throw Utils.illegalArgumentException();
+            throw Utils.errorReplyException();
         }
         for (byte[] arg : args) {
             if (Utils.checkStringIgnoreCase(arg, RedisKeyword.NX.name())) {
@@ -226,7 +226,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
             }
         }
         if (args.length % 2 != 0) {
-            throw Utils.illegalArgumentException();
+            throw Utils.errorReplyException();
         }
         Map<byte[], Double> scoreMembers = new HashMap<>();
         for (int i=0; i<args.length; i=i+2) {
@@ -462,7 +462,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public StatusReply hmset(byte[] key, byte[][] kvs) {
         if (kvs == null || kvs.length % 2 != 0) {
-            throw Utils.illegalArgumentException();
+            throw Utils.errorReplyException();
         }
         Map<byte[], byte[]> kvMap = new HashMap<>();
         for (int i=0; i< kvs.length; i+=2) {
@@ -478,7 +478,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public MultiBulkReply hmget(byte[] key, byte[][] fields) {
         if (fields == null || fields.length == 0) {
-            throw Utils.illegalArgumentException();
+            throw Utils.errorReplyException();
         }
         List<byte[]> hmget = hashMixClient.hmget(key, fields);
         int size = 0;

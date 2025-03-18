@@ -46,14 +46,14 @@ public class ParamUtils {
         } else if (args.length == 1) {
             boolean withScores = Utils.checkStringIgnoreCase(args[0], RedisKeyword.WITHSCORES.name());
             if (!withScores) {
-                throw Utils.illegalArgumentException();
+                throw Utils.errorReplyException();
             }
             params.withScores = true;
             return params;
         } else if (args.length == 3) {
             boolean limit = Utils.checkStringIgnoreCase(args[0], RedisKeyword.LIMIT.name());
             if (!limit) {
-                throw Utils.illegalArgumentException();
+                throw Utils.errorReplyException();
             }
             int offset = (int) Utils.bytesToNum(args[1]);
             int count = (int) Utils.bytesToNum(args[2]);
@@ -68,20 +68,20 @@ public class ParamUtils {
             if (withScores) {
                 boolean limit = Utils.checkStringIgnoreCase(args[1], RedisKeyword.LIMIT.name());
                 if (!limit) {
-                    throw Utils.illegalArgumentException();
+                    throw Utils.errorReplyException();
                 }
                 offset = (int) Utils.bytesToNum(args[2]);
                 count = (int) Utils.bytesToNum(args[3]);
             } else {
                 boolean limit = Utils.checkStringIgnoreCase(args[0], RedisKeyword.LIMIT.name());
                 if (!limit) {
-                    throw Utils.illegalArgumentException();
+                    throw Utils.errorReplyException();
                 }
                 offset = (int) Utils.bytesToNum(args[1]);
                 count = (int) Utils.bytesToNum(args[2]);
                 withScores = Utils.checkStringIgnoreCase(args[3], RedisKeyword.WITHSCORES.name());
                 if (!withScores) {
-                    throw Utils.illegalArgumentException();
+                    throw Utils.errorReplyException();
                 }
             }
             params.withScores = true;
@@ -90,7 +90,7 @@ public class ParamUtils {
             params.count = count;
             return params;
         }
-        throw Utils.illegalArgumentException();
+        throw Utils.errorReplyException();
     }
 
 

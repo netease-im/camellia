@@ -96,12 +96,12 @@ public class Utils {
 
     public static double bytesToDouble(byte[] bytes) {
         if (bytes == null) {
-            throw new IllegalArgumentException(syntaxError);
+            throw new ErrorReplyException(syntaxError);
         }
         try {
             return Double.parseDouble(new String(bytes, utf8Charset));
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(syntaxError);
+            throw new ErrorReplyException(syntaxError);
         }
     }
 
@@ -120,19 +120,19 @@ public class Utils {
         return s.getBytes(utf8Charset);
     }
 
-    public static IllegalArgumentException illegalArgumentException() {
+    public static ErrorReplyException errorReplyException() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         if (stackTrace.length > 4) {
             String methodName = stackTrace[3].getMethodName();
-            return new IllegalArgumentException("wrong number of arguments for '" + methodName + "' command");
+            return new ErrorReplyException("ERR wrong number of arguments for '" + methodName + "' command");
         }
-        return new IllegalArgumentException("wrong number of arguments");
+        return new ErrorReplyException("ERR wrong number of arguments");
     }
 
     public static long bytesToNum(byte[] bytes) {
         int length = bytes.length;
         if (length == 0) {
-            throw new IllegalArgumentException("value is not an integer or out of range");
+            throw new ErrorReplyException("ERR value is not an integer or out of range");
         }
         int position = 0;
         int sign;
@@ -150,7 +150,7 @@ public class Utils {
                 number *= 10;
                 number += value;
             } else {
-                throw new IllegalArgumentException("value is not an integer or out of range");
+                throw new ErrorReplyException("ERR value is not an integer or out of range");
             }
             if (position == length) {
                 return number * sign;
