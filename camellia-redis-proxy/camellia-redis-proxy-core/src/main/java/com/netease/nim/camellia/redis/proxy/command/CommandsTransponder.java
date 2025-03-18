@@ -532,8 +532,12 @@ public class CommandsTransponder {
             future.thenAccept(template -> flush0(template, bid, bgroup, db, tasks, commands));
         } catch (Exception e) {
             ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
+            ErrorReply errorReply = ErrorReply.UPSTREAM_NOT_AVAILABLE;
+            if (e instanceof ErrorReplyException) {
+                errorReply = new ErrorReply(((ErrorReplyException) e).getMsg());
+            }
             for (CommandTask task : tasks) {
-                task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
+                task.replyCompleted(errorReply);
             }
         }
     }
@@ -551,8 +555,12 @@ public class CommandsTransponder {
                 } catch (Exception e) {
                     String log = "sendCommand error, bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                     ErrorLogCollector.collect(CommandsTransponder.class, log, e);
+                    ErrorReply errorReply = ErrorReply.UPSTREAM_NOT_AVAILABLE;
+                    if (e instanceof ErrorReplyException) {
+                        errorReply = new ErrorReply(((ErrorReplyException) e).getMsg());
+                    }
                     for (CommandTask task : tasks) {
-                        task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
+                        task.replyCompleted(errorReply);
                     }
                     return;
                 }

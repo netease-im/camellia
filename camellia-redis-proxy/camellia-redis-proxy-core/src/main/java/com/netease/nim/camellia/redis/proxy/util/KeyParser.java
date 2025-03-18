@@ -176,6 +176,9 @@ public class KeyParser {
 
     private static void evalOrFcall(Command command, List<byte[]> keys) {
         byte[][] objects = command.getObjects();
+        if (objects.length <= 2) {
+            return;
+        }
         long keyCount = Utils.bytesToNum(objects[2]);
         if (keyCount == 1) {
             if (objects.length < 4) {
