@@ -176,9 +176,13 @@ public class ClusterModeCommandMoveInvoker {
                     String[] slotArray = slotStr.split(" ");
                     Set<Integer> slots = new HashSet<>();
                     for (String str : slotArray) {
-                        String[] startEnd = str.split("-");
-                        for (int i=Integer.parseInt(startEnd[0]); i<=Integer.parseInt(startEnd[1]); i++) {
-                            slots.add(i);
+                        if (str.contains("-")) {
+                            String[] startEnd = str.split("-");
+                            for (int i = Integer.parseInt(startEnd[0]); i <= Integer.parseInt(startEnd[1]); i++) {
+                                slots.add(i);
+                            }
+                        } else {
+                            slots.add(Integer.parseInt(str));
                         }
                     }
                     slotCacheMap.put(node, new SlotCache(System.currentTimeMillis(), slots));
