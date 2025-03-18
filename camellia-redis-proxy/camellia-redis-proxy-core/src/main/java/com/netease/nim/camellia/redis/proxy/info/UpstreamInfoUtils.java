@@ -663,13 +663,13 @@ public class UpstreamInfoUtils {
         return null;
     }
 
-    private static class ClusterNodeInfo {
+    public static class ClusterNodeInfo {
         String master;
         List<String> slaves = new ArrayList<>();
         String slots;
     }
 
-    private static List<ClusterNodeInfo> clusterNodes(Resource resource, String host, int port, String userName, String password) {
+    public static List<ClusterNodeInfo> clusterNodes(Resource resource, String host, int port, String userName, String password) {
         RedisConnection redisConnection = null;
         try {
             redisConnection = RedisConnectionHub.getInstance().newConnection(resource, host, port, userName, password);
