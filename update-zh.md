@@ -1,5 +1,22 @@
 [ENGLISH](update-en.md)
 
+# 1.3.4（2025/03/xx）
+### 新增
+* camellia-redis-proxy，kv，新增热点key的lru-cache的load次数的监控指标
+* camellia-redis-proxy，新增一个工具方法RedisClusterPhysicsNodeTopologyUtils，可以在redis-cluster的节点和集群混部时导出节点的分布情况
+
+### 更新
+* camellia-redis-proxy，优化了部分命令参数错误情况下的错误信息描述，感谢 [@jzhao20230918](https://github.com/jzhao20230918)
+* camellia-redis-proxy，优化了redis-sentinel作为后端时主从节点更新的逻辑，感谢 [@masteroogway123](https://github.com/masteroogway123)
+* camellia-redis-proxy，kv，更新obkv-table-client版本到1.4.2
+* camellia-redis-proxy，kv，调整了部分默认配置（zset的encode-version=1时有效）
+
+### fix
+* camellia-redis-proxy，修复了ClusterModeCommandMoveInvoker#checkSlotInProxyNode方法在单slot下的数组越界问题
+* camellia-redis-proxy，kv，修复了zset的score字段在部分情况下回包是科学计数法的问题
+* camellia-delay-queue，修复了CamelliaDelayQueueServer#getTopicInfo方法在统计消息时计算错误的问题，感谢 [@kalencaya](https://github.com/kalencaya)
+
+
 # 1.3.3（2025/03/05）
 ### 新增
 * camellia-redis-proxy，kv，command-executor默认开启run-in-completion模式

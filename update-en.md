@@ -1,5 +1,22 @@
 [中文版](update-zh.md)
 
+# 1.3.4（2025/03/xx）
+### add
+* camellia-redis-proxy, kv, add load cache stats
+* camellia-redis-proxy, add RedisClusterPhysicsNodeTopologyUtils
+
+### update
+* camellia-redis-proxy, optimize error msg on param error, thanks [@jzhao20230918](https://github.com/jzhao20230918)
+* camellia-redis-proxy, optimize renew logic on redis-sentinel, thanks [@masteroogway123](https://github.com/masteroogway123)
+* camellia-redis-proxy, kv, bump obkv-table-client to v1.4.2
+* camellia-redis-proxy, kv, update some default config on zset.encode_version = 1
+
+### fix
+* camellia-redis-proxy, fix ClusterModeCommandMoveInvoker#checkSlotInProxyNode on single slot
+* camellia-redis-proxy, kv, fix zset score reply with scientific notation in some cases
+* camellia-delay-queue, fix CamelliaDelayQueueServer#getTopicInfo, thanks [@kalencaya](https://github.com/kalencaya)
+
+
 # 1.3.3（2025/03/05）
 ### add
 * camellia-redis-proxy, kv, command-executor run-in-completion as default
