@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.3.4（2025/03/xx）
+# 1.3.4（2025/03/19）
 ### add
 * camellia-redis-proxy, kv, add load cache stats
 * camellia-redis-proxy, add RedisClusterPhysicsNodeTopologyUtils
