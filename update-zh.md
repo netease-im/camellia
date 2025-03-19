@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.3.4（2025/03/xx）
+# 1.3.4（2025/03/19）
 ### 新增
 * camellia-redis-proxy，kv，新增热点key的lru-cache的load次数的监控指标
 * camellia-redis-proxy，新增一个工具方法RedisClusterPhysicsNodeTopologyUtils，可以在redis-cluster的节点和集群混部时导出节点的分布情况

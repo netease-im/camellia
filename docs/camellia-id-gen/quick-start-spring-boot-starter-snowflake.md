@@ -5,12 +5,12 @@
     <dependency>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-id-gen-snowflake-spring-boot-starter</artifactId>
-        <version>1.3.3</version>
+        <version>1.3.4</version>
     </dependency>
     <dependency>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-spring-boot3-starter</artifactId>
-        <version>1.3.3</version>
+        <version>1.3.4</version>
     </dependency>
 </dependencies>
 ```
