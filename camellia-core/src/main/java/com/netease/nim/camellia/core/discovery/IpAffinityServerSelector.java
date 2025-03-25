@@ -9,9 +9,9 @@ import java.util.List;
 public abstract class IpAffinityServerSelector<T> implements CamelliaServerSelector<T> {
 
     private final CamelliaServerSelector<T> serverSelector;
-    private final String defaultConfig;
+    private final List<IpAffinityConfig> defaultConfig;
 
-    public IpAffinityServerSelector(CamelliaServerSelector<T> serverSelector, String defaultConfig) {
+    public IpAffinityServerSelector(CamelliaServerSelector<T> serverSelector, List<IpAffinityConfig> defaultConfig) {
         this.serverSelector = serverSelector;
         this.defaultConfig = defaultConfig;
     }
@@ -27,15 +27,15 @@ public abstract class IpAffinityServerSelector<T> implements CamelliaServerSelec
      * you can override to dynamic config
      * @return config
      */
-    public String getConfig() {
+    public List<IpAffinityConfig> getConfig() {
         return defaultConfig;
     }
 
     @Override
     public T pick(List<T> list, Object loadBalanceKey) {
         try {
-            String config = getConfig();
-            if (config == null || config.trim().isEmpty()) {
+            List<IpAffinityConfig> config = getConfig();
+            if (config == null || config.isEmpty()) {
                 return serverSelector.pick(list, loadBalanceKey);
             }
             List<T> filterList = new ArrayList<>(list.size());
@@ -44,6 +44,9 @@ public abstract class IpAffinityServerSelector<T> implements CamelliaServerSelec
                 if (match) {
                     filterList.add(resource);
                 }
+            }
+            if (filterList.isEmpty()) {
+                return serverSelector.pick(list, loadBalanceKey);
             }
             T pick = serverSelector.pick(filterList, loadBalanceKey);
             if (pick != null) {

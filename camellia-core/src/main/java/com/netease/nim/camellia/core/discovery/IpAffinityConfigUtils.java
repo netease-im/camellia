@@ -20,8 +20,8 @@ public class IpAffinityConfigUtils {
     private static final Logger logger = LoggerFactory.getLogger(IpAffinityConfigUtils.class);
 
     private static final ConcurrentLinkedHashMap<String, List<IpAffinityConfig>> cache = new ConcurrentLinkedHashMap.Builder<String, List<IpAffinityConfig>>()
-            .initialCapacity(1000)
-            .maximumWeightedCapacity(1000)
+            .initialCapacity(128)
+            .maximumWeightedCapacity(128)
             .build();
 
     private static String host;
@@ -39,13 +39,8 @@ public class IpAffinityConfigUtils {
         }
     }
 
-    public static boolean match(String config, String targetIp) {
+    public static boolean match(List<IpAffinityConfig> list, String targetIp) {
         try {
-            List<IpAffinityConfig> list = cache.get(config);
-            if (list == null) {
-                list = init(config);
-                cache.put(config, list);
-            }
             if (list.isEmpty()) {
                 return true;
             }
@@ -60,9 +55,13 @@ public class IpAffinityConfigUtils {
         }
     }
 
-    private static List<IpAffinityConfig> init(String config) {
+    public static List<IpAffinityConfig> parse(String config) {
         try {
-            List<IpAffinityConfig> list = new ArrayList<>();
+            List<IpAffinityConfig> list = cache.get(config);
+            if (list != null) {
+                return list;
+            }
+            list = new ArrayList<>();
             JSONArray array = JSONArray.parseArray(config);
             for (Object o : array) {
                 JSONObject json = ((JSONObject) o);
@@ -73,8 +72,10 @@ public class IpAffinityConfigUtils {
                 ipAffinityConfig.setTarget(initIPMatcher(target));
                 list.add(ipAffinityConfig);
             }
+            cache.put(config, list);
             return list;
         } catch (Exception e) {
+            cache.put(config, new ArrayList<>());
             return new ArrayList<>();
         }
     }
