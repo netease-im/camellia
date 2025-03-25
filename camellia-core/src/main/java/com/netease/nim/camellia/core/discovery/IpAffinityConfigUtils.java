@@ -1,4 +1,4 @@
-camellia-core/src/main/java/com/netease/nim/camellia/core/discovery/IpAffinityConfigUtils.javapackage com.netease.nim.camellia.core.discovery;
+package com.netease.nim.camellia.core.discovery;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
