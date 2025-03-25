@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.core.discovery;
+camellia-core/src/main/java/com/netease/nim/camellia/core/discovery/IpAffinityConfigUtils.javapackage com.netease.nim.camellia.core.discovery;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -19,7 +19,7 @@ public class IpAffinityConfigUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(IpAffinityConfigUtils.class);
 
-    private static final ConcurrentLinkedHashMap<String, List<IpAffinityConfig>> cache = new ConcurrentLinkedHashMap.Builder<String, List<IpAffinityConfig>>()
+    private static final ConcurrentLinkedHashMap<String, IpAffinityConfig> cache = new ConcurrentLinkedHashMap.Builder<String, IpAffinityConfig>()
             .initialCapacity(128)
             .maximumWeightedCapacity(128)
             .build();
@@ -39,44 +39,62 @@ public class IpAffinityConfigUtils {
         }
     }
 
-    public static boolean match(List<IpAffinityConfig> list, String targetIp) {
+    public static boolean match(IpAffinityConfig config, String targetIp) {
+        return match(config, host, targetIp);
+    }
+
+    public static boolean match(IpAffinityConfig config, String host, String targetIp) {
         try {
-            if (list.isEmpty()) {
+            IpAffinityConfig.Type type = config.getType();
+            if (type == null) {
                 return true;
             }
-            for (IpAffinityConfig affinityConfig : list) {
-                if (affinityConfig.getSource().match(host) && affinityConfig.getTarget().match(targetIp)) {
-                    return true;
+            List<IpAffinityConfig.Config> configList = config.getConfigList();
+            if (configList == null || configList.isEmpty()) {
+                return true;
+            }
+            for (IpAffinityConfig.Config affinityconfig : configList) {
+                if (affinityconfig.getSource().match(host) && affinityconfig.getTarget().match(targetIp)) {
+                    return type == IpAffinityConfig.Type.affinity;
                 }
             }
-            return false;
+            return type != IpAffinityConfig.Type.affinity;
         } catch (Exception e) {
             return true;
         }
     }
 
-    public static List<IpAffinityConfig> parse(String config) {
+    public static IpAffinityConfig parse(String configStr) {
         try {
-            List<IpAffinityConfig> list = cache.get(config);
-            if (list != null) {
-                return list;
+            IpAffinityConfig config = cache.get(configStr);
+            if (config != null) {
+                return config;
             }
-            list = new ArrayList<>();
-            JSONArray array = JSONArray.parseArray(config);
+            config = new IpAffinityConfig();
+            JSONObject jsonObject = JSONObject.parseObject(configStr);
+            String type = jsonObject.getString("type");
+            if (type.equals(IpAffinityConfig.Type.affinity.name())) {
+                config.setType(IpAffinityConfig.Type.affinity);
+            } else if (type.equals(IpAffinityConfig.Type.anti_affinity.name())) {
+                config.setType(IpAffinityConfig.Type.anti_affinity);
+            }
+            JSONArray array = jsonObject.getJSONArray("config");
+            List<IpAffinityConfig.Config> list = new ArrayList<>();
             for (Object o : array) {
                 JSONObject json = ((JSONObject) o);
                 String source = json.getString("source");
                 String target = json.getString("target");
-                IpAffinityConfig ipAffinityConfig = new IpAffinityConfig();
+                IpAffinityConfig.Config ipAffinityConfig = new IpAffinityConfig.Config();
                 ipAffinityConfig.setSource(initIPMatcher(source));
                 ipAffinityConfig.setTarget(initIPMatcher(target));
                 list.add(ipAffinityConfig);
             }
-            cache.put(config, list);
-            return list;
+            config.setConfigList(list);
+            cache.put(configStr, config);
+            return config;
         } catch (Exception e) {
-            cache.put(config, new ArrayList<>());
-            return new ArrayList<>();
+            cache.put(configStr, new IpAffinityConfig());
+            return new IpAffinityConfig();
         }
     }
 

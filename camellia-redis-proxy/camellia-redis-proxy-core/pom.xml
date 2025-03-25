@@ -44,11 +44,6 @@
 			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-base</artifactId>
-			<version>${revision}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
 			<artifactId>concurrentlinkedhashmap-lru</artifactId>
 			<version>${concurrentlinkedhashmap.version}</version>
