@@ -41,7 +41,7 @@ redis://passwd@127.0.0.1:6379
 * 写命令会代理到redis-sentinel://passwd123@127.0.0.1:26379/master
 * 读命令会代理到redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true，也就是redis-sentinel://passwd123@127.0.0.1:26379/master的主节点和所有从节点
 
-#### 配置分片（因为之前命名错误，1.0.45及之前的版本，使用shading，1.0.46及之后的版本兼容sharding/shading）
+#### 配置分片
 ```json
 {
   "type": "sharding",
@@ -100,7 +100,7 @@ redis://passwd@127.0.0.1:6379
 * 所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379
 * 所有的读命令（如get/zrange/mget）随机代理到redis://passwd1@127.0.0.1:6379或者redis://password2@127.0.0.1:6380
 
-#### 混合各种分片、双写逻辑（因为之前命名错误，1.0.45及之前的版本，使用shading，1.0.46及之后的版本兼容sharding/shading）
+#### 混合各种分片、双写逻辑
 ```json
 {
   "type": "sharding",
