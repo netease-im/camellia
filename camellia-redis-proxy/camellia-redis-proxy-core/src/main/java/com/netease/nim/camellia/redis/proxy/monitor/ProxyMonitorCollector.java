@@ -146,13 +146,6 @@ public class ProxyMonitorCollector {
             stats.setKvRunToCompletionStatsList(KvRunToCompletionMonitor.collect());
             stats.setKvLRUCacheStatsList(KvLRUCacheMonitor.collect());
             stats.setKvLoadCacheStatsList(KvLoadCacheMonitor.collect());
-            stats.setLocalStorageFileStatsList(LocalStorageFileMonitor.collect());
-            stats.setLocalStorageCountStatsList(LocalStorageCountMonitor.collect());
-            stats.setLocalStorageTimeStatsList(LocalStorageTimeMonitor.collect());
-            stats.setLocalStorageKeyBucketStatsList(LocalStorageKeyBucketMonitor.collect());
-            stats.setLocalStorageRunToCompletionStatsList(LocalStorageRunToCompletionMonitor.collect());
-            stats.setLocalStorageExecutorStatsList(LocalStorageExecutorMonitor.collect());
-            stats.setLocalStorageCacheStatsList(LocalStorageCacheMonitor.collect());
 
             ProxyMonitorCollector.stats = stats;
 

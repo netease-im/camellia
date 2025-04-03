@@ -92,18 +92,6 @@ public class BytesUtils {
         return b;
     }
 
-    public static short toShort(byte[] bytes) {
-        return toShort(bytes, 0);
-    }
-
-    public static short toShort(byte[] bytes, int offset) {
-        short n = 0;
-        n ^= (short) (bytes[offset] & 0xFF);
-        n <<= 8;
-        n ^= (short) (bytes[offset+1] & 0xFF);
-        return n;
-    }
-
     public static int toInt(byte[] bytes) {
         return toInt(bytes, 0, SIZEOF_INT);
     }

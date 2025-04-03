@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
-import com.netease.nim.camellia.redis.base.resource.RedisLocalStorageResource;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
@@ -58,16 +57,7 @@ public class CamelliaRedisProxyUtil {
         if (netty.getWorkThread() > 0) {
             serverProperties.setWorkThread(netty.getWorkThread());
         } else {
-            try {
-                Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(properties.getTranspond().getLocal().getResource()));
-                if (resource instanceof RedisLocalStorageResource) {
-                    serverProperties.setWorkThread(Math.max(1, Math.min(8, SysUtils.getCpuNum() / 2)));
-                } else {
-                    serverProperties.setWorkThread(SysUtils.getCpuNum());
-                }
-            } catch (Exception e) {
-                serverProperties.setWorkThread(SysUtils.getCpuNum());
-            }
+            serverProperties.setWorkThread(SysUtils.getCpuNum());
         }
         serverProperties.setClusterModeEnable(properties.isClusterModeEnable());
         serverProperties.setSentinelModeEnable(properties.isSentinelModeEnable());

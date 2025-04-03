@@ -411,9 +411,6 @@ public class RedisResourceUtil {
             } else if (redisType == RedisType.RedisKV) {
                 String namespace = url.substring(redisType.getPrefix().length());
                 return new RedisKvResource(namespace);
-            } else if (redisType == RedisType.LocalStorage) {
-                String dir = url.substring(redisType.getPrefix().length());
-                return new RedisLocalStorageResource(dir);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

@@ -47,13 +47,6 @@ public class Stats {
     private List<KvRunToCompletionStats> kvRunToCompletionStatsList = new ArrayList<>();
     private List<KvLRUCacheStats> kvLRUCacheStatsList = new ArrayList<>();
     private List<KvLoadCacheStats> kvLoadCacheStatsList = new ArrayList<>();
-    private List<LocalStorageFileStats> localStorageFileStatsList = new ArrayList<>();
-    private List<LocalStorageCountStats> localStorageCountStatsList = new ArrayList<>();
-    private List<LocalStorageTimeStats> localStorageTimeStatsList = new ArrayList<>();
-    private List<LocalStorageKeyBucketStats> localStorageKeyBucketStatsList = new ArrayList<>();
-    private List<LocalStorageRunToCompletionStats> localStorageRunToCompletionStatsList = new ArrayList<>();
-    private List<LocalStorageExecutorStats> localStorageExecutorStatsList = new ArrayList<>();
-    private List<LocalStorageCacheStats> localStorageCacheStatsList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -334,62 +327,4 @@ public class Stats {
     public void setKvLoadCacheStatsList(List<KvLoadCacheStats> kvLoadCacheStatsList) {
         this.kvLoadCacheStatsList = kvLoadCacheStatsList;
     }
-
-    public List<LocalStorageFileStats> getLocalStorageFileStatsList() {
-        return localStorageFileStatsList;
-    }
-
-    public void setLocalStorageFileStatsList(List<LocalStorageFileStats> localStorageFileStatsList) {
-        this.localStorageFileStatsList = localStorageFileStatsList;
-    }
-
-    public List<LocalStorageCountStats> getLocalStorageCountStatsList() {
-        return localStorageCountStatsList;
-    }
-
-    public void setLocalStorageCountStatsList(List<LocalStorageCountStats> localStorageCountStatsList) {
-        this.localStorageCountStatsList = localStorageCountStatsList;
-    }
-
-    public List<LocalStorageTimeStats> getLocalStorageTimeStatsList() {
-        return localStorageTimeStatsList;
-    }
-
-    public void setLocalStorageTimeStatsList(List<LocalStorageTimeStats> localStorageTimeStatsList) {
-        this.localStorageTimeStatsList = localStorageTimeStatsList;
-    }
-
-    public List<LocalStorageKeyBucketStats> getLocalStorageKeyBucketStatsList() {
-        return localStorageKeyBucketStatsList;
-    }
-
-    public void setLocalStorageKeyBucketStatsList(List<LocalStorageKeyBucketStats> localStorageKeyBucketStatsList) {
-        this.localStorageKeyBucketStatsList = localStorageKeyBucketStatsList;
-    }
-
-    public List<LocalStorageRunToCompletionStats> getLocalStorageRunToCompletionStatsList() {
-        return localStorageRunToCompletionStatsList;
-    }
-
-    public void setLocalStorageRunToCompletionStatsList(List<LocalStorageRunToCompletionStats> localStorageRunToCompletionStatsList) {
-        this.localStorageRunToCompletionStatsList = localStorageRunToCompletionStatsList;
-    }
-
-    public List<LocalStorageExecutorStats> getLocalStorageExecutorStatsList() {
-        return localStorageExecutorStatsList;
-    }
-
-    public void setLocalStorageExecutorStatsList(List<LocalStorageExecutorStats> localStorageExecutorStatsList) {
-        this.localStorageExecutorStatsList = localStorageExecutorStatsList;
-    }
-
-    public List<LocalStorageCacheStats> getLocalStorageCacheStatsList() {
-        return localStorageCacheStatsList;
-    }
-
-    public void setLocalStorageCacheStatsList(List<LocalStorageCacheStats> localStorageCacheStatsList) {
-        this.localStorageCacheStatsList = localStorageCacheStatsList;
-    }
-
-
 }

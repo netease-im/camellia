@@ -6,7 +6,6 @@ import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.upstream.cluster.RedisClusterClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.RedisKvClient;
-import com.netease.nim.camellia.redis.proxy.upstream.local.storage.RedisLocalStorageClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesDiscoveryClient;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelClient;
@@ -205,16 +204,6 @@ public interface UpstreamRedisClientFactory {
             return client;
         }
 
-        public IUpstreamClient get(RedisLocalStorageResource resource) {
-            IUpstreamClient client = map.get(resource.getUrl());
-            if (client == null) {
-                client = new RedisLocalStorageClient(resource);
-                client.start();
-                map.put(resource.getUrl(), client);
-            }
-            return client;
-        }
-
         @Override
         public IUpstreamClient get(String url) {
             IUpstreamClient client = map.get(url);
@@ -255,8 +244,6 @@ public interface UpstreamRedisClientFactory {
                             client = get((RedisUnixDomainSocketResource) resource);
                         } else if (resource instanceof RedisKvResource) {
                             client = get((RedisKvResource) resource);
-                        } else if (resource instanceof RedisLocalStorageResource) {
-                            client = get((RedisLocalStorageResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }
