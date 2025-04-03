@@ -258,7 +258,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     }
                     CompletableFuture<Reply> future;
                     if (writeResources.size() != 1) {
-                        Resource resource = writeResources.get(0);
+                        Resource resource = writeResources.getFirst();
                         future = doWrite(Collections.singletonList(resource), commandFlusher, command);
                     } else {
                         future = doWrite(writeResources, commandFlusher, command);
@@ -269,7 +269,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 if (redisCommand == RedisCommand.PUBSUB) {
                     //send to first write resource
                     List<Resource> writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
-                    CompletableFuture<Reply> future = doWrite(Collections.singletonList(writeResources.get(0)), commandFlusher, command);
+                    CompletableFuture<Reply> future = doWrite(Collections.singletonList(writeResources.getFirst()), commandFlusher, command);
                     futureList.add(future);
                     continue;
                 }
@@ -307,7 +307,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         command.getChannelInfo().setTransactionTag(false);
                     }
                 }
-                String url = allWriteResources.get(0).getUrl();
+                String url = allWriteResources.getFirst().getUrl();
                 IUpstreamClient client = factory.get(url);
                 if (!commandFlusher.isEmpty()) {
                     commandFlusher.flush();
@@ -404,56 +404,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 continue;
             }
 
-            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
-                CompletableFuture<Reply> future = null;
-                if (redisCommand.getType() == RedisCommand.Type.READ) {
-                    Resource resource;
-                    List<byte[]> keys = command.getKeys();
-                    if (keys.isEmpty()) {
-                        resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
-                    } else if (keys.size() == 1) {
-                        resource = resourceSelector.getReadResource(keys.get(0));
-                    } else {
-                        resource = resourceSelector.getReadResourceWithCheckEqual(keys);
-                    }
-                    if (resource == null) {
-                        future = new CompletableFuture<>();
-                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
-                    } else {
-                        future = doRead(resource, commandFlusher, command);
-                    }
-                } else if (redisCommand.getType() == RedisCommand.Type.WRITE) {
-                    List<Resource> writeResources;
-                    List<byte[]> keys = command.getKeys();
-                    if (keys.isEmpty()) {
-                        writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
-                    } else if (keys.size() == 1) {
-                        writeResources = resourceSelector.getWriteResources(keys.get(0));
-                    } else {
-                        writeResources = resourceSelector.getWriteResourcesWithCheckEqual(keys);
-                    }
-                    if (writeResources == null) {
-                        future = new CompletableFuture<>();
-                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
-                    } else if (writeResources.size() > 1) {
-                        if (command.isBlocking()) {
-                            future = new CompletableFuture<>();
-                            future.complete(new ErrorReply("ERR blocking command do not support multi-write"));
-                        }
-                    }
-                    if (future == null) {
-                        future = doWrite(writeResources, commandFlusher, command);
-                    }
-                }
-                if (future == null) {
-                    future = new CompletableFuture<>();
-                    future.complete(ErrorReply.SYNTAX_ERROR);
-                    ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, "error read write route");
-                }
-                futureList.add(future);
-                continue;
-            }
-
             if (redisCommand == RedisCommand.SCAN) {
                 try {
                     if (proxyRouteType == ProxyRouteType.REDIS_STANDALONE || proxyRouteType == ProxyRouteType.REDIS_SENTINEL
@@ -505,82 +455,132 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 continue;
             }
 
-            if (redisCommand == RedisCommand.SCRIPT) {
-                byte[][] objects = command.getObjects();
-                if (objects.length <= 1) {
-                    CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.argNumWrong(redisCommand));
-                    futureList.add(future);
-                    continue;
-                }
-                CompletableFuture<Reply> future;
-                String ope = Utils.bytesToString(objects[1]);
-                if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
-                        || ope.equalsIgnoreCase(RedisKeyword.KILL.name())) {
-                    List<Resource> resources = resourceSelector.getAllWriteResources();
-                    future = doWrite(resources, commandFlusher, command);
-                } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
-                    List<Resource> resources = resourceSelector.getAllReadResources();
-                    List<CompletableFuture<Reply>> futures = new ArrayList<>();
-                    for (Resource resource : resources) {
-                        CompletableFuture<Reply> subFuture = doRead(resource, commandFlusher, command);
-                        futures.add(subFuture);
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
+                if (redisCommand == RedisCommand.SCRIPT) {
+                    byte[][] objects = command.getObjects();
+                    if (objects.length <= 1) {
+                        CompletableFuture<Reply> future = new CompletableFuture<>();
+                        future.complete(ErrorReply.argNumWrong(redisCommand));
+                        futureList.add(future);
+                        continue;
                     }
-                    future = new CompletableFuture<>();
-                    CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
-                } else {
-                    future = new CompletableFuture<>();
-                    future.complete(Utils.commandNotSupport(redisCommand));
-                }
-                futureList.add(future);
-                continue;
-            }
-
-            if (redisCommand == RedisCommand.FUNCTION) {
-                byte[][] objects = command.getObjects();
-                if (objects.length <= 1) {
-                    CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.argNumWrong(redisCommand));
+                    CompletableFuture<Reply> future;
+                    String ope = Utils.bytesToString(objects[1]);
+                    if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
+                            || ope.equalsIgnoreCase(RedisKeyword.KILL.name())) {
+                        List<Resource> resources = resourceSelector.getAllWriteResources();
+                        future = doWrite(resources, commandFlusher, command);
+                    } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
+                        List<Resource> resources = resourceSelector.getAllReadResources();
+                        List<CompletableFuture<Reply>> futures = new ArrayList<>();
+                        for (Resource resource : resources) {
+                            CompletableFuture<Reply> subFuture = doRead(resource, commandFlusher, command);
+                            futures.add(subFuture);
+                        }
+                        future = new CompletableFuture<>();
+                        CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
+                    } else {
+                        future = new CompletableFuture<>();
+                        future.complete(Utils.commandNotSupport(redisCommand));
+                    }
                     futureList.add(future);
                     continue;
                 }
-                CompletableFuture<Reply> future;
-                String ope = Utils.bytesToString(objects[1]);
-                if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.FLUSH.name())
-                        || ope.equalsIgnoreCase(RedisKeyword.KILL.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
-                        || ope.equalsIgnoreCase(RedisKeyword.RESTORE.name())) {
-                    List<Resource> resources = resourceSelector.getAllWriteResources();
-                    future = doWrite(resources, commandFlusher, command);
-                } else if (ope.equalsIgnoreCase(RedisKeyword.DUMP.name()) || ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
-                    Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
-                    future = doRead(resource, commandFlusher, command);
-                } else {
-                    future = new CompletableFuture<>();
-                    future.complete(Utils.commandNotSupport(redisCommand));
-                }
-                futureList.add(future);
-                continue;
-            }
 
-            if (redisCommand == RedisCommand.TFUNCTION) {
-                byte[][] objects = command.getObjects();
-                if (objects.length <= 1) {
-                    CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.argNumWrong(redisCommand));
+                if (redisCommand == RedisCommand.FUNCTION) {
+                    byte[][] objects = command.getObjects();
+                    if (objects.length <= 1) {
+                        CompletableFuture<Reply> future = new CompletableFuture<>();
+                        future.complete(ErrorReply.argNumWrong(redisCommand));
+                        futureList.add(future);
+                        continue;
+                    }
+                    CompletableFuture<Reply> future;
+                    String ope = Utils.bytesToString(objects[1]);
+                    if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.FLUSH.name())
+                            || ope.equalsIgnoreCase(RedisKeyword.KILL.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
+                            || ope.equalsIgnoreCase(RedisKeyword.RESTORE.name())) {
+                        List<Resource> resources = resourceSelector.getAllWriteResources();
+                        future = doWrite(resources, commandFlusher, command);
+                    } else if (ope.equalsIgnoreCase(RedisKeyword.DUMP.name()) || ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+                        Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
+                        future = doRead(resource, commandFlusher, command);
+                    } else {
+                        future = new CompletableFuture<>();
+                        future.complete(Utils.commandNotSupport(redisCommand));
+                    }
                     futureList.add(future);
                     continue;
                 }
-                CompletableFuture<Reply> future;
-                String ope = Utils.bytesToString(objects[1]);
-                if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
-                    List<Resource> resources = resourceSelector.getAllWriteResources();
-                    future = doWrite(resources, commandFlusher, command);
-                } else if (ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
-                    Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
-                    future = doRead(resource, commandFlusher, command);
-                } else {
+
+                if (redisCommand == RedisCommand.TFUNCTION) {
+                    byte[][] objects = command.getObjects();
+                    if (objects.length <= 1) {
+                        CompletableFuture<Reply> future = new CompletableFuture<>();
+                        future.complete(ErrorReply.argNumWrong(redisCommand));
+                        futureList.add(future);
+                        continue;
+                    }
+                    CompletableFuture<Reply> future;
+                    String ope = Utils.bytesToString(objects[1]);
+                    if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+                        List<Resource> resources = resourceSelector.getAllWriteResources();
+                        future = doWrite(resources, commandFlusher, command);
+                    } else if (ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+                        Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
+                        future = doRead(resource, commandFlusher, command);
+                    } else {
+                        future = new CompletableFuture<>();
+                        future.complete(Utils.commandNotSupport(redisCommand));
+                    }
+                    futureList.add(future);
+                    continue;
+                }
+
+                CompletableFuture<Reply> future = null;
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    Resource resource;
+                    List<byte[]> keys = command.getKeys();
+                    if (keys.isEmpty()) {
+                        resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
+                    } else if (keys.size() == 1) {
+                        resource = resourceSelector.getReadResource(keys.getFirst());
+                    } else {
+                        resource = resourceSelector.getReadResourceWithCheckEqual(keys);
+                    }
+                    if (resource == null) {
+                        future = new CompletableFuture<>();
+                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
+                    } else {
+                        future = doRead(resource, commandFlusher, command);
+                    }
+                } else if (redisCommand.getType() == RedisCommand.Type.WRITE) {
+                    List<Resource> writeResources;
+                    List<byte[]> keys = command.getKeys();
+                    if (keys.isEmpty()) {
+                        writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
+                    } else if (keys.size() == 1) {
+                        writeResources = resourceSelector.getWriteResources(keys.getFirst());
+                    } else {
+                        writeResources = resourceSelector.getWriteResourcesWithCheckEqual(keys);
+                    }
+                    if (writeResources == null) {
+                        future = new CompletableFuture<>();
+                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
+                    } else if (writeResources.size() > 1) {
+                        if (command.isBlocking()) {
+                            future = new CompletableFuture<>();
+                            future.complete(new ErrorReply("ERR blocking command do not support multi-write"));
+                        }
+                    }
+                    if (future == null) {
+                        future = doWrite(writeResources, commandFlusher, command);
+                    }
+                }
+                if (future == null) {
                     future = new CompletableFuture<>();
-                    future.complete(Utils.commandNotSupport(redisCommand));
+                    future.complete(ErrorReply.SYNTAX_ERROR);
+                    ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, "error read write route");
                 }
                 futureList.add(future);
                 continue;
@@ -647,7 +647,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     if (keys.isEmpty()) {
                         resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
                     } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
-                        resource = resourceSelector.getReadResource(keys.get(0));
+                        resource = resourceSelector.getReadResource(keys.getFirst());
                     }
                 }
                 CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
@@ -661,7 +661,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     if (keys.isEmpty()) {
                         writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
                     } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
-                        writeResources = resourceSelector.getWriteResources(keys.get(0));
+                        writeResources = resourceSelector.getWriteResources(keys.getFirst());
                     }
                 }
                 CompletableFuture<Reply> future = doWrite(writeResources, commandFlusher, command);
@@ -729,7 +729,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         if (!needCloseSubscribeChannel) {
             List<Resource> newWriteResources = this.resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
             needCloseSubscribeChannel = oldWriteResources != null && !oldWriteResources.isEmpty() && !newWriteResources.isEmpty()
-                    && !ResourceUtil.resourceEquals(oldWriteResources.get(0), newWriteResources.get(0));
+                    && !ResourceUtil.resourceEquals(oldWriteResources.getFirst(), newWriteResources.getFirst());
         }
         if (needCloseSubscribeChannel) {
             Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
@@ -803,7 +803,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     private CompletableFuture<Reply> doWrite(List<Resource> writeResources, UpstreamClientCommandFlusher commandFlusher, Command command) {
         if (writeResources.size() > 1) {
             if (command.getChannelInfo().isInTransaction()) {
-                writeResources = new ArrayList<>(Collections.singletonList(writeResources.get(0)));
+                writeResources = new ArrayList<>(Collections.singletonList(writeResources.getFirst()));
             } else if (command.getChannelInfo().isTransactionTag()) {
                 for (int i=1; i<writeResources.size(); i++) {
                     Resource resource = writeResources.get(i);
@@ -822,7 +822,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         UpstreamFailMonitor.stats(resource.getUrl(), command, future);
                     }
                 }
-                writeResources = new ArrayList<>(Collections.singletonList(writeResources.get(0)));
+                writeResources = new ArrayList<>(Collections.singletonList(writeResources.getFirst()));
             }
         }
         List<CompletableFuture<Reply>> list = new ArrayList<>(writeResources.size());
@@ -886,7 +886,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         }
         if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
             if (futures.size() == 1) {
-                return futures.get(0);
+                return futures.getFirst();
             }
             CompletableFuture<Reply> future = new CompletableFuture<>();
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeStatusReply(replies)));
@@ -903,7 +903,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
             }
             if (futures.size() == 1) {
-                futures.get(0).thenAccept(completableFuture::complete);
+                futures.getFirst().thenAccept(completableFuture::complete);
                 return;
             }
             CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -950,7 +950,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         if (futures.size() == 1) {
-            return futures.get(0);
+            return futures.getFirst();
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
         CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
@@ -959,8 +959,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 String url = urlList.get(i);
                 List<BytesKey> keyList = map.get(url);
                 Reply reply = replies.get(i);
-                if (reply instanceof MultiBulkReply) {
-                    MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
+                if (reply instanceof MultiBulkReply multiBulkReply) {
                     Reply[] subReplies = multiBulkReply.getReplies();
                     for (int j = 0; j < subReplies.length; j++) {
                         Reply subReply = subReplies[j];
@@ -1024,7 +1023,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         if (futures.size() == 1) {
-            return futures.get(0);
+            return futures.getFirst();
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
         CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
@@ -1033,8 +1032,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 String url = urlList.get(i);
                 List<BytesKey> keyList = map.get(url);
                 Reply reply = replies.get(i);
-                if (reply instanceof MultiBulkReply) {
-                    MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
+                if (reply instanceof MultiBulkReply multiBulkReply) {
                     Reply[] subReplies = multiBulkReply.getReplies();
                     for (int j = 0; j < subReplies.length; j++) {
                         Reply subReply = subReplies[j];
@@ -1086,7 +1084,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         }
         if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
             if (futures.size() == 1) {
-                return futures.get(0);
+                return futures.getFirst();
             }
             CompletableFuture<Reply> future = new CompletableFuture<>();
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
@@ -1104,7 +1102,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     }
                 }
                 if (futures.size() == 1) {
-                    CompletableFuture<Reply> future1 = futures.get(0);
+                    CompletableFuture<Reply> future1 = futures.getFirst();
                     future1.thenAccept(completableFuture::complete);
                     return;
                 }
@@ -1146,7 +1144,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         if (futures.size() == 1) {
-            return futures.get(0);
+            return futures.getFirst();
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
         CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
