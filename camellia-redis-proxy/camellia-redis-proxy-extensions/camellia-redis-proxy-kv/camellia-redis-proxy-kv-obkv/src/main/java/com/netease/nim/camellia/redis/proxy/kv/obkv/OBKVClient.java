@@ -9,6 +9,7 @@ import com.alipay.oceanbase.rpc.protocol.payload.impl.execute.mutate.ObTableQuer
 import com.alipay.oceanbase.rpc.stream.QueryResultSet;
 import com.alipay.oceanbase.rpc.table.api.TableBatchOps;
 import com.alipay.oceanbase.rpc.table.api.TableQuery;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +36,9 @@ public class OBKVClient implements KVClient {
 
     private String tableName;
     private ObTableClient obTableClient;
+
+    private ThreadPoolExecutor executor;
+    private int batchSplitSize;
 
     @Override
     public void init(String namespace) {
@@ -53,13 +58,25 @@ public class OBKVClient implements KVClient {
             obTableClient.setSysUserName(sysUserName);
             obTableClient.setSysPassword(sysPassword);
 
-            boolean executorEnable = RedisKvConf.getBoolean(namespace, "kv.obkv.runtime.batch.executor.enable", false);
-            if (executorEnable) {
-                int size = RedisKvConf.getInt(namespace, "kv.obkv.runtime.batch.executor.size", SysUtils.getCpuNum());
-                ThreadPoolExecutor executor = new ThreadPoolExecutor(size, size, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(128),
-                        new CamelliaThreadFactory(OBKVClient.class), new ThreadPoolExecutor.CallerRunsPolicy());
-                obTableClient.setRuntimeBatchExecutor(executor);
-            }
+            int poolSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.executor.pool.size", SysUtils.getCpuNum() * 2);
+            int queueSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.executor.queue.size", 32);
+            executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(queueSize),
+                    new CamelliaThreadFactory(OBKVClient.class), new ThreadPoolExecutor.CallerRunsPolicy());
+            batchSplitSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.split.size", 1000);
+            ProxyDynamicConf.registerCallback(() -> {
+                int newPoolSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.executor.pool.size", SysUtils.getCpuNum() * 2);
+                if (newPoolSize != executor.getCorePoolSize()) {
+                    logger.info("kv.obkv.batch.executor.pool.size update, {} -> {}", executor.getCorePoolSize(), newPoolSize);
+                }
+                if (newPoolSize > executor.getCorePoolSize()) {
+                    executor.setMaximumPoolSize(newPoolSize);
+                    executor.setCorePoolSize(newPoolSize);
+                } else if (newPoolSize < executor.getCorePoolSize()) {
+                    executor.setCorePoolSize(newPoolSize);
+                    executor.setMaximumPoolSize(newPoolSize);
+                }
+                batchSplitSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.split.size", 1000);
+            });
 
             int slowQueryMonitorThreshold = RedisKvConf.getInt(namespace, "kv.obkv.slow.query.monitor.threshold", 2000);
             obTableClient.setslowQueryMonitorThreshold(slowQueryMonitorThreshold);
@@ -99,15 +116,54 @@ public class OBKVClient implements KVClient {
     @Override
     public void batchPut(int slot, List<KeyValue> list) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
-            for (KeyValue keyValue : list) {
-                batch.insertOrUpdate(new Object[]{slot, keyValue.getKey()}, new String[]{"v"}, new Object[]{keyValue.getValue()});
+            if (list.size() > batchSplitSize) {
+                List<List<KeyValue>> split = split(batchSplitSize, list);
+                List<Future<?>> futures = new ArrayList<>();
+                for (List<KeyValue> keyValues : split) {
+                    Future<?> future = executor.submit(() -> {
+                        try {
+                            TableBatchOps batch = obTableClient.batch(tableName);
+                            for (KeyValue keyValue : keyValues) {
+                                batch.insertOrUpdate(new Object[]{slot, keyValue.getKey()}, new String[]{"v"}, new Object[]{keyValue.getValue()});
+                            }
+                            batch.execute();
+                        } catch (Exception e) {
+                            logger.error("batch put error", e);
+                            throw new KvException(e);
+                        }
+                    });
+                    futures.add(future);
+                }
+                for (Future<?> future : futures) {
+                    future.get();
+                }
+            } else {
+                TableBatchOps batch = obTableClient.batch(tableName);
+                for (KeyValue keyValue : list) {
+                    batch.insertOrUpdate(new Object[]{slot, keyValue.getKey()}, new String[]{"v"}, new Object[]{keyValue.getValue()});
+                }
+                batch.execute();
             }
-            batch.execute();
         } catch (Exception e) {
             logger.error("batch put error", e);
             throw new KvException(e);
         }
+    }
+
+    private List<List<KeyValue>> split(int splitSize, List<KeyValue> keyValueList) {
+        List<List<KeyValue>> lists = new ArrayList<>();
+        List<KeyValue> list = new ArrayList<>();
+        for (KeyValue kv : keyValueList) {
+            list.add(kv);
+            if (list.size() >= splitSize) {
+                lists.add(list);
+                list = new ArrayList<>();
+            }
+        }
+        if (!list.isEmpty()) {
+            lists.add(list);
+        }
+        return lists;
     }
 
     @Override
@@ -218,15 +274,54 @@ public class OBKVClient implements KVClient {
     @Override
     public void batchDelete(int slot, byte[]... keys) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
-            for (byte[] key : keys) {
-                batch.delete(new Object[]{slot, key});
+            if (keys.length > batchSplitSize) {
+                List<List<byte[]>> split = split(batchSplitSize, keys);
+                List<Future<?>> futures = new ArrayList<>();
+                for (List<byte[]> list : split) {
+                    Future<?> future = executor.submit(() -> {
+                        try {
+                            TableBatchOps batch = obTableClient.batch(tableName);
+                            for (byte[] key : list) {
+                                batch.delete(new Object[]{slot, key});
+                            }
+                            batch.execute();
+                        } catch (Exception e) {
+                            logger.error("batchDelete error, slot = {}", slot, e);
+                            throw new KvException(e);
+                        }
+                    });
+                    futures.add(future);
+                }
+                for (Future<?> future : futures) {
+                    future.get();
+                }
+            } else {
+                TableBatchOps batch = obTableClient.batch(tableName);
+                for (byte[] key : keys) {
+                    batch.delete(new Object[]{slot, key});
+                }
+                batch.execute();
             }
-            batch.execute();
         } catch (Exception e) {
-            logger.error("delete error", e);
+            logger.error("batchDelete error, slot = {}", slot, e);
             throw new KvException(e);
         }
+    }
+
+    private List<List<byte[]>> split(int splitSize, byte[]... keys) {
+        List<List<byte[]>> lists = new ArrayList<>();
+        List<byte[]> list = new ArrayList<>();
+        for (byte[] key : keys) {
+            list.add(key);
+            if (list.size() >= splitSize) {
+                lists.add(list);
+                list = new ArrayList<>();
+            }
+        }
+        if (!list.isEmpty()) {
+            lists.add(list);
+        }
+        return lists;
     }
 
     @Override
