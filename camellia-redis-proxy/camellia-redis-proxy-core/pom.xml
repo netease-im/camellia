@@ -14,16 +14,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-base</artifactId>
-			<version>${revision}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-codec</artifactId>
-			<version>${revision}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.jctools</groupId>
 			<artifactId>jctools-core</artifactId>
 			<version>${jctools.version}</version>
@@ -53,12 +43,6 @@
 			<artifactId>camellia-http-console</artifactId>
 			<version>${revision}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.github.luben</groupId>
-			<artifactId>zstd-jni</artifactId>
-			<version>1.5.6-9</version>
-		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

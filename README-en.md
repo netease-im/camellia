@@ -78,7 +78,7 @@ latest version is 1.3.4, have deploy to maven central repository on 2025/03/19
 [CHANGE_LOG](/update-en.md)  
 
 ## SNAPSHOT-version
-latest version is 1.4.0-SNAPSHOT  
+latest version is 1.3.5-SNAPSHOT  
 ```xml
 <repositories>
   <repository>
