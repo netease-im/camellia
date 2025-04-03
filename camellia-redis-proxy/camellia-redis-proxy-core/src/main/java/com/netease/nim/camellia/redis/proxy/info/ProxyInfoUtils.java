@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.constant.CamelliaVersion;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -21,6 +22,8 @@ import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.management.*;
 import java.nio.charset.StandardCharsets;
@@ -36,8 +39,16 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ProxyInfoUtils {
 
-    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
+    private static final Logger logger = LoggerFactory.getLogger(ProxyInfoUtils.class);
+
+    private static final ThreadPoolExecutor executor;
+    static {
+        int poolSize = ProxyDynamicConf.getInt("info.command.executor.pool.size", 1);
+        int queueSize = ProxyDynamicConf.getInt("info.command.executor.queue.size", 128);
+        executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(queueSize), new DefaultThreadFactory("proxy-info"));
+        logger.info("init info command executor, pool.size = {}, queue.size = {}", poolSize, queueSize);
+    }
 
     public static final String VERSION = CamelliaVersion.version;
     public static final String RedisVersion = "7.0.11";
