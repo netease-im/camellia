@@ -17,7 +17,6 @@
 	<modules>
 		<module>camellia-redis-proxy-spring-boot-starter</module>
 
-		<module>camellia-redis-proxy-hbase-spring-boot-starter</module>
 		<module>camellia-redis-proxy-nacos-spring-boot-starter</module>
 
 		<module>camellia-redis-proxy-zk-registry-spring-boot-starter</module>
