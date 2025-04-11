@@ -75,7 +75,11 @@ public class OBKVClient implements KVClient {
                     executor.setCorePoolSize(newPoolSize);
                     executor.setMaximumPoolSize(newPoolSize);
                 }
-                batchSplitSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.split.size", 1000);
+                int newBatchSplitSize = RedisKvConf.getInt(namespace, "kv.obkv.batch.split.size", 1000);
+                if (batchSplitSize != newBatchSplitSize) {
+                    logger.info("kv.obkv.batch.split.size update, {} -> {}", batchSplitSize, newBatchSplitSize);
+                    batchSplitSize = newBatchSplitSize;
+                }
             });
 
             int slowQueryMonitorThreshold = RedisKvConf.getInt(namespace, "kv.obkv.slow.query.monitor.threshold", 2000);
