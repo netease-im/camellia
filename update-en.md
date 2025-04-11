@@ -1,5 +1,18 @@
 [中文版](update-zh.md)
 
+# 1.3.5（2025/04/xx）
+### add
+* camellia-redis-proxy, support setting info command executor config
+* camellia-redis-proxy, add new tool `IpAffinityServerSelector`
+
+### update
+* camellia-redis-proxy, kv, improve performance of obkv-client batch ops
+* camellia-redis-proxy, remove `camellia-redis-proxy-hbase` module
+
+### fix
+* camellia-redis-proxy, fix `script load` ineffective on sharding route config, thanks [@Ak1yama-mio](https://github.com/Ak1yama-mio)
+
+
 # 1.3.4（2025/03/19）
 ### add
 * camellia-redis-proxy, kv, add load cache stats

@@ -1,5 +1,18 @@
 [ENGLISH](update-en.md)
 
+# 1.3.5（2025/04/xx）
+### 新增
+* camellia-redis-proxy，支持配置info命令的线程池配置
+* camellia-redis-proxy，新增一个工具 `IpAffinityServerSelector` ，可以用于负载均衡时做ip的亲和和反亲和
+
+### 更新
+* camellia-redis-proxy，kv，优化了obkv-client在大批量操作下的性能
+* camellia-redis-proxy，移除了camellia-redis-proxy-hbase模块
+
+### fix
+* camellia-redis-proxy，修复了分片模式下，`script load` 等命令没有生效到所有节点的问题，感谢 [@Ak1yama-mio](https://github.com/Ak1yama-mio)
+
+
 # 1.3.4（2025/03/19）
 ### 新增
 * camellia-redis-proxy，kv，新增热点key的lru-cache的load次数的监控指标
