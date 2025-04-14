@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.3.5（2025/04/xx）
+# 1.3.5（2025/04/14）
 ### 新增
 * camellia-redis-proxy，支持配置info命令的线程池配置
 * camellia-redis-proxy，新增一个工具 `IpAffinityServerSelector` ，可以用于负载均衡时做ip的亲和和反亲和

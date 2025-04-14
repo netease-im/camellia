@@ -74,11 +74,11 @@ hot key detect and cache:
 
 
 ## Release-Version
-latest version is 1.3.4, have deploy to maven central repository on 2025/03/19  
+latest version is 1.3.5, have deploy to maven central repository on 2025/04/14  
 [CHANGE_LOG](/update-en.md)  
 
 ## SNAPSHOT-version
-latest version is 1.3.5-SNAPSHOT  
+latest version is 1.3.6-SNAPSHOT  
 ```xml
 <repositories>
   <repository>

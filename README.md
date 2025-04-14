@@ -87,11 +87,11 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 
 ## RELEASE版本
-最新版本是1.3.4，已经发布到maven中央仓库（2025/03/19）  
+最新版本是1.3.5，已经发布到maven中央仓库（2025/04/14）  
 [更新日志](/update-zh.md)  
 
 ## SNAPSHOT版本
-当前最新是1.3.5-SNAPSHOT  
+当前最新是1.3.6-SNAPSHOT  
 ```xml
 <repositories>
   <repository>

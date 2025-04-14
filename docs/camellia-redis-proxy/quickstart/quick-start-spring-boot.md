@@ -2,12 +2,12 @@
 ## quick start as new java project
 
 
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.3.4）
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.3.5）
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.3.4</version>
+  <version>1.3.5</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下:

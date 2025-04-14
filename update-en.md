@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.3.5（2025/04/xx）
+# 1.3.5（2025/04/14）
 ### add
 * camellia-redis-proxy, support setting info command executor config
 * camellia-redis-proxy, add new tool `IpAffinityServerSelector`

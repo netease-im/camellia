@@ -13,7 +13,6 @@
         <module name="camellia-redis-eureka-spring-boot-starter" />
         <module name="camellia-id-gen-tests" />
         <module name="camellia-hot-key-discovery-eureka" />
-        <module name="camellia-redis-proxy-hbase-spring-boot-starter" />
         <module name="camellia-redis-eureka-spring-boot3-starter" />
         <module name="camellia-redis-proxy-kv-tikv" />
         <module name="camellia-hot-key-common" />
@@ -34,7 +33,6 @@
         <module name="camellia-feign-tests" />
         <module name="camellia-redis-proxy-hot-key-common" />
         <module name="camellia-tools" />
-        <module name="camellia-redis-proxy-hbase" />
         <module name="camellia-dashboard-spring-boot-starter" />
         <module name="camellia-cache-core" />
         <module name="camellia-delay-queue-sdk" />
@@ -136,6 +134,8 @@
     <bytecodeTargetLevel>
       <module name="camellia-kv" target="1.5" />
       <module name="camellia-kv-wal" target="21" />
+      <module name="camellia-redis-proxy-hbase" target="21" />
+      <module name="camellia-redis-proxy-hbase-spring-boot-starter" target="21" />
     </bytecodeTargetLevel>
   </component>
 </project>

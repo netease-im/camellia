@@ -4,7 +4,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-delay-queue-server-spring-boot-starter</artifactId>
-    <version>1.3.4</version>
+    <version>1.3.5</version>
 </dependency>
 ```
 
