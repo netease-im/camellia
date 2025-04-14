@@ -5,5 +5,5 @@ package com.netease.nim.camellia.core.constant;
  */
 public class CamelliaVersion {
 
-    public static final String version = "1.3.5";
+    public static final String version = "1.3.6-SNAPSHOT";
 }
