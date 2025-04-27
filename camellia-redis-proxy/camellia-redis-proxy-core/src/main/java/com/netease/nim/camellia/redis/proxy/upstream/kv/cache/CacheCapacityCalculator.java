@@ -30,7 +30,7 @@ public class CacheCapacityCalculator {
 
         KvLRUCacheMonitor.update(namespace, name, currentCapacity, currentKeyCount, currentSize, targetSize);
 
-        int newCapacity = calcCapacity(targetSize, currentCapacity, currentKeyCount, currentSize);
+        int newCapacity = calcCapacity(namespace, name, targetSize, currentCapacity, currentKeyCount, currentSize);
         if (newCapacity <= 0) {
             newCapacity = 10000;
         }
@@ -63,7 +63,7 @@ public class CacheCapacityCalculator {
         return target + "M";
     }
 
-    private static int calcCapacity(long targetSize, long currentCapacity, long currentKeyCount, long currentSize) {
+    private static int calcCapacity(String namespace, String name, long targetSize, long currentCapacity, long currentKeyCount, long currentSize) {
         if (currentKeyCount == 0) {
             return (int) currentCapacity;
         }
@@ -75,7 +75,13 @@ public class CacheCapacityCalculator {
         if (targetCapacity > Integer.MAX_VALUE) {
             return 10000;
         }
-        int maxCapacity = ProxyDynamicConf.getInt("kv.lru.cache.max.capacity", 200_0000);
+        int maxCapacity = ProxyDynamicConf.getInt(namespace + "." + name + ".kv.lru.cache.max.capacity", -1);
+        if (maxCapacity <= 0) {
+            maxCapacity = ProxyDynamicConf.getInt(name + ".kv.lru.cache.max.capacity", -1);
+        }
+        if (maxCapacity <= 0) {
+            maxCapacity = ProxyDynamicConf.getInt("kv.lru.cache.max.capacity", 200_0000);
+        }
         return Math.min(maxCapacity, (int) targetCapacity);
     }
 
