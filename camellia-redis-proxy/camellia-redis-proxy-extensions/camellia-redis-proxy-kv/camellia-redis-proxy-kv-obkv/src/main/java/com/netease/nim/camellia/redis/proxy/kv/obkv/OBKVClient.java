@@ -22,10 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2024/9/4
@@ -233,32 +230,78 @@ public class OBKVClient implements KVClient {
     @Override
     public List<KeyValue> batchGet(int slot, byte[]... keys) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
-            for (byte[] key : keys) {
-                batch.get(new Object[]{slot, key}, new String[]{"v"});
-            }
-            List<Object> objects = batch.executeWithResult();
+            if (keys.length > batchSplitSize) {
+                List<List<byte[]>> split = split(batchSplitSize, keys);
+                List<Future<List<KeyValue>>> futureList = new ArrayList<>(split.size());
+                for (List<byte[]> subList : split) {
+                    Future<List<KeyValue>> future = executor.submit(() -> {
+                        try {
+                            TableBatchOps batch = obTableClient.batch(tableName);
+                            for (byte[] key : subList) {
+                                batch.get(new Object[]{slot, key}, new String[]{"v"});
+                            }
+                            List<Object> objects = batch.executeWithResult();
 
-            List<KeyValue> list = new ArrayList<>(keys.length);
-            int index = 0;
-            for (Object object : objects) {
-                MutationResult result = (MutationResult) object;
-                Row operationRow = result.getOperationRow();
-                Map<String, Object> map = operationRow.getMap();
-                if (map == null || map.isEmpty()) {
-                    index ++;
-                    continue;
-                } else {
-                    Object o = map.get("v");
-                    if (o == null) {
-                        index ++;
-                        continue;
-                    }
-                    list.add(new KeyValue(keys[index], (byte[]) o));
+                            List<KeyValue> list = new ArrayList<>(subList.size());
+                            int index = 0;
+                            for (Object object : objects) {
+                                MutationResult result = (MutationResult) object;
+                                Row operationRow = result.getOperationRow();
+                                Map<String, Object> map = operationRow.getMap();
+                                if (map == null || map.isEmpty()) {
+                                    index++;
+                                    continue;
+                                } else {
+                                    Object o = map.get("v");
+                                    if (o == null) {
+                                        index++;
+                                        continue;
+                                    }
+                                    list.add(new KeyValue(subList.get(index), (byte[]) o));
+                                }
+                                index++;
+                            }
+                            return list;
+                        } catch (Exception e) {
+                            logger.error("batchGet error", e);
+                            throw new KvException(e);
+                        }
+                    });
+                    futureList.add(future);
                 }
-                index ++;
+                List<KeyValue> result = new ArrayList<>();
+                for (Future<List<KeyValue>> future : futureList) {
+                    result.addAll(future.get());
+                }
+                return result;
+            } else {
+                TableBatchOps batch = obTableClient.batch(tableName);
+                for (byte[] key : keys) {
+                    batch.get(new Object[]{slot, key}, new String[]{"v"});
+                }
+                List<Object> objects = batch.executeWithResult();
+
+                List<KeyValue> list = new ArrayList<>(keys.length);
+                int index = 0;
+                for (Object object : objects) {
+                    MutationResult result = (MutationResult) object;
+                    Row operationRow = result.getOperationRow();
+                    Map<String, Object> map = operationRow.getMap();
+                    if (map == null || map.isEmpty()) {
+                        index++;
+                        continue;
+                    } else {
+                        Object o = map.get("v");
+                        if (o == null) {
+                            index++;
+                            continue;
+                        }
+                        list.add(new KeyValue(keys[index], (byte[]) o));
+                    }
+                    index++;
+                }
+                return list;
             }
-            return list;
         } catch (Exception e) {
             logger.error("batchGet error", e);
             throw new KvException(e);
