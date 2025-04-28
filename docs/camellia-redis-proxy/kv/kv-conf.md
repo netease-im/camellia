@@ -120,8 +120,8 @@ kv.obkv.table.name=camellia_kv
 ```
 CREATE TABLE `camellia_kv` (
     `slot` int(9) NOT NULL,
-    `k` varbinary(1024) NOT NULL,
-    `v` varbinary(1024) NOT NULL
+    `k` varbinary(16384) NOT NULL,
+    `v` varbinary(1048576) NOT NULL,
     PRIMARY KEY (`slot`, `k`))
 PARTITION BY KEY(slot) PARTITIONS 97;
 
