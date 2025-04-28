@@ -136,7 +136,7 @@ public class OBKVClient implements KVClient {
                     futures.add(future);
                 }
                 for (Future<?> future : futures) {
-                    future.get();
+                    future.get(30, TimeUnit.SECONDS);
                 }
             } else {
                 TableBatchOps batch = obTableClient.batch(tableName);
@@ -229,7 +229,7 @@ public class OBKVClient implements KVClient {
                 boolean[] result = new boolean[keys.length];
                 int index = 0;
                 for (Future<List<Boolean>> future : futureList) {
-                    List<Boolean> list = future.get();
+                    List<Boolean> list = future.get(30, TimeUnit.SECONDS);
                     for (Boolean b : list) {
                         result[index] = b;
                         index ++;
@@ -304,7 +304,7 @@ public class OBKVClient implements KVClient {
                 }
                 List<KeyValue> result = new ArrayList<>();
                 for (Future<List<KeyValue>> future : futureList) {
-                    result.addAll(future.get());
+                    result.addAll(future.get(30, TimeUnit.SECONDS));
                 }
                 return result;
             } else {
@@ -373,7 +373,7 @@ public class OBKVClient implements KVClient {
                     futures.add(future);
                 }
                 for (Future<?> future : futures) {
-                    future.get();
+                    future.get(30, TimeUnit.SECONDS);
                 }
             } else {
                 TableBatchOps batch = obTableClient.batch(tableName);
