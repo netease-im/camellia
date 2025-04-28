@@ -200,27 +200,65 @@ public class OBKVClient implements KVClient {
     @Override
     public boolean[] exists(int slot, byte[]... keys) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
-            for (byte[] key : keys) {
-                batch.get(new Object[]{slot, key}, new String[]{"v"});
-            }
-            List<Object> objects = batch.executeWithResult();
-
-            boolean[] booleans = new boolean[keys.length];
-            int index = 0;
-            for (Object object : objects) {
-                MutationResult result = (MutationResult) object;
-                Row operationRow = result.getOperationRow();
-                Map<String, Object> map = operationRow.getMap();
-                if (map == null || map.isEmpty()) {
-                    booleans[index] = false;
-                } else {
-                    Object o = map.get("v");
-                    booleans[index] = o != null;
+            if (keys.length > batchSplitSize) {
+                List<List<byte[]>> split = split(batchSplitSize, keys);
+                List<Future<List<Boolean>>> futureList = new ArrayList<>();
+                for (List<byte[]> subList : split) {
+                    Future<List<Boolean>> future = executor.submit(() -> {
+                        TableBatchOps batch = obTableClient.batch(tableName);
+                        for (byte[] key : subList) {
+                            batch.get(new Object[]{slot, key}, new String[]{"v"});
+                        }
+                        List<Object> objects = batch.executeWithResult();
+                        List<Boolean> booleanList = new ArrayList<>(subList.size());
+                        for (Object object : objects) {
+                            MutationResult result = (MutationResult) object;
+                            Row operationRow = result.getOperationRow();
+                            Map<String, Object> map = operationRow.getMap();
+                            if (map == null || map.isEmpty()) {
+                                booleanList.add(false);
+                            } else {
+                                Object o = map.get("v");
+                                booleanList.add(o != null);
+                            }
+                        }
+                        return booleanList;
+                    });
+                    futureList.add(future);
                 }
-                index ++;
+                boolean[] result = new boolean[keys.length];
+                int index = 0;
+                for (Future<List<Boolean>> future : futureList) {
+                    List<Boolean> list = future.get();
+                    for (Boolean b : list) {
+                        result[index] = b;
+                        index ++;
+                    }
+                }
+                return result;
+            } else {
+                TableBatchOps batch = obTableClient.batch(tableName);
+                for (byte[] key : keys) {
+                    batch.get(new Object[]{slot, key}, new String[]{"v"});
+                }
+                List<Object> objects = batch.executeWithResult();
+
+                boolean[] booleans = new boolean[keys.length];
+                int index = 0;
+                for (Object object : objects) {
+                    MutationResult result = (MutationResult) object;
+                    Row operationRow = result.getOperationRow();
+                    Map<String, Object> map = operationRow.getMap();
+                    if (map == null || map.isEmpty()) {
+                        booleans[index] = false;
+                    } else {
+                        Object o = map.get("v");
+                        booleans[index] = o != null;
+                    }
+                    index++;
+                }
+                return booleans;
             }
-            return booleans;
         } catch (Exception e) {
             logger.error("exists error", e);
             throw new KvException(e);
@@ -235,37 +273,32 @@ public class OBKVClient implements KVClient {
                 List<Future<List<KeyValue>>> futureList = new ArrayList<>(split.size());
                 for (List<byte[]> subList : split) {
                     Future<List<KeyValue>> future = executor.submit(() -> {
-                        try {
-                            TableBatchOps batch = obTableClient.batch(tableName);
-                            for (byte[] key : subList) {
-                                batch.get(new Object[]{slot, key}, new String[]{"v"});
-                            }
-                            List<Object> objects = batch.executeWithResult();
+                        TableBatchOps batch = obTableClient.batch(tableName);
+                        for (byte[] key : subList) {
+                            batch.get(new Object[]{slot, key}, new String[]{"v"});
+                        }
+                        List<Object> objects = batch.executeWithResult();
 
-                            List<KeyValue> list = new ArrayList<>(subList.size());
-                            int index = 0;
-                            for (Object object : objects) {
-                                MutationResult result = (MutationResult) object;
-                                Row operationRow = result.getOperationRow();
-                                Map<String, Object> map = operationRow.getMap();
-                                if (map == null || map.isEmpty()) {
+                        List<KeyValue> list = new ArrayList<>(subList.size());
+                        int index = 0;
+                        for (Object object : objects) {
+                            MutationResult result = (MutationResult) object;
+                            Row operationRow = result.getOperationRow();
+                            Map<String, Object> map = operationRow.getMap();
+                            if (map == null || map.isEmpty()) {
+                                index++;
+                                continue;
+                            } else {
+                                Object o = map.get("v");
+                                if (o == null) {
                                     index++;
                                     continue;
-                                } else {
-                                    Object o = map.get("v");
-                                    if (o == null) {
-                                        index++;
-                                        continue;
-                                    }
-                                    list.add(new KeyValue(subList.get(index), (byte[]) o));
                                 }
-                                index++;
+                                list.add(new KeyValue(subList.get(index), (byte[]) o));
                             }
-                            return list;
-                        } catch (Exception e) {
-                            logger.error("batchGet error", e);
-                            throw new KvException(e);
+                            index++;
                         }
+                        return list;
                     });
                     futureList.add(future);
                 }
