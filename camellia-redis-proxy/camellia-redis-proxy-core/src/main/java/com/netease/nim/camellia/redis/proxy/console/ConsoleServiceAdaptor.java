@@ -160,7 +160,7 @@ public class ConsoleServiceAdaptor implements ConsoleService {
         String url = null;
         for (Map.Entry<String, List<String>> entry : params.entrySet()) {
             if (entry.getKey().equalsIgnoreCase("url")) {
-                url = entry.getValue().get(0);
+                url = entry.getValue().getFirst();
             }
         }
         if (url != null) {

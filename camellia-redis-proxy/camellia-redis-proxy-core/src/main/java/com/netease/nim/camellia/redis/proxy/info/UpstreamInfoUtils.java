@@ -48,83 +48,85 @@ public class UpstreamInfoUtils {
         infoJson.put("url", PasswordMaskUtils.maskResource(url));
         JSONArray nodeJsonArray = new JSONArray();
         Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));
-        if (resource instanceof RedisClusterResource) {
-            infoJson.put("type", "cluster");
-            String redisClusterInfo = getRedisClusterInfo((RedisClusterResource) resource);
-            infoJson.put("status", "unknown");
-            if (redisClusterInfo != null) {
-                Map<String, String> map = parseKv(redisClusterInfo);
-                if (map != null) {
-                    for (Map.Entry<String, String> entry : map.entrySet()) {
-                        otherInfoJsonArray.add(infoItem(entry.getKey(), entry.getValue()));
-                    }
-                    if (map.containsKey("cluster_state")) {
-                        infoJson.put("status", map.get("cluster_state"));
-                    }
-                }
-                long totalMaxMemory = 0;
-                long totalUsedMemory = 0;
-                long totalQps = 0;
-                long totalKeyCount = 0;
-                long totalExpireKeyCount = 0;
-                List<ClusterNodeInfo> redisClusterNodeInfo = getRedisClusterNodeInfo((RedisClusterResource) resource);
-                if (redisClusterNodeInfo != null) {
-                    boolean safety = redisClusterSafety(redisClusterNodeInfo);
-                    otherInfoJsonArray.add(infoItem("cluster_safety", safety ? "yes" : "no"));
-                    for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
-                        String master = clusterNodeInfo.master;
-                        String[] split = master.split("@");
-                        String[] split1 = split[0].split(":");
-                        String host = split1[0];
-                        int port = Integer.parseInt(split1[1]);
-                        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, ((RedisClusterResource) resource).getUserName(),
-                                ((RedisClusterResource) resource).getPassword(), false, 0, false);
-                        RedisInfo redisInfo = getRedisInfo(resource, addr);
-                        if (redisInfo != null) {
-                            totalMaxMemory += redisInfo.maxMemory;
-                            totalUsedMemory += redisInfo.usedMemory;
-                            totalQps += redisInfo.qps;
-                            totalKeyCount += redisInfo.keyCount;
-                            totalExpireKeyCount += redisInfo.expireKeyCount;
-                            JSONObject nodeJson = toNodeJson(addr, redisInfo);
-                            nodeJsonArray.add(nodeJson);
+        switch (resource) {
+            case RedisClusterResource redisClusterResource -> {
+                infoJson.put("type", "cluster");
+                String redisClusterInfo = getRedisClusterInfo(redisClusterResource);
+                infoJson.put("status", "unknown");
+                if (redisClusterInfo != null) {
+                    Map<String, String> map = parseKv(redisClusterInfo);
+                    if (map != null) {
+                        for (Map.Entry<String, String> entry : map.entrySet()) {
+                            otherInfoJsonArray.add(infoItem(entry.getKey(), entry.getValue()));
+                        }
+                        if (map.containsKey("cluster_state")) {
+                            infoJson.put("status", map.get("cluster_state"));
                         }
                     }
+                    long totalMaxMemory = 0;
+                    long totalUsedMemory = 0;
+                    long totalQps = 0;
+                    long totalKeyCount = 0;
+                    long totalExpireKeyCount = 0;
+                    List<ClusterNodeInfo> redisClusterNodeInfo = getRedisClusterNodeInfo((RedisClusterResource) resource);
+                    if (redisClusterNodeInfo != null) {
+                        boolean safety = redisClusterSafety(redisClusterNodeInfo);
+                        otherInfoJsonArray.add(infoItem("cluster_safety", safety ? "yes" : "no"));
+                        for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
+                            String master = clusterNodeInfo.master;
+                            String[] split = master.split("@");
+                            String[] split1 = split[0].split(":");
+                            String host = split1[0];
+                            int port = Integer.parseInt(split1[1]);
+                            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, ((RedisClusterResource) resource).getUserName(),
+                                    ((RedisClusterResource) resource).getPassword(), false, 0, false);
+                            RedisInfo redisInfo = getRedisInfo(resource, addr);
+                            if (redisInfo != null) {
+                                totalMaxMemory += redisInfo.maxMemory;
+                                totalUsedMemory += redisInfo.usedMemory;
+                                totalQps += redisInfo.qps;
+                                totalKeyCount += redisInfo.keyCount;
+                                totalExpireKeyCount += redisInfo.expireKeyCount;
+                                JSONObject nodeJson = toNodeJson(addr, redisInfo);
+                                nodeJsonArray.add(nodeJson);
+                            }
+                        }
+                    }
+                    infoJson(infoJson, totalMaxMemory, totalUsedMemory, totalQps, totalKeyCount, totalExpireKeyCount);
                 }
-                infoJson(infoJson, totalMaxMemory, totalUsedMemory, totalQps, totalKeyCount, totalExpireKeyCount);
             }
-        } else if (resource instanceof RedisSentinelResource) {
-            infoJson.put("type", "sentinel");
-            RedisSentinelResource redisSentinelResource = (RedisSentinelResource) resource;
-            RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(resource, redisSentinelResource.getNodes(),
-                    redisSentinelResource.getUserName(), redisSentinelResource.getPassword(),redisSentinelResource.getMaster(),
-                    redisSentinelResource.getSentinelUserName(), redisSentinelResource.getSentinelPassword());
-            if (redisSentinelInfo.master != null && redisSentinelInfo.redisInfo != null) {
-                infoJson.put("status", "ok");
-                otherInfoJsonArray.add(infoItem("master_node", PasswordMaskUtils.maskAddr(redisSentinelInfo.master)));
-                JSONObject nodeJson = toNodeJson(redisSentinelInfo.master, redisSentinelInfo.redisInfo);
-                nodeJsonArray.add(nodeJson);
-                infoJson(infoJson, redisSentinelInfo.redisInfo.maxMemory, redisSentinelInfo.redisInfo.usedMemory,
-                        redisSentinelInfo.redisInfo.qps, redisSentinelInfo.redisInfo.keyCount, redisSentinelInfo.redisInfo.expireKeyCount);
-            } else {
-                infoJson.put("status", "unknown");
+            case RedisSentinelResource redisSentinelResource -> {
+                infoJson.put("type", "sentinel");
+                RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(resource, redisSentinelResource.getNodes(),
+                        redisSentinelResource.getUserName(), redisSentinelResource.getPassword(), redisSentinelResource.getMaster(),
+                        redisSentinelResource.getSentinelUserName(), redisSentinelResource.getSentinelPassword());
+                if (redisSentinelInfo.master != null && redisSentinelInfo.redisInfo != null) {
+                    infoJson.put("status", "ok");
+                    otherInfoJsonArray.add(infoItem("master_node", PasswordMaskUtils.maskAddr(redisSentinelInfo.master)));
+                    JSONObject nodeJson = toNodeJson(redisSentinelInfo.master, redisSentinelInfo.redisInfo);
+                    nodeJsonArray.add(nodeJson);
+                    infoJson(infoJson, redisSentinelInfo.redisInfo.maxMemory, redisSentinelInfo.redisInfo.usedMemory,
+                            redisSentinelInfo.redisInfo.qps, redisSentinelInfo.redisInfo.keyCount, redisSentinelInfo.redisInfo.expireKeyCount);
+                } else {
+                    infoJson.put("status", "unknown");
+                }
             }
-        } else if (resource instanceof RedisResource) {
-            infoJson.put("type", "standalone");
-            RedisConnectionAddr addr = new RedisConnectionAddr(((RedisResource) resource).getHost(),
-                    ((RedisResource) resource).getPort(), ((RedisResource) resource).getUserName(), ((RedisResource) resource).getPassword(), false, 0, false);
-            RedisInfo redisInfo = getRedisInfo(resource, addr);
-            if (redisInfo != null) {
-                infoJson.put("status", "ok");
-                infoJson(infoJson, redisInfo.maxMemory, redisInfo.usedMemory,
-                        redisInfo.qps, redisInfo.keyCount, redisInfo.expireKeyCount);
-                JSONObject nodeJson = toNodeJson(addr, redisInfo);
-                nodeJsonArray.add(nodeJson);
-            } else {
-                infoJson.put("status", "unknown");
+            case RedisResource redisResource -> {
+                infoJson.put("type", "standalone");
+                RedisConnectionAddr addr = new RedisConnectionAddr(redisResource.getHost(),
+                        redisResource.getPort(), redisResource.getUserName(), redisResource.getPassword(), false, 0, false);
+                RedisInfo redisInfo = getRedisInfo(resource, addr);
+                if (redisInfo != null) {
+                    infoJson.put("status", "ok");
+                    infoJson(infoJson, redisInfo.maxMemory, redisInfo.usedMemory,
+                            redisInfo.qps, redisInfo.keyCount, redisInfo.expireKeyCount);
+                    JSONObject nodeJson = toNodeJson(addr, redisInfo);
+                    nodeJsonArray.add(nodeJson);
+                } else {
+                    infoJson.put("status", "unknown");
+                }
             }
-        } else {
-            infoJsonArray.add(infoItem("type", "unknown"));
+            case null, default -> infoJsonArray.add(infoItem("type", "unknown"));
         }
         jsonObject.put("info", infoJsonArray);
         jsonObject.put("nodeInfo", nodeJsonArray);
@@ -184,11 +186,9 @@ public class UpstreamInfoUtils {
     public static String upstreamInfo(Long bid, String bgroup, IUpstreamClientTemplateFactory factory, boolean parseJson) {
         try {
             IUpstreamClientTemplate clientTemplate = factory.getOrInitialize(bid, bgroup);
-            if (!(clientTemplate instanceof IUpstreamRedisClientTemplate)) {
+            if (!(clientTemplate instanceof IUpstreamRedisClientTemplate template)) {
                 return null;
             }
-
-            IUpstreamRedisClientTemplate template = (IUpstreamRedisClientTemplate) clientTemplate;
 
             JSONObject jsonObject = new JSONObject();
 
@@ -557,8 +557,8 @@ public class UpstreamInfoUtils {
                             map.put(split1[0], split1[1]);
                         }
                     }
+                    return map;
                 }
-                return map;
             }
             return null;
         } catch (Exception e) {
@@ -626,11 +626,7 @@ public class UpstreamInfoUtils {
                 }
                 String[] split = clusterNodeInfo.master.split(":");
                 String masterIp = split[0];
-                AtomicLong count = map.get(masterIp);
-                if (count == null) {
-                    count = new AtomicLong();
-                    map.put(masterIp, count);
-                }
+                AtomicLong count = map.computeIfAbsent(masterIp, k -> new AtomicLong());
                 count.incrementAndGet();
             }
             int size = clusterNodeInfos.size();
