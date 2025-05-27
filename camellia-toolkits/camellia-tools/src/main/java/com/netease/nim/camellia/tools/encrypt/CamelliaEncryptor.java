@@ -22,7 +22,7 @@ public class CamelliaEncryptor {
 
     private static final String DEFAULT_MAGIC = "camellia~e";
 
-    private final CipherInitializer cipherInitlizer;
+    private final CipherInitializer cipherInitializer;
     private final FastThreadLocal<Cipher> encryptThreadLocal = new FastThreadLocal<>();
     private final FastThreadLocal<Cipher> decryptThreadLocal = new FastThreadLocal<>();
     private final Tag tag;
@@ -52,7 +52,7 @@ public class CamelliaEncryptor {
 
     public CamelliaEncryptor(String magic, CamelliaEncryptAesConfig camelliaEncryptAesConfig) {
         this.tag = camelliaEncryptAesConfig.getType().getTag();
-        this.cipherInitlizer = new CipherInitializer() {
+        this.cipherInitializer = new CipherInitializer() {
             @Override
             public Cipher initEncrypt() {
                 try {
@@ -99,7 +99,7 @@ public class CamelliaEncryptor {
     private Cipher getEncryptCipher() {
         Cipher cipher = encryptThreadLocal.get();
         if (cipher == null) {
-            cipher = cipherInitlizer.initEncrypt();
+            cipher = cipherInitializer.initEncrypt();
             encryptThreadLocal.set(cipher);
         }
         return cipher;
@@ -108,7 +108,7 @@ public class CamelliaEncryptor {
     private Cipher getDecryptCipher() {
         Cipher cipher = decryptThreadLocal.get();
         if (cipher == null) {
-            cipher = cipherInitlizer.initDecrypt();
+            cipher = cipherInitializer.initDecrypt();
             decryptThreadLocal.set(cipher);
         }
         return cipher;
