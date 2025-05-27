@@ -1,5 +1,18 @@
 [中文版](update-zh.md)
 
+
+# 1.3.6（2025/05/xx）
+### add
+* camellia-redis-proxy, kv, support set lru-cache max capacity by namespace/name
+
+### update
+* camellia-redis-proxy, kv, improve batch-get/batch-exists
+* camellia-redis-proxy, optimize console api /detect
+
+### fix
+* none
+
+
 # 1.3.5（2025/04/14）
 ### add
 * camellia-redis-proxy, support setting info command executor config
