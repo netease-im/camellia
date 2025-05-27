@@ -1411,7 +1411,7 @@
 * none  
 
 ### update
-* performance update of camellia-redis-proxy, see [v1.0.19](/docs/redis-proxy/performance-report-8.md)
+* performance update of camellia-redis-proxy, see [v1.0.19](/docs/camellia-redis-proxy/performance-report-8.md)
 
 ### fix
 * fix xinfo/xgroup in KeyParser/pipeline

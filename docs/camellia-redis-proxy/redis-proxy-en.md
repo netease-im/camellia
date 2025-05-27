@@ -19,7 +19,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support custom sharding
 * support ssl/tls, both client to proxy and proxy to upstream redis
 * support unix-domain-socket, client can access proxy by uds
-* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [http](/docs/redis-proxy/other/http.md)
+* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [http](/docs/camellia-redis-proxy/other/http.md)
 * support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
 * support route config refresh online
 * support multi-tenants, then proxy will route business-A to redis1, business-B to redis2 
@@ -32,7 +32,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 
 
 ## Quick Start
-1) you need a spring-boot project first, then add dependency in your pom.xml，like this（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) you need a spring-boot project first, then add dependency in your pom.xml，like this   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
