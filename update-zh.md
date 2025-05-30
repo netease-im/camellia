@@ -512,7 +512,7 @@
 
 # 1.2.8（2023/05/29）
 ### 新增
-* 新增camellia-hot-key模块，具体见：[hot-key](/docs/hot-key/hot-key.md)
+* 新增camellia-hot-key模块，具体见：[hot-key](/docs/camellia-hot-key/hot-key.md)
 * 新增camellia-zk模块，camellia-redis-proxy-zk和camellia-hot-key-zk均引用camellia-zk，从而复用代码
 
 ### 更新
@@ -577,7 +577,7 @@
 
 # 1.2.4（2023/04/03）
 ### 新增
-* 新增camellia-config模块，一个简单的kv配置中心，具体见：[camellia-config](/docs/config/config.md)
+* 新增camellia-config模块，一个简单的kv配置中心，具体见：[camellia-config](/docs/camellia-config/config.md)
 * camellia-redis-proxy新增NacosProxyDynamicConfLoader，一种新的集成nacos的方法，具体见：[dynamic-conf](/docs/camellia-redis-proxy/other/dynamic-conf.md)
 * camellia-redis-proxy中内建的ProxyPlugin支持自定义执行顺序（order），具体见：[plugin](/docs/camellia-redis-proxy/plugin/plugin.md)
 
@@ -720,7 +720,7 @@
 
 # 1.1.9（2022/12/21）
 ### 新增
-* 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/cache/cache.md)
+* 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/camellia-cache/cache.md)
 * camellia-redis-proxy新增对LMPOP和BLMPOP命令的支持（redis7.0）
 
 ### 更新
@@ -795,7 +795,7 @@
 ### 新增
 * 访问camellia-dashboard的相关API时支持自定义header头，感谢[@tasszz2k](https://github.com/tasszz2k)提供该功能
 * camellia-redis-proxy在配置双写时也支持PUBSUB系列命令
-* 新增任务合并工具类，具体见：[toolkit](/docs/redis-client/toolkit.md)
+* 新增任务合并工具类，具体见：[toolkit](/docs/camellia-tools/tools.md)
 
 ### 更新
 * camellia-redis-proxy重构并优化了ReplyDecoder的实现和性能
@@ -857,7 +857,7 @@
 
 # 1.0.61（2022/09/06）
 ### 新增
-* camellia-delay-queue支持使用长轮询接口消费延迟消息，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
+* camellia-delay-queue支持使用长轮询接口消费延迟消息，具体见：[delay-queue](/docs/camellia-delay-queue/delay-queue.md)
 * 新增camellia-console模块，用于管理多组camellia-dashboard集群，感谢[@HongliangChen-963](https://github.com/HongliangChen-963)提供该模块
 * 新增CamelliaStatisticsManager用于管理多个CamelliaStatistics对象
 
@@ -871,7 +871,7 @@
 
 # 1.0.60（2022/08/16）
 ### 新增
-* 新增camellia-delay-queue模块，可以用于实现延迟队列功能，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
+* 新增camellia-delay-queue模块，可以用于实现延迟队列功能，具体见：[delay-queue](/docs/camellia-delay-queue/delay-queue.md)
 * camellia-feign新增failureListener，包括CamelliaNakedClient和CamelliaFeignClient都支持，可以用于监控，也可以用于失败重试
 * camellia-tools新增CamelliaStatistics工具类，可以用于计数、求和、平均值、最大值等的统计
 * camellia-redis新增CamelliaFreq工具类，可以用于频控，包括单机频控和集群频控
@@ -954,7 +954,7 @@
 # 1.0.54（2022/04/07）
 ### 新增
 * 新增CamelliaCircuitBreaker熔断器
-* camellia-feign支持熔断（接入CamelliaCircuitBreaker），支持spring-boot-starter，支持动态配置，具体见：[camellia-feign](/docs/feign/feign.md)
+* camellia-feign支持熔断（接入CamelliaCircuitBreaker），支持spring-boot-starter，支持动态配置，具体见：[camellia-feign](/docs/camellia-feign/feign.md)
 * camellia-redis-proxy自定义ProxyRouteConfUpdater支持删除已有路由，具体见：[路由](/docs/camellia-redis-proxy/auth/route.md)
 
 ### 更新
@@ -1004,8 +1004,8 @@
 
 # 1.0.50（2022/02/17）
 ### 新增
-* camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/redis-client/toolkit.md)
-* camellia-redis新增CamelliaRedisTemplateManager，用于管理不同bid/bgroup的多组CamelliaRedisTemplate，具体见：[dynamic-dashboard](/docs/redis-client/dynamic-dashboard.md)
+* camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/camellia-tools/tools.md)
+* camellia-redis新增CamelliaRedisTemplateManager，用于管理不同bid/bgroup的多组CamelliaRedisTemplate，具体见：[dynamic-dashboard](/docs/camellia-redis-client/dynamic-dashboard.md)
 * camellia-tools新增CamelliaHashedExecutor，用于执行相同hashKey的runnable/callable任务时是相同线程执行
 
 ### 更新
@@ -1096,10 +1096,10 @@
 
 # 1.0.43（2021/11/23）
 ### 新增
-* camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
-* camellia-id-gen的segment和strict模式，regionId字段支持设置偏移量，具体见：[id-gen](/docs/id-gen/id-gen.md)
-* camellia-id-gen的segment模式支持跨单元同步，具体见：[id-gen-segment](/docs/id-gen/segment.md)
-* camellia-id-gen新增解析regionId、workerId等的接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
+* camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/camellia-id-gen/id-gen.md)
+* camellia-id-gen的segment和strict模式，regionId字段支持设置偏移量，具体见：[id-gen](/docs/camellia-id-gen/id-gen.md)
+* camellia-id-gen的segment模式支持跨单元同步，具体见：[id-gen-segment](/docs/camellia-id-gen/segment.md)
+* camellia-id-gen新增解析regionId、workerId等的接口，具体见：[id-gen](/docs/camellia-id-gen/id-gen.md)
 * camellia-redis-proxy支持基于消息队列（kafka等）的异地双写，具体见：[拦截器](/docs/camellia-redis-proxy/interceptor.md)
 
 ### 更新
@@ -1162,7 +1162,7 @@
 
 # 1.0.38（2021/10/11）
 ### 新增
-* 新增camellia-id-gen模块，支持：snowflake策略（支持设置单元标记）、基于数据库的id生成策略（支持设置单元标记，趋势递增）、基于数据库和redis的id生成策略（支持设置单元标记，严格递增），具体见：[id-gen](/docs/id-gen/id-gen.md)
+* 新增camellia-id-gen模块，支持：snowflake策略（支持设置单元标记）、基于数据库的id生成策略（支持设置单元标记，趋势递增）、基于数据库和redis的id生成策略（支持设置单元标记，严格递增），具体见：[id-gen](/docs/camellia-id-gen/id-gen.md)
 * camellia-redis-proxy支持自定义callback通过spring的@Autowired来自动注入，具体见：[spring-autowire](/docs/camellia-redis-proxy/spring-autowire.md)
 
 ### 更新
@@ -1225,8 +1225,8 @@
 # 1.0.34（2021/08/05）
 ### 新增
 * camellia-redis-proxy-hbase重构了string相关命令的冷热分离存储设计，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
-* CamelliaRedisTemplate提供Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/redis-client/redis-client.md)
-* CamelliaRedisTemplate提供SpringRedisTemplate适配器，具体见：[文档](/docs/redis-client/redis-client.md)
+* CamelliaRedisTemplate提供Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/camellia-redis-client/redis-client.md)
+* CamelliaRedisTemplate提供SpringRedisTemplate适配器，具体见：[文档](/docs/camellia-redis-client/redis-client.md)
 * camellia-redis-proxy提供一个不使用spring-boot-starter启动proxy的简单封装工具类CamelliaRedisProxyStarter，具体见：[文档](/docs/camellia-redis-proxy/redis-proxy-zh.md)
 
 ### 更新

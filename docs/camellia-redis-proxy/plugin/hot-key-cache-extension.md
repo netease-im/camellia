@@ -3,7 +3,7 @@
 ### 说明
 
 - 使用场景：单机Proxy或者集群proxy之间需要共享hot-key。
-- 使用[hot-key-sdk](https://github.com/21want28k/camellia/blob/master/docs/hot-key/hot-key.md)，接入hot-key-server服务的插件，从而监控hot-key的状态。
+- 使用[hot-key-sdk](https://github.com/netease-im/camellia/blob/master/docs/camellia-hot-key/hot-key.md)，接入hot-key-server服务的插件，从而监控hot-key的状态。
 - 集群伪cluster模式下直接使用内置HotKey插件，客户端自带功能，会把请求映射到固定的proxy上，所以无需proxy之间共享。
 - 相比与内建的热key监控插件和热key缓存插件，本插件对性能影响较大，**高并发场景下不建议使用**
 

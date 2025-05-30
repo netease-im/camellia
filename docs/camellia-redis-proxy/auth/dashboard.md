@@ -1,6 +1,6 @@
 
 ## 使用camellia-dashboard管理动态路由
-你可以将路由信息托管到远程的camellia-dashboard（见[camellia-dashboard](/docs/dashboard/dashboard.md)）  
+你可以将路由信息托管到远程的camellia-dashboard（见[camellia-dashboard](/docs/camellia-dashboard/dashboard.md)）  
 camellia-dashboard是一个web服务，proxy会定期去检查camellia-dashboard里的配置是否有变更，如果有，则会更新proxy的路由  
 以下是一个配置示例：
 ```yaml

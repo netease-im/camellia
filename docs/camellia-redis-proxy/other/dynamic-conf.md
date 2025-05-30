@@ -117,7 +117,7 @@ k3={"k":"v"}
 ```
 
 ### ApiBasedProxyDynamicConfLoader
-这是proxy内置的另外一个loader，读取的是camellia-config服务器，具体见：[camellia-config](/docs/config/config.md)  
+这是proxy内置的另外一个loader，读取的是camellia-config服务器，具体见：[camellia-config](/docs/camellia-config/config.md)  
 配置方法如下：  
 
 * application.yml
