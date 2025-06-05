@@ -73,7 +73,7 @@ namespace2=namespace2.json
       "keyConfig": "abcdef",
       "checkMillis": 1000,
       "checkThreshold": 100,
-      "expireMills": 10000
+      "expireMillis": 10000
     },
     {
       "name": "rule2",
@@ -81,7 +81,7 @@ namespace2=namespace2.json
       "keyConfig": "xyz",
       "checkMillis": 1000,
       "checkThreshold": 100,
-      "expireMills": 10000
+      "expireMillis": 10000
     },
     {
       "name": "rule3",
@@ -102,7 +102,7 @@ namespace2=namespace2.json
       "type": "match_all",
       "checkMillis": 1000,
       "checkThreshold": 100,
-      "expireMills": 10000
+      "expireMillis": 10000
     }
   ]
 }
