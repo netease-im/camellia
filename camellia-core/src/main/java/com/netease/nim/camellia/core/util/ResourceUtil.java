@@ -78,6 +78,25 @@ public class ResourceUtil {
         return readResources;
     }
 
+    public static List<Set<Resource>> getAllReadResourceList(ResourceTable resourceTable) {
+        List<Set<Resource>> readResources = new ArrayList<>();
+        ResourceTable.Type type = resourceTable.getType();
+        if (type == ResourceTable.Type.SIMPLE) {
+            ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
+            ResourceOperation resourceOperation = simpleTable.getResourceOperation();
+            Set<Resource> set = getAllReadResources(resourceOperation);
+            readResources.add(set);
+        } else if (type == ResourceTable.Type.SHADING) {
+            ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
+            Map<Integer, ResourceOperation> resourceOperationMap = shadingTable.getResourceOperationMap();
+            for (ResourceOperation resourceOperation : resourceOperationMap.values()) {
+                Set<Resource> set = getAllReadResources(resourceOperation);
+                readResources.add(set);
+            }
+        }
+        return readResources;
+    }
+
     public static Set<Resource> getAllWriteResources(ResourceTable resourceTable) {
         Set<Resource> writeResources = new HashSet<>();
         ResourceTable.Type type = resourceTable.getType();

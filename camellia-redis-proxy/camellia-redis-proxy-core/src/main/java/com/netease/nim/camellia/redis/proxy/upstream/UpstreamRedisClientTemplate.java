@@ -412,7 +412,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
                         futureList.add(future);
                     } else {
-                        List<Resource> allReadResources = resourceSelector.getAllReadResources();
+                        List<Resource> allReadResources = resourceSelector.getReadResourcesWithCheckMultiRead();
                         if (cursorCalculator == null || cursorCalculator.getNodeBitLen() != ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size())) {
                             cursorCalculator = new ScanCursorCalculator(ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size()));
                         }

@@ -91,6 +91,51 @@ public class ResourceSelector {
         return allReadResources;
     }
 
+    public List<Resource> getReadResourcesWithCheckMultiRead() {
+        List<Set<Resource>> list = ResourceUtil.getAllReadResourceList(resourceTable);
+        Set<Resource> set = new HashSet<>();
+        for (Set<Resource> resources : list) {
+            //有重复的，直接跳过
+            if (!set.isEmpty()) {
+                boolean skip = false;
+                for (Resource resource : resources) {
+                    if (set.contains(resource)) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+            }
+            //否则只加1个
+            boolean add = false;
+            for (Resource resource : resources) {
+                if (resourceChecker != null) {
+                    if (resourceChecker.checkValid(resource)) {
+                        set.add(resource);
+                        add = true;
+                        break;
+                    }
+                } else {
+                    set.add(resource);
+                    add = true;
+                    break;
+                }
+            }
+            //至少加1个
+            if (!add) {
+                for (Resource resource : resources) {
+                    set.add(resource);
+                    break;
+                }
+            }
+        }
+        List<Resource> result = new ArrayList<>(set);
+        result.sort(Comparator.comparing(Resource::getUrl));
+        return result;
+    }
+
     public List<Resource> getAllWriteResources() {
         return allWriteResources;
     }
