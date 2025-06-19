@@ -12,10 +12,14 @@ import com.netease.nim.camellia.hbase.CamelliaHBaseEnv;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.hbase.conf.CamelliaHBaseConf;
 import com.netease.nim.camellia.hbase.connection.CamelliaHBaseConnectionFactory;
+import com.netease.nim.camellia.hbase.exception.CamelliaHBaseException;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
+import com.netease.nim.camellia.hbase.resource.HBaseTemplateResourceTableUpdater;
 import com.netease.nim.camellia.hbase.util.CamelliaHBaseInitUtil;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +34,8 @@ import java.util.Map;
 @Configuration
 @EnableConfigurationProperties({CamelliaHBaseProperties.class})
 public class CamelliaHBaseConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaHBaseConfiguration.class);
 
     @Bean
     @ConditionalOnMissingBean(value = {ProxyEnv.class})
@@ -122,8 +128,38 @@ public class CamelliaHBaseConfiguration {
                 throw new IllegalArgumentException("only support xml/yml");
             }
             return new CamelliaHBaseTemplate(env, camelliaApi, remote.getBid(), remote.getBgroup(), remote.isMonitor(), remote.getCheckIntervalMillis());
+        } else if (type == CamelliaHBaseProperties.Type.CUSTOM) {
+            CamelliaHBaseProperties.Custom custom = properties.getCustom();
+            String className = custom.getResourceTableUpdaterClassName();
+            if (className == null) {
+                throw new IllegalArgumentException("resourceTableUpdaterClassName missing");
+            }
+            HBaseTemplateResourceTableUpdater updater;
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(className);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+                }
+                updater = (HBaseTemplateResourceTableUpdater) clazz.getConstructor().newInstance();
+                logger.info("HBaseTemplateResourceTableUpdater init success, class = {}", className);
+            } catch (Exception e) {
+                logger.error("HBaseTemplateResourceTableUpdater init error, class = {}", className, e);
+                throw new CamelliaHBaseException(e);
+            }
+            Map<String, String> conf = custom.getConf();
+            CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
+            for (Map.Entry<String, String> entry : conf.entrySet()) {
+                camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
+            }
+            CamelliaHBaseEnv env = new CamelliaHBaseEnv.Builder()
+                    .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
+                    .proxyEnv(proxyEnv())
+                    .build();
+            return new CamelliaHBaseTemplate(env, updater);
         } else {
-            throw new IllegalArgumentException("only support local/remote");
+            throw new IllegalArgumentException("only support local/remote/custom");
         }
     }
 }

@@ -7,7 +7,9 @@ import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.resource.HBaseResourceWrapper;
+import com.netease.nim.camellia.hbase.resource.HBaseTemplateResourceTableUpdater;
 import com.netease.nim.camellia.hbase.util.CamelliaHBaseInitUtil;
+import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 
@@ -25,9 +27,11 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
     private static final boolean defaultMonitorEnable = false;
 
     private final ReloadableProxyFactory<CamelliaHBaseClientImpl> factory;
+    private final CamelliaApi service;
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, CamelliaApi service, long bid, String bgroup,
                                  boolean monitorEnable, long checkIntervalMillis) {
+        this.service = service;
         this.factory = new ReloadableProxyFactory.Builder<CamelliaHBaseClientImpl>()
                 .service(new ApiServiceWrapper(service, env))
                 .clazz(CamelliaHBaseClientImpl.class)
@@ -37,6 +41,28 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
                 .checkIntervalMillis(checkIntervalMillis)
                 .proxyEnv(env.getProxyEnv())
                 .build();
+    }
+
+    public CamelliaHBaseTemplate(CamelliaHBaseEnv env, HBaseTemplateResourceTableUpdater updater) {
+        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), HBaseResourceUtil.HBaseResourceTableChecker),
+                defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+        updater.addCallback(new ResourceTableUpdateCallback() {
+            @Override
+            public void callback(ResourceTable resourceTable) {
+                if (service instanceof LocalDynamicCamelliaApi) {
+                    ((LocalDynamicCamelliaApi) service).updateResourceTable(resourceTable);
+                }
+                reloadResourceTable();
+            }
+        });
+    }
+
+    public final void reloadResourceTable() {
+        factory.reload(false);
+    }
+
+    public CamelliaHBaseTemplate(HBaseTemplateResourceTableUpdater updater) {
+        this(CamelliaHBaseEnv.defaultHBaseEnv(), updater);
     }
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, String url, long bid, String bgroup,

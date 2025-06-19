@@ -119,7 +119,7 @@ public class CamelliaRedisConfiguration {
             CamelliaRedisProperties.Custom custom = properties.getCustom();
             String className = custom.getResourceTableUpdaterClassName();
             if (className == null) {
-                throw new IllegalArgumentException("proxyRouteConfUpdaterClassName missing");
+                throw new IllegalArgumentException("resourceTableUpdaterClassName missing");
             }
             RedisTemplateResourceTableUpdater updater;
             try {

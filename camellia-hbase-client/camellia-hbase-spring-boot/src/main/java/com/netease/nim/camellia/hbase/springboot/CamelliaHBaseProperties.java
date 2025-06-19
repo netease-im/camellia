@@ -14,6 +14,7 @@ public class CamelliaHBaseProperties {
     private Type type = Type.LOCAL;
     private Local local = new Local();
     private Remote remote;
+    private Custom custom;
 
     public Type getType() {
         return type;
@@ -37,6 +38,14 @@ public class CamelliaHBaseProperties {
 
     public void setRemote(Remote remote) {
         this.remote = remote;
+    }
+
+    public Custom getCustom() {
+        return custom;
+    }
+
+    public void setCustom(Custom custom) {
+        this.custom = custom;
     }
 
     public static class Local {
@@ -294,10 +303,32 @@ public class CamelliaHBaseProperties {
         }
     }
 
+    public static class Custom {
+        private String resourceTableUpdaterClassName;
+        private Map<String, String> conf = new HashMap<>();
+
+        public String getResourceTableUpdaterClassName() {
+            return resourceTableUpdaterClassName;
+        }
+
+        public void setResourceTableUpdaterClassName(String resourceTableUpdaterClassName) {
+            this.resourceTableUpdaterClassName = resourceTableUpdaterClassName;
+        }
+
+        public Map<String, String> getConf() {
+            return conf;
+        }
+
+        public void setConf(Map<String, String> conf) {
+            this.conf = conf;
+        }
+    }
+
 
     public static enum Type {
         LOCAL,
         REMOTE,
+        CUSTOM,
         ;
     }
 }
