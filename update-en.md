@@ -4,13 +4,14 @@
 # 1.3.6（2025/05/xx）
 ### add
 * camellia-redis-proxy, kv, support set lru-cache max capacity by namespace/name
+* camellia-hbase-client, support custom config mode
 
 ### update
 * camellia-redis-proxy, kv, improve batch-get/batch-exists
 * camellia-redis-proxy, optimize console api /detect
 
 ### fix
-* none
+* camellia-redis-proxy, fix scan logic of multi-read route conf
 
 
 # 1.3.5（2025/04/14）

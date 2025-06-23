@@ -4,13 +4,14 @@
 # 1.3.6（2025/05/xx）
 ### 新增
 * camellia-redis-proxy，kv，支持根据namespace和name设置lru-cache的最大容量
+* camellia-hbase-client，支持custom模式来获取配置
 
 ### 更新
 * camellia-redis-proxy，kv，优化了obkv-client的batchGet和batchExists性能
 * camellia-redis-proxy，优化了console下/detect的实现
 
 ### fix
-* 无
+* camellia-redis-proxy，修复了multi-read配置下，scan方法的逻辑
 
 
 # 1.3.5（2025/04/14）
