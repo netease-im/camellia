@@ -4,12 +4,12 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-segment-spring-boot-starter</artifactId>
-    <version>1.3.5</version>
+    <version>1.3.6</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-id-loader</artifactId>
-    <version>1.3.5</version>
+    <version>1.3.6</version>
 </dependency>
 ```
 

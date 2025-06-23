@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.3.6（2025/05/xx）
+# 1.3.6（2025/06/23）
 ### add
 * camellia-redis-proxy, kv, support set lru-cache max capacity by namespace/name
 * camellia-hbase-client, support custom config mode

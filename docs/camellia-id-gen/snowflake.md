@@ -88,7 +88,7 @@ http://127.0.0.1:8081/camellia/id/gen/snowflake/decodeSequence?id=11111
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-sdk</artifactId>
-    <version>1.3.5</version>
+    <version>1.3.6</version>
 </dependency>
 ```
 示例代码如下：  
