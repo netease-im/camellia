@@ -31,8 +31,5 @@ compressed/
 
 /bin/
 
-<<<<<<< HEAD
 *.flattened-pom.xml
-=======
-*.flattened-pom.xml
->>>>>>> v1.3.3
+.idea/

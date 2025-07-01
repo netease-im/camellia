@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/camellia-redis-proxy/camellia-redis-proxy-extensions/camellia-redis-proxy-hbase/camellia-redis-proxy-hbase.iml" filepath="$PROJECT_DIR$/camellia-redis-proxy/camellia-redis-proxy-extensions/camellia-redis-proxy-hbase/camellia-redis-proxy-hbase.iml" />
-      <module fileurl="file://$PROJECT_DIR$/camellia-redis-proxy/camellia-redis-proxy-spring-boot-starters/camellia-redis-proxy-hbase-spring-boot-starter/camellia-redis-proxy-hbase-spring-boot-starter.iml" filepath="$PROJECT_DIR$/camellia-redis-proxy/camellia-redis-proxy-spring-boot-starters/camellia-redis-proxy-hbase-spring-boot-starter/camellia-redis-proxy-hbase-spring-boot-starter.iml" />
-    </modules>
-  </component>
-</project>

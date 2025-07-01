@@ -84,7 +84,7 @@ latest version is 1.3.7-SNAPSHOT
   <repository>
     <id>sonatype-snapshots</id>
     <name>Sonatype Snapshot Repository</name>
-    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    <url>https://central.sonatype.com/repository/maven-snapshots/</url>
     <snapshots>
       <enabled>true</enabled>
     </snapshots>
