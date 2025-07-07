@@ -13,6 +13,11 @@
 	</parent>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis</artifactId>
+			<version>${revision}</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

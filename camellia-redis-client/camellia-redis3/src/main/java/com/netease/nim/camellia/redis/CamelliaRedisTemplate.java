@@ -202,7 +202,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         StandardProxyGenerator<CamelliaRedisPipelineImpl> generator = new StandardProxyGenerator<>(CamelliaRedisPipelineImpl.class,
                 resourceTable, null, pipelineProxyEnv);
         CamelliaRedisPipelineImpl pipelineProxy = generator.generate();
-        return new CamelliaRedisPipeline(pipelineProxy, queable, redisClientPool, pipelinePool);
+        ResourceSelector resourceSelector = new ResourceSelector(resourceTable, pipelineProxyEnv);
+        return new CamelliaRedisPipeline(pipelineProxy, queable, redisClientPool, pipelinePool, resourceSelector);
     }
 
     @Override

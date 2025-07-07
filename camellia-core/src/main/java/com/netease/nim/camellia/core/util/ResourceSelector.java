@@ -31,6 +31,7 @@ public class ResourceSelector {
     private final Set<Resource> allResources;
     private final List<Resource> allReadResources;
     private final List<Resource> allWriteResources;
+    private final boolean isMultiReadMode;
 
     private final long createTime = System.currentTimeMillis();
 
@@ -59,8 +60,9 @@ public class ResourceSelector {
         Set<Resource> writeResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
         writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
         this.allWriteResources = Collections.unmodifiableList(new ArrayList<>(writeResources));
+        this.isMultiReadMode = isMultiReadMode(resourceTable);
         //
-        if (resourceChecker != null && isMultiReadMode(resourceTable)) {
+        if (resourceChecker != null && isMultiReadMode) {
             for (Resource resource : allReadResources) {
                 resourceChecker.addResource(resource);
             }
@@ -234,6 +236,14 @@ public class ResourceSelector {
             resources = nextResources;
         }
         return resources;
+    }
+
+    /**
+     * isMultiReadMode
+     * @return true/false
+     */
+    public boolean isMultiReadMode() {
+        return isMultiReadMode;
     }
 
     private Resource getReadResource(ReadResources readResources) {

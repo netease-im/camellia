@@ -1,14 +1,19 @@
 package com.netease.nim.camellia.redis.pipeline;
 
+import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.core.util.ResourceSelector;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.tools.utils.BytesKey;
+import com.netease.nim.camellia.tools.utils.Pair;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.GeoRadiusParam;
 import redis.clients.jedis.params.ZAddParams;
 import redis.clients.jedis.params.ZIncrByParams;
+import redis.clients.jedis.util.JedisClusterCRC16;
+import redis.clients.jedis.util.SafeEncoder;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -21,19 +26,24 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
 
     private final AtomicBoolean close = new AtomicBoolean(false);
 
-    private final ICamelliaRedisPipeline pipeline;
+    private final ICamelliaRedisPipeline0 pipeline;
     private final ResponseQueable queable;
     private final RedisClientPool redisClientPool;
     private final PipelinePool pipelinePool;
+    private final ResourceSelector resourceSelector;
 
-    public CamelliaRedisPipeline(ICamelliaRedisPipeline pipeline,
+    private final List<Runnable> syncCallbackList = new ArrayList<>();
+
+    public CamelliaRedisPipeline(ICamelliaRedisPipeline0 pipeline,
                                  ResponseQueable queable,
                                  RedisClientPool redisClientPool,
-                                 PipelinePool pipelinePool) {
+                                 PipelinePool pipelinePool,
+                                 ResourceSelector resourceSelector) {
         this.pipeline = pipeline;
         this.queable = queable;
         this.redisClientPool = redisClientPool;
         this.pipelinePool = pipelinePool;
+        this.resourceSelector = resourceSelector;
     }
 
     @Override
@@ -43,6 +53,13 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
         } finally {
             queable.clear();
             redisClientPool.clear();
+            try {
+                for (Runnable runnable : syncCallbackList) {
+                    runnable.run();
+                }
+            } finally {
+                syncCallbackList.clear();
+            }
         }
     }
 
@@ -1629,5 +1646,179 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
     public Response<Long> zcount(String key, String min, String max) {
         check();
         return pipeline.zcount(key, min, max);
+    }
+
+
+    @Override
+    public Response<List<byte[]>> mget(byte[]... keys) {
+        check();
+        final List<BytesKey> keyList = new ArrayList<>(keys.length);
+        Map<Resource, List<BytesKey>> map = new HashMap<>();
+        for (byte[] key : keys) {
+            BytesKey bytesKey = new BytesKey(key);
+            keyList.add(bytesKey);
+            Resource resource = resourceSelector.getReadResource(key);
+            List<BytesKey> bytesKeys = map.computeIfAbsent(resource, k -> new ArrayList<>());
+            bytesKeys.add(bytesKey);
+        }
+        final List<Pair<List<BytesKey>, Response<List<byte[]>>>> responseList = new ArrayList<>();
+        if (multiKeyReadCommandDegrade()) {
+            for (Map.Entry<Resource, List<BytesKey>> entry : map.entrySet()) {
+                List<BytesKey> bytesKeyList = entry.getValue();
+                for (BytesKey key : bytesKeyList) {
+                    Response<List<byte[]>> response = pipeline.mget0(key.getKey(), key.getKey());
+                    responseList.add(new Pair<>(Collections.singletonList(key), response));
+                }
+            }
+        } else {
+            for (Map.Entry<Resource, List<BytesKey>> entry : map.entrySet()) {
+                Resource resource = entry.getKey();
+                List<BytesKey> bytesKeyList = entry.getValue();
+                if (RedisResourceUtil.isClusterResource(resource)) {
+                    Map<Integer, List<BytesKey>> slotKeyMap = new HashMap<>();
+                    for (BytesKey bytesKey : bytesKeyList) {
+                        int slot = JedisClusterCRC16.getSlot(bytesKey.getKey());
+                        List<BytesKey> bytesKeys = slotKeyMap.computeIfAbsent(slot, k -> new ArrayList<>());
+                        bytesKeys.add(bytesKey);
+                    }
+                    for (Map.Entry<Integer, List<BytesKey>> subEntry : slotKeyMap.entrySet()) {
+                        List<BytesKey> list = subEntry.getValue();
+                        List<byte[]> subList = new ArrayList<>(bytesKeyList.size());
+                        for (BytesKey bytesKey : list) {
+                            subList.add(bytesKey.getKey());
+                        }
+                        Response<List<byte[]>> response = pipeline.mget0(subList.get(0), subList.toArray(new byte[0][0]));
+                        responseList.add(new Pair<>(list, response));
+                    }
+                } else {
+                    List<byte[]> subList = new ArrayList<>(bytesKeyList.size());
+                    for (BytesKey bytesKey : bytesKeyList) {
+                        subList.add(bytesKey.getKey());
+                    }
+                    Response<List<byte[]>> response = pipeline.mget0(subList.get(0), subList.toArray(new byte[0][0]));
+                    responseList.add(new Pair<>(bytesKeyList, response));
+                }
+            }
+        }
+
+        final Response<List<byte[]>> response = new Response<>(BuilderFactory.BYTE_ARRAY_LIST);
+        syncCallbackList.add(() -> {
+            try {
+                List<byte[]> result = new ArrayList<>(keyList.size());
+                Map<BytesKey, byte[]> resultMap = new HashMap<>();
+                for (Pair<List<BytesKey>, Response<List<byte[]>>> pair : responseList) {
+                    List<BytesKey> bytesKeyList = pair.getFirst();
+                    Response<List<byte[]>> listResponse = pair.getSecond();
+                    List<byte[]> list = listResponse.get();
+                    for (int i=0; i<bytesKeyList.size(); i++) {
+                        resultMap.put(bytesKeyList.get(i), list.get(i));
+                    }
+                }
+                for (BytesKey bytesKey : keyList) {
+                    byte[] value = resultMap.get(bytesKey);
+                    result.add(value);
+                }
+                response.set(result);
+            } catch (Exception e) {
+                response.set(e);
+            }
+        });
+        return response;
+    }
+
+    @Override
+    public Response<List<String>> mget(String... keys) {
+        check();
+        final List<String> keyList = new ArrayList<>(keys.length);
+        Map<Resource, List<String>> map = new HashMap<>();
+        for (String key : keys) {
+            keyList.add(key);
+            Resource resource = resourceSelector.getReadResource(SafeEncoder.encode(key));
+            List<String> bytesKeys = map.computeIfAbsent(resource, k -> new ArrayList<>());
+            bytesKeys.add(key);
+        }
+        final List<Pair<List<String>, Response<List<String>>>> responseList = new ArrayList<>();
+        if (multiKeyReadCommandDegrade()) {
+            for (Map.Entry<Resource, List<String>> entry : map.entrySet()) {
+                List<String> stringList = entry.getValue();
+                for (String key : stringList) {
+                    Response<List<String>> response = pipeline.mget0(key, key);
+                    responseList.add(new Pair<>(Collections.singletonList(key), response));
+                }
+            }
+        } else {
+            for (Map.Entry<Resource, List<String>> entry : map.entrySet()) {
+                Resource resource = entry.getKey();
+                List<String> stringList = entry.getValue();
+                if (RedisResourceUtil.isClusterResource(resource)) {
+                    Map<Integer, List<String>> slotKeyMap = new HashMap<>();
+                    for (String bytesKey : stringList) {
+                        int slot = JedisClusterCRC16.getSlot(bytesKey);
+                        List<String> strings = slotKeyMap.computeIfAbsent(slot, k -> new ArrayList<>());
+                        strings.add(bytesKey);
+                    }
+                    for (Map.Entry<Integer, List<String>> subEntry : slotKeyMap.entrySet()) {
+                        List<String> list = subEntry.getValue();
+                        Response<List<String>> response = pipeline.mget0(list.get(0), list.toArray(new String[0]));
+                        responseList.add(new Pair<>(list, response));
+                    }
+                } else {
+                    Response<List<String>> response = pipeline.mget0(stringList.get(0), stringList.toArray(new String[0]));
+                    responseList.add(new Pair<>(stringList, response));
+                }
+            }
+        }
+
+        final Response<List<String>> response = new Response<>(BuilderFactory.STRING_LIST);
+        syncCallbackList.add(() -> {
+            try {
+                List<byte[]> result = new ArrayList<>(keyList.size());
+                Map<String, String> resultMap = new HashMap<>();
+                for (Pair<List<String>, Response<List<String>>> pair : responseList) {
+                    List<String> stringList = pair.getFirst();
+                    Response<List<String>> listResponse = pair.getSecond();
+                    List<String> list = listResponse.get();
+                    for (int i=0; i<stringList.size(); i++) {
+                        resultMap.put(stringList.get(i), list.get(i));
+                    }
+                }
+                for (String bytesKey : keyList) {
+                    String value = resultMap.get(bytesKey);
+                    if (value == null) {
+                        result.add(null);
+                    } else {
+                        result.add(SafeEncoder.encode(value));
+                    }
+                }
+                response.set(result);
+            } catch (Exception e) {
+                response.set(e);
+            }
+        });
+        return response;
+    }
+
+    private boolean multiKeyReadCommandDegrade() {
+        return resourceSelector.isMultiReadMode() && containsReadRedisClusterResource() && containsReadNotRedisClusterResource();
+    }
+
+    private boolean containsReadRedisClusterResource() {
+        List<Resource> allReadResources = resourceSelector.getAllReadResources();
+        for (Resource resource : allReadResources) {
+            if (RedisResourceUtil.isClusterResource(resource)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsReadNotRedisClusterResource() {
+        List<Resource> allReadResources = resourceSelector.getAllReadResources();
+        for (Resource resource : allReadResources) {
+            if (!RedisResourceUtil.isClusterResource(resource)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

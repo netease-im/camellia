@@ -561,4 +561,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<String> restore(byte[] key, int ttl, byte[] serializedValue);
 
     Response<String> restore(String key, int ttl, byte[] serializedValue);
+
+    Response<List<byte[]>> mget(byte[]... keys);
+
+    Response<List<String>> mget(String... keys);
 }

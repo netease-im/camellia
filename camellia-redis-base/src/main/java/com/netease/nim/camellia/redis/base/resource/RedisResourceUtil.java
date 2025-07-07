@@ -433,6 +433,23 @@ public class RedisResourceUtil {
         return map;
     }
 
+    public static boolean isClusterResource(Resource resource) {
+        Resource redisResource = parseResourceByUrl(resource);
+        if (redisResource instanceof RedisClusterResource) {
+            return true;
+        }
+        if (redisResource instanceof RedisClusterSlavesResource) {
+            return true;
+        }
+        if (redisResource instanceof RedissClusterResource) {
+            return true;
+        }
+        if (redisResource instanceof RedissClusterSlavesResource) {
+            return true;
+        }
+        return false;
+    }
+
     public static String[] getUserNameAndPassword(String str) {
         if (str == null) {
             return new String[2];

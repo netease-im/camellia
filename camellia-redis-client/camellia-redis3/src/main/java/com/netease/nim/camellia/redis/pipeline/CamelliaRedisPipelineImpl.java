@@ -29,7 +29,7 @@ import java.util.Set;
  * 封装了pipeline的接口
  * Created by caojiajun on 2019/7/22.
  */
-public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
+public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline0 {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisPipelineImpl.class);
 
@@ -5336,4 +5336,56 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
             after(key, command);
         }
     }
+
+
+    @Override
+    public Response<List<byte[]>> mget(byte[]... keys) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Response<List<String>> mget(String... keys) {
+        throw new UnsupportedOperationException();
+    }
+
+    @ReadOp
+    @Override
+    public Response<List<byte[]>> mget0(@ShardingParam byte[] shardingKey, byte[]... keys) {
+        LogUtil.debugLog(resource, shardingKey);
+        String command = "mget0(byte[] shardingKey, byte[]... keys)";
+        before(shardingKey, command);
+        try {
+            Client client = clientPool.getClient(resource, shardingKey);
+            client.mget(keys);
+            return queable.getResponse(client, BuilderFactory.BYTE_ARRAY_LIST, resource, shardingKey, new ResponseQueable.Fallback() {
+                @Override
+                public void invoke(Client client) {
+                    client.mget(keys);
+                }
+            });
+        } finally {
+            after(shardingKey, command);
+        }
+    }
+
+    @ReadOp
+    @Override
+    public Response<List<String>> mget0(@ShardingParam String shardingKey, String... keys) {
+        LogUtil.debugLog(resource, shardingKey);
+        String command = "mget0(String shardingKey, String... keys)";
+        before(shardingKey, command);
+        try {
+            Client client = clientPool.getClient(resource, SafeEncoder.encode(shardingKey));
+            client.mget(keys);
+            return queable.getResponse(client, BuilderFactory.STRING_LIST, resource, shardingKey, new ResponseQueable.Fallback() {
+                @Override
+                public void invoke(Client client) {
+                    client.mget(keys);
+                }
+            });
+        } finally {
+            after(shardingKey, command);
+        }
+    }
+
 }
