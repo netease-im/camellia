@@ -1,5 +1,15 @@
 [ENGLISH](update-en.md)
 
+# 1.3.7（2025/xx/xx）
+### 新增
+* camellia-redis-client，pipeline操作支持multiKey的命令，如mget等，感谢 [@TherChenYang](https://github.com/TherChenYang)
+
+### 更新
+* 无
+
+### fix
+* camellia-delay-queue-sdk-spring-boot，优化初始化逻辑，避免bean互相依赖场景下没有注册CamelliaDelayMsgListener，感谢 [@logan2013](https://github.com/logan2013)
+
 
 # 1.3.6（2025/06/23）
 ### 新增

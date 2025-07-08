@@ -1,5 +1,15 @@
 [中文版](update-zh.md)
 
+# 1.3.7（2025/xx/xx）
+### add
+* camellia-redis-client, pipeline support multiKey commands, thanks [@TherChenYang](https://github.com/TherChenYang)
+
+### update
+* none
+
+### fix
+* camellia-delay-queue-sdk-spring-boot, move listener registration logic to BeanPostProcessor, thanks [@logan2013](https://github.com/logan2013)
+
 
 # 1.3.6（2025/06/23）
 ### add
