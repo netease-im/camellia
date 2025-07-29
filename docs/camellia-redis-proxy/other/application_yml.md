@@ -15,7 +15,7 @@ camellia-redis-proxy:
   tls-port: -1 #tls port if tls enabled
   proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider # tls provider
   http-port: -1 #http port for resp-over-http
-  cport: -1 #inner port for heartbeat when cluster-mode-enable enabled
+  cport: -1
   uds-path: "/tmp/xxx.sock" #unix-domain-socket file path
   proxy-protocol-enable: false #enabled proxy protocol
   proxy-protocol-ports: "" #enabled proxy protocol ports, default all

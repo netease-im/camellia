@@ -1,7 +1,7 @@
 
 ## PROXY命令
 
-PROXY命令用于查询和操作proxy本身的一些配置
+PROXY命令用于查询和操作proxy本身的一些配置，1.3.0开始，限制为只允许通过cport去执行本命令
 
 ### 查询基本信息(proxy info)
 示例： 
