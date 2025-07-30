@@ -66,6 +66,12 @@ public class CamelliaHBaseConnection {
                         configuration.set(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL, HBaseConstants.HBASE_CLIENT_CONNECTION_LINDORM_IMPL);
                     }
                 }
+                Map<String, String> configMap = hBaseResource.getConfigMap();
+                if (configMap != null && !configMap.isEmpty()) {
+                    for (Map.Entry<String, String> entry : configMap.entrySet()) {
+                        configuration.set(entry.getKey(), entry.getValue());
+                    }
+                }
             }
             this.configuration = configuration;
             this.connection = ConnectionFactory.createConnection(configuration);

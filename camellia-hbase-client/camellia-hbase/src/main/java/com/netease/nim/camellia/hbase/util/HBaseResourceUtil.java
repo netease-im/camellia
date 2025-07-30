@@ -75,27 +75,31 @@ public class HBaseResourceUtil {
         String zk = split[0];
         String str = split[1];
         String zkParent;
-        String userName = null;
-        String password = null;
-        Boolean lindorm = null;
+
+        if (zk == null || zk.isEmpty()) {
+            throw new IllegalArgumentException("zk is empty");
+        }
+
         if (!str.contains("?")) {
             zkParent = "/" + str;
+            return new HBaseResource(zk, zkParent);
         } else {
             String[] strings = str.split("\\?");
             zkParent = "/" + strings[0];
             if (strings.length > 1) {
                 Map<String, String> params = getParams(strings[1]);
-                userName = params.get("userName");
-                password = params.get("password");
                 String lindormStr = params.get("lindorm");
-                lindorm = lindormStr == null ? null : lindormStr.equalsIgnoreCase(Boolean.TRUE.toString());
+                boolean lindorm = lindormStr != null && lindormStr.equalsIgnoreCase(Boolean.TRUE.toString());
+                if (lindorm) {
+                    String userName = params.get("userName");
+                    String password = params.get("password");
+                    return new HBaseResource(zk, zkParent, userName, password, true);
+                }
+                return new HBaseResource(zk, zkParent, params);
+            } else {
+                return new HBaseResource(zk, zkParent);
             }
         }
-        HBaseResource hBaseResource = new HBaseResource(zk, zkParent, userName, password, lindorm);
-        if (zk == null || zk.isEmpty()) {
-            throw new IllegalArgumentException("zk is empty");
-        }
-        return hBaseResource;
     }
 
     public static Map<String, String> getParams(String queryString) {

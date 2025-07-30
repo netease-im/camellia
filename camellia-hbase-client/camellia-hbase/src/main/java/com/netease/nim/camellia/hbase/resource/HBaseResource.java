@@ -2,6 +2,10 @@ package com.netease.nim.camellia.hbase.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
 
 /**
  *
@@ -11,19 +15,28 @@ public class HBaseResource extends Resource {
 
     public static final String prefix = "hbase://";
 
+    private enum Type {
+        hbase,
+        lindorm,
+        obkv,
+        ;
+    }
+
     private final String zk;
     private final String zkParent;
-    private final String userName;
-    private final String password;
-    private final Boolean lindorm;
 
-    private final Boolean obkv;
+    private String userName;
+    private String password;
+
+    private Type type = Type.hbase;
 
     private String obkvParamUrl;
     private String obkvFullUserName;
     private String obkvPassword;
     private String obkvSysUserName;
     private String obkvSysPassword;
+
+    private Map<String, String> configMap;
 
     public HBaseResource(String zk, String zkParent) {
         this(zk, zkParent, null, null);
@@ -38,7 +51,7 @@ public class HBaseResource extends Resource {
         this.zkParent = null;
         this.userName = null;
         this.password = null;
-        this.lindorm = null;
+        this.type = Type.obkv;
         this.obkvParamUrl = obkvParamUrl;
         this.obkvFullUserName = obkvFullUserName;
         this.obkvPassword = obkvPassword;
@@ -51,7 +64,6 @@ public class HBaseResource extends Resource {
                 "obkvSysUserName=" + obkvSysUserName + "&" +
                 "obkvSysPassword=" + obkvSysPassword;
         setUrl(url);
-        this.obkv = true;
     }
 
     public HBaseResource(String zk, String zkParent, String userName, String password, Boolean lindorm) {
@@ -59,8 +71,9 @@ public class HBaseResource extends Resource {
         this.zkParent = zkParent;
         this.userName = userName;
         this.password = password;
-        this.lindorm = lindorm;
-        this.obkv = null;
+        if (lindorm != null && lindorm) {
+            this.type = Type.lindorm;
+        }
         StringBuilder builder = new StringBuilder();
         builder.append(prefix);
         builder.append(zk).append(zkParent);
@@ -82,6 +95,33 @@ public class HBaseResource extends Resource {
         setUrl(builder.toString());
     }
 
+    public HBaseResource(String zk, String zkParent, Map<String, String> configMap) {
+        this.zk = zk;
+        this.zkParent = zkParent;
+        StringBuilder builder = new StringBuilder();
+        builder.append(prefix);
+        builder.append(zk).append(zkParent);
+        if (configMap != null && !configMap.isEmpty()) {
+            TreeMap<String, String> treeMap = new TreeMap<>(configMap);
+            builder.append("?");
+            for (Map.Entry<String, String> entry : treeMap.entrySet()) {
+                if (entry.getKey().equals("userName")) {
+                    this.userName = entry.getValue();
+                } else if (entry.getKey().equals("password")) {
+                    this.password = entry.getValue();
+                }
+                builder.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+            }
+            if (builder.charAt(builder.length() - 1) == '&') {
+                builder.deleteCharAt(builder.length() - 1);
+            }
+            this.configMap = new HashMap<>(configMap);
+            this.configMap.remove("userName");
+            this.configMap.remove("password");
+        }
+        setUrl(builder.toString());
+    }
+
     public String getZk() {
         return zk;
     }
@@ -99,11 +139,15 @@ public class HBaseResource extends Resource {
     }
 
     public boolean isLindorm() {
-        return lindorm != null && lindorm;
+        return type == Type.lindorm;
     }
 
     public boolean isObkv() {
-        return obkv != null && obkv;
+        return type == Type.obkv;
+    }
+
+    public Map<String, String> getConfigMap() {
+        return new HashMap<>(configMap);
     }
 
     public String getObkvParamUrl() {
