@@ -1,7 +1,7 @@
 
 # camellia-redis 
 ## 简介
-基于camellia-core和jedis（2.9.3/3.6.3）开发并增强的Redis客户端CamelliaRedisTemplate  
+基于camellia-core和jedis（2.9.3/3.6.3/5.2.0）开发并增强的Redis客户端CamelliaRedisTemplate  
 
 ## feature
 * enhanced-redis-client
@@ -47,6 +47,14 @@
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis3</artifactId>
   <version>1.3.6</version>
+</dependency>
+```
+* 底层依赖jedis-5.2.0
+```
+<dependency>
+  <groupId>com.netease.nim</groupId>
+  <artifactId>camellia-redis5</artifactId>
+  <version>1.3.7-SNAPSHOT</version>
 </dependency>
 ```
 

@@ -20,6 +20,7 @@
 		<module>camellia-redis5</module>
 		<module>camellia-redis-toolkit</module>
 		<module>camellia-redis3-toolkit</module>
+		<module>camellia-redis5-toolkit</module>
 		<module>camellia-redis-spring-boot-starters</module>
 	</modules>
 </project>

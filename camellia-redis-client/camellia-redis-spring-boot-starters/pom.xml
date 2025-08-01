@@ -23,17 +23,23 @@
 		<module>camellia-redis-eureka-spring-boot3-starter</module>
 		<module>camellia-redis3-eureka-spring-boot-starter</module>
 		<module>camellia-redis3-eureka-spring-boot3-starter</module>
+		<module>camellia-redis5-eureka-spring-boot-starter</module>
+		<module>camellia-redis5-eureka-spring-boot3-starter</module>
 
 		<module>camellia-redis-spring-boot</module>
 		<module>camellia-redis-spring-boot-starter</module>
 		<module>camellia-redis-spring-boot3-starter</module>
 		<module>camellia-redis3-spring-boot-starter</module>
 		<module>camellia-redis3-spring-boot3-starter</module>
+		<module>camellia-redis5-spring-boot-starter</module>
+		<module>camellia-redis5-spring-boot3-starter</module>
 
 		<module>camellia-redis-zk-discovery-spring-boot</module>
 		<module>camellia-redis-zk-discovery-spring-boot-starter</module>
 		<module>camellia-redis-zk-discovery-spring-boot3-starter</module>
 		<module>camellia-redis3-zk-discovery-spring-boot-starter</module>
 		<module>camellia-redis3-zk-discovery-spring-boot3-starter</module>
+		<module>camellia-redis5-zk-discovery-spring-boot-starter</module>
+		<module>camellia-redis5-zk-discovery-spring-boot3-starter</module>
 	</modules>
 </project>
