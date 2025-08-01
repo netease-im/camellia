@@ -65,6 +65,7 @@
 		<netty-incubator-codec-native-quic.version>0.0.73.Final</netty-incubator-codec-native-quic.version>
 		<jedis.version>2.9.3</jedis.version>
 		<jedis3.version>3.6.3</jedis3.version>
+		<jedis5.version>5.2.0</jedis5.version>
 		<concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
 		<hbase-client.version>2.2.6</hbase-client.version>
 		<curator.version>2.12.0</curator.version>
