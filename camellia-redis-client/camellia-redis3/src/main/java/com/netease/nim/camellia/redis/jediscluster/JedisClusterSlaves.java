@@ -75,7 +75,8 @@ public class JedisClusterSlaves {
                             ReadOnlyJedisPool pool = poolMap.get(key);
                             if (pool == null) {
                                 pool = new ReadOnlyJedisPool(poolConfig, hostAndPort.getHost(), hostAndPort.getPort(),
-                                        connectionTimeout, soTimeout, resource.getPassword(), 0, null, false, null, null, null);
+                                        connectionTimeout, soTimeout, resource.getUserName(), resource.getPassword(),
+                                        0, null, false, null, null, null);
                                 newPoolMap.put(key, pool);
                             } else {
                                 newPoolMap.put(key, pool);
