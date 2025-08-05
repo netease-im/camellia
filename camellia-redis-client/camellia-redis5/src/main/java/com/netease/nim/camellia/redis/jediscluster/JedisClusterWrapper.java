@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -173,6 +174,33 @@ public class JedisClusterWrapper extends JedisCluster {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             throw new CamelliaRedisException(e);
+        }
+    }
+
+    private int slaveSize = -1;
+    private long slaveSizeCheckTime = -1;
+    private final AtomicBoolean checking = new AtomicBoolean(false);
+
+    public int getSlaveSize() {
+        try {
+            if (System.currentTimeMillis() - slaveSizeCheckTime > 1000L) {
+                if (checking.compareAndSet(false, true)) {
+                    try {
+                        List<ConnectionPool>[] replicaSlots = (List<ConnectionPool>[]) replicaSlotsField.get(cache);
+                        if (replicaSlots != null && replicaSlots.length > 0) {
+                            slaveSize = (replicaSlots[0]).size();
+                        } else {
+                            slaveSize = 0;
+                        }
+                        slaveSizeCheckTime = System.currentTimeMillis();
+                    } finally {
+                        checking.compareAndSet(true, false);
+                    }
+                }
+            }
+            return slaveSize;
+        } catch (Exception e) {
+            return slaveSize;
         }
     }
 

@@ -71,11 +71,15 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
 
     private NodeType selectNodeType() {
         if (resource.isWithMaster()) {
-            boolean slave = ThreadLocalRandom.current().nextBoolean();
-            if (slave) {
-                return NodeType.slave;
-            } else {
+            int slaveSize = jedisClusterSlaves.getSlaveSize();
+            if (slaveSize <= 0) {
                 return NodeType.master;
+            }
+            int rand = ThreadLocalRandom.current().nextInt(slaveSize + 1);
+            if (rand == 0) {
+                return NodeType.master;
+            } else {
+                return NodeType.slave;
             }
         }
         return NodeType.slave;
