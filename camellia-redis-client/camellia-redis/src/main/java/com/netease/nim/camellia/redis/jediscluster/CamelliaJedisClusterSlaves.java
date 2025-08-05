@@ -7,6 +7,8 @@ import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
 import com.netease.nim.camellia.redis.base.utils.CloseUtil;
 import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
 import redis.clients.util.JedisClusterCRC16;
@@ -20,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * Created by caojiajun on 2024/11/11
  */
 public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaJedisClusterSlaves.class);
 
     private final JedisClusterWrapper jedisCluster;
     private final RedisClusterSlavesResource resource;
@@ -35,10 +39,11 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         this.camelliaJedisCluster = new CamelliaJedisCluster(redisClusterResource, env);
         this.resource = resource;
         this.env = env;
-        renew();
+        jedisClusterSlaves.renew();
     }
 
-    private void renew() {
+    private void renew(Exception e) {
+        logger.warn("redis cluster slave invoke error, fallback to master, ex = {}", e.toString());
         jedisClusterSlaves.renew();
     }
 
@@ -92,11 +97,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.get(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.get(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.get(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -111,11 +117,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.exists(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.exists(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.exists(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -130,11 +137,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.type(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.type(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.type(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -149,11 +157,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.ttl(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.ttl(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.ttl(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -168,11 +177,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.ttl(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.pttl(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.pttl(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -187,11 +197,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.getbit(key, offset);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.getbit(key, offset);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.getbit(key, offset);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -206,11 +217,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.getrange(key, startOffset, endOffset);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.getrange(key, startOffset, endOffset);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.getrange(key, startOffset, endOffset);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -225,11 +237,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hget(key, field);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hget(key, field);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hget(key, field);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -244,11 +257,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hmget(key, fields);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hmget(key, fields);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hmget(key, fields);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -263,11 +277,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hexists(key, field);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hexists(key, field);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hexists(key, field);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -282,11 +297,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hlen(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hlen(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hlen(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -301,11 +317,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hkeys(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hkeys(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hkeys(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -320,11 +337,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return new ArrayList<>(jedisCluster.hvals(key));
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hvals(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return new ArrayList<>(jedisCluster.hvals(key));
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -339,11 +357,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hgetAll(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hgetAll(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hgetAll(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -359,11 +378,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.llen(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.llen(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.llen(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -378,11 +398,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.lrange(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.lrange(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.lrange(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -397,11 +418,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.ltrim(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.ltrim(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.ltrim(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -416,11 +438,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.lindex(key, index);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.lindex(key, index);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.lindex(key, index);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -435,11 +458,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.smembers(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.smembers(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.smembers(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -454,11 +478,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.scard(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.scard(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.scard(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -473,11 +498,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sismember(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sismember(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sismember(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -492,11 +518,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.srandmember(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.srandmember(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.srandmember(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -511,11 +538,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.srandmember(key, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.srandmember(key, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.srandmember(key, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -530,11 +558,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.strlen(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.strlen(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.strlen(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -549,11 +578,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrange(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrange(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrange(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -568,11 +598,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrank(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrank(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrank(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -587,11 +618,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrank(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrank(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrank(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -606,11 +638,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrange(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrange(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrange(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -625,11 +658,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeWithScores(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeWithScores(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeWithScores(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -644,11 +678,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeWithScores(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeWithScores(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeWithScores(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -663,11 +698,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zcard(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zcard(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zcard(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -682,11 +718,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zscore(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zscore(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zscore(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -701,11 +738,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sort(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sort(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sort(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -720,11 +758,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sort(key, sortingParameters);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sort(key, sortingParameters);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sort(key, sortingParameters);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -739,11 +778,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zcount(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zcount(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zcount(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -758,11 +798,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zcount(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zcount(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zcount(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -777,11 +818,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -796,11 +838,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -815,11 +858,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -834,11 +878,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -853,11 +898,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -872,11 +918,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -891,11 +938,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -910,11 +958,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -929,11 +978,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -948,11 +998,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -967,11 +1018,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -986,11 +1038,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1005,11 +1058,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1024,11 +1078,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1043,11 +1098,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1062,11 +1118,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1081,11 +1138,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zlexcount(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zlexcount(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zlexcount(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1100,11 +1158,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByLex(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByLex(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByLex(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1119,11 +1178,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByLex(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByLex(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByLex(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1138,11 +1198,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByLex(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByLex(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByLex(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1157,11 +1218,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByLex(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1176,11 +1238,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitcount(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitcount(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitcount(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1195,11 +1258,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitcount(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitcount(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitcount(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1215,11 +1279,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.pfcount(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.pfcount(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.pfcount(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1234,11 +1299,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geodist(key, member1, member2);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geodist(key, member1, member2);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geodist(key, member1, member2);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1253,11 +1319,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geodist(key, member1, member2, unit);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geodist(key, member1, member2, unit);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geodist(key, member1, member2, unit);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1272,11 +1339,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geohash(key, members);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geohash(key, members);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geohash(key, members);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1291,11 +1359,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geopos(key, members);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geopos(key, members);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geopos(key, members);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1310,11 +1379,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadius(key, longitude, latitude, radius, unit);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadius(key, longitude, latitude, radius, unit);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1329,11 +1399,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadius(key, longitude, latitude, radius, unit, param);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1348,11 +1419,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadiusByMember(key, member, radius, unit);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadiusByMember(key, member, radius, unit);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1367,11 +1439,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadiusByMember(key, member, radius, unit, param);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadiusByMember(key, member, radius, unit, param);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit, param);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1386,11 +1459,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hscan(key, cursor);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hscan(key, cursor);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hscan(key, cursor);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1405,11 +1479,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hscan(key, cursor, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hscan(key, cursor, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hscan(key, cursor, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1424,11 +1499,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sscan(key, cursor);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sscan(key, cursor);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sscan(key, cursor);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1443,11 +1519,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sscan(key, cursor, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sscan(key, cursor, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sscan(key, cursor, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1462,11 +1539,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zscan(key, cursor);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zscan(key, cursor);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zscan(key, cursor);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1481,11 +1559,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zscan(key, cursor, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zscan(key, cursor, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zscan(key, cursor, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1500,11 +1579,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitfield(key, arguments);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitfield(key, arguments);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitfield(key, arguments);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1519,11 +1599,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.get(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.get(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.get(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1538,11 +1619,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.exists(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.exists(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.exists(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1557,11 +1639,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.type(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.type(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.type(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1576,11 +1659,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.ttl(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.ttl(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.ttl(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1595,11 +1679,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.pttl(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.pttl(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.pttl(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1614,11 +1699,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.getbit(key, offset);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.getbit(key, offset);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.getbit(key, offset);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1633,11 +1719,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.getrange(key, startOffset, endOffset);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.getrange(key, startOffset, endOffset);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.getrange(key, startOffset, endOffset);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1652,11 +1739,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.substr(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.substr(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.substr(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1671,11 +1759,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hget(key, field);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hget(key, field);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hget(key, field);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1690,11 +1779,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hmget(key, fields);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hmget(key, fields);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hmget(key, fields);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1709,11 +1799,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hexists(key, field);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hexists(key, field);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hexists(key, field);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1728,11 +1819,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hlen(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hlen(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hlen(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1747,11 +1839,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hkeys(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hkeys(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hkeys(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1766,11 +1859,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hvals(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hvals(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hvals(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1785,11 +1879,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hgetAll(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hgetAll(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hgetAll(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1804,11 +1899,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.llen(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.llen(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.llen(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1823,11 +1919,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.lrange(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.lrange(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.lrange(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1842,11 +1939,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.ltrim(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.ltrim(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.ltrim(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1861,11 +1959,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.lindex(key, index);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.lindex(key, index);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.lindex(key, index);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1880,11 +1979,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.smembers(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.smembers(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.smembers(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1899,11 +1999,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.scard(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.scard(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.scard(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1918,11 +2019,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sismember(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sismember(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sismember(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1937,11 +2039,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.srandmember(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.srandmember(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.srandmember(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1956,11 +2059,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.srandmember(key, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.srandmember(key, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.srandmember(key, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1975,11 +2079,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.strlen(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.strlen(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.strlen(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -1994,11 +2099,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrange(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrange(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrange(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2013,11 +2119,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrank(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrank(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrank(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2032,11 +2139,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrank(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrank(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrank(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2051,11 +2159,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrange(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrange(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrange(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2070,11 +2179,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeWithScores(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeWithScores(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeWithScores(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2089,11 +2199,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeWithScores(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeWithScores(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeWithScores(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2108,11 +2219,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zcard(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zcard(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zcard(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2127,11 +2239,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zscore(key, member);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zscore(key, member);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zscore(key, member);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2146,11 +2259,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sort(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sort(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sort(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2165,11 +2279,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sort(key, sortingParameters);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sort(key, sortingParameters);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sort(key, sortingParameters);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2184,11 +2299,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zcount(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zcount(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zcount(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2203,11 +2319,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zcount(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zcount(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zcount(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2222,11 +2339,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2241,11 +2359,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2260,11 +2379,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2279,11 +2399,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2298,11 +2419,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2317,11 +2439,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScore(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScore(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2336,11 +2459,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2355,11 +2479,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2374,11 +2499,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2393,11 +2519,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2412,11 +2539,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScore(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2431,11 +2559,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2450,11 +2579,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2469,11 +2599,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByScoreWithScores(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2488,11 +2619,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2507,11 +2639,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2526,11 +2659,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zlexcount(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zlexcount(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zlexcount(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2545,11 +2679,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByLex(key, min, max);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByLex(key, min, max);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByLex(key, min, max);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2564,11 +2699,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrangeByLex(key, min, max, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrangeByLex(key, min, max, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrangeByLex(key, min, max, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2583,11 +2719,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByLex(key, max, min);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByLex(key, max, min);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByLex(key, max, min);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2602,11 +2739,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zrevrangeByLex(key, max, min, offset, count);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2621,11 +2759,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.echo(string);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.echo(string);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.echo(string);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2640,11 +2779,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitcount(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitcount(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitcount(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2659,11 +2799,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitcount(key, start, end);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitcount(key, start, end);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitcount(key, start, end);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2678,11 +2819,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitpos(key, value);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitpos(key, value);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitpos(key, value);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2702,11 +2844,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                 }
             }.runBinary(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitpos(key, value);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return new JedisClusterCommand<Long>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
                     @Override
                     public Long execute(Jedis connection) {
@@ -2726,11 +2869,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitpos(key, value, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitpos(key, value, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitpos(key, value, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2750,11 +2894,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                 }
             }.runBinary(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitpos(key, value, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return new JedisClusterCommand<Long>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
                     @Override
                     public Long execute(Jedis connection) {
@@ -2774,11 +2919,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hscan(key, cursor);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hscan(key, cursor);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hscan(key, cursor);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2793,11 +2939,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.hscan(key, cursor, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.hscan(key, cursor, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.hscan(key, cursor, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2812,11 +2959,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sscan(key, cursor);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sscan(key, cursor);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sscan(key, cursor);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2831,11 +2979,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.sscan(key, cursor, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.sscan(key, cursor, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.sscan(key, cursor, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2850,11 +2999,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zscan(key, cursor);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zscan(key, cursor);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zscan(key, cursor);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2869,11 +3019,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.zscan(key, cursor, params);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.zscan(key, cursor, params);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.zscan(key, cursor, params);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2888,11 +3039,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.pfcount(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.pfcount(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.pfcount(key);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2907,11 +3059,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geodist(key, member1, member2);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geodist(key, member1, member2);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geodist(key, member1, member2);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2926,11 +3079,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geodist(key, member1, member2, unit);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geodist(key, member1, member2, unit);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geodist(key, member1, member2, unit);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2945,11 +3099,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geohash(key, members);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geohash(key, members);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geohash(key, members);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2964,11 +3119,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.geopos(key, members);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.geopos(key, members);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.geopos(key, members);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -2983,11 +3139,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadius(key, longitude, latitude, radius, unit);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadius(key, longitude, latitude, radius, unit);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -3002,11 +3159,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadius(key, longitude, latitude, radius, unit, param);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -3021,11 +3179,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadiusByMember(key, member, radius, unit);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadiusByMember(key, member, radius, unit);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -3040,11 +3199,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.georadiusByMember(key, member, radius, unit, param);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.georadiusByMember(key, member, radius, unit, param);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit, param);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -3059,11 +3219,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         if (pool == null) {
             return jedisCluster.bitfield(key, arguments);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.bitfield(key, arguments);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return jedisCluster.bitfield(key, arguments);
             } finally {
                 CloseUtil.closeQuietly(jedis);
@@ -3110,7 +3271,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                             }
                         }
                     } catch (Exception e) {
-                        renew();
+                        renew(e);
                         byte[][] array = keyList.toArray(new byte[0][0]);
                         Long exists = camelliaJedisCluster.exists(array);
                         result.addAndGet(exists);
@@ -3174,7 +3335,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                             }
                         }
                     } catch (Exception e) {
-                        renew();
+                        renew(e);
                         byte[][] array = keyList.toArray(new byte[0][0]);
                         Map<byte[], byte[]> mget = camelliaJedisCluster.mget(array);
                         synchronized (resultMap) {
@@ -3243,11 +3404,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                 }
             }.runBinary(key);
         } else {
-            Jedis jedis = pool.getResource();
+            Jedis jedis = null;
             try {
+                jedis = pool.getResource();
                 return jedis.dump(key);
             } catch (Exception e) {
-                renew();
+                renew(e);
                 return new JedisClusterCommand<byte[]>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
                     @Override
                     public byte[] execute(Jedis connection) {

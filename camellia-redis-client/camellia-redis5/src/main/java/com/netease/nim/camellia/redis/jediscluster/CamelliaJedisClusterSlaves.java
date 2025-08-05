@@ -81,6 +81,10 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
         return NodeType.slave;
     }
 
+    private void fallbackLog(Exception e) {
+        logger.warn("redis cluster slave invoke error, fallback to master, ex = {}", e.toString());
+    }
+
     @Override
     public byte[] get(byte[] key) {
         NodeType type = selectNodeType();
@@ -88,6 +92,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.get(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.get(key);
             }
         } else {
@@ -102,6 +107,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.exists(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.exists(key);
             }
         } else {
@@ -116,6 +122,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.type(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.type(key);
             }
         } else {
@@ -130,6 +137,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.ttl(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.ttl(key);
             }
         } else {
@@ -144,6 +152,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.pttl(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.pttl(key);
             }
         } else {
@@ -158,6 +167,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.getbit(key, offset));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.getbit(key, offset);
             }
         } else {
@@ -172,6 +182,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.getrange(key, startOffset, endOffset));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.getrange(key, startOffset, endOffset);
             }
         } else {
@@ -186,6 +197,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hget(key, field));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hget(key, field);
             }
         } else {
@@ -200,6 +212,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hmget(key, fields));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hmget(key, fields);
             }
         } else {
@@ -214,6 +227,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hexists(key, field));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hexists(key, field);
             }
         } else {
@@ -228,6 +242,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hlen(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hlen(key);
             }
         } else {
@@ -242,6 +257,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hkeys(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hkeys(key);
             }
         } else {
@@ -253,7 +269,12 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
     public List<byte[]> hvals(byte[] key) {
         NodeType type = selectNodeType();
         if (type == NodeType.slave) {
-            return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hvals(key));
+            try {
+                return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hvals(key));
+            } catch (Exception e) {
+                fallbackLog(e);
+                return jedisCluster.hvals(key);
+            }
         } else {
             return jedisCluster.hvals(key);
         }
@@ -266,6 +287,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hgetAll(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hgetAll(key);
             }
         } else {
@@ -280,6 +302,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.llen(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.llen(key);
             }
         } else {
@@ -294,6 +317,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.lrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.lrange(key, start, end);
             }
         } else {
@@ -308,6 +332,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.ltrim(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.ltrim(key, start, end);
             }
         } else {
@@ -322,6 +347,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.lindex(key, index));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.lindex(key, index);
             }
         } else {
@@ -336,6 +362,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.smembers(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.smembers(key);
             }
         } else {
@@ -350,6 +377,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.scard(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.scard(key);
             }
         } else {
@@ -364,6 +392,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sismember(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sismember(key, member);
             }
         } else {
@@ -378,6 +407,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.srandmember(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.srandmember(key);
             }
         } else {
@@ -392,6 +422,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.srandmember(key, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.srandmember(key, count);
             }
         } else {
@@ -406,6 +437,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.strlen(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.strlen(key);
             }
         } else {
@@ -420,6 +452,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrange(key, start, end);
             }
         } else {
@@ -434,6 +467,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrank(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrank(key, member);
             }
         } else {
@@ -448,6 +482,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrank(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrank(key, member);
             }
         } else {
@@ -462,6 +497,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrange(key, start, end);
             }
         } else {
@@ -476,6 +512,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeWithScores(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeWithScores(key, start, end);
             }
         } else {
@@ -490,6 +527,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeWithScores(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeWithScores(key, start, end);
             }
         } else {
@@ -504,6 +542,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zcard(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zcard(key);
             }
         } else {
@@ -518,6 +557,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zscore(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zscore(key, member);
             }
         } else {
@@ -532,6 +572,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sort(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sort(key);
             }
         } else {
@@ -546,6 +587,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sort(key, sortingParameters));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sort(key, sortingParameters);
             }
         } else {
@@ -560,6 +602,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zcount(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zcount(key, min, max);
             }
         } else {
@@ -574,6 +617,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zcount(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zcount(key, min, max);
             }
         } else {
@@ -588,6 +632,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             }
         } else {
@@ -602,6 +647,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             }
         } else {
@@ -616,6 +662,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             }
         } else {
@@ -630,6 +677,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             }
         } else {
@@ -644,6 +692,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             }
         } else {
@@ -658,6 +707,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             }
         } else {
@@ -672,6 +722,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             }
         } else {
@@ -686,6 +737,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             }
         } else {
@@ -700,6 +752,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             }
         } else {
@@ -714,6 +767,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             }
         } else {
@@ -728,6 +782,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             }
         } else {
@@ -742,6 +797,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             }
         } else {
@@ -756,6 +812,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             }
         } else {
@@ -770,6 +827,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             }
         } else {
@@ -784,6 +842,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             }
         } else {
@@ -798,6 +857,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             }
         } else {
@@ -812,6 +872,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zlexcount(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zlexcount(key, min, max);
             }
         } else {
@@ -826,6 +887,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByLex(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByLex(key, min, max);
             }
         } else {
@@ -840,6 +902,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByLex(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByLex(key, min, max, offset, count);
             }
         } else {
@@ -854,6 +917,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByLex(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByLex(key, max, min);
             }
         } else {
@@ -868,6 +932,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByLex(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
             }
         } else {
@@ -882,6 +947,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitcount(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitcount(key);
             }
         } else {
@@ -896,6 +962,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitcount(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitcount(key, start, end);
             }
         } else {
@@ -911,6 +978,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.pfcount(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.pfcount(key);
             }
         } else {
@@ -925,6 +993,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geodist(key, member1, member2));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geodist(key, member1, member2);
             }
         } else {
@@ -939,6 +1008,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geodist(key, member1, member2, unit));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geodist(key, member1, member2, unit);
             }
         } else {
@@ -953,6 +1023,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geohash(key, members));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geohash(key, members);
             }
         } else {
@@ -967,6 +1038,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geopos(key, members));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geopos(key, members);
             }
         } else {
@@ -981,6 +1053,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadius(key, longitude, latitude, radius, unit));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit);
             }
         } else {
@@ -995,6 +1068,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadius(key, longitude, latitude, radius, unit, param));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
             }
         } else {
@@ -1009,6 +1083,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadiusByMember(key, member, radius, unit));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit);
             }
         } else {
@@ -1023,6 +1098,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadiusByMember(key, member, radius, unit, param));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit, param);
             }
         } else {
@@ -1037,6 +1113,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hscan(key, cursor, new ScanParams()));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hscan(key, cursor);
             }
         } else {
@@ -1051,6 +1128,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hscan(key, cursor, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hscan(key, cursor, params);
             }
         } else {
@@ -1065,6 +1143,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sscan(key, cursor, new ScanParams()));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sscan(key, cursor);
             }
         } else {
@@ -1079,6 +1158,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sscan(key, cursor, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sscan(key, cursor, params);
             }
         } else {
@@ -1093,6 +1173,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zscan(key, cursor, new ScanParams()));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zscan(key, cursor);
             }
         } else {
@@ -1107,6 +1188,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zscan(key, cursor, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zscan(key, cursor, params);
             }
         } else {
@@ -1121,6 +1203,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitfield(key, arguments));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitfield(key, arguments);
             }
         } else {
@@ -1135,6 +1218,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.get(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.get(key);
             }
         } else {
@@ -1149,6 +1233,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.exists(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.exists(key);
             }
         } else {
@@ -1163,6 +1248,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.type(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.type(key);
             }
         } else {
@@ -1177,6 +1263,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.ttl(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.ttl(key);
             }
         } else {
@@ -1191,6 +1278,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.pttl(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.pttl(key);
             }
         } else {
@@ -1205,6 +1293,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.getbit(key, offset));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.getbit(key, offset);
             }
         } else {
@@ -1219,6 +1308,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.getrange(key, startOffset, endOffset));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.getrange(key, startOffset, endOffset);
             }
         } else {
@@ -1233,6 +1323,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.getrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.getrange(key, start, end);
             }
         } else {
@@ -1247,6 +1338,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hget(key, field));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hget(key, field);
             }
         } else {
@@ -1261,6 +1353,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hmget(key, fields));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hmget(key, fields);
             }
         } else {
@@ -1275,6 +1368,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hexists(key, field));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hexists(key, field);
             }
         } else {
@@ -1289,6 +1383,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hlen(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hlen(key);
             }
         } else {
@@ -1303,6 +1398,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hkeys(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hkeys(key);
             }
         } else {
@@ -1317,6 +1413,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hvals(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hvals(key);
             }
         } else {
@@ -1331,6 +1428,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hgetAll(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hgetAll(key);
             }
         } else {
@@ -1345,6 +1443,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.llen(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.llen(key);
             }
         } else {
@@ -1359,6 +1458,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.lrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.lrange(key, start, end);
             }
         } else {
@@ -1373,6 +1473,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.ltrim(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.ltrim(key, start, end);
             }
         } else {
@@ -1387,6 +1488,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.lindex(key, index));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.lindex(key, index);
             }
         } else {
@@ -1401,6 +1503,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.smembers(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.smembers(key);
             }
         } else {
@@ -1415,6 +1518,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.scard(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.scard(key);
             }
         } else {
@@ -1429,6 +1533,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sismember(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sismember(key, member);
             }
         } else {
@@ -1443,6 +1548,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.srandmember(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.srandmember(key);
             }
         } else {
@@ -1457,6 +1563,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.srandmember(key, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.srandmember(key, count);
             }
         } else {
@@ -1471,6 +1578,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.strlen(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.strlen(key);
             }
         } else {
@@ -1485,6 +1593,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrange(key, start, end);
             }
         } else {
@@ -1499,6 +1608,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrank(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrank(key, member);
             }
         } else {
@@ -1513,6 +1623,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrank(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrank(key, member);
             }
         } else {
@@ -1527,6 +1638,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrange(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrange(key, start, end);
             }
         } else {
@@ -1541,6 +1653,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeWithScores(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeWithScores(key, start, end);
             }
         } else {
@@ -1555,6 +1668,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeWithScores(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeWithScores(key, start, end);
             }
         } else {
@@ -1569,6 +1683,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zcard(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zcard(key);
             }
         } else {
@@ -1583,6 +1698,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zscore(key, member));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zscore(key, member);
             }
         } else {
@@ -1597,6 +1713,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sort(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sort(key);
             }
         } else {
@@ -1611,6 +1728,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sort(key, sortingParameters));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sort(key, sortingParameters);
             }
         } else {
@@ -1625,6 +1743,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zcount(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zcount(key, min, max);
             }
         } else {
@@ -1639,6 +1758,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zcount(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zcount(key, min, max);
             }
         } else {
@@ -1653,6 +1773,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             }
         } else {
@@ -1667,6 +1788,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max);
             }
         } else {
@@ -1681,6 +1803,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             }
         } else {
@@ -1695,6 +1818,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             }
         } else {
@@ -1709,6 +1833,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min);
             }
         } else {
@@ -1723,6 +1848,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScore(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScore(key, min, max, offset, count);
             }
         } else {
@@ -1737,6 +1863,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             }
         } else {
@@ -1751,6 +1878,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             }
         } else {
@@ -1765,6 +1893,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             }
         } else {
@@ -1779,6 +1908,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             }
         } else {
@@ -1793,6 +1923,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScore(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
             }
         } else {
@@ -1807,6 +1938,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max);
             }
         } else {
@@ -1821,6 +1953,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
             }
         } else {
@@ -1835,6 +1968,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByScoreWithScores(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
             }
         } else {
@@ -1849,6 +1983,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             }
         } else {
@@ -1863,6 +1998,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByScoreWithScores(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
             }
         } else {
@@ -1877,6 +2013,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zlexcount(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zlexcount(key, min, max);
             }
         } else {
@@ -1891,6 +2028,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByLex(key, min, max));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByLex(key, min, max);
             }
         } else {
@@ -1905,6 +2043,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrangeByLex(key, min, max, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrangeByLex(key, min, max, offset, count);
             }
         } else {
@@ -1919,6 +2058,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByLex(key, max, min));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByLex(key, max, min);
             }
         } else {
@@ -1933,6 +2073,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zrevrangeByLex(key, max, min, offset, count));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
             }
         } else {
@@ -1947,6 +2088,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitcount(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitcount(key);
             }
         } else {
@@ -1961,6 +2103,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitcount(key, start, end));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitcount(key, start, end);
             }
         } else {
@@ -1975,6 +2118,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitpos(key, value));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitpos(key, value);
             }
         } else {
@@ -1989,6 +2133,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitpos(key, value));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitpos(key, value);
             }
         } else {
@@ -2003,6 +2148,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitpos(key, value, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitpos(key, value, params);
             }
         } else {
@@ -2017,6 +2163,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitpos(key, value, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitpos(key, value, params);
             }
         } else {
@@ -2031,6 +2178,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hscan(key, cursor, new ScanParams()));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hscan(key, cursor);
             }
         } else {
@@ -2045,6 +2193,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.hscan(key, cursor, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.hscan(key, cursor, params);
             }
         } else {
@@ -2059,6 +2208,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sscan(key, cursor, new ScanParams()));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sscan(key, cursor);
             }
         } else {
@@ -2073,6 +2223,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.sscan(key, cursor, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.sscan(key, cursor, params);
             }
         } else {
@@ -2087,6 +2238,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zscan(key, cursor, new ScanParams()));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zscan(key, cursor);
             }
         } else {
@@ -2101,6 +2253,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.zscan(key, cursor, params));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.zscan(key, cursor, params);
             }
         } else {
@@ -2115,6 +2268,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.pfcount(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.pfcount(key);
             }
         } else {
@@ -2129,6 +2283,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geodist(key, member1, member2));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geodist(key, member1, member2);
             }
         } else {
@@ -2143,6 +2298,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geodist(key, member1, member2, unit));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geodist(key, member1, member2, unit);
             }
         } else {
@@ -2157,6 +2313,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geohash(key, members));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geohash(key, members);
             }
         } else {
@@ -2171,6 +2328,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.geopos(key, members));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.geopos(key, members);
             }
         } else {
@@ -2185,6 +2343,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadius(key, longitude, latitude, radius, unit));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit);
             }
         } else {
@@ -2199,6 +2358,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadius(key, longitude, latitude, radius, unit, param));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
             }
         } else {
@@ -2213,6 +2373,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadiusByMember(key, member, radius, unit));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit);
             }
         } else {
@@ -2227,6 +2388,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.georadiusByMember(key, member, radius, unit, param));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.georadiusByMember(key, member, radius, unit, param);
             }
         } else {
@@ -2241,6 +2403,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.bitfield(key, arguments));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.bitfield(key, arguments);
             }
         } else {
@@ -2255,6 +2418,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.dump(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.dump(key);
             }
         } else {
@@ -2269,6 +2433,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
             try {
                 return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.dump(key));
             } catch (Exception e) {
+                fallbackLog(e);
                 return jedisCluster.dump(key);
             }
         } else {
@@ -2292,7 +2457,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                                 return 0L;
                             }
                         } catch (Exception e) {
-                            logger.error("execute exists(byte[] key) on slave error, fallback to master, ex = {}", e.toString());
+                            fallbackLog(e);
                             boolean exists = jedisCluster.exists(key);
                             if (exists) {
                                 return 1L;
@@ -2309,7 +2474,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                 }
                 return result;
             } catch (Exception e) {
-                logger.error("execute exists(byte[]... keys) on slave error, fallback to master, ex = {}", e.toString());
+                fallbackLog(e);
                 return super.exists(keys);
             }
         } else {
@@ -2328,7 +2493,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                         try {
                             return jedisClusterSlaves.executeCommandToReplica(clusterCommandObjects.get(key));
                         } catch (Exception e) {
-                            logger.error("execute get(byte[] key) on slave error, fallback to master, ex = {}", e.toString());
+                            fallbackLog(e);
                             return jedisCluster.get(key);
                         }
                     });
@@ -2340,7 +2505,7 @@ public class CamelliaJedisClusterSlaves extends CamelliaJedisCluster {
                 }
                 return result;
             } catch (Exception e) {
-                logger.error("execute mget(byte[]... keys) on slave error, fallback to master, ex = {}", e.toString());
+                fallbackLog(e);
                 return super.mget(keys);
             }
         } else {
