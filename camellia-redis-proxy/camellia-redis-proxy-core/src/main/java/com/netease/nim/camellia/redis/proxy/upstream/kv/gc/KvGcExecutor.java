@@ -333,6 +333,7 @@ public class KvGcExecutor {
                         logger.info("scan sub keys doing, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
                                 namespace, slot, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
                         time = TimeCache.currentMillis;
+                        KvGcEnv.setSubKeyScanStartKey(namespace, i, startKey, slot);
                     }
                 }
             }
