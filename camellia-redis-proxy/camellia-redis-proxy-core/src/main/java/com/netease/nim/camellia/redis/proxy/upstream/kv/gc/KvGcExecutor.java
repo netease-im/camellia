@@ -330,7 +330,7 @@ public class KvGcExecutor {
                     }
                     TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
                     if (TimeCache.currentMillis - time > 60*1000L) {
-                        logger.info("scan sub keys doing, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                        logger.info("scan sub keys doing, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
                                 namespace, slot, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys);
                         time = TimeCache.currentMillis;
                     }
