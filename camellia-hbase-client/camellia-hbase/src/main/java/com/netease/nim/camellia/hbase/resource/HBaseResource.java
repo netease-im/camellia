@@ -147,6 +147,9 @@ public class HBaseResource extends Resource {
     }
 
     public Map<String, String> getConfigMap() {
+        if (configMap == null) {
+            return null;
+        }
         return new HashMap<>(configMap);
     }
 
