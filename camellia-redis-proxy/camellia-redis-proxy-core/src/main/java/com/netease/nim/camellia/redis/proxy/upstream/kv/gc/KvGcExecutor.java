@@ -231,6 +231,7 @@ public class KvGcExecutor {
                     logger.info("scan meta keys doing, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
                             namespace, slot, System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys);
                     time = TimeCache.currentMillis;
+                    KvGcEnv.updateMetaKeyScanStartKey(namespace, startKey, slot);
                 }
             }
             if (checkInScheduleGcTime()) {
