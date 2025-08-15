@@ -1,5 +1,5 @@
 
-## RateLimitProxyPlugin
+## ReadOnlyPlugin
 
 ### 说明
 * 用于拦截客户端的写请求
