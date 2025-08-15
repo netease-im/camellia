@@ -26,13 +26,20 @@ public class HttpClientUtils {
         Dispatcher dispatcher = new Dispatcher();
         dispatcher.setMaxRequests(httpClientConfig.getMaxRequests());
         dispatcher.setMaxRequestsPerHost(httpClientConfig.getMaxRequestsPerHost());
-        okHttpClient = new OkHttpClient.Builder()
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(httpClientConfig.getConnectTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .readTimeout(httpClientConfig.getReadTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .writeTimeout(httpClientConfig.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .dispatcher(dispatcher)
-                .connectionPool(new ConnectionPool(httpClientConfig.getMaxIdleConnections(), httpClientConfig.getKeepAliveSeconds(), TimeUnit.SECONDS))
-                .build();
+                .connectionPool(new ConnectionPool(httpClientConfig.getMaxIdleConnections(), httpClientConfig.getKeepAliveSeconds(), TimeUnit.SECONDS));
+
+        if (httpClientConfig.isSkipHostNameVerifier()) {
+            builder.hostnameVerifier((s, sslSession) -> true);
+        }
+
+        okHttpClient = builder.build();
+
         init = true;
     }
 
@@ -113,7 +120,6 @@ public class HttpClientUtils {
             return okHttpClient;
         } else {
             return okHttpClient.newBuilder()
-                    .callTimeout(timeout, timeUnit)
                     .readTimeout(timeout, timeUnit)
                     .writeTimeout(timeout, timeUnit)
                     .connectTimeout(timeout, timeUnit)
