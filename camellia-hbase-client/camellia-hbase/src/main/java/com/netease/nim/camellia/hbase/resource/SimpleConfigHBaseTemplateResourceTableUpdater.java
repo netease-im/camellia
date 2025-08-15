@@ -31,9 +31,9 @@ public class SimpleConfigHBaseTemplateResourceTableUpdater extends HBaseTemplate
         this(System.getProperty("simple.config.fetch.url"), System.getProperty("simple.config.hbase.biz"));
     }
 
-    public SimpleConfigHBaseTemplateResourceTableUpdater(String biz, String url) {
+    public SimpleConfigHBaseTemplateResourceTableUpdater(String url, String biz) {
         this.biz = biz;
-        this.fetcher = new SimpleConfigFetcher(biz, url);
+        this.fetcher = new SimpleConfigFetcher(url, biz);
         fetch();
         if (resourceTable == null) {
             throw new IllegalStateException("init hbase resource table error, biz = " + biz + ", url = " + url);

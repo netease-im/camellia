@@ -30,9 +30,9 @@ public class SimpleConfigRedisTemplateResourceTableUpdater extends RedisTemplate
         this(System.getProperty("simple.config.fetch.url"), System.getProperty("simple.config.redis.biz"));
     }
 
-    public SimpleConfigRedisTemplateResourceTableUpdater(String biz, String url) {
+    public SimpleConfigRedisTemplateResourceTableUpdater(String url, String biz) {
         this.biz = biz;
-        this.fetcher = new SimpleConfigFetcher(biz, url);
+        this.fetcher = new SimpleConfigFetcher(url, biz);
         fetch();
         if (resourceTable == null) {
             throw new IllegalStateException("init redis resource table error, biz = " + biz + ", url = " + url);
