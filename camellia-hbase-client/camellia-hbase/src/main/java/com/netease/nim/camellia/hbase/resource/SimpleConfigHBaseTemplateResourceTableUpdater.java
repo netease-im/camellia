@@ -59,7 +59,7 @@ public class SimpleConfigHBaseTemplateResourceTableUpdater extends HBaseTemplate
             invokeUpdateResourceTable(resourceTable);
             logger.info("hbase config updated, biz = {}, config = {}", biz, newConfig);
         } catch (Exception e) {
-            logger.error("hbase redis config error, biz = {}", biz, e);
+            logger.error("fetch hbase config error, biz = {}", biz, e);
         }
     }
 }

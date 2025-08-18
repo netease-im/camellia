@@ -61,7 +61,7 @@ public class SimpleConfigFetcher {
             this.md5 = response.getString("md5");
             this.nextPullTime = response.getLongValue("nextPullTime");
             String config = response.getString("config");
-            logger.info("simple config updated, biz = {}, config = {}", biz, config);
+            logger.info("simple config updated, biz = {}, md5 = {}, config = {}", biz, md5, config);
             this.config = config;
             return config;
         } catch (Exception e) {
