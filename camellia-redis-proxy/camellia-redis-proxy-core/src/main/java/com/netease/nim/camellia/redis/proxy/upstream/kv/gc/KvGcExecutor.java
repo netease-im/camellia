@@ -159,6 +159,7 @@ public class KvGcExecutor {
         private final int threads;
         private final Integer startSlot;
         private final ThreadPoolExecutor executor;
+        private final long startTime = System.currentTimeMillis();
 
         public ScanTask(String name, ThreadPoolExecutor executor, int threads, Integer startSlot) {
             this.name = name;
@@ -169,6 +170,7 @@ public class KvGcExecutor {
                 slot = 0;
             }
             this.startSlot = slot;
+            logger.info("scan task init, name = {}, threads = {}, start slot = {}", name, threads, startSlot);
         }
 
         public CompletableFuture<Boolean> invoke() {
@@ -223,8 +225,8 @@ public class KvGcExecutor {
             }
             CompletableFuture<List<String>> all = CompletableFutureUtils.allOf(futureList);
             all.thenAccept(results -> {
-                logger.info("scan task = {} stop for {}, scan slots = {}, scan keys = {}, delete keys = {}",
-                        name, results.getFirst(), completeSlots.size(), scanKeys.get(), deleteKeys.get());
+                logger.info("scan task = {} stop for {}, scan slots = {}, scan keys = {}, delete keys = {}, spendMs = {}",
+                        name, results.getFirst(), completeSlots.size(), scanKeys.get(), deleteKeys.get(), System.currentTimeMillis() - startTime);
                 completableFuture.complete(true);
             });
             return completableFuture;
@@ -341,10 +343,11 @@ public class KvGcExecutor {
                     time = TimeCache.currentMillis;
                 }
             }
-            logger.info("scan meta keys end, namespace = {}, slot = {}", namespace, slot);
+            logger.info("scan meta keys end, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
+                    namespace, slot, System.currentTimeMillis() - startTime, scanKeys.get(), deleteMetaKeys.get());
         } catch (Throwable e) {
             logger.error("scan meta keys error, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteMetaKeys = {}",
-                    namespace, slot, System.currentTimeMillis() - startTime, scanKeys, deleteMetaKeys, e);
+                    namespace, slot, System.currentTimeMillis() - startTime, scanKeys.get(), deleteMetaKeys.get(), e);
         }
     }
 
@@ -367,7 +370,7 @@ public class KvGcExecutor {
                 //
                 int limit = kvConfig.scanBatch();
                 while (true) {
-                    List<KeyValue> scan = kvClient.scanByPrefix(slot, prefix, startKey, limit, Sort.ASC, false);
+                    List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
                     if (scan.isEmpty()) {
                         break;
                     }
@@ -412,9 +415,11 @@ public class KvGcExecutor {
                 }
             }
             cacheMap.clear();
+            logger.info("scan sub keys end, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
+                    namespace, slot, System.currentTimeMillis() - startTime, scanKeys.get(), deleteSubKeys.get());
         } catch (Throwable e) {
             logger.error("scan sub keys error, namespace = {}, slot = {}, spendMs = {}, scanKeys = {}, deleteSubKeys = {}",
-                    namespace, slot, System.currentTimeMillis() - startTime, scanKeys, deleteSubKeys, e);
+                    namespace, slot, System.currentTimeMillis() - startTime, scanKeys.get(), deleteSubKeys.get(), e);
         }
     }
 
@@ -490,20 +495,20 @@ public class KvGcExecutor {
     private record CacheKey(byte[] key, long keyVersion) {
 
         @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-                CacheKey cacheKey = (CacheKey) o;
-                return keyVersion == cacheKey.keyVersion && Arrays.equals(key, cacheKey.key);
-            }
-
-            @Override
-            public int hashCode() {
-                int result = Objects.hash(keyVersion);
-                result = 31 * result + Arrays.hashCode(key);
-                return result;
-            }
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CacheKey cacheKey = (CacheKey) o;
+            return keyVersion == cacheKey.keyVersion && Arrays.equals(key, cacheKey.key);
         }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(keyVersion);
+            result = 31 * result + Arrays.hashCode(key);
+            return result;
+        }
+    }
 
     private static enum KeyStatus {
         NORMAL,
@@ -516,72 +521,72 @@ public class KvGcExecutor {
                                     KeyDesign keyDesign, KvConfig kvConfig) implements Runnable {
 
         @Override
-            public void run() {
-                try {
-                    int count = 0;
-                    KeyType keyType = keyMeta.getKeyType();
-                    if (keyType == KeyType.hash) {
-                        count = clearHashSubKeys(slot);
-                    } else if (keyType == KeyType.zset) {
-                        count = clearZSetSubKeys(slot);
-                    } else if (keyType == KeyType.set) {
-                        count = clearSetSubKeys(slot);
-                    }
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("sub key delete, namespace = {}, count = {}", namespace, count);
-                    }
-                    KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), count);
-                } catch (Exception e) {
-                    logger.warn("add delete task error, namespace = {}, ex = {}", namespace, e.toString());
-                }
-            }
-
-            private int clearHashSubKeys(int slot) {
-                return clearByPrefix(slot, keyDesign.subKeyPrefix(keyMeta, key));
-            }
-
-            private int clearSetSubKeys(int slot) {
-                return clearByPrefix(slot, keyDesign.subKeyPrefix(keyMeta, key));
-            }
-
-            private int clearZSetSubKeys(int slot) {
+        public void run() {
+            try {
                 int count = 0;
-                EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-                if (encodeVersion == EncodeVersion.version_0) {
-                    count += clearByPrefix(slot, keyDesign.subKeyPrefix(keyMeta, key));
+                KeyType keyType = keyMeta.getKeyType();
+                if (keyType == KeyType.hash) {
+                    count = clearHashSubKeys(slot);
+                } else if (keyType == KeyType.zset) {
+                    count = clearZSetSubKeys(slot);
+                } else if (keyType == KeyType.set) {
+                    count = clearSetSubKeys(slot);
                 }
-                if (encodeVersion == EncodeVersion.version_0) {
-                    count += clearByPrefix(slot, keyDesign.subKeyPrefix2(keyMeta, key));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("sub key delete, namespace = {}, count = {}", namespace, count);
                 }
-                if (encodeVersion == EncodeVersion.version_1) {
-                    count += clearByPrefix(slot, keyDesign.subIndexKeyPrefix(keyMeta, key));
-                }
-                return count;
-            }
-
-            private int clearByPrefix(int slot, byte[] prefix) {
-                int count = 0;
-                byte[] startKey = prefix;
-                int limit = kvConfig.scanBatch();
-                while (true) {
-                    List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
-                    if (scan.isEmpty()) {
-                        break;
-                    }
-                    byte[][] keys = new byte[scan.size()][];
-                    int i = 0;
-                    for (KeyValue keyValue : scan) {
-                        keys[i] = keyValue.getKey();
-                        startKey = keyValue.getKey();
-                        i++;
-                    }
-                    kvClient.batchDelete(slot, keys);
-                    count += keys.length;
-                    if (scan.size() < limit) {
-                        break;
-                    }
-                }
-                return count;
+                KvGcMonitor.deleteSubKeys(Utils.bytesToString(keyDesign.getNamespace()), count);
+            } catch (Exception e) {
+                logger.warn("add delete task error, namespace = {}, ex = {}", namespace, e.toString());
             }
         }
+
+        private int clearHashSubKeys(int slot) {
+            return clearByPrefix(slot, keyDesign.subKeyPrefix(keyMeta, key));
+        }
+
+        private int clearSetSubKeys(int slot) {
+            return clearByPrefix(slot, keyDesign.subKeyPrefix(keyMeta, key));
+        }
+
+        private int clearZSetSubKeys(int slot) {
+            int count = 0;
+            EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+            if (encodeVersion == EncodeVersion.version_0) {
+                count += clearByPrefix(slot, keyDesign.subKeyPrefix(keyMeta, key));
+            }
+            if (encodeVersion == EncodeVersion.version_0) {
+                count += clearByPrefix(slot, keyDesign.subKeyPrefix2(keyMeta, key));
+            }
+            if (encodeVersion == EncodeVersion.version_1) {
+                count += clearByPrefix(slot, keyDesign.subIndexKeyPrefix(keyMeta, key));
+            }
+            return count;
+        }
+
+        private int clearByPrefix(int slot, byte[] prefix) {
+            int count = 0;
+            byte[] startKey = prefix;
+            int limit = kvConfig.scanBatch();
+            while (true) {
+                List<KeyValue> scan = kvClient.scanByPrefix(slot, startKey, prefix, limit, Sort.ASC, false);
+                if (scan.isEmpty()) {
+                    break;
+                }
+                byte[][] keys = new byte[scan.size()][];
+                int i = 0;
+                for (KeyValue keyValue : scan) {
+                    keys[i] = keyValue.getKey();
+                    startKey = keyValue.getKey();
+                    i++;
+                }
+                kvClient.batchDelete(slot, keys);
+                count += keys.length;
+                if (scan.size() < limit) {
+                    break;
+                }
+            }
+            return count;
+        }
+    }
 }
