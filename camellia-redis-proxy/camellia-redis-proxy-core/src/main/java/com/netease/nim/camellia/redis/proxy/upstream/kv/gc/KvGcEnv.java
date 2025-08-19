@@ -12,18 +12,14 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
-import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
-import com.netease.nim.camellia.tools.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -134,9 +130,9 @@ public class KvGcEnv {
     public static void updateMetaKeyScanStartSlot(String namespace, int slot) {
         try {
             if (slot < 0) {
-                subKeyStartKeyMap.remove(namespace);
+                metaKeyStartKeyMap.remove(namespace);
             } else {
-                subKeyStartKeyMap.put(namespace, slot);
+                metaKeyStartKeyMap.put(namespace, slot);
             }
             if (redisEnable()) {
                 String key = redisKey() + "#" + namespace + "#metaKeyScanStartSlot";
