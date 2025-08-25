@@ -119,6 +119,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用proxy命令批量管理proxy集群配置的说明，具体见：[proxy_command](other/proxy_command.md)
 * 关于redis_proxy初始化和预热，具体见：[init](other/init.md)
 * 关于application.yml的配置项，具体见：[application_yml](other/application_yml.md)
+* 使用simple_config管理多租户配置，具体见：[simple_config](other/simple_config.md)
 
 ## 应用场景
 * 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）

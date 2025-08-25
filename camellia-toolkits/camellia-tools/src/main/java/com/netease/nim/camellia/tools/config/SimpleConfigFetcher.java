@@ -39,7 +39,7 @@ public class SimpleConfigFetcher {
     }
 
     public String getConfig() {
-        if (nextPullTime > 0 && nextPullTime <= System.currentTimeMillis()) {
+        if (nextPullTime > 0 && nextPullTime >= System.currentTimeMillis()) {
             return config;
         }
         JSONObject response = null;
