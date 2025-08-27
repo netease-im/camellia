@@ -3,7 +3,7 @@
 
 * camellia-redis-proxy支持多租户
 * 也就是一个proxy实例可以同时代理多组路由
-* 不同路由直接互相独立，对外可以通过不同的proxy密码来区分
+* 不同路由之间互相独立，对外可以通过不同的proxy密码来区分
 * 基于ClientAuthProvider和ProxyRouteConfUpdater这两个扩展口来实现多租户的能力
 
 ### 示例
