@@ -43,6 +43,20 @@ public class MultiTenantConfigUtils {
         }
     }
 
+    public static List<MultiTenantSimpleConfig> getMultiTenantSimpleConfig() {
+        String string = ProxyDynamicConf.getString(CONF_KEY, null);
+        if (string == null) {
+            return new ArrayList<>();
+        }
+        List<MultiTenantSimpleConfig> list = new ArrayList<>();
+        JSONArray array = JSONArray.parseArray(string);
+        for (Object json : array) {
+            MultiTenantSimpleConfig config = JSONObject.parseObject(json.toString(), MultiTenantSimpleConfig.class);
+            list.add(config);
+        }
+        return list;
+    }
+
     public static boolean checkValid(MultiTenantConfig config) {
         try {
             if (config == null) return false;
