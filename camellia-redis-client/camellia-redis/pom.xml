@@ -28,6 +28,12 @@
 			<artifactId>camellia-redis-proxy-discovery-jedis2</artifactId>
 			<version>${revision}</version>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.1</version>
+			<scope>test</scope>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

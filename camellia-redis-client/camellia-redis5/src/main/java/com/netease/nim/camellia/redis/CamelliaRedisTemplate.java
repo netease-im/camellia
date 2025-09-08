@@ -8,6 +8,7 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
@@ -191,6 +192,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             if (resource == null) return null;
             PipelineResource pipelineResource = new PipelineResource(resource);
             pipelineResource.setRedisEnv(env);
+            pipelineResource.setPipelineFactory(pipelineFactory);
             return pipelineResource;
         });
         ProxyEnv env = factory.getEnv();
