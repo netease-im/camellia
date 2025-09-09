@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ public class ProxyDynamicConf {
 
     private static Map<String, String> initConf = new HashMap<>();
     private static Map<String, String> conf = new HashMap<>();
-    private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
+    private static final Set<DynamicConfCallback> callbackSet = new ConcurrentHashSet<>();
 
     private static final AtomicBoolean reloading = new AtomicBoolean(false);
 
