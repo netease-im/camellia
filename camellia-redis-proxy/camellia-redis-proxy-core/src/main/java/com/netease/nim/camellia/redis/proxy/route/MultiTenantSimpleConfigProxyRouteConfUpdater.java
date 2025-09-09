@@ -30,6 +30,8 @@ public class MultiTenantSimpleConfigProxyRouteConfUpdater extends ProxyRouteConf
 
     private List<MultiTenantSimpleConfig> oldConfigs = null;
     private String oldFetchUrl = null;
+    private String oldFetchKey = null;
+    private String oldFetchSecret = null;
     private Map<String, RouteConfig> bizMap = new ConcurrentHashMap<>();
 
     public MultiTenantSimpleConfigProxyRouteConfUpdater() {
@@ -52,11 +54,14 @@ public class MultiTenantSimpleConfigProxyRouteConfUpdater extends ProxyRouteConf
         try {
             List<MultiTenantSimpleConfig> configs = MultiTenantConfigUtils.getMultiTenantSimpleConfig();
             String url = ProxyDynamicConf.getString("simple.config.fetch.url", null);
+            String key = ProxyDynamicConf.getString("simple.config.fetch.key", null);
+            String secret = ProxyDynamicConf.getString("simple.config.fetch.secret", null);
             if (url == null) {
                 logger.warn("'simple.config.fetch.url' is null");
                 return;
             }
-            if (Objects.equals(configs, oldConfigs) && Objects.equals(url, oldFetchUrl)) {
+            if (Objects.equals(configs, oldConfigs) && Objects.equals(url, oldFetchUrl)
+                    && Objects.equals(key, oldFetchKey) && Objects.equals(secret, oldFetchSecret)) {
                 for (Map.Entry<String, RouteConfig> entry : bizMap.entrySet()) {
                     RouteConfig routeConfig = entry.getValue();
                     try {
@@ -77,7 +82,7 @@ public class MultiTenantSimpleConfigProxyRouteConfUpdater extends ProxyRouteConf
             Set<String> removedSet = bizMap == null ? new HashSet<>() : new HashSet<>(bizMap.keySet());
             Map<String, RouteConfig> newMap = new HashMap<>();
             for (MultiTenantSimpleConfig simpleConfig : configs) {
-                SimpleConfigFetcher fetcher = new SimpleConfigFetcher(url, simpleConfig.getBiz());
+                SimpleConfigFetcher fetcher = new SimpleConfigFetcher(url, simpleConfig.getBiz(), key, secret);
                 String config = fetcher.getConfig();
                 ResourceTable resourceTable = parse(config);
                 RouteConfig routeConfig = new RouteConfig(simpleConfig.getBiz(), config, resourceTable, fetcher);
@@ -102,6 +107,8 @@ public class MultiTenantSimpleConfigProxyRouteConfUpdater extends ProxyRouteConf
             this.bizMap = newMap;
             this.oldConfigs = configs;
             this.oldFetchUrl = url;
+            this.oldFetchKey = key;
+            this.oldFetchSecret = secret;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         } finally {

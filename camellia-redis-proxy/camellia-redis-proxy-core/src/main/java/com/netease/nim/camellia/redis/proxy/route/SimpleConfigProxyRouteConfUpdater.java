@@ -72,7 +72,9 @@ public class SimpleConfigProxyRouteConfUpdater extends ProxyRouteConfUpdater {
         subMap.put(biz + "|" + bgroup, Boolean.TRUE);
 
         String url = ProxyDynamicConf.getString("simple.config.fetch.url", null);
-        SimpleConfigFetcher fetcher = CamelliaMapUtils.computeIfAbsent(fetcherMap, biz, k -> new SimpleConfigFetcher(url, biz));
+        String key = ProxyDynamicConf.getString("simple.config.fetch.key", null);
+        String secret = ProxyDynamicConf.getString("simple.config.fetch.secret", null);
+        SimpleConfigFetcher fetcher = CamelliaMapUtils.computeIfAbsent(fetcherMap, biz, k -> new SimpleConfigFetcher(url, biz, key, secret));
 
         String config = fetcher.getConfig();
         ResourceTable resourceTable = parse(config);

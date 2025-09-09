@@ -2,10 +2,12 @@ package com.netease.nim.camellia.tools.config;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.tools.http.ParamBuilder;
+import com.netease.nim.camellia.tools.utils.CheckSumUtils;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SimpleConfigFetcher {
@@ -28,6 +30,8 @@ public class SimpleConfigFetcher {
 
     private final String url;
     private final String biz;
+    private final String key;
+    private final String secret;
 
     private String md5 = null;
     private long nextPullTime = -1L;
@@ -36,6 +40,15 @@ public class SimpleConfigFetcher {
     public SimpleConfigFetcher(String url, String biz) {
         this.biz = biz;
         this.url = url;
+        this.key = System.getProperty("simple.config.key");
+        this.secret = System.getProperty("simple.config.secret");
+    }
+
+    public SimpleConfigFetcher(String url, String biz, String key, String secret) {
+        this.biz = biz;
+        this.url = url;
+        this.key = key;
+        this.secret = secret;
     }
 
     public String getConfig() {
@@ -49,7 +62,7 @@ public class SimpleConfigFetcher {
             if (md5 != null) {
                 builder.addParam("md5", md5);
             }
-            response = get(url + "?" + builder.build());
+            response = get(url + "?" + builder.build(), key, secret);
             int code = response.getIntValue("code");
             if (code == 304) {
                 return config;
@@ -70,8 +83,14 @@ public class SimpleConfigFetcher {
         }
     }
 
-    private static JSONObject get(String url) {
+    private static JSONObject get(String url, String key, String secret) {
         Request.Builder builder = new Request.Builder().get().url(url);
+        if (key != null && secret != null) {
+            Map<String, String> authHeaders = CheckSumUtils.authHeaders(key, secret);
+            for (Map.Entry<String, String> entry : authHeaders.entrySet()) {
+                builder.addHeader(entry.getKey(), entry.getValue());
+            }
+        }
         Request request = builder.build();
         try (Response response = okHttpClient.newCall(request).execute()) {
             return JSONObject.parseObject(response.body().string());

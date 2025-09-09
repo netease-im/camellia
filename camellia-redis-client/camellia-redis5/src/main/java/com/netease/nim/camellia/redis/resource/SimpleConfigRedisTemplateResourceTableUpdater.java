@@ -40,6 +40,16 @@ public class SimpleConfigRedisTemplateResourceTableUpdater extends RedisTemplate
         scheduler.scheduleAtFixedRate(this::fetch, 1, 1, TimeUnit.SECONDS);
     }
 
+    public SimpleConfigRedisTemplateResourceTableUpdater(String url, String biz, String key, String secret) {
+        this.biz = biz;
+        this.fetcher = new SimpleConfigFetcher(url, biz, key, secret);
+        fetch();
+        if (resourceTable == null) {
+            throw new IllegalStateException("init redis resource table error, biz = " + biz + ", url = " + url + ", key = " + key);
+        }
+        scheduler.scheduleAtFixedRate(this::fetch, 1, 1, TimeUnit.SECONDS);
+    }
+
     @Override
     public ResourceTable getResourceTable() {
         return resourceTable;
