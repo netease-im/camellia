@@ -47,9 +47,11 @@ public interface PipelineFactory {
                 Jedis jedis = jedisMap.get(key);
                 if (jedis == null) {
                     jedis = jedisCluster.getJedis(hostAndPort);
-                    jedisMap.put(hostAndPort.toString(), jedis);
+                    jedisMap.put(key, jedis);
                 }
-                return jedis.pipelined();
+                pipeline = jedis.pipelined();
+                map.put(key, pipeline);
+                return pipeline;
             }
             String key = resource.getUrl();
 

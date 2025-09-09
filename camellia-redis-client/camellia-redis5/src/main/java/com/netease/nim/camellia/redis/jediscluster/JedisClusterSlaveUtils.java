@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.jediscluster;
 
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.util.SafeEncoder;
 

@@ -23,7 +23,6 @@ public class JedisClusterWrapper extends JedisCluster {
 
     private static final Logger logger = LoggerFactory.getLogger(JedisClusterWrapper.class);
 
-    private static final Field providerField;
     private static final Field cacheField;
     private static final Field slotNodesField;
     private static final Field replicaSlotsField;
@@ -31,9 +30,6 @@ public class JedisClusterWrapper extends JedisCluster {
     private static final Method getHostAndPortMethod;
     static {
         try {
-            providerField = JedisClusterWrapper.class.getDeclaredField("provider");
-            providerField.setAccessible(true);
-
             cacheField = ClusterConnectionProvider.class.getDeclaredField("cache");
             cacheField.setAccessible(true);
 
@@ -54,7 +50,7 @@ public class JedisClusterWrapper extends JedisCluster {
     private final ConcurrentHashMap<HostAndPort, JedisPool> jedisPoolMap = new ConcurrentHashMap<>();
     private final JedisClientConfig jedisClientConfig;
 
-    private ClusterConnectionProvider provider;
+    private ClusterConnectionProvider clusterProvider;
     private JedisClusterInfoCache cache;
 
     public JedisClusterWrapper(Set<HostAndPort> clusterNodes, JedisClientConfig clientConfig, int maxAttempts,
@@ -66,8 +62,8 @@ public class JedisClusterWrapper extends JedisCluster {
 
     private void init() {
         try {
-            this.provider = (ClusterConnectionProvider) providerField.get(this);
-            this.cache = (JedisClusterInfoCache) cacheField.get(provider);
+            this.clusterProvider = (ClusterConnectionProvider) provider;
+            this.cache = (JedisClusterInfoCache) cacheField.get(clusterProvider);
         } catch (Exception e) {
             logger.error("init error", e);
             throw new CamelliaRedisException(e);
@@ -114,7 +110,7 @@ public class JedisClusterWrapper extends JedisCluster {
 
     public Jedis getSlaveJedis(byte[] key) {
         int slot = JedisClusterCRC16.getSlot(key);
-        try (Connection connection = provider.getReplicaConnectionFromSlot(slot)) {
+        try (Connection connection = clusterProvider.getReplicaConnectionFromSlot(slot)) {
             try {
                 HostAndPort hostAndPort = (HostAndPort) getHostAndPortMethod.invoke(connection);
                 JedisPool jedisPool = getJedisPool(hostAndPort);
@@ -132,7 +128,7 @@ public class JedisClusterWrapper extends JedisCluster {
     }
 
     public HostAndPort getSlaveHostAndPort(int slot) {
-        try (Connection connection = provider.getReplicaConnectionFromSlot(slot)) {
+        try (Connection connection = clusterProvider.getReplicaConnectionFromSlot(slot)) {
             try {
                 return (HostAndPort) getHostAndPortMethod.invoke(connection);
             } catch (Exception e) {
