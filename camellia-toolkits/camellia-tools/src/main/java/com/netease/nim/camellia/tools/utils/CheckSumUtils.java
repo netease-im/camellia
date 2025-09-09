@@ -3,6 +3,7 @@ package com.netease.nim.camellia.tools.utils;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -22,7 +23,20 @@ public class CheckSumUtils {
         return headers;
     }
 
-    private static String getCheckSum(String secret, String nonce, String curTime) {
+    public static boolean check(String secret, String nonce, String curTime, String checksum) {
+        long time;
+        try {
+            time = Long.parseLong(curTime);
+        } catch (Exception e) {
+            return false;
+        }
+        if (Math.abs(System.currentTimeMillis()/1000 - time) > 60) {
+            return false;
+        }
+        return Objects.equals(getCheckSum(secret, nonce, curTime), checksum);
+    }
+
+    public static String getCheckSum(String secret, String nonce, String curTime) {
         return sha1(secret + nonce + curTime);
     }
 
