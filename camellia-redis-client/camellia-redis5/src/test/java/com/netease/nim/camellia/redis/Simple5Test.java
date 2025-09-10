@@ -14,17 +14,24 @@ import java.util.*;
  */
 public class Simple5Test {
 
-    private static final String redis_url = System.getProperty("test_redis_url", "");
-    private static final String redis_cluster_url = System.getProperty("test_redis_cluster_url", "");
-    private static final String redis_cluster_slave_url = System.getProperty("test_redis_cluster_slave_url", "");
+    private static final boolean enable = Boolean.parseBoolean(System.getProperty("test_enable", "false"));
+    private static final String redis_url = System.getProperty("test_redis_url", "redis://@127.0.0.1:6379");
+    private static final String redis_cluster_url = System.getProperty("test_redis_cluster_url", "redis-cluster://@10.44.40.24:7101,10.44.40.25:7102,10.44.40.23:7101");
+    private static final String redis_cluster_slave_url = System.getProperty("test_redis_cluster_slave_url", "redis-cluster-slaves://@10.44.40.24:7101,10.44.40.25:7102,10.44.40.23:7101");
+    private static final String redis_sentinel_url = System.getProperty("test_redis_sentinel_url", "redis-sentinel://@127.0.0.1:26379/mymaster1");
+    private static final String redis_sentinel_slaves_url = System.getProperty("test_redis_sentinel_slaves_url", "redis-sentinel-slaves://@127.0.0.1:26379/mymaster1");
 
     @Test
     public void autoTest() {
         try {
+            if (!enable) {
+                return;
+            }
             test(redis());
             test(redisCluster());
             test(shardRedis());
-            test(readWriteSeparate());
+            test(readWriteSeparate1());
+            test(readWriteSeparate2());
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -45,15 +52,16 @@ public class Simple5Test {
     }
 
     private CamelliaRedisTemplate shardRedis() {
-        if (redis_cluster_url.isEmpty() || redis_url.isEmpty()) {
+        if (redis_cluster_url.isEmpty() || redis_url.isEmpty() || redis_sentinel_url.isEmpty()) {
             return null;
         }
         String s = "{\n" +
                 "  \"type\": \"sharding\",\n" +
                 "  \"operation\": {\n" +
                 "    \"operationMap\": {\n" +
-                "      \"0-2-4\": \"" + redis_url + "\",\n" +
-                "      \"1-3-5\": \"" + redis_cluster_url + "\"\n" +
+                "      \"0-1\": \"" + redis_url + "\",\n" +
+                "      \"2-3\": \"" + redis_cluster_url + "\",\n" +
+                "      \"4-5\": \"" + redis_sentinel_url + "\"\n" +
                 "    },\n" +
                 "    \"bucketSize\": 6\n" +
                 "  }\n" +
@@ -62,7 +70,7 @@ public class Simple5Test {
         return new CamelliaRedisTemplate(resourceTable);
     }
 
-    private CamelliaRedisTemplate readWriteSeparate() {
+    private CamelliaRedisTemplate readWriteSeparate1() {
         if (redis_cluster_url.isEmpty() || redis_cluster_slave_url.isEmpty()) {
             return null;
         }
@@ -72,6 +80,22 @@ public class Simple5Test {
                 "    \"read\": \"" + redis_cluster_slave_url + "\",\n" +
                 "    \"type\": \"rw_separate\",\n" +
                 "    \"write\": \"" + redis_cluster_url + "\"\n" +
+                "  }\n" +
+                "}";
+        ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(s);
+        return new CamelliaRedisTemplate(resourceTable);
+    }
+
+    private CamelliaRedisTemplate readWriteSeparate2() {
+        if (redis_sentinel_url.isEmpty() || redis_sentinel_slaves_url.isEmpty()) {
+            return null;
+        }
+        String s = "{\n" +
+                "  \"type\": \"simple\",\n" +
+                "  \"operation\": {\n" +
+                "    \"read\": \"" + redis_sentinel_slaves_url + "\",\n" +
+                "    \"type\": \"rw_separate\",\n" +
+                "    \"write\": \"" + redis_sentinel_url + "\"\n" +
                 "  }\n" +
                 "}";
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(s);
@@ -125,14 +149,23 @@ public class Simple5Test {
         String k2 = UUID.randomUUID().toString();
         String member = UUID.randomUUID().toString();
         double score = System.currentTimeMillis();
+        String k3 = UUID.randomUUID().toString();
+        String hashField = UUID.randomUUID().toString();
+        String hashValue = UUID.randomUUID().toString();
+        String k4 = UUID.randomUUID().toString();
+        String setMember = UUID.randomUUID().toString();
 
         try (ICamelliaRedisPipeline pipeline = template.pipelined()) {
             String[] array = kv.keySet().toArray(new String[0]);
             Response<Long> zadd = pipeline.zadd(k2, score, member);
+            pipeline.hset(k3, hashField, hashValue);
+            pipeline.sadd(k4, setMember);
             pipeline.sync();
             sleep(1000);
             Response<List<String>> zrange = pipeline.zrange(k2, 0, -1);
             Response<List<String>> mget = pipeline.mget(array);
+            Response<String> hget = pipeline.hget(k3, hashField);
+            Response<Set<String>> smembers = pipeline.smembers(k4);
             pipeline.sync();
             List<String> strings = mget.get();
             for (int i=0; i<array.length; i++) {
@@ -141,6 +174,8 @@ public class Simple5Test {
             Assert.assertEquals(1L, zadd.get().longValue());
             Assert.assertEquals(1L, zrange.get().size());
             Assert.assertEquals(member, zrange.get().iterator().next());
+            Assert.assertEquals(hashValue, hget.get());
+            Assert.assertEquals(setMember, smembers.get().iterator().next());
         }
         System.out.println("test success");
     }
