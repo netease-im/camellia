@@ -16,10 +16,11 @@ camellia-redis-proxy:
   proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider # tls provider
   http-port: -1 #http port for resp-over-http
   cport: -1
+  cport-password: xxx
   uds-path: "/tmp/xxx.sock" #unix-domain-socket file path
   proxy-protocol-enable: false #enabled proxy protocol
   proxy-protocol-ports: "" #enabled proxy protocol ports, default all
-  netty-transport-mode: kqueue #kqueue\epoll\io_uring\nio，default nio
+  netty-transport-mode: auto #kqueue\epoll\io_uring\nio\auto，default auto
   cluster-mode-enable: false 
   sentinel-mode-enable: false
   netty:
