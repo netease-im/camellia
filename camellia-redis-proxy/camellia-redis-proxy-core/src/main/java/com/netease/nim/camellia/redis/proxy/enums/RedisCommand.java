@@ -62,7 +62,7 @@ public enum RedisCommand {
     LPUSH(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     LLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     LRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    LTRIM(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    LTRIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     LINDEX(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     LSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     LREM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
