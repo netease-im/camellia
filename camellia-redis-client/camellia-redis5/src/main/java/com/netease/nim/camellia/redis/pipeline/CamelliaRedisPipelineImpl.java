@@ -665,7 +665,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline0 {
         }
     }
 
-    @ReadOp
+    @WriteOp
     @Override
     public Response<String> ltrim(@ShardingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
@@ -2200,7 +2200,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline0 {
         }
     }
 
-    @ReadOp
+    @WriteOp
     @Override
     public Response<String> ltrim(@ShardingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);

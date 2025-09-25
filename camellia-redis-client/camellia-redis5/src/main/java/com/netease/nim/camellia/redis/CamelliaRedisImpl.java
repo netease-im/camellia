@@ -762,7 +762,7 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         }
     }
 
-    @ReadOp
+    @WriteOp
     @Override
     public String ltrim(@ShardingParam String key, long start, long end) {
         LogUtil.debugLog(resource, key);
@@ -2613,7 +2613,7 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         }
     }
 
-    @ReadOp
+    @WriteOp
     @Override
     public String ltrim(@ShardingParam byte[] key, long start, long end) {
         LogUtil.debugLog(resource, key);
