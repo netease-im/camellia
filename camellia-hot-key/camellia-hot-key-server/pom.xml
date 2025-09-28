@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key-server</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-server</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

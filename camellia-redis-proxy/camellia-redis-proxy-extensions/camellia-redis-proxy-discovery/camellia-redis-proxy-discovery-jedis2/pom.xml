@@ -6,6 +6,7 @@
 
     <artifactId>camellia-redis-proxy-discovery-jedis2</artifactId>
     <version>${revision}</version>
+    <name>camellia-redis-proxy-discovery-jedis2</name>
 
     <parent>
         <groupId>com.netease.nim</groupId>

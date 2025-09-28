@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-mq-isolation</artifactId>
 	<version>${revision}</version>
+	<name>camellia-mq-isolation</name>
 
 	<packaging>pom</packaging>
 

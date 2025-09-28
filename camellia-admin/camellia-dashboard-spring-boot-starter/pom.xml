@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-dashboard-spring-boot-starter</artifactId>
 	<version>${revision}</version>
+	<name>camellia-dashboard-spring-boot-starter</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

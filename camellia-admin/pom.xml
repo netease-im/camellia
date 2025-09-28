@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-admin</artifactId>
 	<version>${revision}</version>
+	<name>camellia-admin</name>
 
 	<packaging>pom</packaging>
 

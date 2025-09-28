@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>camellia-redis-proxy-hot-key-common</artifactId>
+    <version>${revision}</version>
+    <name>camellia-redis-proxy-hot-key-common</name>
 
     <dependencies>
         <dependency>

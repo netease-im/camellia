@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-id-gen-tests</artifactId>
 	<version>${revision}</version>
+	<name>camellia-id-gen-tests</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

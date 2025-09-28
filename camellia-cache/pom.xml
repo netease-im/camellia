@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-cache</artifactId>
 	<version>${revision}</version>
+	<name>camellia-cache</name>
 
 	<packaging>pom</packaging>
 

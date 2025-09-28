@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-bootstrap</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-bootstrap</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-delay-queue-server-bootstrap</artifactId>
 	<version>${revision}</version>
+	<name>camellia-delay-queue-server-bootstrap</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

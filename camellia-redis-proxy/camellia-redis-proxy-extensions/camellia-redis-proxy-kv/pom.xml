@@ -6,6 +6,7 @@
 
     <artifactId>camellia-redis-proxy-kv</artifactId>
     <version>${revision}</version>
+    <name>camellia-redis-proxy-kv</name>
 
     <packaging>pom</packaging>
     <modules>

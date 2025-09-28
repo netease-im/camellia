@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-feign-tests</artifactId>
 	<version>${revision}</version>
+	<name>camellia-feign-tests</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

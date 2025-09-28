@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hbase-client</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hbase-client</name>
 
 	<packaging>pom</packaging>
 

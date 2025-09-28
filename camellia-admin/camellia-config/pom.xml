@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-config</artifactId>
 	<version>${revision}</version>
+	<name>camellia-config</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

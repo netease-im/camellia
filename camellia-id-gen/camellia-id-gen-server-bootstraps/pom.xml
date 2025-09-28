@@ -6,6 +6,7 @@
 
     <artifactId>camellia-id-gen-server-bootstraps</artifactId>
     <version>${revision}</version>
+    <name>camellia-id-gen-server-bootstraps</name>
 
     <packaging>pom</packaging>
 

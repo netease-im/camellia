@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-spring-boot-starters</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-spring-boot-starters</name>
 
 	<packaging>pom</packaging>
 

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
 	<version>${revision}</version>
+	<name>camellia-id-gen-strict-spring-boot-starter</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

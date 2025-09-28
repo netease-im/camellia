@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key-spring-boot-starters</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-spring-boot-starters</name>
 
 	<packaging>pom</packaging>
 

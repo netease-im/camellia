@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-spring-redis-zk-discovery-spring-boot</artifactId>
 	<version>${revision}</version>
+	<name>camellia-spring-redis-zk-discovery-spring-boot</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

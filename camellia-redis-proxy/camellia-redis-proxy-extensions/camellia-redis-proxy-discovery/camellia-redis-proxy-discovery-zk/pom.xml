@@ -6,6 +6,7 @@
 
     <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
     <version>${revision}</version>
+    <name>camellia-redis-proxy-discovery-zk</name>
 
     <parent>
         <groupId>com.netease.nim</groupId>

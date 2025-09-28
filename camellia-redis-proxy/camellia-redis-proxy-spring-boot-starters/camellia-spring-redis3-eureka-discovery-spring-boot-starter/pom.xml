@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-spring-redis3-eureka-discovery-spring-boot-starter</artifactId>
 	<version>${revision}</version>
+	<name>camellia-spring-redis3-eureka-discovery-spring-boot-starter</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

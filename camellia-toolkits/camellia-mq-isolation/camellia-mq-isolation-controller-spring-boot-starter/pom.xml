@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-mq-isolation-controller-spring-boot-starter</artifactId>
 	<version>${revision}</version>
+	<name>camellia-mq-isolation-controller-spring-boot-starter</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

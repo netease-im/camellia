@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-delay-queue-tests</artifactId>
 	<version>${revision}</version>
+	<name>camellia-delay-queue-tests</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

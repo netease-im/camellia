@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-id-gen</artifactId>
 	<version>${revision}</version>
+	<name>camellia-id-gen</name>
 
 	<packaging>pom</packaging>
 

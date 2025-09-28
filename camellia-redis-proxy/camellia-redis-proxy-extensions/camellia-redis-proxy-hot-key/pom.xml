@@ -6,6 +6,7 @@
 
     <artifactId>camellia-redis-proxy-hot-key</artifactId>
     <version>${revision}</version>
+    <name>camellia-redis-proxy-hot-key</name>
 
     <packaging>pom</packaging>
     <modules>

@@ -6,6 +6,7 @@
 
     <artifactId>camellia-hot-key-discovery-eureka</artifactId>
     <version>${revision}</version>
+    <name>camellia-hot-key-discovery-eureka</name>
 
     <parent>
         <groupId>com.netease.nim</groupId>

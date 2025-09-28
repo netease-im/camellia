@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-dashboard</artifactId>
 	<version>${revision}</version>
+	<name>camellia-dashboard</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

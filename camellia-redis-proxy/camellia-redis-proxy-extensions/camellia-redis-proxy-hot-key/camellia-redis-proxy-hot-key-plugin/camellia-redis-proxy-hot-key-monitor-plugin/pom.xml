@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>camellia-redis-proxy-hot-key-monitor-plugin</artifactId>
+    <version>${revision}</version>
+    <name>camellia-redis-proxy-hot-key-monitor-plugin</name>
 
     <dependencies>
         <dependency>

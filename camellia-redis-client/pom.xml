@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-client</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-client</name>
 
 	<packaging>pom</packaging>
 

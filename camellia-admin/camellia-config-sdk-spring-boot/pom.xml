@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-config-sdk-spring-boot</artifactId>
 	<version>${revision}</version>
+	<name>camellia-config-sdk-spring-boot</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

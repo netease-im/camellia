@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-tools-tests</artifactId>
 	<version>${revision}</version>
+	<name>camellia-tools-tests</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

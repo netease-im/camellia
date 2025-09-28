@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-feign-client</artifactId>
 	<version>${revision}</version>
+	<name>camellia-feign-client</name>
 
 	<packaging>pom</packaging>
 

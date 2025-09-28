@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
+    <version>${revision}</version>
+    <name>camellia-redis-proxy-hot-key-discovery-eureka</name>
 
     <dependencies>
         <dependency>

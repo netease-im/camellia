@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-toolkit</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-toolkit</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

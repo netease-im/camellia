@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-tests</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-tests</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

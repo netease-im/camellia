@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-feign-spring-boot</artifactId>
 	<version>${revision}</version>
+	<name>camellia-feign-spring-boot</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

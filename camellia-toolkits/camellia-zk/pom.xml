@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-zk</artifactId>
 	<version>${revision}</version>
+	<name>camellia-zk</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>camellia-redis-proxy-hot-key-discovery</artifactId>
+    <version>${revision}</version>
+    <name>camellia-redis-proxy-hot-key-discovery</name>
+
     <packaging>pom</packaging>
     <modules>
         <module>camellia-redis-proxy-hot-key-discovery-zk</module>

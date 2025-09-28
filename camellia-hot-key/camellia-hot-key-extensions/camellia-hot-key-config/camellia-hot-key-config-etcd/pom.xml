@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key-config-etcd</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-config-etcd</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

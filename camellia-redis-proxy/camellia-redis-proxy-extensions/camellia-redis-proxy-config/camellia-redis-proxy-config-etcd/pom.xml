@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-config-etcd</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-config-etcd</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

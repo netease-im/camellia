@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key-config-nacos</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-config-nacos</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

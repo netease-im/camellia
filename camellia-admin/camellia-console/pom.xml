@@ -6,6 +6,7 @@
 
     <artifactId>camellia-console</artifactId>
     <version>${revision}</version>
+    <name>camellia-console</name>
 
     <parent>
         <groupId>com.netease.nim</groupId>

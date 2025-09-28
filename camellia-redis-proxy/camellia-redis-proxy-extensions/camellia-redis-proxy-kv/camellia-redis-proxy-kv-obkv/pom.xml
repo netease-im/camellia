@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-kv-obkv</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-kv-obkv</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

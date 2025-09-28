@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-delay-queue</artifactId>
 	<version>${revision}</version>
+	<name>camellia-delay-queue</name>
 
 	<packaging>pom</packaging>
 

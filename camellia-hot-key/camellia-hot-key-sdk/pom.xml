@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key-sdk</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-sdk</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -6,6 +6,7 @@
 
     <artifactId>camellia-hot-key-discovery-zk</artifactId>
     <version>${revision}</version>
+    <name>camellia-hot-key-discovery-zk</name>
 
     <parent>
         <groupId>com.netease.nim</groupId>

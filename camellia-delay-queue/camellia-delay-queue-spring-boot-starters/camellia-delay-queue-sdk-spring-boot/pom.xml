@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-delay-queue-sdk-spring-boot</artifactId>
 	<version>${revision}</version>
+	<name>camellia-delay-queue-sdk-spring-boot</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-mq-isolation-kafka</artifactId>
 	<version>${revision}</version>
+	<name>camellia-mq-isolation-kafka</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

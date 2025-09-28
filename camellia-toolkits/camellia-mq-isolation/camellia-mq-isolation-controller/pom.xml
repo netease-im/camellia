@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-mq-isolation-controller</artifactId>
 	<version>${revision}</version>
+	<name>camellia-mq-isolation-controller</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

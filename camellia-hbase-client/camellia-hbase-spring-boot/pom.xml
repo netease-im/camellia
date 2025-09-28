@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hbase-spring-boot</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hbase-spring-boot</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

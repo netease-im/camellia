@@ -6,6 +6,7 @@
 
     <artifactId>camellia-redis-proxy-discovery</artifactId>
     <version>${revision}</version>
+    <name>camellia-redis-proxy-discovery</name>
 
     <packaging>pom</packaging>
 

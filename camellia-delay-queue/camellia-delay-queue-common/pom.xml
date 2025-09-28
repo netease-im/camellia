@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-delay-queue-common</artifactId>
 	<version>${revision}</version>
+	<name>camellia-delay-queue-common</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

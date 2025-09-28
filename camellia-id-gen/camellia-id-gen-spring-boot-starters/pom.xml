@@ -6,6 +6,7 @@
 
     <artifactId>camellia-id-gen-spring-boot-starters</artifactId>
     <version>${revision}</version>
+    <name>camellia-id-gen-spring-boot-starters</name>
 
     <packaging>pom</packaging>
 

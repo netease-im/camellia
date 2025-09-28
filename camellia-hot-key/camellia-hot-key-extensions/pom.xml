@@ -4,6 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>camellia-hot-key-extensions</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-extensions</name>
 
 	<packaging>pom</packaging>
 

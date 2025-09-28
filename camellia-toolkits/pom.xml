@@ -4,6 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>camellia-toolkits</artifactId>
 	<version>${revision}</version>
+	<name>camellia-toolkits</name>
 
 	<packaging>pom</packaging>
 

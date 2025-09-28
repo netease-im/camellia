@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-zk-registry-spring-boot-starter</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-codec</artifactId>
 	<version>${revision}</version>
+	<name>camellia-codec</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key-server-bootstrap</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key-server-bootstrap</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-kv-hbase</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-kv-hbase</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

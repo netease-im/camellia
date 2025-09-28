@@ -6,6 +6,7 @@
 
     <artifactId>camellia-delay-queue-spring-boot-starters</artifactId>
     <version>${revision}</version>
+    <name>camellia-delay-queue-spring-boot-starters</name>
 
     <packaging>pom</packaging>
 

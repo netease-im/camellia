@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-eureka-base</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-eureka-base</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>

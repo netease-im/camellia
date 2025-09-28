@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-hot-key</artifactId>
 	<version>${revision}</version>
+	<name>camellia-hot-key</name>
 
 	<packaging>pom</packaging>
 

@@ -5,6 +5,7 @@
 
 	<artifactId>camellia-redis-proxy-mq-kafka</artifactId>
 	<version>${revision}</version>
+	<name>camellia-redis-proxy-mq-kafka</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
