@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.3.7（2025/xx/xx）
+# 1.3.7（2025/09/28）
 ### 新增
 * camellia-redis-client，pipeline操作支持multiKey的命令，当前支持mget
 * camellia-redis-client，新增对jedis5的支持

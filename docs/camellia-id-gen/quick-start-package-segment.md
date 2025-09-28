@@ -1,10 +1,10 @@
 
 
-下载最新版安装包并解压（v1.3.6）：
+下载最新版安装包并解压（v1.3.7）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.3.6/camellia-id-gen-segment-server-1.3.6.tar.gz
-tar zxvf camellia-id-gen-segment-server-1.3.6.tar.gz
-cd camellia-id-gen-segment-server-1.3.6/
+wget https://github.com/netease-im/camellia/releases/download/1.3.7/camellia-id-gen-segment-server-1.3.7.tar.gz
+tar zxvf camellia-id-gen-segment-server-1.3.7.tar.gz
+cd camellia-id-gen-segment-server-1.3.7/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml

@@ -7,7 +7,7 @@ PROXY命令用于查询和操作proxy本身的一些配置，1.3.0开始，限�
 示例： 
 ```shell
 127.0.0.1:6380> proxy info
-camellia_version:v1.3.6
+camellia_version:v1.3.7
 upstream_client_template_factory:UpstreamRedisClientTemplateFactory
 transpond_config:{"type":"local","multiTenantsSupport":false}
 client_auth_provider:ClientAuthByConfigProvider

@@ -16,7 +16,7 @@ services:
 
     camellia_proxy_rw:
         container_name: camellia_proxy_rw
-        image: 48n6e/camellia-redis-proxy:1.3.6-jdk-21-0.0.1
+        image: 48n6e/camellia-redis-proxy:1.3.7-jdk-21-0.0.1
         volumes:
             - "./application.yml:/opt/camellia-redis-proxy/BOOT-INF/classes/application.yml"
             - "./resource-table.json:/opt/camellia-redis-proxy/BOOT-INF/classes/resource-table.json"
