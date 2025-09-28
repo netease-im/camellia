@@ -2,13 +2,25 @@
 
 # 1.3.7（2025/xx/xx）
 ### add
-* camellia-redis-client, pipeline support multiKey commands, thanks [@TherChenYang](https://github.com/TherChenYang)
+* camellia-redis-client, pipeline support multiKey commands, current support mget
+* camellia-redis-client, support jedis5新增对jedis5的支持
+* camellia-tools, support `SimpleConfigFetcher` as a simple config server
+* camellia-tools, provide `HttpClientUtils` as a simple http tools
+* camellia-redis-client, support use `SimpleConfigFetcher`
+* camellia-hbase-client, support use `SimpleConfigFetcher`
+* camellia-redis-proxy, support use `SimpleConfigFetcher`
+* camellia-hbase-client, support custom kv in resource url
 
 ### update
-* none
+* camellia-redis-proxy, kv, optimize gc logic, support configure gc threads
+* camellia-redis-client, optimize log on redis-cluster-slave
 
 ### fix
 * camellia-delay-queue-sdk-spring-boot, move listener registration logic to BeanPostProcessor, thanks [@logan2013](https://github.com/logan2013)
+* camellia-redis-proxy/camellia-redis-client, ltrim should write command, thanks [@shenyujia2512](https://github.com/shenyujia2512)
+* camellia-redis-client, fix redis-cluster-slave init
+* camellia-redis-proxy, fix ConcurrentModificationException error when remove callback on ProxyDynamicConf callback
+* camellia-redis-client, fix no use of username on redis-cluster-slave authentication
 
 
 # 1.3.6（2025/06/23）

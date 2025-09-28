@@ -2,13 +2,25 @@
 
 # 1.3.7（2025/xx/xx）
 ### 新增
-* camellia-redis-client，pipeline操作支持multiKey的命令，如mget等，感谢 [@TherChenYang](https://github.com/TherChenYang)
+* camellia-redis-client，pipeline操作支持multiKey的命令，当前支持mget
+* camellia-redis-client，新增对jedis5的支持
+* camellia-tools，支持 `SimpleConfigFetcher`，方便定义一个简单的外部配置中心
+* camellia-tools，提供一个简单的http调用工具类 `HttpClientUtils`
+* camellia-redis-client，支持使用 `SimpleConfigFetcher` 管理动态配置
+* camellia-hbase-client，支持使用 `SimpleConfigFetcher` 管理动态配置
+* camellia-redis-proxy，支持使用 `SimpleConfigFetcher` 管理动态配置
+* camellia-hbase-client，支持在url中使用自定义kv
 
 ### 更新
-* 无
+* camellia-redis-proxy，kv，优化gc逻辑，支持配置并发线程
+* camellia-redis-client，优化了redis-cluster-slave的日志打印
 
 ### fix
 * camellia-delay-queue-sdk-spring-boot，优化初始化逻辑，避免bean互相依赖场景下没有注册CamelliaDelayMsgListener，感谢 [@logan2013](https://github.com/logan2013)
+* camellia-redis-proxy/camellia-redis-client，ltrim命令应该是写命令，感谢 [@shenyujia2512](https://github.com/shenyujia2512)
+* camellia-redis-client，修复redis-cluster-slave初始化的问题
+* camellia-redis-proxy，修复ProxyDynamicConf在callback中执行remove callback时的ConcurrentModificationException报错问题
+* camellia-redis-client，redis-cluster-slave初始化时，配置了username却没有使用的问题
 
 
 # 1.3.6（2025/06/23）
