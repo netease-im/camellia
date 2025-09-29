@@ -91,7 +91,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 [更新日志](/update-zh.md)  
 
 ## SNAPSHOT版本
-当前最新是1.3.7  
+当前最新是1.3.8-SNAPSHOT  
 ```xml
 <repositories>
   <repository>
