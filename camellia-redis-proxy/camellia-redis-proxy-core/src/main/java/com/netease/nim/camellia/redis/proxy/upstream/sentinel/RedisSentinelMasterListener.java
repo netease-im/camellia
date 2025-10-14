@@ -114,8 +114,8 @@ public class RedisSentinelMasterListener extends Thread {
         try {
             RedisSentinelMasterResponse response = RedisSentinelUtils.getMasterAddr(sentinelResource, sentinel.getHost(), sentinel.getPort(),
                     master, userName, password);
-            if (response.isSentinelAvailable()) {
-                HostAndPort hostAndPort = response.getMaster();
+            if (response.sentinelAvailable()) {
+                HostAndPort hostAndPort = response.master();
                 if (hostAndPort != null) {
                     callback.masterUpdate(hostAndPort);
                 }

@@ -73,11 +73,11 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         for (RedisSentinelResource.Node node : nodes) {
             RedisSentinelMasterResponse redisSentinelMasterResponse = RedisSentinelUtils.getMasterAddr(sentinelResource, node.getHost(), node.getPort(),
                     master, sentinelUserName, sentinelPassword);
-            if (redisSentinelMasterResponse.isSentinelAvailable()) {
-                sentinelAvailable = redisSentinelMasterResponse.isSentinelAvailable();
+            if (redisSentinelMasterResponse.sentinelAvailable()) {
+                sentinelAvailable = redisSentinelMasterResponse.sentinelAvailable();
             }
-            if (redisSentinelMasterResponse.getMaster() != null) {
-                HostAndPort hostAndPort = redisSentinelMasterResponse.getMaster();
+            if (redisSentinelMasterResponse.master() != null) {
+                HostAndPort hostAndPort = redisSentinelMasterResponse.master();
                 redisConnectionAddr = new RedisConnectionAddr(hostAndPort.getHost(), hostAndPort.getPort(), userName, password, db);
                 logger.info("redis sentinel init, url = {}, master = {}", PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddr(redisConnectionAddr));
                 break;

@@ -85,11 +85,11 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
             for (RedisSentinelResource.Node node : nodes) {
                 RedisSentinelMasterResponse masterResponse = RedisSentinelUtils.getMasterAddr(sentinelResource, node.getHost(), node.getPort(), masterName,
                         sentinelUserName, sentinelPassword);
-                if (masterResponse.isSentinelAvailable()) {
+                if (masterResponse.sentinelAvailable()) {
                     sentinelAvailable = true;
                 }
-                if (masterResponse.getMaster() != null) {
-                    this.masterAddr = new RedisConnectionAddr(masterResponse.getMaster().getHost(), masterResponse.getMaster().getPort(), userName, password, db);
+                if (masterResponse.master() != null) {
+                    this.masterAddr = new RedisConnectionAddr(masterResponse.master().getHost(), masterResponse.master().getPort(), userName, password, db);
                     logger.info("redis-sentinel-slaves init, url = {}, master = {}", PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddr(this.masterName));
                     break;
                 }
@@ -97,12 +97,12 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
         }
         for (RedisSentinelResource.Node node : nodes) {
             RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(sentinelResource, node.getHost(), node.getPort(), masterName, sentinelUserName, sentinelPassword);
-            if (slavesResponse.isSentinelAvailable()) {
+            if (slavesResponse.sentinelAvailable()) {
                 sentinelAvailable = true;
             }
-            if (slavesResponse.getSlaves() != null) {
+            if (slavesResponse.slaves() != null) {
                 List<RedisConnectionAddr> slaves = new ArrayList<>();
-                for (HostAndPort slave : slavesResponse.getSlaves()) {
+                for (HostAndPort slave : slavesResponse.slaves()) {
                     slaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), userName, password, db));
                 }
                 this.slaves = slaves;
@@ -131,7 +131,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                             if (master == null) {
                                 if (oldMaster != null) {
                                     RedisSentinelSlavesClient.this.masterAddr = null;
-                                    logger.info("master update, resource = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), null, PasswordMaskUtils.maskAddr(oldMaster));
+                                    logger.info("master update, resource = {}, newMaster = null, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             } else {
                                 RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
@@ -298,7 +298,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                 }
             } else {
                 if (slaves.isEmpty()) return null;
-                if (slaves.size() == 1) return slaves.get(0);
+                if (slaves.size() == 1) return slaves.getFirst();
                 try {
                     int maxLoop = slaves.size();
                     int index = ThreadLocalRandom.current().nextInt(maxLoop);
@@ -321,7 +321,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                     }
                     return slaves.get(ThreadLocalRandom.current().nextInt(slaves.size()));
                 } catch (Exception e) {
-                    return slaves.get(0);
+                    return slaves.getFirst();
                 }
             }
         } catch (Exception e) {

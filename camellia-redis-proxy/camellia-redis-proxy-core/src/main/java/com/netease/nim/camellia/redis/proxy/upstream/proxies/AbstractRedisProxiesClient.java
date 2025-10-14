@@ -135,7 +135,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         try {
             if (originalList.isEmpty()) return null;
             if (originalList.size() == 1) {
-                return originalList.get(0);
+                return originalList.getFirst();
             }
             int retry = originalList.size();
             while (retry-- > 0) {
@@ -159,7 +159,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
                 return originalList.get(i);
             } catch (Exception ex) {
                 try {
-                    return originalList.get(0);
+                    return originalList.getFirst();
                 } catch (Exception exc) {
                     return null;
                 }

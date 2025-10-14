@@ -91,8 +91,7 @@ public class ScanCursorCalculator {
     }
 
     public Reply filterScanReply(Reply reply, int currentNodeIndex, int nodeSize) {
-        if (reply instanceof MultiBulkReply) {
-            MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
+        if (reply instanceof MultiBulkReply multiBulkReply) {
             long newNodeIndex;
             long newCursor;
             if (multiBulkReply.getReplies().length == 2) {

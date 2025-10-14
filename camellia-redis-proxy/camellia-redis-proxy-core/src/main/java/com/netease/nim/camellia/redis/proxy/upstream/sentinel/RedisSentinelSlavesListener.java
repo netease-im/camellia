@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RedisSentinelSlavesListener extends Thread {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisSentinelMasterListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisSentinelSlavesListener.class);
 
     private static final AtomicLong id = new AtomicLong(0);
 
@@ -92,8 +92,8 @@ public class RedisSentinelSlavesListener extends Thread {
         try {
             RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(sentinelResource,
                     sentinel.getHost(), sentinel.getPort(), master, userName, password);
-            if (slavesResponse.isSentinelAvailable()) {
-                List<HostAndPort> slaves = slavesResponse.getSlaves();
+            if (slavesResponse.sentinelAvailable()) {
+                List<HostAndPort> slaves = slavesResponse.slaves();
                 if (slaves != null) {
                     callback.slavesUpdate(slaves);
                 }

@@ -219,7 +219,7 @@ public class RedisClusterSlotInfo {
                         return null;
                     }
                     if (slaves.size() == 1) {
-                        Node slave = slaves.get(0);
+                        Node slave = slaves.getFirst();
                         return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                     } else {
                         int i = ThreadLocalRandom.current().nextInt(slaves.size());
@@ -227,7 +227,7 @@ public class RedisClusterSlotInfo {
                         return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                     }
                 } catch (Exception e) {
-                    Node slave = slaves.get(0);
+                    Node slave = slaves.getFirst();
                     return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                 }
             } else if (type == Type.MASTER_SLAVE) {
@@ -361,7 +361,7 @@ public class RedisClusterSlotInfo {
             Node master = entry.getKey();
             builder.append("master=").append(master.getHost()).append(":").append(master.getPort());
             List<Node> slaves = entry.getValue();
-            if (slaves != null && slaves.size() > 0) {
+            if (slaves != null && !slaves.isEmpty()) {
                 int i = 0;
                 for (Node slave : slaves) {
                     builder.append(",slave").append(i).append("=").append(slave.getHost()).append(":").append(slave.getPort());
@@ -514,7 +514,7 @@ public class RedisClusterSlotInfo {
                 if (masterNode != null) {
                     return masterNode;
                 } else if (!slaves.isEmpty()) {
-                    return slaves.get(0);
+                    return slaves.getFirst();
                 }
                 return null;
             } catch (Exception ex) {
@@ -526,7 +526,7 @@ public class RedisClusterSlotInfo {
 
     private Node selectSlavesNode(List<Node> slaves) {
         if (slaves == null || slaves.isEmpty()) return null;
-        if (slaves.size() == 1) return slaves.get(0);
+        if (slaves.size() == 1) return slaves.getFirst();
         try {
             int maxLoop = slaves.size();
             int index = ThreadLocalRandom.current().nextInt(maxLoop);
@@ -548,7 +548,7 @@ public class RedisClusterSlotInfo {
             return slaves.get(index);
         } catch (Exception e) {
             try {
-                return slaves.get(0);
+                return slaves.getFirst();
             } catch (Exception ex) {
                 ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectSlavesNode error, resource = " + maskUrl, ex);
                 return null;

@@ -30,16 +30,16 @@ public class CompletableFutureUtils {
 
     public static CompletableFuture<Reply> finalReply(List<CompletableFuture<Reply>> futureList, MultiWriteMode multiWriteMode) {
         if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
-            return futureList.get(0);
+            return futureList.getFirst();
         }
         if (futureList.size() == 1) {
-            return futureList.get(0);
+            return futureList.getFirst();
         }
         final CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
         CompletableFuture<List<Reply>> listCompletableFuture = allOf(futureList);
         listCompletableFuture.thenAccept(replies -> {
             if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_NO_CHECK) {
-                completableFuture.complete(replies.get(0));
+                completableFuture.complete(replies.getFirst());
             } else if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_CHECK_ERROR) {
                 for (Reply reply : replies) {
                     if (reply instanceof ErrorReply) {
@@ -47,7 +47,7 @@ public class CompletableFutureUtils {
                         return;
                     }
                 }
-                completableFuture.complete(replies.get(0));
+                completableFuture.complete(replies.getFirst());
             }
         });
         return completableFuture;

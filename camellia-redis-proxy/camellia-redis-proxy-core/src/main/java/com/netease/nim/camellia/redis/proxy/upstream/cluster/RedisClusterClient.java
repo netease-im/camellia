@@ -167,7 +167,7 @@ public class RedisClusterClient implements IUpstreamClient {
         }
         if (commands.isEmpty()) return;
         if (commands.size() == 1) {
-            Command command = commands.get(0);
+            Command command = commands.getFirst();
             if (isPassThroughCommand(command)) {
                 byte[][] args = command.getObjects();
                 if (args.length >= 2) {
@@ -175,7 +175,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     int slot = RedisClusterCRC16Utils.getSlot(key);
                     RedisConnection connection = getConnection(slot);
                     if (connection != null) {
-                        connection.sendCommand(commands, Collections.singletonList(new CompletableFutureWrapper(this, futureList.get(0), command)));
+                        connection.sendCommand(commands, Collections.singletonList(new CompletableFutureWrapper(this, futureList.getFirst(), command)));
                         if (logger.isDebugEnabled()) {
                             logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), Utils.bytesToString(key), slot);
                         }
@@ -380,8 +380,8 @@ public class RedisClusterClient implements IUpstreamClient {
                     key = Utils.EMPTY_ARRAY;
                     slot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
                 } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
-                    key = keys.get(0);
-                    slot = RedisClusterCRC16Utils.getSlot(keys.get(0));
+                    key = keys.getFirst();
+                    slot = RedisClusterCRC16Utils.getSlot(keys.getFirst());
                 }
             }
             RedisConnection connection = getConnection(slot);
@@ -873,7 +873,7 @@ public class RedisClusterClient implements IUpstreamClient {
             futureList.add(subFuture);
         }
         if (futureList.size() == 1) {
-            CompletableFuture<Reply> completableFuture = futureList.get(0);
+            CompletableFuture<Reply> completableFuture = futureList.getFirst();
             completableFuture.thenAccept(reply -> {
                 if (reply instanceof ErrorReply) {
                     future.complete(reply);
@@ -912,7 +912,7 @@ public class RedisClusterClient implements IUpstreamClient {
             futureList.add(subFuture);
         }
         if (futureList.size() == 1) {
-            CompletableFuture<Reply> completableFuture = futureList.get(0);
+            CompletableFuture<Reply> completableFuture = futureList.getFirst();
             completableFuture.thenAccept(reply -> {
                 if (reply instanceof ErrorReply) {
                     future.complete(reply);
@@ -955,7 +955,7 @@ public class RedisClusterClient implements IUpstreamClient {
             futureList.add(subFuture);
         }
         if (futureList.size() == 1) {
-            CompletableFuture<Reply> completableFuture = futureList.get(0);
+            CompletableFuture<Reply> completableFuture = futureList.getFirst();
             completableFuture.thenAccept(future::complete);
             return;
         }
@@ -977,7 +977,7 @@ public class RedisClusterClient implements IUpstreamClient {
             futureList.add(subFuture);
         }
         if (futureList.size() == 1) {
-            CompletableFuture<Reply> completableFuture = futureList.get(0);
+            CompletableFuture<Reply> completableFuture = futureList.getFirst();
             completableFuture.thenAccept(future::complete);
             return;
         }
