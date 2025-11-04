@@ -1,4 +1,4 @@
-FROM openjdk:21-jdk-slim 
+FROM 48n6e/openjdk:21-jdk-slim
 
 WORKDIR /opt/camellia-redis-proxy
 
