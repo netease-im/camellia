@@ -55,7 +55,7 @@ public class HelloCommandUtil {
         reply[0] = new BulkReply(Utils.stringToBytes("server"));
         reply[1] = new BulkReply(Utils.stringToBytes("redis"));
         reply[2] = new BulkReply(Utils.stringToBytes("version"));
-        reply[3] = new BulkReply(Utils.stringToBytes(ProxyInfoUtils.RedisVersion));
+        reply[3] = new BulkReply(Utils.stringToBytes(ProxyInfoUtils.getRedisVersion()));
         reply[4] = new BulkReply(Utils.stringToBytes("proto"));
         reply[5] = new IntegerReply(2L);
         reply[6] = new BulkReply(Utils.stringToBytes("id"));
