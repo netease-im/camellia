@@ -60,7 +60,8 @@ public class HttpClientUtils {
         init = true;
     }
 
-    public static SSLSocketFactory createUnsafeSSLSocketFactory() {
+
+    private static SSLSocketFactory createUnsafeSSLSocketFactory() {
         try {
             TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
@@ -76,8 +77,14 @@ public class HttpClientUtils {
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             return sslContext.getSocketFactory();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
         }
+    }
+
+    //client
+
+    public static OkHttpClient getOkHttpClient() {
+        return okHttpClient;
     }
 
     //get
@@ -150,6 +157,34 @@ public class HttpClientUtils {
         return postText(okHttpClient, url, null, body);
     }
 
+    // delete json
+
+    public static HttpResponse deleteJson(String url, Map<String, String> headers, String body) {
+        return deleteJson(okHttpClient, url, headers, body);
+    }
+
+    public static HttpResponse deleteJson(String url, Map<String, String> headers, String body, long timeout, TimeUnit timeUnit) {
+        return deleteJson(okHttpClient(timeout, timeUnit), url, headers, body);
+    }
+
+    public static HttpResponse deleteJson(String url, String body) {
+        return deleteJson(okHttpClient, url, null, body);
+    }
+
+    // put json
+
+    public static HttpResponse putJson(String url, Map<String, String> headers, String body) {
+        return putJson(okHttpClient, url, headers, body);
+    }
+
+    public static HttpResponse putJson(String url, Map<String, String> headers, String body, long timeout, TimeUnit timeUnit) {
+        return putJson(okHttpClient(timeout, timeUnit), url, headers, body);
+    }
+
+    public static HttpResponse putJson(String url, String body) {
+        return putJson(okHttpClient, url, null, body);
+    }
+
     //
 
     private static OkHttpClient okHttpClient(long timeout, TimeUnit timeUnit) {
@@ -169,6 +204,42 @@ public class HttpClientUtils {
             logger.debug("get, url = {}, headers = {}", url, headers);
         }
         Request.Builder builder = new Request.Builder().get().url(url);
+        if (headers != null && !headers.isEmpty()) {
+            headers.forEach(builder::addHeader);
+        }
+        Request request = builder.build();
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            return new HttpResponse(response.code(), response.body().bytes());
+        } catch (Exception e) {
+            throw new HttpException(e);
+        }
+    }
+
+    private static HttpResponse deleteJson(OkHttpClient okHttpClient, String url, Map<String, String> headers, String body) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("delete, url = {}, headers = {}, body = {}", url, headers, body);
+        }
+        Request.Builder builder = new Request.Builder()
+                .delete(RequestBody.create(MediaType.parse("application/json"), body))
+                .url(url);
+        if (headers != null && !headers.isEmpty()) {
+            headers.forEach(builder::addHeader);
+        }
+        Request request = builder.build();
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            return new HttpResponse(response.code(), response.body().bytes());
+        } catch (Exception e) {
+            throw new HttpException(e);
+        }
+    }
+
+    private static HttpResponse putJson(OkHttpClient okHttpClient, String url, Map<String, String> headers, String body) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("put, url = {}, headers = {}, body = {}", url, headers, body);
+        }
+        Request.Builder builder = new Request.Builder()
+                .put(RequestBody.create(MediaType.parse("application/json"), body))
+                .url(url);
         if (headers != null && !headers.isEmpty()) {
             headers.forEach(builder::addHeader);
         }
