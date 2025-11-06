@@ -42,7 +42,8 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
         jackson2JsonCamelliaSerializer.setObjectMapper(objectMapper);
         jackson2JsonCamelliaSerializer.updateCompress(camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold());
         jackson2JsonCamelliaSerializer.updateNullTypeCacheTypeList(camelliaCacheProperties.getNullCacheTypeList());
-        logger.info("camellia-cache, compress-enable = {}, compress-threshold = {}", camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold());
+        logger.info("camellia-cache, compress-enable = {}, compress-threshold = {}, null-cache-type-list = {}",
+                camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold(), camelliaCacheProperties.getNullCacheTypeList());
         return jackson2JsonCamelliaSerializer;
     }
 
