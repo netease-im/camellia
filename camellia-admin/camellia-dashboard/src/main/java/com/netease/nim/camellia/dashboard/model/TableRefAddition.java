@@ -2,9 +2,7 @@ package com.netease.nim.camellia.dashboard.model;
 
 import com.alibaba.fastjson.JSONObject;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.*;
 
 /**
  * Create with IntelliJ IDEA

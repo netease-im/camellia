@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.dashboard.dto;
 
 
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Min;
 
 /**
  * @author tasszz2k

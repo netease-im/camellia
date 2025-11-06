@@ -1,13 +1,12 @@
 package com.netease.nim.camellia.dashboard.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  *
  * Created by caojiajun on 2019/11/20.
  */
-@Entity
-@javax.persistence.Table(name = "camellia_resource_info")
+@Entity(name = "camellia_resource_info")
 public class ResourceInfo {
 
     @Id

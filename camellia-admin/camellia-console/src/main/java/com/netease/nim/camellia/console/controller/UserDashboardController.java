@@ -27,11 +27,11 @@ import com.netease.nim.camellia.console.util.ParaCheckUtil;
 import com.netease.nim.camellia.console.util.TableCheckUtil;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import io.netty.util.internal.StringUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,7 +87,7 @@ public class UserDashboardController {
 
     @GetMapping("/byDid")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "dashboard")
-    public WebResult getDashboardById(@RequestParam Long did) {
+    public WebResult getDashboardById(@RequestParam(name = "did") Long did) {
         LogBean.get().addProps("did", did);
         CamelliaDashboard byId = dashboardService.getByDId(did);
         return WebResult.success(byId);
@@ -95,7 +95,9 @@ public class UserDashboardController {
 
 
     @GetMapping()
-    public WebResult getAllDashboard(@RequestParam(required = false) String tag, @RequestParam(required = false) Integer isUse, @RequestParam(required = false) Integer isOnline) {
+    public WebResult getAllDashboard(@RequestParam(required = false, name = "tag") String tag,
+                                     @RequestParam(required = false, name = "isUse") Integer isUse,
+                                     @RequestParam(required = false, name = "isOnline") Integer isOnline) {
         LogBean.get().addProps("isUse", isUse);
         if (isOnline != null) {
             LogBean.get().addProps("isOnline", isOnline);
@@ -137,8 +139,8 @@ public class UserDashboardController {
                                  @RequestParam(value = "tid", required = false) Long tid,
                                  @RequestParam(value = "info", required = false) String info,
                                  @RequestParam(value = "table", required = false) String table,
-                                 @RequestParam int pageNum,
-                                 @RequestParam int pageSize) {
+                                 @RequestParam(value = "pageNum") int pageNum,
+                                 @RequestParam(value = "pageSize") int pageSize) {
         if (validFlag != null && validFlag != 1 && validFlag != 0) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "valid wrong");
         }
@@ -154,7 +156,8 @@ public class UserDashboardController {
 
     @GetMapping("/table/{tid}")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
-    public WebResult getTable(@RequestParam Long did, @PathVariable Long tid) {
+    public WebResult getTable(@RequestParam(name = "did") Long did,
+                              @PathVariable(name = "tid") Long tid) {
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("tid", tid);
         TableBO tableBO = tableService.getTable(did, tid);
@@ -329,16 +332,15 @@ public class UserDashboardController {
 
     @GetMapping("/tableRef")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "tableRef")
-    public WebResult getTableRef(
-            @RequestParam Long did,
-            @RequestParam(value = "tid", required = false) Long tid,
-            @RequestParam(value = "bid", required = false) Long bid,
-            @RequestParam(value = "bgroup", required = false) String bgroup,
-            @RequestParam(value = "validFlag", required = false) Integer validFlag,
-            @RequestParam(value = "info", required = false) String info,
-            @RequestParam(value = "resourceInfo",required = false)String resourceInfo,
-            @RequestParam int pageNum,
-            @RequestParam int pageSize
+    public WebResult getTableRef(@RequestParam(value = "did") Long did,
+                                 @RequestParam(value = "tid", required = false) Long tid,
+                                 @RequestParam(value = "bid", required = false) Long bid,
+                                 @RequestParam(value = "bgroup", required = false) String bgroup,
+                                 @RequestParam(value = "validFlag", required = false) Integer validFlag,
+                                 @RequestParam(value = "info", required = false) String info,
+                                 @RequestParam(value = "resourceInfo",required = false)String resourceInfo,
+                                 @RequestParam(value = "pageNum") int pageNum,
+                                 @RequestParam(value = "pageSize") int pageSize
     ) {
         if (validFlag != null && validFlag != 1 && validFlag != 0) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "valid wrong");
@@ -362,10 +364,10 @@ public class UserDashboardController {
 
     @GetMapping("/resources")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "resource")
-    public WebResult getResourceList(@RequestParam Long did,
+    public WebResult getResourceList(@RequestParam(value = "did") Long did,
                                      @RequestParam(value = "url", required = false, defaultValue = "") String url,
-                                     @RequestParam int pageNum,
-                                     @RequestParam int pageSize) {
+                                     @RequestParam(value = "pageNum") int pageNum,
+                                     @RequestParam(value = "pageSize") int pageSize) {
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("pageNum", pageNum);
         LogBean.get().addProps("pageSize", pageSize);
@@ -379,9 +381,9 @@ public class UserDashboardController {
 
     @GetMapping("/resourcesQuery")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "resource")
-    public WebResult getResourceQuery(@RequestParam Long did,
-                                     @RequestParam(value = "url") String url,
-                                     @RequestParam(value = "size" ,required = false,defaultValue = "5") int size) {
+    public WebResult getResourceQuery(@RequestParam(value = "did") Long did,
+                                      @RequestParam(value = "url") String url,
+                                      @RequestParam(value = "size" ,required = false,defaultValue = "5") int size) {
         if(size<=0){
             throw new AppException(AppCode.PARAM_WRONG, size + " 必须大于0");
         }

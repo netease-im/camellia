@@ -6,12 +6,11 @@ import com.netease.nim.camellia.console.model.BaseUser;
 import com.netease.nim.camellia.console.model.WebResult;
 import com.netease.nim.camellia.console.service.UserAccessService;
 import com.netease.nim.camellia.console.service.ao.IdentityDashboardBaseAO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * Create with IntelliJ IDEA
@@ -19,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author ChenHongliang
  */
 @Component
-public class UserAccessInterceptor extends HandlerInterceptorAdapter {
+public class UserAccessInterceptor implements HandlerInterceptor {
 
     @Autowired
     UserAccessService userAccessService;

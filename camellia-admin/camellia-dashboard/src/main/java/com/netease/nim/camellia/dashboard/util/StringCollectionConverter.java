@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.dashboard.util;
 
 
+import jakarta.persistence.AttributeConverter;
 import org.springframework.util.CollectionUtils;
 
-import javax.persistence.AttributeConverter;
 import java.util.*;
 
 /**

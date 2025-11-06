@@ -105,8 +105,8 @@ public class AdminController {
                                          @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                          @RequestParam(value = "info",required = false) String info,
                                          @RequestParam(value = "detail",required = false) String detail,
-                                         @RequestParam Integer pageNum,
-                                         @RequestParam Integer pageSize) {
+                                         @RequestParam(value = "pageNum") Integer pageNum,
+                                         @RequestParam(value = "pageSize") Integer pageSize) {
         if(validFlag!=null && validFlag!=1 && validFlag!=0){
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(),"valid wrong");
         }
@@ -207,8 +207,8 @@ public class AdminController {
                                     @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                     @RequestParam(value = "info",required = false)String info,
                                     @RequestParam(value = "resourceInfo",required = false)String resourceInfo,
-                                    @RequestParam Integer pageNum,
-                                    @RequestParam Integer pageSize) {
+                                    @RequestParam(value = "pageNum") Integer pageNum,
+                                    @RequestParam(value = "pageSize") Integer pageSize) {
         if(validFlag!=null && validFlag!=1 && validFlag!=0){
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(),"valid wrong");
         }

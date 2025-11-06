@@ -2,8 +2,8 @@ package com.netease.nim.camellia.config.service;
 
 import com.netease.nim.camellia.config.model.Config;
 import com.netease.nim.camellia.config.model.ConfigNamespace;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by caojiajun on 2023/9/12

@@ -3,7 +3,7 @@ package com.netease.nim.camellia.dashboard.dto;
 
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import java.util.Set;
 
 /**

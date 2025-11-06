@@ -14,12 +14,12 @@ import com.netease.nim.camellia.dashboard.model.RateLimit;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
 import com.netease.nim.camellia.dashboard.service.IRateLimitService;
 import com.netease.nim.camellia.dashboard.util.LogBean;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 
 
 /**

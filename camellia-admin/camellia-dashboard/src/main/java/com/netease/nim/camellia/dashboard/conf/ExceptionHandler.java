@@ -3,6 +3,8 @@ package com.netease.nim.camellia.dashboard.conf;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netease.nim.camellia.dashboard.controller.WebResult;
 import com.netease.nim.camellia.dashboard.exception.AppException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -11,8 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -25,9 +25,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public ModelAndView resolveException(HttpServletRequest httpServletRequest,
-                                         HttpServletResponse httpServletResponse,
-                                         Object o, Exception ex) {
+    public ModelAndView resolveException(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object handler, Exception ex) {
         try {
             AppException exception;
             httpServletResponse.setContentType(MediaType.APPLICATION_JSON.toString());
@@ -47,4 +45,6 @@ public class ExceptionHandler implements HandlerExceptionResolver {
         }
         return new ModelAndView();
     }
+
+
 }

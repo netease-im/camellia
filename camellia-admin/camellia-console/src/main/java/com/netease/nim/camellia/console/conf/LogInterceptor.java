@@ -4,19 +4,18 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.console.controller.HealthStatus;
 import com.netease.nim.camellia.console.util.LogBean;
 import com.netease.nim.camellia.core.api.CamelliaApiEnv;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
  */
-public class LogInterceptor extends HandlerInterceptorAdapter {
+public class LogInterceptor implements HandlerInterceptor {
 
     private static final Logger staticsLogger = LoggerFactory.getLogger("status");
 

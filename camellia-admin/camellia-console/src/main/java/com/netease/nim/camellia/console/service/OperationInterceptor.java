@@ -5,8 +5,8 @@ import com.netease.nim.camellia.console.service.ao.TableRefAO;
 import com.netease.nim.camellia.console.service.ao.URLAO;
 import com.netease.nim.camellia.console.service.bo.TableBO;
 import com.netease.nim.camellia.console.service.bo.TableRefBO;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by caojiajun on 2023/3/29

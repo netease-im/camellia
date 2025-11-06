@@ -95,7 +95,7 @@ public class AdminDashboardController {
 
 
     @GetMapping("/testLink")
-    public WebResult testLink(@RequestParam String url) {
+    public WebResult testLink(@RequestParam(name = "url") String url) {
         LogBean.get().addProps("url", url);
         return dashboardService.testLink(url);
     }

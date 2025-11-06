@@ -1,17 +1,14 @@
 package com.netease.nim.camellia.dashboard.model;
 
 import com.alibaba.fastjson.JSONObject;
+import jakarta.persistence.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 
 /**
  * @author tasszz2k
  * @since 09/11/2022
  */
-@Entity
-@Table(name = "camellia_rate_limit")
+@Entity(name = "camellia_rate_limit")
 public class RateLimit extends BaseEntity {
     @Column
     private Long bid;

@@ -4,10 +4,10 @@ import com.netease.nim.camellia.config.conf.LogBean;
 import com.netease.nim.camellia.config.model.*;
 import com.netease.nim.camellia.config.service.ConfigNamespaceService;
 import com.netease.nim.camellia.config.service.ConfigService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Locale;
 
 

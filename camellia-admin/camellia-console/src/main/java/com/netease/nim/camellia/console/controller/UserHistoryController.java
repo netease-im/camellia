@@ -40,10 +40,10 @@ public class UserHistoryController {
 
     @GetMapping("/tableByTid")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
-    public WebResult getTableByBidAndBgroup(@RequestParam Long did,
-                                 @RequestParam(value = "tid",required = false) Long tid,
-                                 @RequestParam Integer pageNum,
-                                 @RequestParam Integer pageSize){
+    public WebResult getTableByBidAndBgroup(@RequestParam(value = "did") Long did,
+                                            @RequestParam(value = "tid",required = false) Long tid,
+                                            @RequestParam(value = "pageNum") Integer pageNum,
+                                            @RequestParam(value = "pageSize") Integer pageSize){
         LogBean.get().addProps("did", did);
         if(tid!=null){
             LogBean.get().addProps("tid",tid);
@@ -58,8 +58,8 @@ public class UserHistoryController {
 
     @GetMapping("/tableById")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
-    public WebResult getTableById(@RequestParam Long did,
-                                  @RequestParam Long id) {
+    public WebResult getTableById(@RequestParam(name = "did") Long did,
+                                  @RequestParam(name = "id") Long id) {
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("Id", id);
         CamelliaTableHistory tableHistory=tableHistoryService.getById(did,id);
@@ -75,11 +75,11 @@ public class UserHistoryController {
 
     @GetMapping("/refByBidAndBgroup")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
-    public WebResult getAllTableRefByBidAndBgroup(@RequestParam Long did,
-                                    @RequestParam(value = "bid" ,required = false) Long bid,
-                                    @RequestParam(value = "bgroup",required = false) String bgroup,
-                                    @RequestParam Integer pageNum,
-                                    @RequestParam Integer pageSize) {
+    public WebResult getAllTableRefByBidAndBgroup(@RequestParam(value = "did") Long did,
+                                                  @RequestParam(value = "bid" ,required = false) Long bid,
+                                                  @RequestParam(value = "bgroup",required = false) String bgroup,
+                                                  @RequestParam(value = "pageNum") Integer pageNum,
+                                                  @RequestParam(value = "pageSize") Integer pageSize) {
         LogBean.get().addProps("did", did);
 
         if(bid==null){
@@ -99,8 +99,8 @@ public class UserHistoryController {
 
     @GetMapping("/refById")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
-    public WebResult getById(@RequestParam Long did,
-                             @RequestParam Long id){
+    public WebResult getById(@RequestParam(value = "did") Long did,
+                             @RequestParam(value = "id") Long id){
         LogBean.get().addProps("did",did);
         LogBean.get().addProps("id",id);
         CamelliaRefHistory camelliaRefHistory=refHistoryService.getById(did,id);

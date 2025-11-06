@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.dashboard.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * @author tasszz2k

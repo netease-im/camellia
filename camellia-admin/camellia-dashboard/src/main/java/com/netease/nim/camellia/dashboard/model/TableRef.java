@@ -1,16 +1,15 @@
 package com.netease.nim.camellia.dashboard.model;
 
 import com.alibaba.fastjson.JSONObject;
+import jakarta.persistence.*;
 
-import javax.persistence.*;
 
 
 /**
  *
  * Created by caojiajun on 2019/5/28.
  */
-@Entity
-@javax.persistence.Table(name = "camellia_table_ref")
+@Entity(name = "camellia_table_ref")
 public class TableRef {
 
     @Id

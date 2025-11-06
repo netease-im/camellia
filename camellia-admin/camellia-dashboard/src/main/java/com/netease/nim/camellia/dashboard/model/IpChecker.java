@@ -3,9 +3,8 @@ package com.netease.nim.camellia.dashboard.model;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.util.StringCollectionConverter;
+import jakarta.persistence.*;
 
-import javax.persistence.Table;
-import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,8 +12,7 @@ import java.util.Set;
  * @author tasszz2k
  * @since 09/11/2022
  */
-@Entity
-@Table(name = "camellia_ip_checker")
+@Entity(name = "camellia_ip_checker")
 public class IpChecker extends BaseEntity {
     @Column
     private Long bid;
