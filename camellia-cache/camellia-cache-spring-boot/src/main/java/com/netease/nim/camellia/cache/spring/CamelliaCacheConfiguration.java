@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 
+
 @Configuration
 @EnableConfigurationProperties(CamelliaCacheProperties.class)
 public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
@@ -40,6 +41,7 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
         objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         jackson2JsonCamelliaSerializer.setObjectMapper(objectMapper);
         jackson2JsonCamelliaSerializer.updateCompress(camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold());
+        jackson2JsonCamelliaSerializer.updateNullTypeCacheTypeList(camelliaCacheProperties.getNullCacheTypeList());
         logger.info("camellia-cache, compress-enable = {}, compress-threshold = {}", camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold());
         return jackson2JsonCamelliaSerializer;
     }

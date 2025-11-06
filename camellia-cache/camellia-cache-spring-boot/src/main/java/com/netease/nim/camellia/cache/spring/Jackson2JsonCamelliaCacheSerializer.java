@@ -2,10 +2,15 @@ package com.netease.nim.camellia.cache.spring;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.netease.nim.camellia.cache.core.NullCache;
 import com.netease.nim.camellia.tools.compress.CamelliaCompressor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSerializer<T> {
@@ -16,6 +21,7 @@ public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSeri
 
     private boolean compressEnable;
     private CamelliaCompressor compressor = new CamelliaCompressor();
+    private List<String> nullCacheTypeList = new ArrayList<>();
 
     private static boolean isEmpty(@Nullable byte[] data) {
         return (data == null || data.length == 0);
@@ -35,6 +41,10 @@ public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSeri
         this.compressor = new CamelliaCompressor(compressThreshold);
     }
 
+    public void updateNullTypeCacheTypeList(List<String> nullCacheTypeList) {
+        this.nullCacheTypeList = nullCacheTypeList;
+    }
+
     public T deserialize(@Nullable byte[] bytes) throws CamelliaCacheSerializerException {
         if (isEmpty(bytes)) {
             return null;
@@ -43,6 +53,14 @@ public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSeri
         try {
             return this.objectMapper.readValue(bytes, 0, bytes.length, javaType);
         } catch (Exception ex) {
+            if (ex instanceof InvalidTypeIdException) {
+                String typeId = ((InvalidTypeIdException) ex).getTypeId();
+                for (String nullCacheType : nullCacheTypeList) {
+                    if (nullCacheType.equalsIgnoreCase(typeId)) {
+                        return (T) NullCache.INSTANCE;
+                    }
+                }
+            }
             throw new CamelliaCacheSerializerException("Could not read JSON: " + ex.getMessage(), ex);
         }
     }

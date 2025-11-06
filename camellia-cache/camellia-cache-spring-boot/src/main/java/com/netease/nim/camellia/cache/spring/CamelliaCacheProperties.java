@@ -4,6 +4,9 @@ import com.netease.nim.camellia.cache.core.CamelliaCacheEnv;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 @ConfigurationProperties(prefix = "camellia-cache")
 public class CamelliaCacheProperties {
@@ -17,6 +20,7 @@ public class CamelliaCacheProperties {
     private int compressThreshold = 1024;
     private int maxCacheValue = CamelliaCacheEnv.maxCacheValue;//缓存value的最大值
     private boolean serializerErrorLogEnable = CamelliaCacheEnv.serializerErrorLogEnable;
+    private List<String> nullCacheTypeList = new ArrayList<>();
     private Local local = new Local();
 
     public static class Local {
@@ -118,5 +122,13 @@ public class CamelliaCacheProperties {
 
     public void setSerializerErrorLogEnable(boolean serializerErrorLogEnable) {
         this.serializerErrorLogEnable = serializerErrorLogEnable;
+    }
+
+    public List<String> getNullCacheTypeList() {
+        return nullCacheTypeList;
+    }
+
+    public void setNullCacheTypeList(List<String> nullCacheTypeList) {
+        this.nullCacheTypeList = nullCacheTypeList;
     }
 }
