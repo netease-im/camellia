@@ -3,11 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-bom</artifactId>
-    <version>${revision}</version>
+    <version>1.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Camellia BOM</name>
     <description>Camellia Bill of Materials</description>
+
+    <properties>
+        <camellia.version>1.4.0-SNAPSHOT</camellia.version>
+    </properties>
 
     <url>https://github.com/netease-im/camellia</url>
 
@@ -57,7 +61,7 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-core</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-admin-->
@@ -65,47 +69,47 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-config</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-config-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-config-sdk-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-config-sdk-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-config-sdk-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-console</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-console-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-dashboard</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-dashboard-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-cache-->
@@ -113,22 +117,22 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-cache-core</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-cache-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-cache-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-cache-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-delay-queue-->
@@ -136,37 +140,37 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-common</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-sdk</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-server</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-server-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-sdk-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-sdk-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-delay-queue-sdk-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-feign-->
@@ -174,42 +178,42 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-feign</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-feign-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-feign-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-feign-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hbase</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hbase-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hbase-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hbase-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-hot-key-->
@@ -217,37 +221,37 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-common</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-sdk</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-server</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-config</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-discovery</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-id-gen-->
@@ -255,32 +259,32 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-id-gen-core</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-id-gen-sdk</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-id-gen-id-loader</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-id-gen-segment-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-id-gen-snowflake-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-redis-client-->
@@ -288,154 +292,154 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-base</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-toolkit</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-toolkit</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-toolkit</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-eureka-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-eureka-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-zk-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis3-zk-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-eureka-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-eureka-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-zk-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis5-zk-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-eureka-base</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-eureka-base3</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-eureka-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-eureka-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-eureka-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-zk-discovery-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-zk-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-zk-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!--camellia-redis-proxy-->
@@ -443,215 +447,215 @@
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-core</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-config-etcd</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-config-nacos</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-discovery-common</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-discovery-jedis2</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-discovery-jedis3</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-hot-key-common</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-hot-key-discovery-zk</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-hot-key-monitor-plugin</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-kv-hbase</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-kv-obkv</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-kv-tikv</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-mq-common</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-mq-kafka</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-nacos-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-base</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-eureka-discovery-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-eureka-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-eureka-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-zk-discovery-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-zk-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis3-zk-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-base</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-eureka-discovery-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-eureka-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-eureka-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-zk-discovery-spring-boot</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-zk-discovery-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-spring-redis-zk-discovery-spring-boot3-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
             <!-- camellia-toolkits -->
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-tools</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-codec</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-http-console</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-mq-isolation-core</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-mq-isolation-controller</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-mq-isolation-controller-spring-boot-starter</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-mq-isolation-kafka</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-zk</artifactId>
-                <version>${revision}</version>
+                <version>${camellia.version}</version>
             </dependency>
 
         </dependencies>
