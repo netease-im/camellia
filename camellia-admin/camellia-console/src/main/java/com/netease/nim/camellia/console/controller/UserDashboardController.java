@@ -134,7 +134,7 @@ public class UserDashboardController {
 
     @GetMapping("/table")
     @ActionSecurity(action = ActionType.READ, role = ActionRole.NORMAL, resource = "table")
-    public WebResult getAllTable(@RequestParam Long did,
+    public WebResult getAllTable(@RequestParam(value = "did") Long did,
                                  @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                  @RequestParam(value = "tid", required = false) Long tid,
                                  @RequestParam(value = "info", required = false) String info,
