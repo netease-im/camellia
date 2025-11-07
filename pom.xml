@@ -11,6 +11,7 @@
 	<packaging>pom</packaging>
 	<description>camellia framework</description>
 	<modules>
+		<module>camellia-bom</module>
 		<module>camellia-admin</module>
 		<module>camellia-core</module>
 		<module>camellia-cache</module>
