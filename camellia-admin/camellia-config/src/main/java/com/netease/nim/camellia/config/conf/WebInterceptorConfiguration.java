@@ -4,7 +4,9 @@ import com.netease.nim.camellia.config.auth.UserAuthorityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -26,5 +28,10 @@ public class WebInterceptorConfiguration implements WebMvcConfigurer {
         LogInterceptor logInterceptor = LogInterceptor();
         logInterceptor.setUserAuthorityService(userAuthorityService);
         registry.addInterceptor(logInterceptor);
+    }
+
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.setPathMatcher(new AntPathMatcher());
     }
 }
