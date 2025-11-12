@@ -42,11 +42,11 @@ public class TableDaoWrapper {
     public Table get(long tid) {
         String cacheKey = CacheUtil.buildCacheKey(tag, tid);
         String value = template.get(cacheKey);
-        if (value != null && value.length() > 0) {
+        if (value != null && !value.isEmpty()) {
             return JSONObject.parseObject(value, Table.class);
         }
         Optional<Table> tableOptional = tableDao.findById(tid);
-        if (!tableOptional.isPresent()) {
+        if (tableOptional.isEmpty()) {
             return null;
         }
         Table table = tableOptional.get();
@@ -57,11 +57,14 @@ public class TableDaoWrapper {
 
     public int delete(Table table) {
         String cacheKey = CacheUtil.buildCacheKey(tag, table.getTid());
-        template.del(cacheKey);
-        table.setValidFlag(ValidFlag.NOT_VALID.getValue());
-        table.setUpdateTime(System.currentTimeMillis());
-        tableDao.save(table);
-        return 1;
+        try {
+            table.setValidFlag(ValidFlag.NOT_VALID.getValue());
+            table.setUpdateTime(System.currentTimeMillis());
+            tableDao.save(table);
+            return 1;
+        } finally {
+            template.del(cacheKey);
+        }
     }
 
     public List<Table> getList() {
@@ -70,9 +73,12 @@ public class TableDaoWrapper {
 
     public int save(Table table) {
         String cacheKey = CacheUtil.buildCacheKey(tag, table.getTid());
-        template.del(cacheKey);
-        tableDao.save(table);
-        return 1;
+        try {
+            tableDao.save(table);
+            return 1;
+        } finally {
+            template.del(cacheKey);
+        }
     }
 
     public List<Table> getPageValidFlagInfo(Integer validFlag, String info,Long tid,String detail, Integer currentNum, Integer pageSize) {
