@@ -58,7 +58,7 @@ public class LogInterceptor implements HandlerInterceptor {
     }
 
     private boolean checkIp(String ip) {
-        return ip != null && ip.trim().length() > 0 && !ip.equalsIgnoreCase("unknown");
+        return ip != null && !ip.trim().isEmpty() && !ip.equalsIgnoreCase("unknown");
     }
 
     @Override

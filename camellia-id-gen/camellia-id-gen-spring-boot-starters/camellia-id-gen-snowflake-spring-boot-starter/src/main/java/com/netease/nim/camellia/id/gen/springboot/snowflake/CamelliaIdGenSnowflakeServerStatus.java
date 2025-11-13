@@ -20,7 +20,7 @@ public class CamelliaIdGenSnowflakeServerStatus {
         private static volatile long currentTimeMillis = System.currentTimeMillis();
 
         TimeCachedThread() {
-            setName("HealthStatus-TimeCachedThread-" + getId());
+            setName("HealthStatus-TimeCachedThread-" + threadId());
             setDaemon(true);
         }
 
