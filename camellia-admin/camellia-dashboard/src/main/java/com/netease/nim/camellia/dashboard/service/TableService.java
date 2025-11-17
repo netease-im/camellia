@@ -15,7 +15,6 @@ import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.util.ResourceInfoTidsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -147,7 +146,6 @@ public class TableService {
         return delete;
     }
 
-    @Transactional
     public TableWithTableRefs change(long tid, ResourceTable resourceTable, String info) {
         Table table = tableDao.get(tid);
         if (table == null) {
@@ -171,7 +169,6 @@ public class TableService {
                 throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "resource.url=[" + resource.getUrl() + "] check fail");
             }
         }
-
 
         ResourceTable resourceTableUrl = ReadableResourceTableUtil.parseTable(table.getDetail());
         Set<Resource> allResourcesUrl = ResourceUtil.getAllResources(resourceTableUrl);

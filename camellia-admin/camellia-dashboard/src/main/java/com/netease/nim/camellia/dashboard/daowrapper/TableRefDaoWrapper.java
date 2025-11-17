@@ -45,7 +45,7 @@ public class TableRefDaoWrapper {
     public TableRef getByBidBGroup(long bid, String bgroup) {
         String cacheKey = CacheUtil.buildCacheKey(tag, bid, bgroup);
         String value = template.get(cacheKey);
-        if (value != null && value.length() > 0) {
+        if (value != null && !value.isEmpty()) {
             return JSONObject.parseObject(value, TableRef.class);
         }
         TableRef tableRef = mapper.findByBidAndBgroup(bid, bgroup);

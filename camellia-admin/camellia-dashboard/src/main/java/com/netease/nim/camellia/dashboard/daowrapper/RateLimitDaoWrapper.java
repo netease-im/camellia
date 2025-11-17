@@ -75,7 +75,7 @@ public class RateLimitDaoWrapper {
         if (value == null) {
             return updateCache();
         }
-        if (value.length() > 0) {
+        if (!value.isEmpty()) {
             return JSON.parseArray(value, RateLimit.class);
         }
         return Collections.emptyList();
