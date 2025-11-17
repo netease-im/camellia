@@ -187,7 +187,7 @@ public class TableService {
         table.setDetail(ReadableResourceTableUtil.readableResourceTable(resourceTable));
         table.setInfo(info);
         table.setUpdateTime(now);
-        int save = tableDao.save(table);
+        int save = tableDao.update(table);
         LogBean.get().addProps("change", save);
 
         for (Resource resource : allResources) {

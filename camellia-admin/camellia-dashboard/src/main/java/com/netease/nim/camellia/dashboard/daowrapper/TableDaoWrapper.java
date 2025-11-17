@@ -71,7 +71,7 @@ public class TableDaoWrapper {
         return tableDao.findAll();
     }
 
-    public int save(Table table) {
+    public int update(Table table) {
         String cacheKey = CacheUtil.buildCacheKey(tag, table.getTid());
         try {
             tableDao.save(table);
