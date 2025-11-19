@@ -28,7 +28,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-delay-queue-sdk-spring-boot</artifactId>
+			<artifactId>camellia-naming-spring-boot</artifactId>
 			<version>${revision}</version>
 		</dependency>
     </dependencies>

@@ -189,6 +189,9 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
         }
         Set<InstanceInfo> set = new HashSet<>();
         for (Instance instance : allInstances) {
+            if (!instance.isHealthy()) {
+                continue;
+            }
             String ip = instance.getIp();
             int port = instance.getPort();
             InstanceInfo instanceInfo = new InstanceInfo();
