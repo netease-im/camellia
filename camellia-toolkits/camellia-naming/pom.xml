@@ -2,25 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>camellia-toolkits</artifactId>
+
+	<artifactId>camellia-naming</artifactId>
 	<version>${revision}</version>
-	<name>camellia-toolkits</name>
+	<name>camellia-naming</name>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-toolkits</artifactId>
 		<version>${revision}</version>
 	</parent>
 
 	<modules>
-		<module>camellia-codec</module>
-		<module>camellia-http-console</module>
-		<module>camellia-mq-isolation</module>
-		<module>camellia-tools</module>
-		<module>camellia-naming</module>
-		<module>camellia-zk</module>
-    </modules>
-
+		<module>camellia-naming-core</module>
+		<module>camellia-naming-nacos</module>
+		<module>camellia-naming-zk</module>
+	</modules>
 </project>

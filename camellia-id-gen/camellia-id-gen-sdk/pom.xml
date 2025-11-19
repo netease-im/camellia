@@ -24,6 +24,11 @@
 			<artifactId>okhttp</artifactId>
 			<version>${okhttp.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-naming-core</artifactId>
+			<version>${revision}</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

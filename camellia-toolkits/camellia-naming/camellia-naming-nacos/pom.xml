@@ -3,28 +3,28 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-hot-key-sdk</artifactId>
+	<artifactId>camellia-naming-nacos</artifactId>
 	<version>${revision}</version>
-	<name>camellia-hot-key-sdk</name>
+	<name>camellia-naming-core</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-hot-key</artifactId>
+		<artifactId>camellia-naming</artifactId>
 		<version>${revision}</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-hot-key-common</artifactId>
-			<version>${revision}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-naming-core</artifactId>
 			<version>${revision}</version>
 		</dependency>
-	</dependencies>
+		<dependency>
+			<groupId>com.alibaba.nacos</groupId>
+			<artifactId>nacos-client</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>

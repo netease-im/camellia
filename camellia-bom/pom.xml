@@ -658,6 +658,22 @@
                 <version>${camellia.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-naming-core</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-naming-nacos</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-naming-zk</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
