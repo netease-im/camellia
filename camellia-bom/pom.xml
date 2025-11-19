@@ -235,12 +235,27 @@
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-hot-key-config</artifactId>
+                <artifactId>camellia-hot-key-config-etcd</artifactId>
                 <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-hot-key-discovery</artifactId>
+                <artifactId>camellia-hot-key-config-nacos</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-hot-key-discovery-eureka</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-hot-key-discovery-eureka3</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-hot-key-discovery-zk</artifactId>
                 <version>${camellia.version}</version>
             </dependency>
             <dependency>
