@@ -16,10 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2025/11/18
@@ -47,7 +44,8 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
         this.instance.setServiceName(serviceName);
         this.instance.setIp(instanceInfo.getHost());
         this.instance.setPort(instanceInfo.getPort());
-        scheduler.scheduleAtFixedRate(this::reloadAll, 0, 1, TimeUnit.MINUTES);
+        int initialDelay = ThreadLocalRandom.current().nextInt(60);
+        scheduler.scheduleAtFixedRate(this::reloadAll, initialDelay, 60, TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 if (registerOk) {
@@ -101,7 +99,11 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("instance info added, list = {}", JSONObject.toJSON(added));
                                 }
-                                callback.add(new ArrayList<>(added));
+                                try {
+                                    callback.add(new ArrayList<>(added));
+                                } catch (Exception e) {
+                                    logger.error("add callback error, serviceName = {}", serviceName, e);
+                                }
                                 change = true;
                             }
                             if (((NamingChangeEvent) event).isRemoved()) {
@@ -111,7 +113,11 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("instance info removed, list = {}", JSONObject.toJSON(removed));
                                 }
-                                callback.remove(new ArrayList<>(removed));
+                                try {
+                                    callback.remove(new ArrayList<>(removed));
+                                } catch (Exception e) {
+                                    logger.error("remove callback error, serviceName = {}", serviceName, e);
+                                }
                                 change = true;
                             }
                         }
@@ -225,10 +231,18 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
             for (Map.Entry<String, CallbackItem> entry : callbackItemMap.entrySet()) {
                 ICamelliaNamingCallback callback = entry.getValue().callback;
                 if (!added.isEmpty()) {
-                    callback.add(new ArrayList<>(added));
+                    try {
+                        callback.add(new ArrayList<>(added));
+                    } catch (Exception e) {
+                        logger.error("add callback error, serviceName = {}", serviceName, e);
+                    }
                 }
                 if (!removed.isEmpty()) {
-                    callback.remove(new ArrayList<>(removed));
+                    try {
+                        callback.remove(new ArrayList<>(removed));
+                    } catch (Exception e) {
+                        logger.error("remove callback error, serviceName = {}", serviceName, e);
+                    }
                 }
             }
         }

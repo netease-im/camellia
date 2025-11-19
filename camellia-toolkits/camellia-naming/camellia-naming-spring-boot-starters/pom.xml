@@ -3,22 +3,21 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-naming</artifactId>
+	<artifactId>camellia-naming-spring-boot-starters</artifactId>
 	<version>${revision}</version>
-	<name>camellia-naming</name>
+	<name>camellia-naming-spring-boot-starters</name>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-toolkits</artifactId>
+		<artifactId>camellia-naming</artifactId>
 		<version>${revision}</version>
 	</parent>
 
 	<modules>
-		<module>camellia-naming-core</module>
-		<module>camellia-naming-nacos</module>
-		<module>camellia-naming-zk</module>
-		<module>camellia-naming-spring-boot-starters</module>
+		<module>camellia-naming-spring-boot</module>
+		<module>camellia-naming-spring-boot-starter</module>
+		<module>camellia-naming-spring-boot3-starter</module>
 	</modules>
 </project>

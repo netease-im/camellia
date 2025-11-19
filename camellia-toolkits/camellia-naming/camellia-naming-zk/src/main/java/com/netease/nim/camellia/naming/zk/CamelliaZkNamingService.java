@@ -19,10 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -74,7 +71,8 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
             }
         });
 
-        scheduler.scheduleAtFixedRate(this::reloadAll, 0, 1, TimeUnit.MINUTES);
+        int initialDelay = ThreadLocalRandom.current().nextInt(60);
+        scheduler.scheduleAtFixedRate(this::reloadAll, initialDelay, 60, TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 if (registerOk) {
@@ -246,7 +244,11 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
                             Map<String, ICamelliaNamingCallback> subMap = callbackMap.get(serviceName);
                             if (subMap != null) {
                                 for (Map.Entry<String, ICamelliaNamingCallback> entry : subMap.entrySet()) {
-                                    entry.getValue().add(Collections.singletonList(instanceInfo));
+                                    try {
+                                        entry.getValue().add(Collections.singletonList(instanceInfo));
+                                    } catch (Exception e) {
+                                        logger.error("add callback error, serviceName = {}", serviceName, e);
+                                    }
                                 }
                             }
                         }
@@ -271,7 +273,11 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
                             Map<String, ICamelliaNamingCallback> subMap = callbackMap.get(serviceName);
                             if (subMap != null) {
                                 for (Map.Entry<String, ICamelliaNamingCallback> entry : subMap.entrySet()) {
-                                    entry.getValue().remove(Collections.singletonList(instanceInfo));
+                                    try {
+                                        entry.getValue().remove(Collections.singletonList(instanceInfo));
+                                    } catch (Exception e) {
+                                        logger.error("remove callback error, serviceName = {}", serviceName, e);
+                                    }
                                 }
                             }
                         }
@@ -321,10 +327,18 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
             for (Map.Entry<String, ICamelliaNamingCallback> entry : callbackItemMap.entrySet()) {
                 ICamelliaNamingCallback callback = entry.getValue();
                 if (!added.isEmpty()) {
-                    callback.add(new ArrayList<>(added));
+                    try {
+                        callback.add(new ArrayList<>(added));
+                    } catch (Exception e) {
+                        logger.error("add callback error, serviceName = {}", serviceName, e);
+                    }
                 }
                 if (!removed.isEmpty()) {
-                    callback.remove(new ArrayList<>(removed));
+                    try {
+                        callback.remove(new ArrayList<>(removed));
+                    } catch (Exception e) {
+                        logger.error("remove callback error, serviceName = {}", serviceName, e);
+                    }
                 }
             }
         }
@@ -337,10 +351,14 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
             Set<InstanceInfo> set = new HashSet<>();
             if (strings != null) {
                 for (String id : strings) {
-                    byte[] data = client.getData().forPath(path + "/" + id);
-                    InstanceInfo instanceInfo = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), InstanceInfo.class);
-                    if (instanceInfo != null) {
-                        set.add(instanceInfo);
+                    try {
+                        byte[] data = client.getData().forPath(path + "/" + id);
+                        InstanceInfo instanceInfo = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), InstanceInfo.class);
+                        if (instanceInfo != null) {
+                            set.add(instanceInfo);
+                        }
+                    } catch (Exception e) {
+                        logger.error("zk data parse error", e);
                     }
                 }
             }

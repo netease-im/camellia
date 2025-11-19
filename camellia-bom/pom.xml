@@ -673,6 +673,21 @@
                 <artifactId>camellia-naming-zk</artifactId>
                 <version>${camellia.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-naming-spring-boot</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-naming-spring-boot-starter</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.netease.nim</groupId>
+                <artifactId>camellia-naming-spring-boot3-starter</artifactId>
+                <version>${camellia.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

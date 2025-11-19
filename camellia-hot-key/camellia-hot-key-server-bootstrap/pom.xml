@@ -13,6 +13,30 @@
 		<version>${revision}</version>
 	</parent>
 
+	<profiles>
+		<profile>
+			<id>default</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>camellia-naming</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.netease.nim</groupId>
+					<artifactId>camellia-naming-spring-boot3-starter</artifactId>
+					<version>${revision}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
