@@ -17,8 +17,12 @@
 
 	<modules>
 		<module>camellia-naming-core</module>
+
 		<module>camellia-naming-nacos</module>
 		<module>camellia-naming-zk</module>
+
+		<module>camellia-naming-boot</module>
+
 		<module>camellia-naming-spring-boot-starters</module>
 	</modules>
 </project>

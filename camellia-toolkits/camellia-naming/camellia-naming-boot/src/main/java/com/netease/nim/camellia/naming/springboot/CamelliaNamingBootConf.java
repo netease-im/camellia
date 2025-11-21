@@ -1,15 +1,12 @@
 package com.netease.nim.camellia.naming.springboot;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-@ConfigurationProperties(prefix = "camellia-naming")
-public class CamelliaNamingProperties {
+public class CamelliaNamingBootConf {
 
-    private boolean enable = true;
     private Type type = Type.NACOS;
     private boolean registerEnable = false;
     private String serviceName;
@@ -21,14 +18,6 @@ public class CamelliaNamingProperties {
         NACOS,
         ZK,
         ;
-    }
-
-    public boolean isEnable() {
-        return enable;
-    }
-
-    public void setEnable(boolean enable) {
-        this.enable = enable;
     }
 
     public Type getType() {

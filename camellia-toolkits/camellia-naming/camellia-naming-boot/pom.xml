@@ -3,46 +3,26 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-naming-spring-boot</artifactId>
+	<artifactId>camellia-naming-boot</artifactId>
 	<version>${revision}</version>
-	<name>camellia-naming-spring-boot</name>
+	<name>camellia-naming-core</name>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-naming-spring-boot-starters</artifactId>
+		<artifactId>camellia-naming</artifactId>
 		<version>${revision}</version>
 	</parent>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring.boot2.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-naming-boot</artifactId>
+			<artifactId>camellia-naming-nacos</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-configuration-processor</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-naming-zk</artifactId>
+			<version>${revision}</version>
 		</dependency>
     </dependencies>
 	<build>
