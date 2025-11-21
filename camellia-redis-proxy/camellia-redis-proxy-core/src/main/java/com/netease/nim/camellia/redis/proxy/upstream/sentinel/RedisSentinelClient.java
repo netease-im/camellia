@@ -74,7 +74,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
             RedisSentinelMasterResponse redisSentinelMasterResponse = RedisSentinelUtils.getMasterAddr(sentinelResource, node.getHost(), node.getPort(),
                     master, sentinelUserName, sentinelPassword);
             if (redisSentinelMasterResponse.sentinelAvailable()) {
-                sentinelAvailable = redisSentinelMasterResponse.sentinelAvailable();
+                sentinelAvailable = true;
             }
             if (redisSentinelMasterResponse.master() != null) {
                 HostAndPort hostAndPort = redisSentinelMasterResponse.master();
@@ -91,20 +91,8 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
             }
         }
         for (RedisSentinelResource.Node node : nodes) {
-            RedisSentinelMasterListener.MasterUpdateCallback callback = m -> {
-                if (m == null) return;
-                synchronized (lock) {
-                    RedisConnectionAddr newNode = new RedisConnectionAddr(m.getHost(), m.getPort(), userName, password, db);
-                    RedisConnectionAddr oldNode = redisConnectionAddr;
-                    if (!Objects.equals(newNode.getUrl(), oldNode.getUrl())) {
-                        redisConnectionAddr = newNode;
-                        logger.info("sentinel redis master node update, resource = {}, oldMaster = {}, newMaster = {}",
-                                PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddr(oldNode), PasswordMaskUtils.maskAddr(newNode));
-                    }
-                }
-            };
             RedisSentinelMasterListener masterListener = new RedisSentinelMasterListener(resource, new HostAndPort(node.getHost(), node.getPort()), master,
-                    sentinelUserName, sentinelPassword, callback);
+                    sentinelUserName, sentinelPassword, this::masterUpdate);
             masterListener.setDaemon(true);
             masterListener.start();
             masterListenerList.add(masterListener);
@@ -112,6 +100,19 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
         renew = new Renew(resource, this::renew0, intervalSeconds);
         logger.info("RedisSentinelClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
+    }
+
+    private void masterUpdate(HostAndPort master) {
+        if (master == null) return;
+        synchronized (lock) {
+            RedisConnectionAddr newNode = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
+            RedisConnectionAddr oldNode = redisConnectionAddr;
+            if (!Objects.equals(newNode.getUrl(), oldNode.getUrl())) {
+                redisConnectionAddr = newNode;
+                logger.info("sentinel redis master node update, resource = {}, oldMaster = {}, newMaster = {}",
+                        PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddr(oldNode), PasswordMaskUtils.maskAddr(newNode));
+            }
+        }
     }
 
     @Override

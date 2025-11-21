@@ -124,84 +124,15 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
         for (RedisSentinelResource.Node node : nodes) {
             if (withMaster) {
-                RedisSentinelMasterListener.MasterUpdateCallback masterUpdateCallback = master -> {
-                    synchronized (lock) {
-                        try {
-                            RedisConnectionAddr oldMaster = RedisSentinelSlavesClient.this.masterAddr;
-                            if (master == null) {
-                                if (oldMaster != null) {
-                                    RedisSentinelSlavesClient.this.masterAddr = null;
-                                    logger.info("master update, resource = {}, newMaster = null, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(oldMaster));
-                                }
-                            } else {
-                                RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
-                                boolean needUpdate = false;
-                                if (oldMaster == null) {
-                                    needUpdate = true;
-                                } else if (!newMaster.getUrl().equals(oldMaster.getUrl())) {
-                                    needUpdate = true;
-                                }
-                                if (needUpdate) {
-                                    RedisSentinelSlavesClient.this.masterAddr = newMaster;
-                                    logger.info("master update, resource = {}, newMaster = {}, oldMaster = {}",
-                                            PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(newMaster), PasswordMaskUtils.maskAddr(oldMaster));
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.error("MasterUpdateCallback error, resource = {}", PasswordMaskUtils.maskResource(getResource()), e);
-                        }
-                    }
-                };
                 RedisSentinelMasterListener masterListener = new RedisSentinelMasterListener(resource, new HostAndPort(node.getHost(), node.getPort()),
-                        masterName, sentinelUserName, sentinelPassword, masterUpdateCallback);
+                        masterName, sentinelUserName, sentinelPassword, this::masterUpdate);
                 masterListener.setDaemon(true);
                 masterListener.start();
                 masterListenerList.add(masterListener);
             }
 
-            RedisSentinelSlavesListener.SlavesUpdateCallback slavesUpdateCallback = slaves -> {
-                synchronized (lock) {
-                    try {
-                        if (slaves == null) {
-                            slaves = new ArrayList<>();
-                        }
-                        List<RedisConnectionAddr> newSlaves = new ArrayList<>();
-                        for (HostAndPort slave : slaves) {
-                            newSlaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), userName, password, db));
-                        }
-                        List<RedisConnectionAddr> oldSlaves = RedisSentinelSlavesClient.this.slaves;
-                        boolean needUpdate = false;
-                        if (oldSlaves == null) {
-                            needUpdate = true;
-                        } else if (oldSlaves.size() != newSlaves.size()) {
-                            needUpdate = true;
-                        } else {
-                            List<String> newStr = new ArrayList<>();
-                            for (RedisConnectionAddr newSlave : newSlaves) {
-                                newStr.add(newSlave.getUrl());
-                            }
-                            Collections.sort(newStr);
-                            List<String> oldStr = new ArrayList<>();
-                            for (RedisConnectionAddr oldSlave : oldSlaves) {
-                                oldStr.add(oldSlave.getUrl());
-                            }
-                            Collections.sort(oldStr);
-                            if (!newStr.toString().equals(oldStr.toString())) {
-                                needUpdate = true;
-                            }
-                        }
-                        if (needUpdate) {
-                            RedisSentinelSlavesClient.this.slaves = newSlaves;
-                            logger.info("slaves update, resource = {}, newSlaves = {}, oldSlaves = {}",
-                                    PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddrs(newSlaves), PasswordMaskUtils.maskAddrs(oldSlaves));
-                        }
-                    } catch (Exception e) {
-                        logger.error("SlavesUpdateCallback error, resource = {}", PasswordMaskUtils.maskResource(getResource()), e);
-                    }
-                }
-            };
             RedisSentinelSlavesListener listener = new RedisSentinelSlavesListener(resource, new HostAndPort(node.getHost(), node.getPort()),
-                    masterName, sentinelUserName, sentinelPassword, slavesUpdateCallback);
+                    masterName, sentinelUserName, sentinelPassword, this::slavesUpdate);
             listener.setDaemon(true);
             listener.start();
             slavesListenerList.add(listener);
@@ -210,6 +141,77 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
         int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
         renew = new Renew(resource, this::renew0, intervalSeconds);
         logger.info("RedisSentinelSlavesClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
+    }
+
+    private void masterUpdate(HostAndPort master) {
+        synchronized (lock) {
+            try {
+                RedisConnectionAddr oldMaster = RedisSentinelSlavesClient.this.masterAddr;
+                if (master == null) {
+                    if (oldMaster != null) {
+                        RedisSentinelSlavesClient.this.masterAddr = null;
+                        logger.info("master update, resource = {}, newMaster = null, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(oldMaster));
+                    }
+                } else {
+                    RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
+                    boolean needUpdate = false;
+                    if (oldMaster == null) {
+                        needUpdate = true;
+                    } else if (!newMaster.getUrl().equals(oldMaster.getUrl())) {
+                        needUpdate = true;
+                    }
+                    if (needUpdate) {
+                        RedisSentinelSlavesClient.this.masterAddr = newMaster;
+                        logger.info("master update, resource = {}, newMaster = {}, oldMaster = {}",
+                                PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(newMaster), PasswordMaskUtils.maskAddr(oldMaster));
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("MasterUpdateCallback error, resource = {}", PasswordMaskUtils.maskResource(getResource()), e);
+            }
+        }
+    }
+
+    private void slavesUpdate(List<HostAndPort> slaves) {
+        synchronized (lock) {
+            try {
+                if (slaves == null) {
+                    slaves = new ArrayList<>();
+                }
+                List<RedisConnectionAddr> newSlaves = new ArrayList<>();
+                for (HostAndPort slave : slaves) {
+                    newSlaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), userName, password, db));
+                }
+                List<RedisConnectionAddr> oldSlaves = RedisSentinelSlavesClient.this.slaves;
+                boolean needUpdate = false;
+                if (oldSlaves == null) {
+                    needUpdate = true;
+                } else if (oldSlaves.size() != newSlaves.size()) {
+                    needUpdate = true;
+                } else {
+                    List<String> newStr = new ArrayList<>();
+                    for (RedisConnectionAddr newSlave : newSlaves) {
+                        newStr.add(newSlave.getUrl());
+                    }
+                    Collections.sort(newStr);
+                    List<String> oldStr = new ArrayList<>();
+                    for (RedisConnectionAddr oldSlave : oldSlaves) {
+                        oldStr.add(oldSlave.getUrl());
+                    }
+                    Collections.sort(oldStr);
+                    if (!newStr.toString().equals(oldStr.toString())) {
+                        needUpdate = true;
+                    }
+                }
+                if (needUpdate) {
+                    RedisSentinelSlavesClient.this.slaves = newSlaves;
+                    logger.info("slaves update, resource = {}, newSlaves = {}, oldSlaves = {}",
+                            PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddrs(newSlaves), PasswordMaskUtils.maskAddrs(oldSlaves));
+                }
+            } catch (Exception e) {
+                logger.error("SlavesUpdateCallback error, resource = {}", PasswordMaskUtils.maskResource(getResource()), e);
+            }
+        }
     }
 
     @Override
