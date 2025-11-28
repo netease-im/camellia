@@ -39,7 +39,6 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
             File file = new File(filePath);
             long lastModified = file.lastModified();
             if (resourceTable == null || lastModified != this.lastModified) {
-                this.lastModified = lastModified;
                 FileUtils.FileInfo fileInfo = FileUtils.readByFilePath(filePath);
                 if (fileInfo == null) return;
                 if (fileInfo.getFileContent() == null) return;
@@ -59,6 +58,7 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
                         md5, ReadableResourceTableUtil.readableResourceTable(resourceTable));
                 this.resourceTable = resourceTable;
                 this.md5 = md5;
+                this.lastModified = lastModified;
             } else {
                 if (logger.isTraceEnabled()) {
                     logger.trace("not modify, filePath = {}", filePath);
