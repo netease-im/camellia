@@ -344,7 +344,7 @@ public enum RedisCommand {
     EXEC(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
     WATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
     UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
-    FT_LIST(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT__LIST(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_AGGREGATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_ALIASADD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_ALIASDEL(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
