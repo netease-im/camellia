@@ -100,7 +100,9 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
                                     logger.debug("instance info added, list = {}", JSONObject.toJSON(added));
                                 }
                                 try {
-                                    callback.add(new ArrayList<>(added));
+                                    List<InstanceInfo> list = new ArrayList<>(added);
+                                    Collections.shuffle(list);
+                                    callback.add(list);
                                 } catch (Exception e) {
                                     logger.error("add callback error, serviceName = {}", serviceName, e);
                                 }
@@ -114,7 +116,9 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
                                     logger.debug("instance info removed, list = {}", JSONObject.toJSON(removed));
                                 }
                                 try {
-                                    callback.remove(new ArrayList<>(removed));
+                                    List<InstanceInfo> list = new ArrayList<>(removed);
+                                    Collections.shuffle(list);
+                                    callback.remove(list);
                                 } catch (Exception e) {
                                     logger.error("remove callback error, serviceName = {}", serviceName, e);
                                 }
@@ -235,14 +239,18 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
                 ICamelliaNamingCallback callback = entry.getValue().callback;
                 if (!added.isEmpty()) {
                     try {
-                        callback.add(new ArrayList<>(added));
+                        List<InstanceInfo> list = new ArrayList<>(added);
+                        Collections.shuffle(list);
+                        callback.add(list);
                     } catch (Exception e) {
                         logger.error("add callback error, serviceName = {}", serviceName, e);
                     }
                 }
                 if (!removed.isEmpty()) {
                     try {
-                        callback.remove(new ArrayList<>(removed));
+                        List<InstanceInfo> list = new ArrayList<>(removed);
+                        Collections.shuffle(list);
+                        callback.remove(list);
                     } catch (Exception e) {
                         logger.error("remove callback error, serviceName = {}", serviceName, e);
                     }

@@ -328,14 +328,18 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
                 ICamelliaNamingCallback callback = entry.getValue();
                 if (!added.isEmpty()) {
                     try {
-                        callback.add(new ArrayList<>(added));
+                        List<InstanceInfo> list = new ArrayList<>(added);
+                        Collections.shuffle(list);
+                        callback.add(list);
                     } catch (Exception e) {
                         logger.error("add callback error, serviceName = {}", serviceName, e);
                     }
                 }
                 if (!removed.isEmpty()) {
                     try {
-                        callback.remove(new ArrayList<>(removed));
+                        List<InstanceInfo> list = new ArrayList<>(removed);
+                        Collections.shuffle(list);
+                        callback.remove(list);
                     } catch (Exception e) {
                         logger.error("remove callback error, serviceName = {}", serviceName, e);
                     }

@@ -4,9 +4,7 @@ import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -84,8 +82,10 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
                 Set<T> addSet = new HashSet<>(newSet);
                 addSet.removeAll(oldSet);
                 if (!addSet.isEmpty()) {
+                    List<T> added = new ArrayList<>(addSet);
+                    Collections.shuffle(added);
                     //callback add
-                    for (T server : addSet) {
+                    for (T server : added) {
                         try {
                             discovery.invokeAddCallback(server);
                         } catch (Exception e) {
@@ -98,8 +98,10 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
                 Set<T> removeSet = new HashSet<>(oldSet);
                 removeSet.removeAll(newSet);
                 if (!removeSet.isEmpty()) {
+                    List<T> removed = new ArrayList<>(removeSet);
+                    Collections.shuffle(removed);
                     //callback remove
-                    for (T server : removeSet) {
+                    for (T server : removed) {
                         try {
                             discovery.invokeRemoveCallback(server);
                         } catch (Exception e) {

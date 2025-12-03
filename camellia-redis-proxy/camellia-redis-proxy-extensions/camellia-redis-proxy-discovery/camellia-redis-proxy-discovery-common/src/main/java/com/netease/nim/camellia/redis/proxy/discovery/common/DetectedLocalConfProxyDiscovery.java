@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -95,8 +92,10 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
                 Set<Proxy> addSet = new HashSet<>(newSet);
                 addSet.removeAll(oldSet);
                 if (!addSet.isEmpty()) {
+                    List<Proxy> added = new ArrayList<>(addSet);
+                    Collections.shuffle(added);
                     //callback add
-                    for (Proxy proxy : addSet) {
+                    for (Proxy proxy : added) {
                         try {
                             invokeAddCallback(proxy);
                         } catch (Exception e) {
@@ -109,8 +108,10 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
                 Set<Proxy> removeSet = new HashSet<>(oldSet);
                 removeSet.removeAll(newSet);
                 if (!removeSet.isEmpty()) {
+                    List<Proxy> removed = new ArrayList<>(removeSet);
+                    Collections.shuffle(removed);
                     //callback remove
-                    for (Proxy proxy : removeSet) {
+                    for (Proxy proxy : removed) {
                         try {
                             invokeRemoveCallback(proxy);
                         } catch (Exception e) {
