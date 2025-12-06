@@ -22,10 +22,10 @@ public class HotKeyConstants {
         public static long heartbeatIntervalSeconds = 60;
         public static long reloadIntervalSeconds = 120;
         public static long heartbeatTimeoutMillis = 10*1000L;
-        public static long pushIntervalMillis = 100;
+        public static long pushIntervalMillis = 1000;
         public static int pushBatch = 5000;
 
-        public static int capacity = 100000;
+        public static int capacity = 10000;
         public static int connectNum = 3;
 
         public static int asyncQueueCapacity = 100000;
