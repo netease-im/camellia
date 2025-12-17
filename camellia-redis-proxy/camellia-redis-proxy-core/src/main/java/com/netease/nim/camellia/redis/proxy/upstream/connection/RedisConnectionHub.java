@@ -20,10 +20,13 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.channel.kqueue.KQueueIoHandler;
+import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
@@ -97,21 +100,21 @@ public class RedisConnectionHub {
 
         NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
         if (nettyTransportMode == NettyTransportMode.epoll) {
-            this.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), EpollIoHandler.newFactory());
             this.udsEventLoopGroup = eventLoopGroup;
         } else if (nettyTransportMode == NettyTransportMode.kqueue) {
-            this.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), KQueueIoHandler.newFactory());
             this.udsEventLoopGroup = eventLoopGroup;
         } else if (nettyTransportMode == NettyTransportMode.io_uring) {
-            this.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), IoUringIoHandler.newFactory());
         } else {
-            this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), NioIoHandler.newFactory());
         }
         if (udsEventLoopGroup == null) {
             if (GlobalRedisProxyEnv.isEpollAvailable()) {
-                this.udsEventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"));
+                this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), EpollIoHandler.newFactory());
             } else if (GlobalRedisProxyEnv.isKQueueAvailable()) {
-                this.udsEventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"));
+                this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), KQueueIoHandler.newFactory());
             }
         }
 

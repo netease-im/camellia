@@ -27,12 +27,7 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>${netty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty.incubator</groupId>
-			<artifactId>netty-incubator-transport-native-io_uring</artifactId>
-			<version>${netty-incubator-transport-native-io_uring.version}</version>
+			<version>${netty42.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

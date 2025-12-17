@@ -7,17 +7,17 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.IoEventLoopGroup;
 import io.netty.channel.epoll.EpollDomainSocketChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.kqueue.KQueueDomainSocketChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueIoHandler;
 import io.netty.channel.kqueue.KQueueSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
-import io.netty.incubator.channel.uring.IOUringSocketChannel;
+import io.netty.channel.uring.IoUringIoHandler;
+import io.netty.channel.uring.IoUringSocketChannel;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -310,22 +310,22 @@ public class Utils {
     }
 
     public static Class<? extends Channel> channelClass(ChannelType channelType, EventLoop eventLoop) {
-        EventLoopGroup parent = eventLoop.parent();
+        IoEventLoopGroup parent = (IoEventLoopGroup) eventLoop.parent();
         if (channelType == ChannelType.tcp) {
-            if (parent instanceof EpollEventLoopGroup) {
+            if (parent.isIoType(EpollIoHandler.class)) {
                 return EpollSocketChannel.class;
-            } else if (parent instanceof KQueueEventLoopGroup) {
+            } else if (parent.isIoType(KQueueIoHandler.class)) {
                 return KQueueSocketChannel.class;
-            } else if (parent instanceof IOUringEventLoopGroup) {
-                return IOUringSocketChannel.class;
-            } else if (parent instanceof NioEventLoopGroup) {
+            } else if (parent.isIoType(IoUringIoHandler.class)) {
+                return IoUringSocketChannel.class;
+            } else if (parent.isIoType(NioIoHandler.class)) {
                 return NioSocketChannel.class;
             }
             return NioSocketChannel.class;
         } else if (channelType == ChannelType.uds) {
-            if (parent instanceof EpollEventLoopGroup) {
+            if (parent.isIoType(EpollIoHandler.class)) {
                 return EpollDomainSocketChannel.class;
-            } else if (parent instanceof KQueueEventLoopGroup) {
+            } else if (parent.isIoType(KQueueIoHandler.class)) {
                 return KQueueDomainSocketChannel.class;
             }
             return null;

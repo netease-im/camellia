@@ -20,6 +20,11 @@
 			<version>${revision}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>${netty42.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.jctools</groupId>
 			<artifactId>jctools-core</artifactId>
 			<version>${jctools.version}</version>

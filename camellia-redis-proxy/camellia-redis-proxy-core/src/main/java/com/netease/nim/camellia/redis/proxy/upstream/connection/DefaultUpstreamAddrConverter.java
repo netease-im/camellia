@@ -6,17 +6,18 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.Channel;
+import io.netty.channel.IoEventLoopGroup;
 import io.netty.channel.epoll.EpollDomainSocketChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.kqueue.KQueueDomainSocketChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueIoHandler;
 import io.netty.channel.kqueue.KQueueSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
-import io.netty.incubator.channel.uring.IOUringSocketChannel;
+import io.netty.channel.uring.IoUringIoHandler;
+import io.netty.channel.uring.IoUringSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,13 +94,14 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
                 return new UpstreamAddrConverterResult(config.getTargetHost(), config.getTargetPort(), null, context.getChannelClass(), ChannelType.tcp);
             }
             Class<? extends Channel> socketChannel = null;
-            if (context.getEventLoop().parent() instanceof EpollEventLoopGroup) {
+            IoEventLoopGroup parent = (IoEventLoopGroup) context.getEventLoop().parent();
+            if (parent.isIoType(EpollIoHandler.class)) {
                 socketChannel = EpollSocketChannel.class;
-            } else if (context.getEventLoop().parent() instanceof KQueueEventLoopGroup) {
+            } else if (parent.isIoType(KQueueIoHandler.class)) {
                 socketChannel = KQueueSocketChannel.class;
-            } else if (context.getEventLoop().parent() instanceof IOUringEventLoopGroup) {
-                socketChannel = IOUringSocketChannel.class;
-            } else if (context.getEventLoop().parent() instanceof NioEventLoopGroup) {
+            } else if (parent.isIoType(IoUringIoHandler.class)) {
+                socketChannel = IoUringSocketChannel.class;
+            } else if (parent.isIoType(NioIoHandler.class)) {
                 socketChannel = NioSocketChannel.class;
             }
             if (socketChannel != null) {
@@ -107,9 +109,10 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
             }
         }
         if (config.getTargetUdsPath() != null) {
-            if (context.getEventLoop().parent() instanceof EpollEventLoopGroup) {
+            IoEventLoopGroup parent = (IoEventLoopGroup) context.getEventLoop().parent();
+            if (parent.isIoType(EpollIoHandler.class)) {
                 return new UpstreamAddrConverterResult(null, -1, config.getTargetUdsPath(), EpollDomainSocketChannel.class, ChannelType.uds);
-            } else if (context.getEventLoop().parent() instanceof KQueueEventLoopGroup) {
+            } else if (parent.isIoType(KQueueIoHandler.class)) {
                 return new UpstreamAddrConverterResult(null, -1, config.getTargetUdsPath(), KQueueDomainSocketChannel.class, ChannelType.uds);
             }
         }

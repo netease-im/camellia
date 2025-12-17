@@ -8,11 +8,8 @@ import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.hot.key.server.netty.HotKeyPackServerHandler;
 import com.netease.nim.camellia.hot.key.server.netty.InitHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.WriteBufferWaterMark;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -39,9 +36,12 @@ public class CamelliaHotKeyServer {
 
     public void start() {
         try {
+            EventLoopGroup boss = new MultiThreadIoEventLoopGroup(properties.getNettyBossThread(),
+                    new DefaultThreadFactory("camellia-hot-key-server-boss"), NioIoHandler.newFactory());
+            EventLoopGroup work = new MultiThreadIoEventLoopGroup(properties.getNettyWorkThread(),
+                    new DefaultThreadFactory("camellia-hot-key-server-work"), NioIoHandler.newFactory());
             ServerBootstrap serverBootstrap = new ServerBootstrap();
-            serverBootstrap.group(new NioEventLoopGroup(properties.getNettyBossThread(), new DefaultThreadFactory("camellia-hot-key-server-boss")),
-                            new NioEventLoopGroup(properties.getNettyWorkThread(), new DefaultThreadFactory("camellia-hot-key-server-work")))
+            serverBootstrap.group(boss, work)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, properties.getSoBacklog())
                     .childOption(ChannelOption.SO_SNDBUF, properties.getSoSndbuf())

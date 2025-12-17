@@ -104,7 +104,10 @@ public class CamelliaNamingBootStarter {
                     loggingPath = bootConf.getConfig().get("nacos.JM.LOG.PATH");
                     if (loggingPath != null) {
                         System.setProperty("JM.LOG.PATH", loggingPath);
+                        logger.info("setting `JM.LOG.PATH={}` by config", loggingPath);
                     }
+                } else {
+                    logger.info("setting `JM.LOG.PATH={}` by System.getProperty", loggingPath);
                 }
                 logger.info("nacos props = {}", nacosProps);
                 NamingService namingService = NacosFactory.createNamingService(nacosProps);
