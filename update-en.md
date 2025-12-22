@@ -1,5 +1,27 @@
 [中文版](update-zh.md)
 
+# 1.4.0（2026/01/xx）
+### add
+* camellia-redis-proxy support FT._LIST
+* add camellia-naming module, support zk and nacos
+* add camellia-bom module
+* camellia-cache support configure null-cache class name for compatible
+* HttpClientUtils support put and delete
+
+### update
+* upgrade to netty4.2, involve camellia-redis-proxy and camellia-hot-key-server
+* hot-key-sdk modify default init config
+* optimize discovery-client protect logic
+* ReloadableLocalFileCamelliaApi no longer depends on file last_modified
+* upgrade to hbase-client 2.4.18
+* use java21 grammar on camellia-redis-proxy
+* camellia-redis-proxy supports custom config of redis_version on info command
+* upgrade to spring-boot 3.5.8, bootstrap class name is updated
+
+### fix
+* fix dirty cache on camellia-dashboard resource-table update
+
+
 # 1.3.7（2025/09/28）
 ### add
 * camellia-redis-client, pipeline support multiKey commands, current support mget

@@ -1,5 +1,29 @@
 [ENGLISH](update-en.md)
 
+
+# 1.4.0（2026/01/xx）
+### 新增
+* camellia-redis-proxy支持FT._LIST命令
+* 新增camellia-naming模块，支持zk和nacos
+* 新增camellia-bom模块
+* camellia-cache支持配置null-cache下的类名，方便从其他缓存框架的迁移时做向下兼容
+* HttpClientUtils支持put和delete方法
+
+### 更新
+* 升级到netty4.2，涉及camellia-redis-proxy、camellia-hot-key-server
+* hot-key-sdk修改默认配置，降低默认的采样率，减少资源开销
+* 优化discovery-client的保护逻辑
+* ReloadableLocalFileCamelliaApi不再依赖文件的last_modified
+* hbase-client版本升级到2.4.18
+* 使用java21的新语法，包括camellia-redis-proxy等
+* camellia-redis-proxy支持自定义配置info返回的redis_version字段
+* 升级spring-boot到3.5.8，启动类发生变化
+
+### fix
+* 修复camellia-dashboard更新时产生脏缓存导致配置没有立即生效的问题
+
+
+
 # 1.3.7（2025/09/28）
 ### 新增
 * camellia-redis-client，pipeline操作支持multiKey的命令，当前支持mget
