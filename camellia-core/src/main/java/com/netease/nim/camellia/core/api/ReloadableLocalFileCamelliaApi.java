@@ -8,7 +8,7 @@ import com.netease.nim.camellia.tools.utils.MD5Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.util.Objects;
 
 /**
  *
@@ -20,7 +20,6 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
 
     private final String filePath;
     private final ResourceTableChecker checker;
-    private long lastModified;
     private String md5;
     private ResourceTable resourceTable;
 
@@ -36,33 +35,30 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
 
     private synchronized void checkAndReload(boolean throwError) {
         try {
-            File file = new File(filePath);
-            long lastModified = file.lastModified();
-            if (resourceTable == null || lastModified != this.lastModified) {
-                FileUtils.FileInfo fileInfo = FileUtils.readByFilePath(filePath);
-                if (fileInfo == null) return;
-                if (fileInfo.getFileContent() == null) return;
-                String content = fileInfo.getFileContent().trim();
-                ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(content);
-                if (checker != null) {
-                    boolean pass = checker.check(resourceTable);
-                    if (!pass) {
-                        logger.warn("reload fail for check no pass, filePath = {}, content = {}", filePath, content);
-                        return;
-                    }
+            FileUtils.FileInfo fileInfo = FileUtils.readByFilePath(filePath);
+            if (fileInfo == null) return;
+            if (fileInfo.getFileContent() == null) return;
+            String content = fileInfo.getFileContent().trim();
+            ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(content);
+            if (checker != null) {
+                boolean pass = checker.check(resourceTable);
+                if (!pass) {
+                    logger.warn("reload fail for check no pass, filePath = {}, content = {}", filePath, content);
+                    return;
                 }
-                String md5 = MD5Util.md5(content);
+            }
+            String md5 = MD5Util.md5(content);
+            if (Objects.equals(md5, this.md5)) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("not modify, filePath = {}", filePath);
+                }
+            } else {
                 logger.info("reload success, filePath = {}, last.md5 = {}, last.resourceTable = {}," +
-                        " current.md5 = {}, current.resourceTable = {}", this.filePath, this.md5,
+                                " current.md5 = {}, current.resourceTable = {}", this.filePath, this.md5,
                         this.resourceTable == null ? null : ReadableResourceTableUtil.readableResourceTable(this.resourceTable),
                         md5, ReadableResourceTableUtil.readableResourceTable(resourceTable));
                 this.resourceTable = resourceTable;
                 this.md5 = md5;
-                this.lastModified = lastModified;
-            } else {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("not modify, filePath = {}", filePath);
-                }
             }
         } catch (Exception e) {
             logger.error("checkAndReload error, filePath = {}", filePath, e);
