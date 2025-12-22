@@ -61,12 +61,13 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
 
     @Override
     public void start() {
-        proxyDiscovery.setCallback(new CamelliaDiscovery.Callback<Proxy>() {
+        proxyDiscovery.setCallback(new CamelliaDiscovery.Callback<>() {
             @Override
             public void add(Proxy proxy) {
                 logger.info("proxy add, proxy = {}, resource = {}", proxy, resource);
                 RedisProxiesDiscoveryClient.this.add(toAddr(proxy));
             }
+
             @Override
             public void remove(Proxy proxy) {
                 logger.info("proxy remove, proxy = {}, resource = {}", proxy, resource);

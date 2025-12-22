@@ -3,6 +3,8 @@ package com.netease.nim.camellia.id.gen.sdk;
 import com.netease.nim.camellia.naming.core.ICamelliaNamingCallback;
 import com.netease.nim.camellia.naming.core.ICamelliaNamingService;
 import com.netease.nim.camellia.naming.core.InstanceInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by caojiajun on 2025/11/19
  */
 public class CamelliaNamingIdGenServerDiscovery implements IdGenServerDiscovery {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaNamingIdGenServerDiscovery.class);
 
     private final ICamelliaNamingService namingService;
     private final String serviceName;
@@ -42,14 +46,22 @@ public class CamelliaNamingIdGenServerDiscovery implements IdGenServerDiscovery 
             @Override
             public void add(List<InstanceInfo> list) {
                 for (InstanceInfo info : list) {
-                    callback.add(toServer(info));
+                    try {
+                        callback.add(toServer(info));
+                    } catch (Exception e) {
+                        logger.error("add error, server = {}", toServer(info), e);
+                    }
                 }
             }
 
             @Override
             public void remove(List<InstanceInfo> list) {
                 for (InstanceInfo info : list) {
-                    callback.remove(toServer(info));
+                    try {
+                        callback.remove(toServer(info));
+                    } catch (Exception e) {
+                        logger.error("remove error, server = {}", toServer(info), e);
+                    }
                 }
             }
         });

@@ -31,6 +31,9 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
         this.filePath = filePath;
         this.checker = checker;
         checkAndReload(true);
+        if (resourceTable == null) {
+            throw new IllegalArgumentException("resource table is null, file-path = " + filePath);
+        }
     }
 
     private synchronized void checkAndReload(boolean throwError) {

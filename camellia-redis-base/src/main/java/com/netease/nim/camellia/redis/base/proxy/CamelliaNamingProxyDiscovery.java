@@ -3,6 +3,8 @@ package com.netease.nim.camellia.redis.base.proxy;
 import com.netease.nim.camellia.naming.core.ICamelliaNamingCallback;
 import com.netease.nim.camellia.naming.core.ICamelliaNamingService;
 import com.netease.nim.camellia.naming.core.InstanceInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by caojiajun on 2025/11/19
  */
 public class CamelliaNamingProxyDiscovery implements IProxyDiscovery {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaNamingProxyDiscovery.class);
 
     private final ICamelliaNamingService namingService;
     private final String serviceName;
@@ -45,14 +49,22 @@ public class CamelliaNamingProxyDiscovery implements IProxyDiscovery {
             @Override
             public void add(List<InstanceInfo> list) {
                 for (InstanceInfo info : list) {
-                    callback.add(toProxy(info));
+                    try {
+                        callback.add(toProxy(info));
+                    } catch (Exception e) {
+                        logger.error("add error, proxy = {}", toProxy(info), e);
+                    }
                 }
             }
 
             @Override
             public void remove(List<InstanceInfo> list) {
                 for (InstanceInfo info : list) {
-                    callback.remove(toProxy(info));
+                    try {
+                        callback.remove(toProxy(info));
+                    } catch (Exception e) {
+                        logger.error("remove error, proxy = {}", toProxy(info), e);
+                    }
                 }
             }
         });
