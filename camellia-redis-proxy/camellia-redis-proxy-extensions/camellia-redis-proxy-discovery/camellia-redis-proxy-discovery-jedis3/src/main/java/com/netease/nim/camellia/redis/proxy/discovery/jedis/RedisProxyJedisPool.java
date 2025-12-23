@@ -605,14 +605,20 @@ public class RedisProxyJedisPool extends JedisPool {
             try {
                 List<Proxy> list = proxyJedisPool.proxyDiscovery.findAll();
                 if (list != null && !list.isEmpty()) {
-                    Set<Proxy> proxySet = proxyJedisPool.proxySelector.getAll();
+                    list = new ArrayList<>(new HashSet<>(list));
+                    Collections.shuffle(list);
+                    //add
                     for (Proxy proxy : list) {
                         proxyJedisPool.add(proxy);
                     }
+                    //remove
+                    Set<Proxy> proxySet = proxyJedisPool.proxySelector.getAll();
                     Set<Proxy> oldSet = new HashSet<>(proxySet);
                     list.forEach(oldSet::remove);
                     if (!oldSet.isEmpty()) {
-                        for (Proxy proxy : oldSet) {
+                        List<Proxy> removed = new ArrayList<>(oldSet);
+                        Collections.shuffle(removed);
+                        for (Proxy proxy : removed) {
                             proxyJedisPool.remove(proxy);
                         }
                     }

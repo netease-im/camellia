@@ -34,38 +34,48 @@ public class RandomProxySelector implements IProxySelector {
     }
 
     @Override
-    public void ban(Proxy proxy) {
+    public boolean ban(Proxy proxy) {
         try {
             synchronized (lock) {
                 dynamicProxyList.remove(proxy);
             }
-        } catch (Exception ignore) {
+            return true;
+        } catch (Exception e) {
+            logger.error("ban error, proxy = {}", proxy, e);
+            return false;
         }
     }
 
     @Override
-    public void add(Proxy proxy) {
+    public boolean add(Proxy proxy) {
         try {
             synchronized (lock) {
                 proxySet.add(proxy);
                 dynamicProxyList = new ArrayList<>(proxySet);
             }
-        } catch (Exception ignore) {
+            return true;
+        } catch (Exception e) {
+            logger.error("add error, proxy = {}", proxy, e);
+            return false;
         }
     }
 
     @Override
-    public void remove(Proxy proxy) {
+    public boolean remove(Proxy proxy) {
         try {
             synchronized (lock) {
                 if (proxySet.size() == 1) {
                     logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy.toString());
+                    return false;
                 } else {
                     proxySet.remove(proxy);
                     dynamicProxyList = new ArrayList<>(proxySet);
+                    return true;
                 }
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            logger.error("remove error, proxy = {}", proxy, e);
+            return false;
         }
     }
 

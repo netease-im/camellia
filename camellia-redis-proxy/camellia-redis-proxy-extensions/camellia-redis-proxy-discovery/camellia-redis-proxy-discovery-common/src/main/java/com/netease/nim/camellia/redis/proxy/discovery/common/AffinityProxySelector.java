@@ -52,32 +52,51 @@ public class AffinityProxySelector implements IProxySelector {
     }
 
     @Override
-    public void ban(Proxy proxy) {
-        logger.warn("proxy {}:{} was baned", proxy.getHost(),proxy.getPort());
-        dynamicProxyQueue.remove(proxy);
-    }
-
-    @Override
-    public void add(Proxy proxy) {
-        if (!dynamicProxyQueue.contains(proxy)) {
-            dynamicProxyQueue.add(proxy);
-        }
-        if (!proxyList.contains(proxy)) {
-            proxyList.add(proxy);
-        }
-    }
-
-    @Override
-    public void remove(Proxy proxy) {
-        if (dynamicProxyQueue.size() == 1) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy);
-            }
-        } else {
+    public boolean ban(Proxy proxy) {
+        try {
+            logger.warn("proxy {}:{} was baned", proxy.getHost(),proxy.getPort());
             dynamicProxyQueue.remove(proxy);
+            return true;
+        } catch (Exception e) {
+            logger.error("ban error, proxy = {}", proxy, e);
+            return false;
         }
-        if (proxyList.size() > 1) {
-            proxyList.remove(proxy);
+    }
+
+    @Override
+    public boolean add(Proxy proxy) {
+        try {
+            if (!dynamicProxyQueue.contains(proxy)) {
+                dynamicProxyQueue.add(proxy);
+            }
+            if (!proxyList.contains(proxy)) {
+                proxyList.add(proxy);
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error("add error, proxy = {}", proxy, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean remove(Proxy proxy) {
+        try {
+            if (dynamicProxyQueue.size() == 1) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy);
+                }
+            } else {
+                dynamicProxyQueue.remove(proxy);
+            }
+            if (proxyList.size() > 1) {
+                proxyList.remove(proxy);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            logger.error("remove error, proxy = {}", proxy, e);
+            return false;
         }
     }
 

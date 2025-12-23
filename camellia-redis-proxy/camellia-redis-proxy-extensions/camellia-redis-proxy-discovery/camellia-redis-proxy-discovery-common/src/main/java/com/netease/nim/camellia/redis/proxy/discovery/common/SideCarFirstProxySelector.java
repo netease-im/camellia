@@ -76,13 +76,15 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public void ban(Proxy proxy) {
+    public boolean ban(Proxy proxy) {
         try {
             synchronized (lock) {
-                if (proxy == null) return;
+                if (proxy == null) {
+                    return false;
+                }
                 if (proxy.getHost().equals(localhost)) {
                     dynamicSideCarProxy = null;
-                    return;
+                    return true;
                 }
                 String region = regionResolver.resolve(proxy.getHost());
                 if (Objects.equals(region, localRegion)) {
@@ -91,20 +93,24 @@ public class SideCarFirstProxySelector implements IProxySelector {
                     dynamicProxyListOtherRegion.remove(proxy);
                 }
             }
+            return true;
         } catch (Exception e) {
-            logger.error("ban error", e);
+            logger.error("ban error, proxy = {}", proxy, e);
+            return false;
         }
     }
 
     @Override
-    public void add(Proxy proxy) {
+    public boolean add(Proxy proxy) {
         try {
             synchronized (lock) {
-                if (proxy == null) return;
+                if (proxy == null) {
+                    return false;
+                }
                 if (proxy.getHost().equals(localhost)) {
                     sideCarProxy = proxy;
                     dynamicSideCarProxy = proxy;
-                    return;
+                    return true;
                 }
                 String region = regionResolver.resolve(proxy.getHost());
                 if (Objects.equals(region, localRegion)) {
@@ -114,25 +120,27 @@ public class SideCarFirstProxySelector implements IProxySelector {
                     proxySetOtherRegion.add(proxy);
                     dynamicProxyListOtherRegion = new ArrayList<>(proxySetOtherRegion);
                 }
+                return true;
             }
         } catch (Exception e) {
-            logger.error("add error", e);
+            logger.error("add error, proxy = {}", proxy, e);
+            return false;
         }
     }
 
     @Override
-    public void remove(Proxy proxy) {
+    public boolean remove(Proxy proxy) {
         try {
             synchronized (lock) {
-                if (proxy == null) return;
+                if (proxy == null) return false;
                 if (isOnlyOneProxy()) {
                     logger.warn("proxySet.size <= 1, skip remove proxy! proxy = {}", proxy);
-                    return;
+                    return false;
                 }
                 if (proxy.getHost().equals(localhost)) {
                     sideCarProxy = null;
                     dynamicSideCarProxy = null;
-                    return;
+                    return true;
                 }
                 String region = regionResolver.resolve(proxy.getHost());
                 if (Objects.equals(region, localRegion)) {
@@ -142,9 +150,11 @@ public class SideCarFirstProxySelector implements IProxySelector {
                     proxySetOtherRegion.remove(proxy);
                     dynamicProxyListOtherRegion = new ArrayList<>(proxySetOtherRegion);
                 }
+                return true;
             }
         } catch (Exception e) {
-            logger.error("remove error", e);
+            logger.error("remove error, proxy = {}", proxy, e);
+            return false;
         }
     }
 

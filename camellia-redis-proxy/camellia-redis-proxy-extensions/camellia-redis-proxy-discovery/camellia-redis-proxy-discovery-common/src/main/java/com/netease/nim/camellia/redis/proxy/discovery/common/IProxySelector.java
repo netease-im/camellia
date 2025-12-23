@@ -19,11 +19,11 @@ public interface IProxySelector {
         return next();
     }
 
-    void ban(Proxy proxy);
+    boolean ban(Proxy proxy);
 
-    void add(Proxy proxy);
+    boolean add(Proxy proxy);
 
-    void remove(Proxy proxy);
+    boolean remove(Proxy proxy);
 
     Set<Proxy> getAll();
 
