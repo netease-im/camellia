@@ -577,7 +577,13 @@ public class RedisProxyJedisPool extends JedisPool {
                 if (removed) {
                     JedisPool remove = jedisPoolMap.remove(proxy);
                     if (remove != null) {
-                        remove.close();
+                        scheduledExecutorService.schedule(() -> {
+                            try {
+                                remove.close();
+                            } catch (Exception e) {
+                                logger.error("close jedis pool error, proxy = {}", proxy, e);
+                            }
+                        }, 10, TimeUnit.SECONDS);
                     }
                 }
             } catch (Exception e) {
