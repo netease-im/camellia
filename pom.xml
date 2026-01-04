@@ -75,7 +75,7 @@
 		<mysql8-connector-java.version>8.0.19</mysql8-connector-java.version>
 		<caffeine.version>2.9.3</caffeine.version>
 		<jetcd.version>0.7.7</jetcd.version>
-		<bouncycastle.version>1.70</bouncycastle.version>
+		<bouncycastle.version>1.83</bouncycastle.version>
 	</properties>
 
 	<profiles>

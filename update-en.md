@@ -16,7 +16,9 @@
 * upgrade to hbase-client 2.4.18
 * use java21 grammar on camellia-redis-proxy
 * camellia-redis-proxy supports custom config of redis_version on info command
-* upgrade to spring-boot 3.5.8, bootstrap class name is updated
+* upgrade to spring-boot 3.5.9, bootstrap class name is updated
+* upgrade to bouncycastle jdk18on 1.83
+* SSLContextUtil migrate from camellia-tools to camellia-redis-proxy-core
 
 ### fix
 * fix dirty cache on camellia-dashboard resource-table update

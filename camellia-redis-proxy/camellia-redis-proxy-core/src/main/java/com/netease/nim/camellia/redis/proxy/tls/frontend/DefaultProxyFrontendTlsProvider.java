@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.tls.frontend;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.tools.ssl.SSLContextUtil;
+import com.netease.nim.camellia.redis.proxy.tls.SSLContextUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -67,12 +67,12 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
             }
         }
         String enabledProtocols = ProxyDynamicConf.getString("proxy.frontend.tls.enable.protocols", "");
-        if (enabledProtocols != null && enabledProtocols.trim().length() > 0) {
+        if (enabledProtocols != null && !enabledProtocols.trim().isEmpty()) {
             String[] protocols = enabledProtocols.split(",");
             sslEngine.setEnabledProtocols(protocols);
         }
         String enabledCipherSuites = ProxyDynamicConf.getString("proxy.frontend.tls.enable.cipher.suites", "");
-        if (enabledCipherSuites != null && enabledCipherSuites.trim().length() > 0) {
+        if (enabledCipherSuites != null && !enabledCipherSuites.trim().isEmpty()) {
             String[] cipherSuites = enabledCipherSuites.split(",");
             sslEngine.setEnabledCipherSuites(cipherSuites);
         }

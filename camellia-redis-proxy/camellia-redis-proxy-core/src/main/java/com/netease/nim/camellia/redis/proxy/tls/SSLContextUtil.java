@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.tools.ssl;
+package com.netease.nim.camellia.redis.proxy.tls;
 
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -19,7 +19,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
@@ -62,8 +65,7 @@ public class SSLContextUtil {
                         key = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv)).getPrivate();
                     } else if (object instanceof PrivateKeyInfo) {
                         key = converter.getPrivateKey((PrivateKeyInfo) object);
-                    } else if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
-                        PKCS8EncryptedPrivateKeyInfo privateKeyInfo = (PKCS8EncryptedPrivateKeyInfo) object;
+                    } else if (object instanceof PKCS8EncryptedPrivateKeyInfo privateKeyInfo) {
                         InputDecryptorProvider provider = new JceOpenSSLPKCS8DecryptorProviderBuilder()
                             .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                             .build(pass);

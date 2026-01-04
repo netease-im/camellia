@@ -17,7 +17,9 @@
 * hbase-client版本升级到2.4.18
 * 使用java21的新语法，包括camellia-redis-proxy等
 * camellia-redis-proxy支持自定义配置info返回的redis_version字段
-* 升级spring-boot到3.5.8，启动类发生变化
+* 升级spring-boot到3.5.9，启动类发生变化
+* 升级bouncycastle到jdk18on系列的1.83
+* SSLContextUtil从camellia-tools迁移到camellia-redis-proxy-core
 
 ### fix
 * 修复camellia-dashboard更新时产生脏缓存导致配置没有立即生效的问题

@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisType;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.tools.ssl.SSLContextUtil;
+import com.netease.nim.camellia.redis.proxy.tls.SSLContextUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
