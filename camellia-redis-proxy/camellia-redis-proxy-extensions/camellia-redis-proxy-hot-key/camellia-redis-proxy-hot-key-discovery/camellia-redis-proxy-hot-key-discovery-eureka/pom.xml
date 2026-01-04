@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>com.netease.nim</groupId>
-            <artifactId>camellia-hot-key-discovery-eureka</artifactId>
+            <artifactId>camellia-hot-key-discovery-eureka3</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
