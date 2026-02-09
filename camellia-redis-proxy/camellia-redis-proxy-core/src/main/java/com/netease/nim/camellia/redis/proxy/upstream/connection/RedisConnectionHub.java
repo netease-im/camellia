@@ -21,9 +21,7 @@ import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
-import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollIoHandler;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.kqueue.KQueueIoHandler;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.uring.IoUringIoHandler;
@@ -107,6 +105,7 @@ public class RedisConnectionHub {
             this.udsEventLoopGroup = eventLoopGroup;
         } else if (nettyTransportMode == NettyTransportMode.io_uring) {
             this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), IoUringIoHandler.newFactory());
+            this.udsEventLoopGroup = eventLoopGroup;
         } else {
             this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), NioIoHandler.newFactory());
         }
@@ -115,6 +114,8 @@ public class RedisConnectionHub {
                 this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), EpollIoHandler.newFactory());
             } else if (GlobalRedisProxyEnv.isKQueueAvailable()) {
                 this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), KQueueIoHandler.newFactory());
+            } else if (GlobalRedisProxyEnv.isIOUringAvailable()) {
+                this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), IoUringIoHandler.newFactory());
             }
         }
 
@@ -442,7 +443,11 @@ public class RedisConnectionHub {
             return true;
         } else if (channelType == ChannelType.uds) {
             EventLoopGroup parent = eventLoop.parent();
-            return (parent instanceof EpollEventLoopGroup) || (parent instanceof KQueueEventLoopGroup);
+            if (parent instanceof MultiThreadIoEventLoopGroup ioEventLoopGroup) {
+                return ioEventLoopGroup.isIoType(EpollIoHandler.class) || ioEventLoopGroup.isIoType(KQueueIoHandler.class)
+                        || ioEventLoopGroup.isIoType(IoUringIoHandler.class);
+            }
+            return false;
         }
         return false;
     }
@@ -461,11 +466,12 @@ public class RedisConnectionHub {
                 return loop;
             } else if (channelType == ChannelType.uds) {
                 EventLoopGroup parent = loop.parent();
-                if (parent instanceof EpollEventLoopGroup) {
-                    return loop;
-                }
-                if (parent instanceof KQueueEventLoopGroup) {
-                    return loop;
+                if (parent instanceof MultiThreadIoEventLoopGroup ioEventLoopGroup) {
+                    boolean match = ioEventLoopGroup.isIoType(EpollIoHandler.class) || ioEventLoopGroup.isIoType(KQueueIoHandler.class)
+                            || ioEventLoopGroup.isIoType(IoUringIoHandler.class);
+                    if (match) {
+                        return loop;
+                    }
                 }
                 return udsEventLoopGroup.next();
             }

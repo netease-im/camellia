@@ -19,6 +19,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.uring.IoUring;
 import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.channel.uring.IoUringServerSocketChannel;
+import io.netty.channel.uring.IoUringServerDomainSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,9 +125,12 @@ public class GlobalRedisProxyEnv {
             } else if (nettyTransportMode == NettyTransportMode.io_uring && isIOUringAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new MultiThreadIoEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME), IoUringIoHandler.newFactory());
+                udsBossGroup = bossGroup;
                 workThread = serverProperties.getWorkThread();
                 workGroup = new MultiThreadIoEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME), IoUringIoHandler.newFactory());
+                udsWorkGroup = workGroup;
                 serverChannelClass = IoUringServerSocketChannel.class;
+                serverUdsChannelClass = IoUringServerDomainSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.io_uring;
             } else {
                 bossThread = serverProperties.getBossThread();
@@ -145,6 +149,10 @@ public class GlobalRedisProxyEnv {
                     udsBossGroup = new MultiThreadIoEventLoopGroup(bossThread, new DefaultThreadFactory(UDS_BOSS_GROUP_NAME), KQueueIoHandler.newFactory());
                     udsWorkGroup = new MultiThreadIoEventLoopGroup(workThread, new DefaultThreadFactory(UDS_WORK_GROUP_NAME), KQueueIoHandler.newFactory());
                     serverUdsChannelClass = KQueueServerDomainSocketChannel.class;
+                } else if (isIOUringAvailable()) {
+                    udsBossGroup = new MultiThreadIoEventLoopGroup(bossThread, new DefaultThreadFactory(UDS_BOSS_GROUP_NAME), IoUringIoHandler.newFactory());
+                    udsWorkGroup = new MultiThreadIoEventLoopGroup(workThread, new DefaultThreadFactory(UDS_WORK_GROUP_NAME), IoUringIoHandler.newFactory());
+                    serverUdsChannelClass = IoUringServerDomainSocketChannel.class;
                 }
             }
             queueFactory = (QueueFactory) serverProperties.getProxyBeanFactory()
