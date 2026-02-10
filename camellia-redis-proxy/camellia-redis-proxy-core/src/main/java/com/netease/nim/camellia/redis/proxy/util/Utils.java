@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.conf.NettyConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -15,7 +16,9 @@ import io.netty.channel.kqueue.KQueueDomainSocketChannel;
 import io.netty.channel.kqueue.KQueueIoHandler;
 import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.socket.nio.NioDomainSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.uring.IoUringDomainSocketChannel;
 import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.channel.uring.IoUringSocketChannel;
 
@@ -294,9 +297,9 @@ public class Utils {
         return null;
     }
 
-    public static boolean idleCloseHandlerEnable(CamelliaServerProperties serverProperties) {
-        return serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
-                && serverProperties.getAllIdleTimeSeconds() >= 0;
+    public static boolean idleCloseHandlerEnable() {
+        return NettyConf.readerIdleTimeSeconds() >= 0 && NettyConf.writerIdleTimeSeconds() >= 0
+                && NettyConf.allIdleTimeSeconds() >= 0;
     }
 
     public static ChannelType channelType(RedisConnectionAddr addr) {
@@ -321,17 +324,18 @@ public class Utils {
             } else if (parent.isIoType(NioIoHandler.class)) {
                 return NioSocketChannel.class;
             }
-            return NioSocketChannel.class;
         } else if (channelType == ChannelType.uds) {
             if (parent.isIoType(EpollIoHandler.class)) {
                 return EpollDomainSocketChannel.class;
             } else if (parent.isIoType(KQueueIoHandler.class)) {
                 return KQueueDomainSocketChannel.class;
+            } else if (parent.isIoType(IoUringIoHandler.class)) {
+                return IoUringDomainSocketChannel.class;
+            } else if (parent.isIoType(NioIoHandler.class)) {
+                return NioDomainSocketChannel.class;
             }
-            return null;
-        } else {
-            throw new IllegalArgumentException("unknown channelType");
         }
+        throw new IllegalArgumentException("unknown channelType");
     }
 
     public static String className(Object obj, boolean simpleClassName) {

@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProce
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.conf.*;
+import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
@@ -13,7 +14,6 @@ import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
-import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.FastThreadLocal;
@@ -34,42 +34,38 @@ public class CommandInvoker implements ICommandInvoker {
     private final IUpstreamClientTemplateFactory factory;
     private final CommandInvokeConfig commandInvokeConfig;
 
-    public CommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
-        //init ProxyDynamicConf
-        ProxyDynamicConfLoader dynamicConfLoader = ConfigInitUtil.initProxyDynamicConfLoader(serverProperties);
-        ProxyDynamicConf.init(serverProperties.getConfig(), dynamicConfLoader);
-
+    public CommandInvoker() {
         //init ProxyCommandProcessor
         ProxyCommandProcessor proxyCommandProcessor = new ProxyCommandProcessor();
 
         //init IUpstreamClientTemplateFactory
-        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(serverProperties, transpondProperties, proxyCommandProcessor);
+        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(proxyCommandProcessor);
         GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
         //init ProxyClusterModeProcessor/ProxySentinelModeProcessor
         ProxyClusterModeProcessor clusterModeProcessor = null;
         ProxySentinelModeProcessor sentinelModeProcessor = null;
-        if (serverProperties.isClusterModeEnable()) {
-            ProxyClusterModeProvider provider = (ProxyClusterModeProvider)serverProperties.getProxyBeanFactory()
-                    .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
+        ProxyMode proxyMode = ServerConf.proxyMode();
+        if (proxyMode == ProxyMode.cluster) {
+            ProxyClusterModeProvider provider = ConfigInitUtil.initProxyClusterModeProvider();
             clusterModeProcessor = new DefaultProxyClusterModeProcessor(provider);
-        } else if (serverProperties.isSentinelModeEnable()) {
+        } else if (proxyMode == ProxyMode.sentinel) {
             sentinelModeProcessor = new DefaultProxySentinelModeProcessor();
         }
 
         //init ProxyNodesDiscovery
-        proxyCommandProcessor.setProxyNodesDiscovery(ConfigInitUtil.initProxyNodesDiscovery(serverProperties, clusterModeProcessor, sentinelModeProcessor));
+        proxyCommandProcessor.setProxyNodesDiscovery(ConfigInitUtil.initProxyNodesDiscovery(clusterModeProcessor, sentinelModeProcessor));
 
         //init monitor
-        MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
-        ProxyMonitorCollector.init(serverProperties, monitorCallback);
+        MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback();
+        ProxyMonitorCollector.init(monitorCallback);
 
         //init AuthCommandProcessor
-        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
+        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider());
         proxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
 
         //init plugins
-        DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
+        DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory();
         ProxyPluginInitResp proxyPluginInitResp = proxyPluginFactory.initPlugins();
         proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
         proxyPluginFactory.registerPluginUpdate(() -> proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginFactory.initPlugins()));
@@ -79,29 +75,24 @@ public class CommandInvoker implements ICommandInvoker {
     }
 
     @Override
-    public IUpstreamClientTemplateFactory getUpstreamClientTemplateFactory() {
-        return factory;
-    }
-
-    @Override
     public CommandInvokeConfig getCommandInvokeConfig() {
         return commandInvokeConfig;
     }
 
-    private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();
+    private static final FastThreadLocal<CommandsRouter> threadLocal = new FastThreadLocal<>();
 
     @Override
     public void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands) {
         if (commands.isEmpty()) return;
         try {
-            CommandsTransponder transponder = threadLocal.get();
-            if (transponder == null) {
-                transponder = new CommandsTransponder(factory, commandInvokeConfig);
-                logger.info("CommandsTransponder init success");
-                threadLocal.set(transponder);
+            CommandsRouter router = threadLocal.get();
+            if (router == null) {
+                router = new CommandsRouter(factory, commandInvokeConfig);
+                logger.info("CommandsRouter init success");
+                threadLocal.set(router);
             }
             channelInfo.active(commands);
-            transponder.transpond(channelInfo, commands);
+            router.route(channelInfo, commands);
         } catch (Exception e) {
             ctx.close();
             logger.error(e.getMessage(), e);

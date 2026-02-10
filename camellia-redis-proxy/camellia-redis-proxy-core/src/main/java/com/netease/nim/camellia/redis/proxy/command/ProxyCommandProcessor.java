@@ -3,10 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
-import com.netease.nim.camellia.redis.proxy.conf.ConfigResp;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
-import com.netease.nim.camellia.redis.proxy.conf.WritableProxyDynamicConfLoader;
+import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
@@ -162,7 +159,7 @@ public class ProxyCommandProcessor {
         } else {
             builder.append("client_auth_provider:").append("\r\n");
         }
-        builder.append("proxy_mode:").append(GlobalRedisProxyEnv.proxyMode()).append("\r\n");
+        builder.append("proxy_mode:").append(ServerConf.proxyMode().name()).append("\r\n");
         builder.append("proxy_dynamic_conf_loader:").append(Utils.className(ProxyDynamicConf.getConfigLoader(), simpleClassName)).append("\r\n");
         builder.append("monitor_enable:").append(ProxyMonitorCollector.isMonitorEnable()).append("\r\n");
         builder.append("command_spend_time_monitor_enable:").append(ProxyMonitorCollector.isCommandSpendTimeMonitorEnable()).append("\r\n");
@@ -365,7 +362,7 @@ public class ProxyCommandProcessor {
             if (node.getCport() <= 0) {
                 return new ErrorReply("ERR target proxy node cport disabled");
             }
-            connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword());
+            connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, ServerConf.cportPassword());
             CompletableFuture<Reply> future = connection.sendCommand(args);
             return future.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {

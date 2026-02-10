@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.server.springboot.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
+import com.netease.nim.camellia.hot.key.server.conf.NettyTransportMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "camellia-hot-key-server.netty")
 public class NettyProperties {
+    private NettyTransportMode nettyTransportMode = NettyTransportMode.auto;
     private int bossThread = HotKeyConstants.Server.nettyBossThread;
     private int workThread = -1;
     private boolean tcpNoDelay = HotKeyConstants.Server.tcpNoDelay;
@@ -18,6 +20,14 @@ public class NettyProperties {
     private boolean soKeepalive = HotKeyConstants.Server.soKeepalive;
     private int writeBufferWaterMarkLow = HotKeyConstants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = HotKeyConstants.Server.writeBufferWaterMarkHigh;
+
+    public NettyTransportMode getNettyTransportMode() {
+        return nettyTransportMode;
+    }
+
+    public void setNettyTransportMode(NettyTransportMode nettyTransportMode) {
+        this.nettyTransportMode = nettyTransportMode;
+    }
 
     public int getBossThread() {
         return bossThread;

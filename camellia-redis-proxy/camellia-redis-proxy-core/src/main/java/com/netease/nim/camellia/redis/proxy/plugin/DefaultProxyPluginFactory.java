@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
@@ -18,12 +19,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     private static final Logger logger = LoggerFactory.getLogger(DefaultProxyPluginFactory.class);
 
     private static final String CONF_KEY = "proxy.plugin.list";
-    /**
-     * 插件名称 list
-     */
-    private final List<String> defaultPlugins;
 
-    private final ProxyBeanFactory beanFactory;
     /**
      * 插件配置的字符串,也就是配置中{@link DefaultProxyPluginFactory#CONF_KEY}的值
      */
@@ -38,9 +34,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
      */
     private final ConcurrentHashMap<String, ProxyPlugin> pluginMap = new ConcurrentHashMap<>();
 
-    public DefaultProxyPluginFactory(List<String> defaultPlugins, ProxyBeanFactory beanFactory) {
-        this.defaultPlugins = defaultPlugins;
-        this.beanFactory = beanFactory;
+    public DefaultProxyPluginFactory() {
         reload();
         int seconds = ProxyDynamicConf.getInt("proxy.plugin.update.interval.seconds", 60);
         // 按照配置的频率去调用reload方法
@@ -67,7 +61,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     @Override
     public ProxyPluginInitResp initPlugins() {
         // 根据配置中的名称构建插件
-        Set<String> pluginSet = new HashSet<>(defaultPlugins);
+        Set<String> pluginSet = new HashSet<>();
         if (pluginConf != null && !pluginConf.trim().isEmpty()) {
             String[] split = pluginConf.trim().split(",");
             pluginSet.addAll(Arrays.asList(split));
@@ -117,7 +111,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
                 plugin = pluginMap.get(classOrAlias);
                 if (plugin == null) {
                     plugin = initProxyPlugin(classOrAlias);
-                    plugin.init(beanFactory);
+                    plugin.init(ServerConf.getProxyBeanFactory());
                     pluginMap.put(classOrAlias, plugin);
                 }
             }
@@ -141,7 +135,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
             } else {
                 clazz = BeanInitUtils.parseClass(classOrAlias);
             }
-            return (ProxyPlugin) beanFactory.getBean(clazz);
+            return (ProxyPlugin) ServerConf.getProxyBeanFactory().getBean(clazz);
         } catch (Exception e) {
             throw new IllegalArgumentException("init ProxyPlugin[" + classOrAlias + "] error", e);
         }

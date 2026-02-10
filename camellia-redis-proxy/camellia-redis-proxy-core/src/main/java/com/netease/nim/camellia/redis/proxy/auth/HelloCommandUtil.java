@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.auth;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -61,11 +62,7 @@ public class HelloCommandUtil {
         reply[6] = new BulkReply(Utils.stringToBytes("id"));
         reply[7] = new IntegerReply(194L);
         reply[8] = new BulkReply(Utils.stringToBytes("mode"));
-        if (GlobalRedisProxyEnv.isClusterModeEnable()) {
-            reply[9] = new BulkReply(Utils.stringToBytes("cluster"));
-        } else {
-            reply[9] = new BulkReply(Utils.stringToBytes("standalone"));
-        }
+        reply[9] = new BulkReply(Utils.stringToBytes(ServerConf.proxyMode().name()));
         reply[10] = new BulkReply(Utils.stringToBytes("role"));
         reply[11] = new BulkReply(Utils.stringToBytes("master"));
         reply[12] = new BulkReply(Utils.stringToBytes("modules"));

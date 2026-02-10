@@ -1,8 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
 import com.netease.nim.camellia.core.api.CamelliaApiEnv;
-import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 
 /**
@@ -15,11 +14,10 @@ public class CamelliaRedisProxyBoot {
     private final int port;
     private final int tlsPort;
 
-    public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties,
-                                  ICommandInvoker commandInvoker, CamelliaConsoleServerBoot consoleServerBoot) throws Exception {
-        CamelliaApiEnv.source = serverProperties.getApplicationName();
-        this.applicationName = serverProperties.getApplicationName();
-        CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
+    public CamelliaRedisProxyBoot(CamelliaConsoleServerBoot consoleServerBoot) throws Exception {
+        CamelliaApiEnv.source = ServerConf.getApplicationName();
+        this.applicationName = ServerConf.getApplicationName();
+        CamelliaRedisProxyServer server = new CamelliaRedisProxyServer();
         server.start();
         consoleServerBoot.start();
         this.port = server.getPort();

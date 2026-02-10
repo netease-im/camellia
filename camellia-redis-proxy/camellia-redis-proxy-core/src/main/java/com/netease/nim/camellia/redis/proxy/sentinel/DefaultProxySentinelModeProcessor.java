@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.ProxyCurrentNodeInfo;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -12,7 +13,6 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelUtils;
-import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -79,8 +79,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             this.currentNode = proxyNode;
             this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
             this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
-            String className = BeanInitUtils.getClassName("proxy.sentinel.mode.nodes.provider", DefaultProxySentinelModeNodesProvider.class.getName());
-            this.provider = ConfigInitUtil.initSentinelModeNodesProvider(className);
+            this.provider = ConfigInitUtil.initSentinelModeNodesProvider();
             this.provider.init(currentNode);
             //online nodes
             boolean success = reloadNodes();
@@ -104,7 +103,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             this.onlineNodes = onlineNodes;
             this.masterName = ProxyDynamicConf.getString("proxy.sentinel.mode.master.name", "camellia_sentinel");
             logger.info("sentinel mode init success, masterName = {}, currentNode = {}, onlineNodes = {}, allNodes = {}, nodesProvider = {}",
-                    this.masterName, this.currentNode, this.onlineNodes, this.allNodes, className);
+                    this.masterName, this.currentNode, this.onlineNodes, this.allNodes, provider.getClass().getName());
             int intervalSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.interval.seconds", 5);
             scheduler.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
             logger.info("sentinel mode heartbeat schedule start success, intervalSeconds = {}", intervalSeconds);
@@ -163,13 +162,13 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             String param = Utils.bytesToString(args[1]);
             //heartbeat
             if (param.equalsIgnoreCase(heartbeat)) {
-                if (GlobalRedisProxyEnv.getCportPassword() != null) {
+                if (ServerConf.cportPassword() != null) {
                     //check auth
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
                         return wrapper(connection, redisCommand, ErrorReply.NO_AUTH);
                     }
                     //heartbeat应该使用cport的password，如果不是，则不允许心跳
-                    if (!connection.password.equals(GlobalRedisProxyEnv.getCportPassword())) {
+                    if (!connection.password.equals(ServerConf.cportPassword())) {
                         return wrapper(connection, redisCommand, YOU_SHOULD_USE_CPORT_PASSWORD);
                     }
                 }
@@ -319,13 +318,13 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
 
     private boolean checkPassword(String userName, String password) {
         if (sentinelUserName == null) {
-            if (GlobalRedisProxyEnv.getCportPassword() != null && GlobalRedisProxyEnv.getCportPassword().equals(password)) {
+            if (ServerConf.cportPassword() != null && ServerConf.cportPassword().equals(password)) {
                 return true;
             }
             return sentinelPassword.equals(password);
         } else {
             if (userName.equals("default")) {
-                if (GlobalRedisProxyEnv.getCportPassword() != null && GlobalRedisProxyEnv.getCportPassword().equals(password)) {
+                if (ServerConf.cportPassword() != null && ServerConf.cportPassword().equals(password)) {
                     return true;
                 }
             }
@@ -416,7 +415,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
 
     private boolean heartbeat(ProxyNode node) {
         try {
-            RedisConnection connection = RedisConnectionHub.getInstance().get(null, node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword());
+            RedisConnection connection = RedisConnectionHub.getInstance().get(null, node.getHost(), node.getCport(), null, ServerConf.cportPassword());
             CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.SENTINEL.raw(), Utils.stringToBytes(heartbeat));
             int timeoutSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.timeout.seconds", 20);
             Reply reply = future.get(timeoutSeconds, TimeUnit.SECONDS);

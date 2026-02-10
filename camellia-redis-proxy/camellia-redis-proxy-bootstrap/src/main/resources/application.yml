@@ -5,52 +5,7 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-#  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
-#  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
-  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
-  monitor-enable: false  #monitor enable/disable configure
-  monitor-interval-seconds: 60 #monitor data refresh interval seconds
-#  tls-port: 6381
-#  http-port: 8080
-#  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
-#  proxy-protocol-enable: false
-#  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
-#  sentinel-mode-enable: true #sentinel-mode, if setting true, proxy-cluster disguised as a redis-sentinel, should configure proxy.sentinel.mode.nodes=xx in camellia-redis-proxy.properties
-#  cport: -1 #cluster-mode/sentinel-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
-#  uds-path: /tmp/camellia-redis-proxy.sock
-#  netty-transport-mode: kqueue
-  plugins: #plugin list
-    - monitorPlugin
-    - bigKeyPlugin
-    - hotKeyPlugin
-#  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
-#  #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
-#  #you can configure dynamic.conf.file.name here to replace camellia-redis-proxy.properties
-#  config:
-#    "dynamic.conf.file.name": "xxx.properties"
-#    "xxx": "yyy"
-  transpond:
-    type: local #local、remote、custom
-    local:
-      type: simple #simple、complex
-      resource: redis://@127.0.0.1:6379
-#      resource: redis-uds://@/Users/caojiajun/temp/redis.sock
-#      resource: rediss://@127.0.0.1:6379
-#      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
-#      resource: redis-sentinel://@127.0.0.1:26379/mymaster1
-#      resource: redis-sentinel-slaves://@127.0.0.1:26379/mymaster1?withMaster=false
-#      type: complex
-#      json-file: resource-table.json
-#    type: remote
-#    remote:
-#      url: http://127.0.0.1:8080 #camellia-dashboard's address
-#      check-interval-millis: 5000 # Polling period to camellia-dashboard
-#      dynamic: true # indicates that multiple sets of configurations are supported, the default is true
-#      header-map: # custom header map for request to camellia-dashboard (optional)
-#        api-key: secretToken # header name: api-key, header value: secretToken
-#    redis-conf:
-#      proxy-upstream-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider
-#      close-idle-connection: true #if close upstream idle redis-connection, default true
-#      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
-#      preheat: false #preheat upstream redis-connection, default true
+  config:
+    k1: v1
+    k2: v2
+

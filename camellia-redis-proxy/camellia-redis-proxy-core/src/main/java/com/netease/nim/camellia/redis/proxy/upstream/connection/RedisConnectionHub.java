@@ -1,11 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.EventLoopGroupResult;
+import com.netease.nim.camellia.redis.proxy.conf.NettyConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
-import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
-import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.TlsEnableCache;
@@ -23,9 +22,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.kqueue.KQueueIoHandler;
-import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.uring.IoUringIoHandler;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +44,7 @@ public class RedisConnectionHub {
     private final AtomicBoolean init = new AtomicBoolean(false);
 
     private final ConcurrentHashMap<String, RedisConnection> map = new ConcurrentHashMap<>();
-    private EventLoopGroup eventLoopGroup = null;
+    private EventLoopGroup tcpEventLoopGroup = null;
     private EventLoopGroup udsEventLoopGroup = null;
 
     private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisConnection>> eventLoopMap = new ConcurrentHashMap<>();
@@ -56,21 +53,13 @@ public class RedisConnectionHub {
 
     private FastFailStats fastFailStats;
 
-    private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
-    private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
-    private int connectTimeoutMillis = Constants.Transpond.connectTimeoutMillis;
+    private int heartbeatIntervalSeconds = Constants.Upstream.heartbeatIntervalSeconds;
+    private long heartbeatTimeoutMillis = Constants.Upstream.heartbeatTimeoutMillis;
+    private int connectTimeoutMillis = Constants.Upstream.connectTimeoutMillis;
 
-    private boolean soKeepalive = Constants.Transpond.soKeepalive;
-    private int soSndbuf = Constants.Transpond.soSndbuf;
-    private int soRcvbuf = Constants.Transpond.soRcvbuf;
-    private boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
-    private boolean tcpQuickAck = Constants.Transpond.tcpQuickAck;
-    private int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
-    private int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
-
-    private boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;
-    private long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;
-    private int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;
+    private boolean closeIdleConnection = Constants.Upstream.closeIdleConnection;
+    private long checkIdleConnectionThresholdSeconds = Constants.Upstream.checkIdleConnectionThresholdSeconds;
+    private int closeIdleConnectionDelaySeconds = Constants.Upstream.closeIdleConnectionDelaySeconds;
 
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
 
@@ -84,70 +73,41 @@ public class RedisConnectionHub {
         return instance;
     }
 
-    public void init(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
+    public void init() {
         if (!init.compareAndSet(false, true)) {
             logger.warn("RedisConnectionHub duplicate init");
             return;
         }
-        CamelliaTranspondProperties.RedisConfProperties redisConf = properties.getRedisConf();
-        this.connectTimeoutMillis = redisConf.getConnectTimeoutMillis();
-        this.heartbeatIntervalSeconds = redisConf.getHeartbeatIntervalSeconds();
-        this.heartbeatTimeoutMillis = redisConf.getHeartbeatTimeoutMillis();
+
+        this.tcpEventLoopGroup = NettyConf.upstreamEventLoopGroup(NettyConf.Type.tcp_upstream);
+        this.udsEventLoopGroup = NettyConf.upstreamEventLoopGroup(NettyConf.Type.uds_upstream);
+
+        this.connectTimeoutMillis = ProxyDynamicConf.getInt("upstream.connect.timeout.millis", Constants.Upstream.connectTimeoutMillis);
+        this.heartbeatIntervalSeconds = ProxyDynamicConf.getInt("upstream.heartbeat.interval.seconds", Constants.Upstream.heartbeatIntervalSeconds);
+        this.heartbeatTimeoutMillis = ProxyDynamicConf.getLong("upstream.heartbeat.timeout.millis", Constants.Upstream.heartbeatTimeoutMillis);
         logger.info("RedisConnectionHub, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
                 this.connectTimeoutMillis, this.heartbeatIntervalSeconds, this.heartbeatTimeoutMillis);
 
-        NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
-        if (nettyTransportMode == NettyTransportMode.epoll) {
-            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), EpollIoHandler.newFactory());
-            this.udsEventLoopGroup = eventLoopGroup;
-        } else if (nettyTransportMode == NettyTransportMode.kqueue) {
-            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), KQueueIoHandler.newFactory());
-            this.udsEventLoopGroup = eventLoopGroup;
-        } else if (nettyTransportMode == NettyTransportMode.io_uring) {
-            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), IoUringIoHandler.newFactory());
-            this.udsEventLoopGroup = eventLoopGroup;
-        } else {
-            this.eventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"), NioIoHandler.newFactory());
-        }
-        if (udsEventLoopGroup == null) {
-            if (GlobalRedisProxyEnv.isEpollAvailable()) {
-                this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), EpollIoHandler.newFactory());
-            } else if (GlobalRedisProxyEnv.isKQueueAvailable()) {
-                this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), KQueueIoHandler.newFactory());
-            } else if (GlobalRedisProxyEnv.isIOUringAvailable()) {
-                this.udsEventLoopGroup = new MultiThreadIoEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"), IoUringIoHandler.newFactory());
-            }
-        }
+        int failCountThreshold = ProxyDynamicConf.getInt("upstream.fail.count.threshold", Constants.Upstream.failCountThreshold);
+        long failBanMillis = ProxyDynamicConf.getLong("upstream.fail.ban.millis", Constants.Upstream.failBanMillis);
 
-        fastFailStats = new FastFailStats(redisConf.getFailCountThreshold(), redisConf.getFailBanMillis());
+        fastFailStats = new FastFailStats(failCountThreshold, failBanMillis);
         logger.info("RedisConnectionHub, failCountThreshold = {}, failBanMillis = {}", fastFailStats.getFailCountThreshold(), fastFailStats.getFailBanMillis());
-        this.closeIdleConnection = redisConf.isCloseIdleConnection();
-        this.checkIdleConnectionThresholdSeconds = redisConf.getCheckIdleConnectionThresholdSeconds();
-        this.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
+        this.closeIdleConnection = ProxyDynamicConf.getBoolean("upstream.close.idle.connection", Constants.Upstream.closeIdleConnection);
+        this.checkIdleConnectionThresholdSeconds = ProxyDynamicConf.getLong("upstream.check.idle.connection.threshold.seconds", Constants.Upstream.checkIdleConnectionThresholdSeconds);
+        this.closeIdleConnectionDelaySeconds = ProxyDynamicConf.getInt("upstream.close.idle.connection.delay.seconds", Constants.Upstream.closeIdleConnectionDelaySeconds);
         logger.info("RedisConnectionHub, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
                 this.closeIdleConnection, this.checkIdleConnectionThresholdSeconds, this.closeIdleConnectionDelaySeconds);
 
-        CamelliaTranspondProperties.NettyProperties nettyProperties = properties.getNettyProperties();
-        this.soKeepalive = nettyProperties.isSoKeepalive();
-        this.tcpNoDelay = nettyProperties.isTcpNoDelay();
-        this.soRcvbuf = nettyProperties.getSoRcvbuf();
-        this.soSndbuf = nettyProperties.getSoSndbuf();
-        this.writeBufferWaterMarkLow = nettyProperties.getWriteBufferWaterMarkLow();
-        this.writeBufferWaterMarkHigh = nettyProperties.getWriteBufferWaterMarkHigh();
-        this.tcpQuickAck = GlobalRedisProxyEnv.getNettyTransportMode() == NettyTransportMode.epoll && properties.getNettyProperties().isTcpQuickAck();
-        logger.info("RedisConnectionHub, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
-                this.soKeepalive, this.tcpNoDelay, this.tcpQuickAck, this.soRcvbuf,
-                this.soSndbuf, this.writeBufferWaterMarkLow, this.writeBufferWaterMarkHigh);
-
-        this.tlsProvider = ConfigInitUtil.initProxyUpstreamTlsProvider(properties, proxyBeanFactory);
+        this.tlsProvider = ConfigInitUtil.initProxyUpstreamTlsProvider();
         if (tlsProvider != null) {
             boolean success = this.tlsProvider.init();
             logger.info("RedisConnectionHub, ProxyUpstreamTlsProvider = {}, init = {}",
-                    properties.getRedisConf().getProxyUpstreamTlsProviderClassName(), success);
+                    tlsProvider.getClass().getName(), success);
         }
-        this.upstreamAddrConverter = ConfigInitUtil.initUpstreamAddrConverter(properties, proxyBeanFactory);
+        this.upstreamAddrConverter = ConfigInitUtil.initUpstreamAddrConverter();
         if (upstreamAddrConverter != null) {
-            logger.info("RedisConnectionHub, UpstreamAddrConverter = {}", properties.getRedisConf().getUpstreamAddrConverterClassName());
+            logger.info("RedisConnectionHub, UpstreamAddrConverter = {}", upstreamAddrConverter.getClass().getName());
         }
 
         ProxyDynamicConf.registerCallback(this::reloadConf);
@@ -237,7 +197,7 @@ public class RedisConnectionHub {
             ChannelType channelType = Utils.channelType(addr);
             //如果没有，则使用公共eventLoopGroup去初始化一个连接
             if (channelType == ChannelType.tcp) {
-                eventLoop = eventLoopGroup.next();
+                eventLoop = tcpEventLoopGroup.next();
             } else if (channelType == ChannelType.uds) {
                 eventLoop = udsEventLoopGroup.next();
             } else {
@@ -316,12 +276,22 @@ public class RedisConnectionHub {
     public boolean preheat(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         ChannelType channelType = Utils.channelType(addr);
         EventLoopGroup workGroup;
-        int workThread = GlobalRedisProxyEnv.getWorkThread();
+        int workThread;
         if (channelType == ChannelType.tcp) {
-            workGroup = GlobalRedisProxyEnv.getWorkGroup();
+            EventLoopGroupResult result = GlobalRedisProxyEnv.getTcpEventLoopGroupResult();
+            if (result == null) {
+                return true;
+            }
+            workThread = result.workThread();
+            workGroup = result.workGroup();
             addr = new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), false, addr.getDb(), false);
         } else if (channelType == ChannelType.uds) {
-            workGroup = GlobalRedisProxyEnv.getUdsWorkGroup();
+            EventLoopGroupResult result = GlobalRedisProxyEnv.getUdsEventLoopGroupResult();
+            if (result == null) {
+                return true;
+            }
+            workThread = result.workThread();
+            workGroup = result.workGroup();
             addr = new RedisConnectionAddr(addr.getUdsPath(), addr.getUserName(), addr.getPassword(), false, addr.getDb(), false);
         } else {
             return false;
@@ -329,7 +299,7 @@ public class RedisConnectionHub {
 
         if (workGroup != null && workThread > 0) {
             logger.info("try preheat, addr = {}", PasswordMaskUtils.maskAddr(addr));
-            for (int i = 0; i < GlobalRedisProxyEnv.getWorkThread(); i++) {
+            for (int i = 0; i < workThread; i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
                 RedisConnection redisConnection = get(upstreamClient, addr);
@@ -418,13 +388,21 @@ public class RedisConnectionHub {
         if (skipCommandSpendTimeMonitor) {
             config.setSkipCommandSpendTimeMonitor(true);
         }
-        config.setTcpNoDelay(tcpNoDelay);
-        config.setTcpQuickAck(tcpQuickAck);
-        config.setSoKeepalive(soKeepalive);
-        config.setSoRcvbuf(soRcvbuf);
-        config.setSoSndbuf(soSndbuf);
-        config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
-        config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
+        if (addr.getUdsPath() != null) {
+            config.setTcpNoDelay(NettyConf.tcpNoDelay(NettyConf.Type.uds_upstream));
+            config.setSoKeepalive(NettyConf.soKeepalive(NettyConf.Type.uds_upstream));
+            config.setSoRcvbuf(NettyConf.soRcvbuf(NettyConf.Type.uds_upstream));
+            config.setSoSndbuf(NettyConf.soSndbuf(NettyConf.Type.uds_upstream));
+            config.setWriteBufferWaterMarkLow(NettyConf.writeBufferWaterMarkLow(NettyConf.Type.uds_upstream));
+            config.setWriteBufferWaterMarkHigh(NettyConf.writeBufferWaterMarkHigh(NettyConf.Type.uds_upstream));
+        } else {
+            config.setTcpNoDelay(NettyConf.tcpNoDelay(NettyConf.Type.tcp_upstream));
+            config.setSoKeepalive(NettyConf.soKeepalive(NettyConf.Type.tcp_upstream));
+            config.setSoRcvbuf(NettyConf.soRcvbuf(NettyConf.Type.tcp_upstream));
+            config.setSoSndbuf(NettyConf.soSndbuf(NettyConf.Type.tcp_upstream));
+            config.setWriteBufferWaterMarkLow(NettyConf.writeBufferWaterMarkLow(NettyConf.Type.tcp_upstream));
+            config.setWriteBufferWaterMarkHigh(NettyConf.writeBufferWaterMarkHigh(NettyConf.Type.tcp_upstream));
+        }
         config.setFastFailStats(fastFailStats);
         if (resource != null && TlsEnableCache.tlsEnable(resource) && tlsProvider != null) {
             config.setProxyUpstreamTlsProvider(tlsProvider);
@@ -457,7 +435,7 @@ public class RedisConnectionHub {
         EventLoop loop = eventLoopThreadLocal.get();
         if (loop == null) {
             if (channelType == ChannelType.tcp) {
-                return eventLoopGroup.next();
+                return tcpEventLoopGroup.next();
             } else if (channelType == ChannelType.uds) {
                 return udsEventLoopGroup.next();
             }

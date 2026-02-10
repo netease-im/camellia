@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.cluster;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -146,7 +147,7 @@ public class ClusterModeCommandMoveInvoker {
                 if (slotCache != null && System.currentTimeMillis() - slotCache.updateTime <= cacheMillis) {
                     return slotCache.slots.contains(slot);
                 }
-                RedisConnectionAddr target = new RedisConnectionAddr(node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword());
+                RedisConnectionAddr target = new RedisConnectionAddr(node.getHost(), node.getCport(), null, ServerConf.cportPassword());
                 RedisConnection connection = RedisConnectionHub.getInstance().get(target);
                 if (connection == null) {
                     logger.error("checkSlotInProxyNode error, proxyNode = {}, slot = {}, connection null", node, slot);

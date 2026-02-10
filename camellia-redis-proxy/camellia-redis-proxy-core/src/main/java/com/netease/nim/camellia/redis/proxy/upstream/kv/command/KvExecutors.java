@@ -1,18 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
+import com.netease.nim.camellia.redis.proxy.conf.NettyConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.KvExecutorMonitor;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.MpscSlotHashExecutor;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.MultiThreadIoEventLoopGroup;
-import io.netty.channel.epoll.EpollIoHandler;
-import io.netty.channel.kqueue.KQueueIoHandler;
-import io.netty.channel.nio.NioIoHandler;
-import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,18 +29,8 @@ public class KvExecutors {
     private final ThreadPoolExecutor scanCommandExecutor;
 
     private KvExecutors() {
-        EventLoopGroup eventLoopGroup;
         int nettyWorkThreads = ProxyDynamicConf.getInt("kv.redis.netty.work.threads", SysUtils.getCpuNum() * 3);
-        NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
-        if (nettyTransportMode == NettyTransportMode.epoll) {
-            eventLoopGroup = new MultiThreadIoEventLoopGroup(nettyWorkThreads, new DefaultThreadFactory("camellia-kv-redis-connection"), EpollIoHandler.newFactory());
-        } else if (nettyTransportMode == NettyTransportMode.kqueue) {
-            eventLoopGroup = new MultiThreadIoEventLoopGroup(nettyWorkThreads, new DefaultThreadFactory("camellia-kv-redis-connection"), KQueueIoHandler.newFactory());
-        } else if (nettyTransportMode == NettyTransportMode.io_uring) {
-            eventLoopGroup = new MultiThreadIoEventLoopGroup(nettyWorkThreads, new DefaultThreadFactory("camellia-kv-redis-connection"), IoUringIoHandler.newFactory());
-        } else {
-            eventLoopGroup = new MultiThreadIoEventLoopGroup(nettyWorkThreads, new DefaultThreadFactory("camellia-kv-redis-connection"), NioIoHandler.newFactory());
-        }
+        EventLoopGroup eventLoopGroup = NettyConf.upstreamKvEventLoopGroup(nettyWorkThreads);
 
         Runnable workThreadInitCallback = () -> RedisConnectionHub.getInstance().updateEventLoop(eventLoopGroup.next());
 

@@ -24,7 +24,6 @@ public class DefaultProxyShutdown implements ProxyShutdown {
     private final List<ChannelFuture> serverFutures = new ArrayList<>();
     private ChannelFuture cportFuture;
     private ChannelFuture consoleFuture;
-    private IUpstreamClientTemplateFactory factory;
 
     final synchronized void addServerFuture(ChannelFuture serverFuture) {
         serverFutures.add(serverFuture);
@@ -32,10 +31,6 @@ public class DefaultProxyShutdown implements ProxyShutdown {
 
     final synchronized void setCportFuture(ChannelFuture cportFuture) {
         this.cportFuture = cportFuture;
-    }
-
-    final synchronized void updateUpstreamClientTemplateFactory(IUpstreamClientTemplateFactory factory) {
-        this.factory = factory;
     }
 
     public synchronized final void setConsoleFuture(ChannelFuture consoleFuture) {
@@ -108,6 +103,7 @@ public class DefaultProxyShutdown implements ProxyShutdown {
 
     @Override
     public int closeUpstreamClients() {
+        IUpstreamClientTemplateFactory factory = GlobalRedisProxyEnv.getClientTemplateFactory();
         if (factory == null) return 0;
         RedisProxyEnv redisProxyEnv = factory.getEnv();
         if (redisProxyEnv == null) return 0;
@@ -128,6 +124,7 @@ public class DefaultProxyShutdown implements ProxyShutdown {
 
     @Override
     public int closeUpstreamClientTemplates() {
+        IUpstreamClientTemplateFactory factory = GlobalRedisProxyEnv.getClientTemplateFactory();
         if (factory == null) return 0;
         return factory.shutdown();
     }

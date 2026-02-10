@@ -35,7 +35,7 @@ public interface UpstreamRedisClientFactory {
 
         private final Object lock = new Object();
         private final ConcurrentHashMap<String, IUpstreamClient> map = new ConcurrentHashMap<>();
-        private int maxAttempts = Constants.Transpond.redisClusterMaxAttempts;
+        private int maxAttempts = Constants.Upstream.redisClusterMaxAttempts;
 
         public Default() {
         }

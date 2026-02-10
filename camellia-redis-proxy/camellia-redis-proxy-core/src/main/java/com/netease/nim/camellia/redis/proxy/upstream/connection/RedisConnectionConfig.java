@@ -32,7 +32,6 @@ public class RedisConnectionConfig {
     private int soSndbuf;
     private int soRcvbuf;
     private boolean tcpNoDelay;
-    private boolean tcpQuickAck;
     private int writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh;
 
@@ -196,14 +195,6 @@ public class RedisConnectionConfig {
 
     public void setTcpNoDelay(boolean tcpNoDelay) {
         this.tcpNoDelay = tcpNoDelay;
-    }
-
-    public boolean isTcpQuickAck() {
-        return tcpQuickAck;
-    }
-
-    public void setTcpQuickAck(boolean tcpQuickAck) {
-        this.tcpQuickAck = tcpQuickAck;
     }
 
     public int getWriteBufferWaterMarkLow() {

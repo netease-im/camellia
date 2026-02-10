@@ -5,8 +5,8 @@ import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -38,9 +38,9 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by caojiajun on 2021/5/26
  */
-public class CommandsTransponder {
+public class CommandsRouter {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommandsTransponder.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandsRouter.class);
 
     private final AuthCommandProcessor authCommandProcessor;
     private final ProxyClusterModeProcessor clusterModeProcessor;
@@ -52,7 +52,7 @@ public class CommandsTransponder {
 
     private ProxyPluginInitResp proxyPluginInitResp;
 
-    public CommandsTransponder(IUpstreamClientTemplateFactory factory, CommandInvokeConfig commandInvokeConfig) {
+    public CommandsRouter(IUpstreamClientTemplateFactory factory, CommandInvokeConfig commandInvokeConfig) {
         this.factory = factory;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
@@ -64,7 +64,7 @@ public class CommandsTransponder {
         proxyPluginFactory.registerPluginUpdate(() -> proxyPluginInitResp = proxyPluginFactory.initPlugins());
     }
 
-    public void transpond(ChannelInfo channelInfo, List<Command> commands) {
+    public void route(ChannelInfo channelInfo, List<Command> commands) {
         if (!eventLoopSetSuccess) {
             if (channelInfo.getCtx() != null) {
                 RedisConnectionHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
@@ -137,7 +137,7 @@ public class CommandsTransponder {
                                 break;
                             }
                         } catch (Exception e) {
-                            ErrorLogCollector.collect(CommandsTransponder.class, "executeRequest error", e);
+                            ErrorLogCollector.collect(CommandsRouter.class, "executeRequest error", e);
                         }
                     }
                     // 如果在插件处中断了，说明命令不需要继续执行
@@ -152,7 +152,7 @@ public class CommandsTransponder {
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
                     ErrorReply errorReply = Utils.commandNotSupport(redisCommand);
                     reply(channelInfo, task, redisCommand, errorReply, false);
-                    ErrorLogCollector.collect(CommandsTransponder.class, "not support command = " + command.getName());
+                    ErrorLogCollector.collect(CommandsRouter.class, "not support command = " + command.getName());
                     hasCommandsSkip = true;
                     continue;
                 }
@@ -182,7 +182,7 @@ public class CommandsTransponder {
                         hasCommandsSkip = true;
                         continue;
                     }
-                    if (GlobalRedisProxyEnv.getCportPassword() != null && channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
+                    if (ServerConf.cportPassword() != null && channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
                         task.replyCompleted(ErrorReply.NO_AUTH);
                         hasCommandsSkip = true;
                         continue;
@@ -531,7 +531,7 @@ public class CommandsTransponder {
             }
             future.thenAccept(template -> flush0(template, bid, bgroup, db, tasks, commands));
         } catch (Exception e) {
-            ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
+            ErrorLogCollector.collect(CommandsRouter.class, "flush commands error", e);
             ErrorReply errorReply = ErrorReply.UPSTREAM_NOT_AVAILABLE;
             if (e instanceof ErrorReplyException) {
                 errorReply = new ErrorReply(((ErrorReplyException) e).getMsg());
@@ -554,7 +554,7 @@ public class CommandsTransponder {
                     futureList = template.sendCommand(db, commands);
                 } catch (Exception e) {
                     String log = "sendCommand error, bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
-                    ErrorLogCollector.collect(CommandsTransponder.class, log, e);
+                    ErrorLogCollector.collect(CommandsRouter.class, log, e);
                     ErrorReply errorReply = ErrorReply.UPSTREAM_NOT_AVAILABLE;
                     if (e instanceof ErrorReplyException) {
                         errorReply = new ErrorReply(((ErrorReplyException) e).getMsg());
@@ -584,12 +584,12 @@ public class CommandsTransponder {
                 }
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(CommandsTransponder.class, "flush0 commands error", e);
+            ErrorLogCollector.collect(CommandsRouter.class, "flush0 commands error", e);
         }
     }
 
     private Reply cportAuth(Command command) {
-        if (GlobalRedisProxyEnv.getCportPassword() == null) {
+        if (ServerConf.cportPassword() == null) {
             return ErrorReply.NO_PASSWORD_SET;
         }
         byte[][] objects = command.getObjects();
@@ -597,7 +597,7 @@ public class CommandsTransponder {
             return ErrorReply.INVALID_PASSWORD;
         }
         String password = Utils.bytesToString(objects[1]);
-        if (password.equals(GlobalRedisProxyEnv.getCportPassword())) {
+        if (password.equals(ServerConf.cportPassword())) {
             command.getChannelInfo().setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
             return StatusReply.OK;
         }

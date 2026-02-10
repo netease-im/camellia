@@ -9,6 +9,8 @@ import com.netease.nim.camellia.redis.base.resource.RedisKvResource;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeConfig;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
+import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvRunToCompletionMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
@@ -75,7 +77,7 @@ public class RedisKvClient implements IUpstreamClient {
     private void checkConfig() {
         boolean standaloneModeEnable = ProxyDynamicConf.getBoolean("kv.standalone.mode.enable", false);
         if (!standaloneModeEnable) {
-            boolean clusterModeEnable = GlobalRedisProxyEnv.getServerProperties().isClusterModeEnable();
+            boolean clusterModeEnable = ServerConf.proxyMode() == ProxyMode.cluster;
             if (!clusterModeEnable) {
                 logger.error("proxy cluster mode not enabled, kv client possible concurrency issues");
                 throw new KvException("proxy cluster mode not enabled, kv client possible concurrency issues");
@@ -313,7 +315,7 @@ public class RedisKvClient implements IUpstreamClient {
 
     private KVClient initKVClient() {
         String className = RedisKvConf.getClassName(namespace, "kv.client", null);
-        return (KVClient) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+        return (KVClient) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
     }
 
     private Commanders initCommanders() {

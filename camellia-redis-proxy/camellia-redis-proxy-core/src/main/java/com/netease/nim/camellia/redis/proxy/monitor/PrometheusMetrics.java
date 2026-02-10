@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.conf.EventLoopGroupResult;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.model.*;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -47,7 +49,7 @@ public class PrometheusMetrics {
         builder.append("vm_version=\"").append(runtimeMXBean.getVmVersion()).append("\"").append(",");
         builder.append("jvm_info=\"").append(System.getProperties().get("java.vm.info")).append("\"").append(",");
         builder.append("java_version=\"").append(System.getProperties().get("java.version")).append("\"").append(",");
-        builder.append("proxy_mode=\"").append(GlobalRedisProxyEnv.proxyMode()).append("\"").append(",");
+        builder.append("proxy_mode=\"").append(ServerConf.proxyMode().name()).append("\"").append(",");
         builder.append("}").append(" 1").append("\n");
 
         long startTime = System.currentTimeMillis() - runtimeMXBean.getUptime();
@@ -89,8 +91,11 @@ public class PrometheusMetrics {
         //thread
         builder.append("# HELP thread Redis Proxy Thread\n");
         builder.append("# TYPE thread gauge\n");
-        builder.append(prefix).append(String.format("thread{type=\"boss_thread\"} %d\n", GlobalRedisProxyEnv.getBossThread()));
-        builder.append(prefix).append(String.format("thread{type=\"work_thread\"} %d\n", GlobalRedisProxyEnv.getWorkThread()));
+        EventLoopGroupResult result = GlobalRedisProxyEnv.getTcpEventLoopGroupResult();
+        if (result != null) {
+            builder.append(prefix).append(String.format("thread{type=\"boss_thread\"} %d\n", result.bossThread()));
+            builder.append(prefix).append(String.format("thread{type=\"work_thread\"} %d\n", result.workThread()));
+        }
 
         //gc
         builder.append("# HELP gc Redis Proxy gc\n");

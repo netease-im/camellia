@@ -2,11 +2,14 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.ByteProcessor;
 import io.netty.util.CharsetUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,8 @@ import java.util.List;
  */
 public class CommandDecoder extends ByteToMessageDecoder {
 
+    private static final Logger logger = LoggerFactory.getLogger(CommandDecoder.class);
+
     private List<Command> commands;
 
     private byte[][] bytes;
@@ -24,15 +29,24 @@ public class CommandDecoder extends ByteToMessageDecoder {
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
     private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
 
-    public CommandDecoder(int commandDecodeMaxBatchSize, int commandDecodeBufferInitializerSize) {
+    public CommandDecoder() {
         super();
-        if (commandDecodeMaxBatchSize > 0) {
+        updateConf();
+        ProxyDynamicConf.registerCallback(this::updateConf);
+        this.commands = new ArrayList<>(this.commandDecodeBufferInitializerSize);
+    }
+
+    private void updateConf() {
+        int commandDecodeMaxBatchSize = ProxyDynamicConf.getInt("command.decode.max.batch.size", Constants.Server.commandDecodeMaxBatchSize);
+        if (commandDecodeMaxBatchSize > 0 && commandDecodeMaxBatchSize != this.commandDecodeMaxBatchSize) {
+            logger.info("command.decode.max.batch.size updated, {} -> {}", this.commandDecodeMaxBatchSize, commandDecodeMaxBatchSize);
             this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
         }
-        if (commandDecodeBufferInitializerSize > 0) {
+        int commandDecodeBufferInitializerSize = ProxyDynamicConf.getInt("command.decode.buffer.initializer.size", Constants.Server.commandDecodeBufferInitializerSize);
+        if (commandDecodeBufferInitializerSize > 0 && commandDecodeBufferInitializerSize != this.commandDecodeBufferInitializerSize) {
+            logger.info("command.decode.buffer.initializer.size updated, {} -> {}", this.commandDecodeBufferInitializerSize, commandDecodeBufferInitializerSize);
             this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
         }
-        this.commands = new ArrayList<>(this.commandDecodeBufferInitializerSize);
     }
 
     /**

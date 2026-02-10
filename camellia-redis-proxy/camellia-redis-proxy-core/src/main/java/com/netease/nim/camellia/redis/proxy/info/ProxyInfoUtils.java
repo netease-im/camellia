@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.constant.CamelliaVersion;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.EventLoopGroupResult;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -268,14 +270,13 @@ public class ProxyInfoUtils {
         builder.append("camellia_version:" + VERSION).append("\r\n");
         builder.append("redis_version:").append(getRedisVersion()).append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
         builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\r\n");
-        if (GlobalRedisProxyEnv.isClusterModeEnable()) {
-            builder.append("redis_mode:").append("cluster").append("\r\n");
-        } else {
-            builder.append("redis_mode:").append("standalone").append("\r\n");
+        builder.append("redis_mode:").append(ServerConf.proxyMode().name()).append("\r\n");
+        builder.append("proxy_mode:").append(ServerConf.proxyMode().name()).append("\r\n");
+        EventLoopGroupResult result = GlobalRedisProxyEnv.getTcpEventLoopGroupResult();
+        if (result != null) {
+            builder.append("netty_boss_thread:").append(result.bossThread()).append("\r\n");
+            builder.append("netty_work_thread:").append(result.workThread()).append("\r\n");
         }
-        builder.append("proxy_mode:").append(GlobalRedisProxyEnv.proxyMode()).append("\r\n");
-        builder.append("netty_boss_thread:").append(GlobalRedisProxyEnv.getBossThread()).append("\r\n");
-        builder.append("netty_work_thread:").append(GlobalRedisProxyEnv.getWorkThread()).append("\r\n");
         builder.append("arch:").append(osBean.getArch()).append("\r\n");
         builder.append("os_name:").append(osBean.getName()).append("\r\n");
         builder.append("os_version:").append(osBean.getVersion()).append("\r\n");

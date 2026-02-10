@@ -21,13 +21,11 @@ public class ReplyHandler extends SimpleChannelInboundHandler<Reply> {
     private final IUpstreamClient upstreamClient;
     private final Queue<CompletableFuture<Reply>> queue;
     private final String connectionName;
-    private final boolean tcpQuickAck;
 
-    public ReplyHandler(RedisConnectionConfig config, Queue<CompletableFuture<Reply>> queue, String connectionName, boolean tcpQuickAck) {
+    public ReplyHandler(RedisConnectionConfig config, Queue<CompletableFuture<Reply>> queue, String connectionName) {
         this.upstreamClient = config.getUpstreamClient();
         this.queue = queue;
         this.connectionName = connectionName;
-        this.tcpQuickAck = tcpQuickAck;
     }
 
     @Override
@@ -54,14 +52,6 @@ public class ReplyHandler extends SimpleChannelInboundHandler<Reply> {
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (tcpQuickAck) {
-                    ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
-                }
-            } catch (Exception e) {
-                ErrorLogCollector.collect(ReplyHandler.class, "set TCP_QUICKACK error", e);
-            }
         }
     }
 }

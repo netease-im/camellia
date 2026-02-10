@@ -4,10 +4,8 @@ import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import io.netty.channel.*;
-import io.netty.channel.epoll.EpollChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,18 +53,6 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (logger.isDebugEnabled()) {
             logger.debug("channel init, consid = {}", channelInfo.getConsid());
         }
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        try {
-            if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelType == ChannelType.tcp) {
-                ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
-            }
-        } catch (Exception e) {
-            ErrorLogCollector.collect(InitHandler.class, "set TCP_QUICKACK error", e);
-        }
-        super.channelRead(ctx, msg);
     }
 
     @Override

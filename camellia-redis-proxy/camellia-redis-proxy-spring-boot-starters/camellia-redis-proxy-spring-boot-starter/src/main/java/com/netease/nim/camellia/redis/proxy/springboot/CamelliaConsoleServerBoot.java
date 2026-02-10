@@ -3,12 +3,11 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.channel.ChannelFuture;
-import org.springframework.beans.factory.annotation.Autowired;
 
 
 /**
@@ -17,21 +16,19 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class CamelliaConsoleServerBoot {
 
-    @Autowired
-    private CamelliaRedisProxyProperties properties;
+    private final ConsoleService consoleService;
 
-    @Autowired
-    private ConsoleService consoleService;
+    public CamelliaConsoleServerBoot(ConsoleService consoleService) {
+        this.consoleService = consoleService;
+    }
 
-    public void start() throws Exception {
-        if (properties.getConsolePort() == 0) {
-            return;
-        }
+    public void start() {
+        int port = ServerConf.consolePort();
         CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
-        if (properties.getConsolePort() == Constants.Server.consolePortRandSig) {
+        if (port == Constants.Server.consolePortRandSig) {
             config.setPort(SocketUtils.findRandomAvailablePort());
         } else {
-            config.setPort(properties.getConsolePort());
+            config.setPort(port);
         }
         config.setConsoleService(consoleService);
         CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);

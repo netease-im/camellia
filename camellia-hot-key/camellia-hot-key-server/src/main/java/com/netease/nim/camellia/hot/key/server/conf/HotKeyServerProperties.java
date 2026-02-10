@@ -21,6 +21,8 @@ public class HotKeyServerProperties {
     private final String id = UUID.randomUUID().toString().replaceAll("-", "");
     private String applicationName;
     private int port = HotKeyConstants.Server.severPort;
+
+    private NettyTransportMode nettyTransportMode = NettyTransportMode.auto;
     private int nettyBossThread = HotKeyConstants.Server.nettyBossThread;
     private int nettyWorkThread = HotKeyConstants.Server.nettyWorkThread;
 
@@ -87,6 +89,14 @@ public class HotKeyServerProperties {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public NettyTransportMode getNettyTransportMode() {
+        return nettyTransportMode;
+    }
+
+    public void setNettyTransportMode(NettyTransportMode nettyTransportMode) {
+        this.nettyTransportMode = nettyTransportMode;
     }
 
     public int getNettyBossThread() {

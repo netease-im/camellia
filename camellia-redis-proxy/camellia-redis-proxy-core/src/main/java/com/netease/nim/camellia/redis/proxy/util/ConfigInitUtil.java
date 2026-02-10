@@ -1,30 +1,31 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
+import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusLeaderSelector;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultProxyClusterModeProvider;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector;
-import com.netease.nim.camellia.redis.proxy.command.DefaultProxyNodesDiscovery;
-import com.netease.nim.camellia.redis.proxy.command.ProxyCommandProcessor;
-import com.netease.nim.camellia.redis.proxy.command.ProxyNodesDiscovery;
-import com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery;
+import com.netease.nim.camellia.redis.proxy.command.*;
 import com.netease.nim.camellia.redis.proxy.conf.*;
+import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeNodesProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeNodesProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.DefaultUpstreamAddrConverter;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.UpstreamAddrConverter;
 
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**
@@ -32,127 +33,113 @@ import java.util.Set;
  */
 public class ConfigInitUtil {
 
-    public static ProxySentinelModeNodesProvider initSentinelModeNodesProvider(String className) {
+    public static ProxySentinelModeNodesProvider initSentinelModeNodesProvider() {
+        String className = BeanInitUtils.getClassName("proxy.sentinel.mode.nodes.provider", DefaultProxySentinelModeNodesProvider.class.getName());
         if (className.equalsIgnoreCase(DefaultProxySentinelModeNodesProvider.class.getName())) {
             return new DefaultProxySentinelModeNodesProvider();
         } else {
-            return (ProxySentinelModeNodesProvider) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+            return (ProxySentinelModeNodesProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
     }
 
-    public static ConsensusLeaderSelector initConsensusLeaderSelector(String className) {
+    public static ConsensusLeaderSelector initConsensusLeaderSelector() {
+        String className = BeanInitUtils.getClassName("cluster.mode.consensus.leader.selector", RedisConsensusLeaderSelector.class.getName());
         if (className.equals(RedisConsensusLeaderSelector.class.getName())) {
             return new RedisConsensusLeaderSelector();
         } else {
-            return (ConsensusLeaderSelector) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+            return (ConsensusLeaderSelector) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
     }
 
-    public static ProxyNodesDiscovery initProxyNodesDiscovery(CamelliaServerProperties serverProperties,
-                                                              ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
+    public static ProxyClusterModeProvider initProxyClusterModeProvider() {
+        String className = BeanInitUtils.getClassName("proxy.cluster.mode.provider", DefaultProxyClusterModeProvider.class.getName());
+        ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
+        return (ProxyClusterModeProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+    }
+
+    public static ProxyNodesDiscovery initProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
         String className = BeanInitUtils.getClassName("proxy.nodes.discovery", DefaultProxyNodesDiscovery.class.getName());
         if (className.equals(DefaultProxyNodesDiscovery.class.getName())) {
             return new DefaultProxyNodesDiscovery(proxyClusterModeProcessor, proxySentinelModeProcessor);
         } else if (className.equals(RedisProxyNodesDiscovery.class.getName())) {
-            return new RedisProxyNodesDiscovery(serverProperties, proxyClusterModeProcessor, proxySentinelModeProcessor);
+            return new RedisProxyNodesDiscovery(proxyClusterModeProcessor, proxySentinelModeProcessor);
         } else {
-            ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+            ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
             return (ProxyNodesDiscovery) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
     }
 
-    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(CamelliaServerProperties serverProperties,
-                                                                                   CamelliaTranspondProperties transpondProperties,
-                                                                                   ProxyCommandProcessor proxyCommandProcessor) {
-        String className = serverProperties.getUpstreamClientTemplateFactoryClassName();
-        ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(ProxyCommandProcessor proxyCommandProcessor) {
+        String className = BeanInitUtils.getClassName("upstream.client.template.factory", UpstreamRedisClientTemplateFactory.class.getName());
+        ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
         if (className == null || className.equals(UpstreamRedisClientTemplateFactory.class.getName())) {
-            return new UpstreamRedisClientTemplateFactory(transpondProperties, proxyBeanFactory, proxyCommandProcessor);
+            return new UpstreamRedisClientTemplateFactory(proxyCommandProcessor);
         }
         return (IUpstreamClientTemplateFactory) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
     }
 
-    public static ClientAuthProvider initClientAuthProvider(CamelliaServerProperties serverProperties) {
-        String className = serverProperties.getClientAuthProviderClassName();
+    public static ClientAuthProvider initClientAuthProvider() {
+        String className = BeanInitUtils.getClassName("client.auth.provider", ClientAuthByConfigProvider.class.getName());
         if (className == null || className.equals(ClientAuthByConfigProvider.class.getName())) {
-            return new ClientAuthByConfigProvider(serverProperties.getPassword());
+            return new ClientAuthByConfigProvider(ServerConf.password());
         }
-        ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+        ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
         return (ClientAuthProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
     }
 
-    public static ProxyDynamicConfLoader initProxyDynamicConfLoader(CamelliaServerProperties serverProperties) {
-        String className = serverProperties.getProxyDynamicConfLoaderClassName();
-        if (className != null) {
-            ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
-            return (ProxyDynamicConfLoader) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
-        }
-        return new FileBasedProxyDynamicConfLoader();
-    }
 
-    public static MonitorCallback initMonitorCallback(CamelliaServerProperties serverProperties) {
-        String className = serverProperties.getMonitorCallbackClassName();
+    public static MonitorCallback initMonitorCallback() {
+        String className = BeanInitUtils.getClassName("monitor.callback", LoggingMonitorCallback.class.getName());
         if (className != null) {
-            ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+            ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
             return (MonitorCallback) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
 
-    public static ProxyDiscoveryFactory initProxyDiscoveryFactory(CamelliaTranspondProperties.RedisConfProperties redisConfProperties, ProxyBeanFactory proxyBeanFactory) {
-        String className = redisConfProperties.getProxyDiscoveryFactoryClassName();
+    public static ProxyDiscoveryFactory initProxyDiscoveryFactory() {
+        String className = BeanInitUtils.getClassName("proxy.discovery.factory", null);
         if (className != null) {
-            return (ProxyDiscoveryFactory) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+            return (ProxyDiscoveryFactory) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
 
-    public static ProxyFrontendTlsProvider initProxyFrontendTlsProvider(CamelliaServerProperties properties) {
-        String className = properties.getProxyFrontendTlsProviderClassName();
+    public static ProxyFrontendTlsProvider initProxyFrontendTlsProvider() {
+        String className = BeanInitUtils.getClassName("proxy.frontend.tls.provider", DefaultProxyFrontendTlsProvider.class.getName());
         if (className != null) {
-            ProxyBeanFactory proxyBeanFactory = properties.getProxyBeanFactory();
+            ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
             return (ProxyFrontendTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
 
-    public static ProxyUpstreamTlsProvider initProxyUpstreamTlsProvider(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
-        String className = properties.getRedisConf().getProxyUpstreamTlsProviderClassName();
+    public static ProxyUpstreamTlsProvider initProxyUpstreamTlsProvider() {
+        String className = BeanInitUtils.getClassName("proxy.upstream.tls.provider", DefaultProxyUpstreamTlsProvider.class.getName());
         if (className != null) {
-            return (ProxyUpstreamTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+            return (ProxyUpstreamTlsProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
 
-    public static UpstreamAddrConverter initUpstreamAddrConverter(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
-        String className = properties.getRedisConf().getUpstreamAddrConverterClassName();
+    public static UpstreamAddrConverter initUpstreamAddrConverter() {
+        String className = BeanInitUtils.getClassName("upstream.addr.converter", DefaultUpstreamAddrConverter.class.getName());
         if (className != null) {
-            return (UpstreamAddrConverter) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+            return (UpstreamAddrConverter) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
 
-    public static Set<Integer> proxyProtocolPorts(CamelliaServerProperties properties, int port, int tlsPort) {
-        Set<Integer> set = new HashSet<>();
-        String ports = properties.getProxyProtocolPorts();
-        if (ports == null || ports.trim().length() == 0) {
-            if (port > 0) {
-                set.add(port);
-            }
-            if (tlsPort > 0) {
-                set.add(tlsPort);
-            }
-        } else {
-            String[] split = ports.trim().split(",");
-            for (String str : split) {
-                if (port > 0 && str.trim().equalsIgnoreCase(String.valueOf(port))) {
-                    set.add(port);
-                }
-                if (tlsPort > 0 && str.trim().equalsIgnoreCase(String.valueOf(tlsPort))) {
-                    set.add(tlsPort);
-                }
-            }
+    public static QueueFactory initQueueFactory() {
+        String className = BeanInitUtils.getClassName("queue.factory", DefaultQueueFactory.class.getName());
+        return (QueueFactory) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+    }
+
+    public static ShardingFunc initShardingFunc() {
+        String className = BeanInitUtils.getClassName("sharding.func", null);
+        if (className == null) {
+            return null;
         }
-        return set;
+        return (ShardingFunc) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
     }
 }

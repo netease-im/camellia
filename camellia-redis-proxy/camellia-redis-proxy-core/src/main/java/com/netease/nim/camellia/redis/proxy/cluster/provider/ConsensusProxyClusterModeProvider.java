@@ -50,8 +50,7 @@ public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeP
         initNodes(false);
         current();
         //init leader selector
-        String className = BeanInitUtils.getClassName("cluster.mode.consensus.leader.selector", RedisConsensusLeaderSelector.class.getName());
-        leaderSelector = ConfigInitUtil.initConsensusLeaderSelector(className);
+        leaderSelector = ConfigInitUtil.initConsensusLeaderSelector();
         leaderSelector.init(current(), new ArrayList<>(initNodes(false)));
         //get leader
         long sleepMs = 10;

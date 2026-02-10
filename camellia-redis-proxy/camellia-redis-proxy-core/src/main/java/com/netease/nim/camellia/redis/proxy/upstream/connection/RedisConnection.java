@@ -102,9 +102,9 @@ public class RedisConnection {
         this.connectTimeoutMillis = config.getConnectTimeoutMillis();
         this.closeIdleConnection = config.isCloseIdleConnection();
         this.checkIdleThresholdSeconds = config.getCheckIdleConnectionThresholdSeconds() <= 0
-                ? Constants.Transpond.checkIdleConnectionThresholdSeconds : config.getCheckIdleConnectionThresholdSeconds();
+                ? Constants.Upstream.checkIdleConnectionThresholdSeconds : config.getCheckIdleConnectionThresholdSeconds();
         this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds() <=0
-                ? Constants.Transpond.closeIdleConnectionDelaySeconds : config.getCloseIdleConnectionDelaySeconds();
+                ? Constants.Upstream.closeIdleConnectionDelaySeconds : config.getCloseIdleConnectionDelaySeconds();
         this.connectionName = "RedisConnection[" + PasswordMaskUtils.maskAddr(addr.getUrl()) + "][id=" + id.incrementAndGet() + "]";
         this.status = RedisConnectionStatus.INITIALIZE;
     }
@@ -163,8 +163,6 @@ public class RedisConnection {
                 bootstrap.option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
                         .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive());
             }
-            final boolean tcpQuickAck = config.isTcpQuickAck() && channelType == ChannelType.tcp
-                    && EpollSocketChannel.class.isAssignableFrom(channelClass);
             bootstrap.handler(new ChannelInitializer<Channel>() {
                 @Override
                 protected void initChannel(Channel channel) {
@@ -174,13 +172,10 @@ public class RedisConnection {
                     }
                     pipeline.addLast(new ReplyDecoder());
                     pipeline.addLast(new ReplyAggregateDecoder());
-                    pipeline.addLast(new ReplyHandler(config, queue, connectionName, tcpQuickAck));
+                    pipeline.addLast(new ReplyHandler(config, queue, connectionName));
                     pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
                 }
             });
-            if (tcpQuickAck) {
-                bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
-            }
             if (logger.isInfoEnabled()) {
                 logger.info("{} try connect...", connectionName);
             }
@@ -746,7 +741,7 @@ public class RedisConnection {
         if (checkIdleThresholdSeconds > 0) {
             return TimeCache.currentMillis - lastCommandTime > checkIdleThresholdSeconds * 1000L;
         } else {
-            return TimeCache.currentMillis - lastCommandTime > Constants.Transpond.checkIdleConnectionThresholdSeconds * 1000L;
+            return TimeCache.currentMillis - lastCommandTime > Constants.Upstream.checkIdleConnectionThresholdSeconds * 1000L;
         }
     }
 

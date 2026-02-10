@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.ProxyCurrentNodeInfo;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -167,7 +168,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
      */
     protected final RedisConnectionAddr toAddr(ProxyNode proxyNode) {
         return CamelliaMapUtils.computeIfAbsent(addrCache, proxyNode,
-                node -> new RedisConnectionAddr(node.getHost(), node.getCport(), null, GlobalRedisProxyEnv.getCportPassword()));
+                node -> new RedisConnectionAddr(node.getHost(), node.getCport(), null, ServerConf.cportPassword()));
     }
 
 }

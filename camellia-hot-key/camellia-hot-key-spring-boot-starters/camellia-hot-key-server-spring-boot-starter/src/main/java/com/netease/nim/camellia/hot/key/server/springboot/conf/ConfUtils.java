@@ -10,6 +10,7 @@ public class ConfUtils {
 
     public static HotKeyServerProperties parse(CamelliaHotKeyServerProperties serverProperties) {
         HotKeyServerProperties properties = new HotKeyServerProperties();
+        properties.setNettyTransportMode(serverProperties.getNetty().getNettyTransportMode());
         properties.setNettyBossThread(serverProperties.getNetty().getBossThread());
         if (serverProperties.getNetty().getWorkThread() > 0) {
             properties.setNettyWorkThread(serverProperties.getNetty().getWorkThread());

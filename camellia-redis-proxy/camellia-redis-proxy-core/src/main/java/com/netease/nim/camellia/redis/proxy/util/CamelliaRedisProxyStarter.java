@@ -6,8 +6,9 @@ import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaRouteProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
@@ -32,8 +33,8 @@ public class CamelliaRedisProxyStarter {
     private static final AtomicBoolean starting = new AtomicBoolean(false);
     private static final AtomicBoolean startOk = new AtomicBoolean(false);
 
-    private static final CamelliaServerProperties serverProperties = new CamelliaServerProperties();
-    private static final CamelliaTranspondProperties transpondProperties = new CamelliaTranspondProperties();
+    private static final CamelliaServerProperties camelliaServerProperties = new CamelliaServerProperties();
+    private static CamelliaRouteProperties routeProperties = null;
 
     public static void start() {
         start(0, null);
@@ -58,9 +59,10 @@ public class CamelliaRedisProxyStarter {
                     logger.warn("CamelliaRedisProxyServer has started");
                     return;
                 }
-                GlobalRedisProxyEnv.init(serverProperties, transpondProperties);
-                CommandInvoker commandInvoker = new CommandInvoker(serverProperties, transpondProperties);
-                CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
+                ServerConf.init(camelliaServerProperties, -1, null, null);
+                ServerConf.updateRouteProperties(routeProperties);
+
+                CamelliaRedisProxyServer server = new CamelliaRedisProxyServer();
                 server.start();
                 logger.info("CamelliaRedisProxyServer start success");
                 if (consolePort != 0 && consoleService != null) {
@@ -99,28 +101,21 @@ public class CamelliaRedisProxyStarter {
         return startOk.get();
     }
 
-    public static CamelliaServerProperties getServerProperties() {
-        return serverProperties;
-    }
-
-    public static CamelliaTranspondProperties getTranspondProperties() {
-        return transpondProperties;
-    }
-
     public static void updatePort(int port) {
-        serverProperties.setPort(port);
+        camelliaServerProperties.getConfig().put("port", String.valueOf(port));
     }
 
     public static void updatePassword(String password) {
-        serverProperties.setPassword(password);
+        camelliaServerProperties.getConfig().put("password", password);
     }
 
     public static void updateRouteConf(String conf) {
-        transpondProperties.setType(CamelliaTranspondProperties.Type.LOCAL);
+        routeProperties = new CamelliaRouteProperties();
+        routeProperties.setType(CamelliaRouteProperties.Type.LOCAL);
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(conf);
         RedisResourceUtil.checkResourceTable(resourceTable);
-        CamelliaTranspondProperties.LocalProperties local = new CamelliaTranspondProperties.LocalProperties();
+        CamelliaRouteProperties.LocalProperties local = new CamelliaRouteProperties.LocalProperties();
         local.setResourceTable(resourceTable);
-        transpondProperties.setLocal(local);
+        routeProperties.setLocal(local);
     }
 }
