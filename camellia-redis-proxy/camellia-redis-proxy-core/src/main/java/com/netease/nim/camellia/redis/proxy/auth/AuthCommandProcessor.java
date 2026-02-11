@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,22 +17,14 @@ import org.slf4j.LoggerFactory;
 public class AuthCommandProcessor {
     private static final Logger logger = LoggerFactory.getLogger(AuthCommandProcessor.class);
 
-    private final ClientAuthProvider clientAuthProvider;
+    private final RouteConfProvider provider;
 
     /**
      * constructor
-     * @param clientAuthProvider provider
+     * @param provider RouteConfProvider
      */
-    public AuthCommandProcessor(ClientAuthProvider clientAuthProvider) {
-        this.clientAuthProvider = clientAuthProvider;
-    }
-
-    /**
-     * get auth provider
-     * @return provider
-     */
-    public ClientAuthProvider getClientAuthProvider() {
-        return clientAuthProvider;
+    public AuthCommandProcessor(RouteConfProvider provider) {
+        this.provider = provider;
     }
 
     /**
@@ -41,7 +34,7 @@ public class AuthCommandProcessor {
      * @return reply
      */
     public Reply invokeAuthCommand(ChannelInfo channelInfo, Command auth) {
-        if (!this.clientAuthProvider.isPasswordRequired()) {
+        if (!this.provider.isPasswordRequired()) {
             return ErrorReply.NO_PASSWORD_SET;
         }
 
@@ -75,7 +68,7 @@ public class AuthCommandProcessor {
      * @return result
      */
     public boolean checkPassword(ChannelInfo channelInfo, String userName, String password) {
-        ClientIdentity clientIdentity = this.clientAuthProvider.auth(userName, password);
+        ClientIdentity clientIdentity = this.provider.auth(userName, password);
         if (clientIdentity == null || !clientIdentity.isPass()) {
             channelInfo.setChannelStats(ChannelInfo.ChannelStats.NO_AUTH);
             return false;
@@ -101,6 +94,6 @@ public class AuthCommandProcessor {
      * @return result
      */
     public boolean isPasswordRequired() {
-        return clientAuthProvider.isPasswordRequired();
+        return provider.isPasswordRequired();
     }
 }

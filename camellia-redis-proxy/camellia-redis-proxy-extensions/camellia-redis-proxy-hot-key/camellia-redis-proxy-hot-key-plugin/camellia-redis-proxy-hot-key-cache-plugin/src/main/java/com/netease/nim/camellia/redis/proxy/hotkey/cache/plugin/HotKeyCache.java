@@ -128,12 +128,12 @@ public class HotKeyCache {
 
     //更新配置
     private void reloadHotKeyCacheConfig() {
-        Long bid = identityInfo.getBid();
-        String bgroup = identityInfo.getBgroup();
+        Long bid = identityInfo.bid();
+        String bgroup = identityInfo.bgroup();
         this.enable = ProxyDynamicConf.getBoolean("hot.key.cache.enable", bid, bgroup, true);
         this.cacheNull = ProxyDynamicConf.getBoolean("hot.key.cache.null", bid, bgroup, Constants.Server.hotKeyCacheNeedCacheNull);
         this.namespace = ProxyDynamicConf.getString("hot.key.server.cache.namespace",
-                identityInfo.getBid(), identityInfo.getBgroup(), Utils.getNamespaceOrSetDefault(identityInfo.getBid(), identityInfo.getBgroup()));
+                identityInfo.bid(), identityInfo.bgroup(), Utils.getNamespaceOrSetDefault(identityInfo.bid(), identityInfo.bgroup()));
     }
 
 }

@@ -25,8 +25,8 @@ public class PrefixMatchHotKeyCacheKeyChecker implements HotKeyCacheKeyChecker {
     @Override
     public boolean needCache(IdentityInfo identityInfo, byte[] key) {
         try {
-            Long bid = identityInfo.getBid();
-            String bgroup = identityInfo.getBgroup();
+            Long bid = identityInfo.bid();
+            String bgroup = identityInfo.bgroup();
             String cacheKey = Utils.getCacheKey(bid, bgroup);
             // 这里不用DCL是因为不用保证每次获取是同一个对象，也就是说不用做成单例
             Set<String> set = cache.get(cacheKey);

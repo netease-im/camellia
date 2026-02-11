@@ -5,28 +5,23 @@
 * 也就是一个proxy实例可以同时代理多组路由
 * 不同路由之间互相独立，对外可以通过不同的proxy密码来区分
 * 基于ClientAuthProvider和ProxyRouteConfUpdater这两个扩展口来实现多租户的能力
-* 你可以自己实现上述接口，也可以使用内置的，下面展示一个事例，使用内置的MultiTenantClientAuthProvider和MultiTenantProxyRouteConfUpdater来实现多租户的能力
-* MultiTenantClientAuthProvider和MultiTenantProxyRouteConfUpdater使用ProxyDynamicConf作为动态路由的数据源（默认读取camellia-redis-proxy.properties）
+* 你可以自己实现上述接口，也可以使用内置的，下面展示一个事例，使用内置的MultiTenantClientAuthProvider和MultiTenantProxyRouteConfProvider来实现多租户的能力
+* MultiTenantClientAuthProvider和MultiTenantProxyRouteConfProvider使用ProxyDynamicConf作为动态路由的数据源（默认读取camellia-redis-proxy.properties）
 
 ### 示例
-* application.yml
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider
-  transpond:
-    type: custom
-    custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater
-```
 * camellia-redis-proxy.properties
 ```properties
-#这是一个数组，每一项代表一个路由，支持多组路由
+#基础配置
+port=6380
+console.port=16379
+monitor.enable=false
+client.auth.provider.class.name=com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider
+
+##路由配置
+route.type=custom
+custom.route.conf.provider.class.name=com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfProvider
+
+##这是一个数组，每一项代表一个路由，支持多组路由
 multi.tenant.route.config=[{"name":"route1", "password": "passwd1", "route": "redis://passxx@127.0.0.1:16379"},{"name":"route2", "password": "passwd2", "route": "redis-cluster://@127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382"},{"name":"route3", "password": "passwd3", "route": {"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}}]
 ```
 
@@ -44,8 +39,6 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider
-  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.etcd.EtcdProxyDynamicConfLoader
   config:
     "etcd.target": "ip:///etcd0:2379,etcd1:2379,etcd2:2379"
     #"etcd.endpoints": "http://etcd0:2379,http://etcd1:2379,http://etcd2:2379" #etcd.target和etcd.endpoints二选一，优先使用etcd.target
@@ -54,7 +47,7 @@ camellia-redis-proxy:
   transpond:
     type: custom
     custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfProvider
 ```
 
 配置如下：  

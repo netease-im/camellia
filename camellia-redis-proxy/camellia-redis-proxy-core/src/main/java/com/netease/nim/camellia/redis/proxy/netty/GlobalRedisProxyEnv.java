@@ -1,11 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
-import com.netease.nim.camellia.redis.proxy.command.QueueFactory;
 import com.netease.nim.camellia.redis.proxy.conf.EventLoopGroupResult;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +32,6 @@ public class GlobalRedisProxyEnv {
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static RedisProxyEnv redisProxyEnv;
     private static ProxyDiscoveryFactory discoveryFactory;
-
-    private static volatile QueueFactory queueFactory;
 
     private static final DefaultProxyShutdown proxyShutdown = new DefaultProxyShutdown();
 
@@ -140,17 +136,6 @@ public class GlobalRedisProxyEnv {
 
     public static DefaultProxyShutdown getProxyShutdown() {
         return proxyShutdown;
-    }
-
-    public static QueueFactory getQueueFactory() {
-        if (queueFactory == null) {
-            synchronized (QueueFactory.class) {
-                if (queueFactory == null) {
-                    queueFactory = ConfigInitUtil.initQueueFactory();
-                }
-            }
-        }
-        return queueFactory;
     }
 
     public static synchronized void addBeforeStartCallback(Runnable callback) {

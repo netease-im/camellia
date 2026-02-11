@@ -56,11 +56,11 @@ public class HotKeyMonitor {
     }
 
     private void reloadHotKeyCacheConfig() {
-        Long bid = identityInfo.getBid();
-        String bgroup = identityInfo.getBgroup();
+        Long bid = identityInfo.bid();
+        String bgroup = identityInfo.bgroup();
         this.enable = ProxyDynamicConf.getBoolean("hot.key.monitor.enable", bid, bgroup, true);
         this.namespace = ProxyDynamicConf.getString("hot.key.server.monitor.namespace",
-                identityInfo.getBid(), identityInfo.getBgroup(), Utils.getNamespaceOrSetDefault(identityInfo.getBid(), identityInfo.getBgroup()));
+                identityInfo.bid(), identityInfo.bgroup(), Utils.getNamespaceOrSetDefault(identityInfo.bid(), identityInfo.bgroup()));
     }
 
 }

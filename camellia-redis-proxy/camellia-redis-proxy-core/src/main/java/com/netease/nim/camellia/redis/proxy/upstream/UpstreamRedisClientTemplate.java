@@ -1,8 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
-import com.netease.nim.camellia.core.api.*;
-import com.netease.nim.camellia.core.client.env.Monitor;
-import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
@@ -13,12 +10,12 @@ import com.netease.nim.camellia.redis.proxy.conf.DynamicConfCallback;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyRouteType;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
-import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
@@ -44,20 +41,16 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     private static final ScheduledExecutorService scheduleExecutor
             = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(UpstreamRedisClientTemplate.class));
 
-    private static final long defaultBid = -1;
-    private static final String defaultBgroup = "local";
-    private static final long defaultCheckIntervalMillis = 5000;
-    private static final boolean defaultMonitorEnable = false;
-
     private final UpstreamRedisClientFactory factory;
+    private final CommandMonitor commandMonitor;
+
     private ScheduledFuture<?> future;
 
     private final long bid;
     private final String bgroup;
     private MultiWriteMode multiWriteMode;
 
-    private RedisProxyEnv env;
-    private Monitor monitor;
+    private final RedisProxyEnv env;
     private ResourceSelector resourceSelector;
     private boolean multiDBSupport;
 
@@ -86,84 +79,41 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         }
     };
 
-    public UpstreamRedisClientTemplate(ResourceTable resourceTable) {
-        this(RedisProxyEnv.defaultRedisEnv(), resourceTable);
-    }
-
     public UpstreamRedisClientTemplate(RedisProxyEnv env, ResourceTable resourceTable) {
-        this(env, new LocalCamelliaApi(resourceTable), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis, false);
-    }
-
-    public UpstreamRedisClientTemplate(RedisProxyEnv env, String resourceTableFilePath, long checkIntervalMillis) {
-        this(env, new ReloadableLocalFileCamelliaApi(resourceTableFilePath, RedisResourceUtil.RedisResourceTableChecker),
-                defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis, true);
-    }
-
-    public UpstreamRedisClientTemplate(RedisProxyEnv env, CamelliaApi service, long bid, String bgroup,
-                                       boolean monitorEnable, long checkIntervalMillis) {
-        this(env, service, bid, bgroup, monitorEnable, checkIntervalMillis, true);
-    }
-
-    public UpstreamRedisClientTemplate(RedisProxyEnv env, CamelliaApi service, long bid, String bgroup,
-                                       boolean monitorEnable, long checkIntervalMillis, boolean reload) {
         this.env = env;
-        this.bid = bid;
-        this.bgroup = bgroup;
+        this.bid = -1;
+        this.bgroup = "default";
         this.factory = env.getClientFactory();
         this.resourceChecker = env.getResourceChecker();
+        this.commandMonitor = null;
         multiWriteModeCallback.callback();
         ProxyDynamicConf.registerCallback(multiWriteModeCallback);
-        boolean v2 = ProxyDynamicConf.getBoolean("dashboard.api.v2.enable", false);
-        CamelliaApiResponse response;
-        if (v2) {
-            response = ResourceTableUtil.toV1Response(service.getResourceTableV2(bid, bgroup, null));
-        } else {
-            response = service.getResourceTable(bid, bgroup, null);
-        }
-        String md5 = response.getMd5();
-        if (response.getResourceTable() == null) {
-            throw new CamelliaRedisException("resourceTable is null");
-        }
-        RedisResourceUtil.checkResourceTable(response.getResourceTable());
-        this.update(response.getResourceTable());
+        RedisResourceUtil.checkResourceTable(resourceTable);
+        this.update(resourceTable);
         if (logger.isInfoEnabled()) {
-            logger.info("UpstreamRedisClientTemplate init success, api-version = {}, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}",
-                    v2 ? "v2" : "v1", bid, bgroup, md5, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
-        }
-        if (reload) {
-            DashboardReloadTask dashboardReloadTask = new DashboardReloadTask(this, service, bid, bgroup, md5);
-            this.future = scheduleExecutor.scheduleAtFixedRate(dashboardReloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
-            if (monitorEnable) {
-                Monitor monitor = new RemoteMonitor(bid, bgroup, service);
-                ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
-                this.env = new RedisProxyEnv.Builder(env).proxyEnv(proxyEnv).build();
-                this.monitor = monitor;
-            }
-        }
-        if (bid == -1) {
-            RouteConfMonitor.registerRedisClientTemplate(null, null, this);
-        } else {
-            RouteConfMonitor.registerRedisClientTemplate(bid, bgroup, this);
+            logger.info("UpstreamRedisClientTemplate init success, resourceTable = {}", ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)));
         }
     }
 
-    public UpstreamRedisClientTemplate(RedisProxyEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater, long reloadIntervalMillis) {
+    public UpstreamRedisClientTemplate(RedisProxyEnv env, long bid, String bgroup, RouteConfProvider provider) {
         this.env = env;
         this.bid = bid;
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
         this.resourceChecker = env.getResourceChecker();
+        this.commandMonitor = provider.getCommandMonitor();
         multiWriteModeCallback.callback();
         ProxyDynamicConf.registerCallback(multiWriteModeCallback);
-        ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
+        ResourceTable resourceTable = provider.getRouteConfig(bid, bgroup);
         RedisResourceUtil.checkResourceTable(resourceTable);
         this.update(resourceTable);
         if (logger.isInfoEnabled()) {
             logger.info("UpstreamRedisClientTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
-                    ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), updater.getClass().getName());
+                    ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), provider.getClass().getName());
         }
+        long reloadIntervalMillis = ProxyDynamicConf.getLong("route.conf.provider.reload.interval.millis", 30000);
         if (reloadIntervalMillis > 0) {
-            ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, bid, bgroup, updater);
+            RouteConfProviderReloadTask reloadTask = new RouteConfProviderReloadTask(this, bid, bgroup, provider);
             this.future = scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
         if (bid == -1) {
@@ -1152,28 +1102,27 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     }
 
 
-
-    private static class ProxyRouteConfUpdaterReloadTask implements Runnable {
+    private static class RouteConfProviderReloadTask implements Runnable {
 
         private final AtomicBoolean running = new AtomicBoolean(false);
         private final UpstreamRedisClientTemplate template;
         private final long bid;
         private final String bgroup;
-        private final ProxyRouteConfUpdater updater;
+        private final RouteConfProvider provider;
 
-        ProxyRouteConfUpdaterReloadTask(UpstreamRedisClientTemplate template, long bid, String bgroup,
-                                        ProxyRouteConfUpdater updater) {
+        RouteConfProviderReloadTask(UpstreamRedisClientTemplate template, long bid, String bgroup,
+                                    RouteConfProvider provider) {
             this.template = template;
             this.bid = bid;
             this.bgroup = bgroup;
-            this.updater = updater;
+            this.provider = provider;
         }
 
         @Override
         public void run() {
             if (running.compareAndSet(false, true)) {
                 try {
-                    ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
+                    ResourceTable resourceTable = provider.getRouteConfig(bid, bgroup);
                     try {
                         RedisResourceUtil.checkResourceTable(resourceTable);
                     } catch (Exception e) {
@@ -1196,83 +1145,20 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     }
                 } catch (Exception e) {
                     Throwable ex = ExceptionUtils.onError(e);
-                    String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", updater = " + updater.getClass().getName() + ", ex = " + ex.toString();
+                    String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", updater = " + provider.getClass().getName() + ", ex = " + ex.toString();
                     ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, log, e);
                 } finally {
                     running.set(false);
                 }
             } else {
-                logger.warn("ProxyRouteConfUpdaterReloadTask is running, skip run, bid = {}, bgroup = {}, updater = {}", bid, bgroup, updater.getClass().getName());
+                logger.warn("ProxyRouteConfUpdaterReloadTask is running, skip run, bid = {}, bgroup = {}, updater = {}", bid, bgroup, provider.getClass().getName());
             }
         }
     }
-
-    private static class DashboardReloadTask implements Runnable {
-
-        private final AtomicBoolean running = new AtomicBoolean(false);
-
-        private final UpstreamRedisClientTemplate template;
-        private final CamelliaApi service;
-        private final long bid;
-        private final String bgroup;
-        private String md5;
-
-        DashboardReloadTask(UpstreamRedisClientTemplate template, CamelliaApi service, long bid, String bgroup, String md5) {
-            this.template = template;
-            this.service = service;
-            this.bid = bid;
-            this.bgroup = bgroup;
-            this.md5 = md5;
-        }
-
-        @Override
-        public void run() {
-            if (running.compareAndSet(false, true)) {
-                try {
-                    boolean v2 = ProxyDynamicConf.getBoolean("dashboard.api.v2.enable", false);
-                    CamelliaApiResponse response;
-                    if (v2) {
-                        response = ResourceTableUtil.toV1Response(service.getResourceTableV2(bid, bgroup, this.md5));
-                    } else {
-                        response = service.getResourceTable(bid, bgroup, this.md5);
-                    }
-                    if (response.getCode() == CamelliaApiCode.NOT_MODIFY.getCode()) {
-                        if (logger.isTraceEnabled()) {
-                            logger.trace("not modify, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
-                        }
-                        return;
-                    }
-                    try {
-                        RedisResourceUtil.checkResourceTable(response.getResourceTable());
-                    } catch (Exception e) {
-                        logger.error("resourceTable check error, skip reload, bid = {}, bgroup = {}, resourceTable = {}",
-                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())), e);
-                        return;
-                    }
-                    template.update(response.getResourceTable());
-                    this.md5 = response.getMd5();
-                    if (logger.isInfoEnabled()) {
-                        logger.info("reload success, api_version = {}, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", v2 ? "v2" : "v1", bid, bgroup, md5,
-                                ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
-                    }
-                } catch (Exception e) {
-                    Throwable ex = ExceptionUtils.onError(e);
-                    String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", md5 = " + md5 + ", ex = " + ex.toString();
-                    ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, log, e);
-                } finally {
-                    running.set(false);
-                }
-            } else {
-                logger.warn("DashboardReloadTask is running, skip run, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
-            }
-        }
-    }
-
-    private static final String className = UpstreamRedisClientTemplate.class.getSimpleName();
 
     private void incrRead(String url, Command command) {
-        if (monitor != null) {
-            monitor.incrRead(url, className, command.getName());
+        if (commandMonitor != null) {
+            commandMonitor.incrRead(bid, bgroup, url, command.getName());
         }
         if (bid == -1) {
             ResourceStatsMonitor.incr(null, null, url, command.getName());
@@ -1282,8 +1168,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     }
 
     private void incrWrite(String url, Command command) {
-        if (monitor != null) {
-            monitor.incrWrite(url, className, command.getName());
+        if (commandMonitor != null) {
+            commandMonitor.incrWrite(bid, bgroup, url, command.getName());
         }
         if (bid == -1) {
             ResourceStatsMonitor.incr(null, null, url, command.getName());
@@ -1291,5 +1177,4 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             ResourceStatsMonitor.incr(bid, bgroup, url, command.getName());
         }
     }
-
 }

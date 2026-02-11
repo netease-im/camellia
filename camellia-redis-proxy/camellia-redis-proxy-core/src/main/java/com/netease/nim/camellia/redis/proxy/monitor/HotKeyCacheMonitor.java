@@ -27,8 +27,8 @@ public class HotKeyCacheMonitor {
     public static void hotKeyCache(IdentityInfo identityInfo, HotKeyCacheInfo hotKeyCacheInfo,
                                    long checkMillis, long checkThreshold) {
         try {
-            String bid = identityInfo.getBid() == null ? "default" : String.valueOf(identityInfo.getBid());
-            String bgroup = identityInfo.getBgroup() == null ? "default" : identityInfo.getBgroup();
+            String bid = identityInfo.bid() == null ? "default" : String.valueOf(identityInfo.bid());
+            String bgroup = identityInfo.bgroup() == null ? "default" : identityInfo.bgroup();
             for (HotKeyCacheInfo.Stats stats : hotKeyCacheInfo.getStatsList()) {
                 String keyStr = Utils.bytesToString(stats.getKey());
                 String uniqueKey = bid + "|" + bgroup + "|" + keyStr;

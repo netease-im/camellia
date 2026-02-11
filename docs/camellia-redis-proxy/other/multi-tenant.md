@@ -7,24 +7,19 @@
 * 基于ClientAuthProvider和ProxyRouteConfUpdater这两个扩展口来实现多租户的能力
 
 ### 示例
-* application.yml
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.auth.DynamicConfClientAuthProvider
-  transpond:
-    type: custom
-    custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater
-```
 * camellia-redis-proxy.properties
 ```properties
-##给DynamicConfProxyRouteConfUpdater使用
+##基础配置
+port=6380
+console.port=16379
+monitor.enable=false
+client.auth.provider.class.name=com.netease.nim.camellia.redis.proxy.auth.DynamicConfClientAuthProvider
+
+##路由配置
+route.type=custom
+custom.route.conf.provider.class.name=com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
+
+##给DynamicConfProxyRouteConfProvider使用
 1.default.route.conf=redis://@127.0.0.1:6379
 2.default.route.conf=redis-cluster://@127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382
 3.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}

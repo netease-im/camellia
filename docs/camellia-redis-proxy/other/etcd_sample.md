@@ -23,13 +23,12 @@
 
 * 把`redis-proxy.tar.gz`解压，修改`./BOOT-INF/classes`目录下的配置文件
 * 修改`./BOOT-INF/classes/logback.xml`，可以参考logback-sample.xml去覆盖logback.xml，修改LOG_HOME即可（默认的logback.xml是标准输出）
-* 修改`./BOOT-INF/classes/application.yml`，添加etcd配置
+* 修改`./BOOT-INF/classes/application.yml`，添加基础配置和etcd配置
 
 必填项：  
 * etcd.target和etcd.endpoints二选一
 * etcd.config.key，表示从etcd中获取配置的路径
 * etcd.config.type，配置类型，建议json（也支持properties）
-
 
 ```yml
 server:
@@ -39,14 +38,15 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  console-port: 16379 #http-console的端口，可以做上下线操作，也可以获取监控数据
-#  monitor-enable: false
-#  monitor-interval-seconds: 60
-  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider
-  cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster
-  cport: 16380 #cluster-mode下proxy之间互相心跳的端口，默认是port+10000
-  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.etcd.EtcdProxyDynamicConfLoader
   config:
+    ## proxy config
+    "cport": "6380"
+    "console.port": "16379"
+    "proxy.mode": "cluster"
+    "client.auth.provider.class.name": "com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider"
+    "proxy.dynamic.conf.loader.class.name": "com.netease.nim.camellia.redis.proxy.config.etcd.EtcdProxyDynamicConfLoader"
+    "custom.route.conf.provider.class.name": "com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfProvider"
+    ## etcd config
     "etcd.target": "ip:///etcd0:2379,etcd1:2379,etcd2:2379"
 #    "etcd.endpoints": "http://etcd0:2379,http://etcd1:2379,http://etcd2:2379" #etcd.target和etcd.endpoints二选一，优先使用etcd.target
 #    "etcd.user": "xx"
@@ -55,14 +55,6 @@ camellia-redis-proxy:
 #    "etcd.authority": "xx"
     "etcd.config.key": "/xx/xxx"
     "etcd.config.type": "json" #也可以配置为json/properties
-#  plugins: #引入哪些插件，内建的插件可以用别名，自定义插件用全类名
-#    - monitorPlugin
-#    - bigKeyPlugin
-#    - hotKeyPlugin
-  transpond:
-    type: custom
-    custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater
 ```
 
 ### 6、在etcd中配置路由

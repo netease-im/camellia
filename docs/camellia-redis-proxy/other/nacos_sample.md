@@ -58,7 +58,7 @@ camellia-redis-proxy:
   transpond:
     type: custom
     custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfProvider
 ```
 
 ### 6、在nacos中配置路由

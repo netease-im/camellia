@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.*;
 import com.netease.nim.camellia.redis.proxy.plugin.bigkey.BigKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyMonitor;
@@ -38,17 +37,15 @@ public class ProxyMonitorCollector {
 
     public static void init(MonitorCallback monitorCallback) {
         if (initOk.compareAndSet(false, true)) {
-            int seconds = ServerConf.getMonitorIntervalSeconds();
-            intervalSeconds = seconds;
+            intervalSeconds = ProxyDynamicConf.getInt("monitor.interval.seconds", 60);
             cpuUsageCollector = new CpuUsageCollector(intervalSeconds);
-            ExecutorUtils.scheduleAtFixedRate(ProxyMonitorCollector::collect, seconds, seconds, TimeUnit.SECONDS);
-            ProxyMonitorCollector.monitorEnable = ServerConf.isMonitorEnable();
+            ExecutorUtils.scheduleAtFixedRate(ProxyMonitorCollector::collect, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
             ProxyMonitorCollector.monitorCallback = monitorCallback;
             if (monitorCallback != null) {
                 ProxyMonitorCollector.CALLBACK_NAME = monitorCallback.getClass().getName();
             }
-            ProxyDynamicConf.registerCallback(ProxyMonitorCollector::reloadConf);
             reloadConf();
+            ProxyDynamicConf.registerCallback(ProxyMonitorCollector::reloadConf);
             logger.info("proxy monitor collector init success, intervalSeconds = {}, monitorEnable = {}", intervalSeconds, monitorEnable);
         } else {
             cpuUsageCollector = new CpuUsageCollector();
@@ -56,7 +53,7 @@ public class ProxyMonitorCollector {
     }
 
     private static void reloadConf() {
-        ProxyMonitorCollector.monitorEnable = ServerConf.isMonitorEnable();
+        ProxyMonitorCollector.monitorEnable = ProxyDynamicConf.getBoolean("monitor.enable", false);
         ProxyMonitorCollector.commandSpendTimeMonitorEnable = ProxyDynamicConf.getBoolean("command.spend.time.monitor.enable", true);
         ProxyMonitorCollector.upstreamRedisSpendTimeMonitorEnable = ProxyDynamicConf.getBoolean("upstream.redis.spend.time.monitor.enable", true);
     }

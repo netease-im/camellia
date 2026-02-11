@@ -76,21 +76,21 @@ public class HotKeyCache {
         this.callback = hotKeyCacheConfig.getHotKeyCacheStatsCallback();
         this.CALLBACK_NAME = this.callback.getClass().getName();
         this.cacheExpireMillis = ProxyDynamicConf.getLong("hot.key.cache.expire.millis",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheExpireMillis);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyCacheExpireMillis);
         ProxyDynamicConf.registerCallback(this::reloadHotKeyCacheConfig);
         reloadHotKeyCacheConfig();
         int cacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.cache.max.capacity",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheMaxCapacity);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyCacheMaxCapacity);
         this.cache = new ConcurrentLinkedHashMap.Builder<BytesKey, HotValueWrapper>()
                 .initialCapacity(cacheMaxCapacity)
                 .maximumWeightedCapacity(cacheMaxCapacity)
                 .build();
         // 热key的容量，一共计算多少热key
         int counterMaxCapacity = ProxyDynamicConf.getInt("hot.key.cache.counter.capacity",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheCounterMaxCapacity);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyCacheCounterMaxCapacity);
         // 热key的时间间隔
         long counterCheckMillis = ProxyDynamicConf.getLong("hot.key.cache.counter.check.millis",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheCounterCheckMillis);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyCacheCounterCheckMillis);
         this.hotKeyCounter = new LRUCounter(counterMaxCapacity, counterMaxCapacity, counterCheckMillis);
         int refreshMapMaxCapacity = cacheMaxCapacity * 2;
         this.lastRefreshTimeMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
@@ -99,7 +99,7 @@ public class HotKeyCache {
                 .initialCapacity(refreshMapMaxCapacity).maximumWeightedCapacity(refreshMapMaxCapacity).build();
 
         long callbackIntervalSeconds = ProxyDynamicConf.getLong("hot.key.cache.stats.callback.interval.seconds",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheStatsCallbackIntervalSeconds);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyCacheStatsCallbackIntervalSeconds);
         ExecutorUtils.scheduleAtFixedRate(() -> {
             try {
                 if (HotKeyCache.this.statsMap.isEmpty()) return;
@@ -200,8 +200,8 @@ public class HotKeyCache {
     }
 
     private void reloadHotKeyCacheConfig() {
-        Long bid = identityInfo.getBid();
-        String bgroup = identityInfo.getBgroup();
+        Long bid = identityInfo.bid();
+        String bgroup = identityInfo.bgroup();
         this.hotKeyCheckThreshold = ProxyDynamicConf.getLong("hot.key.cache.check.threshold", bid, bgroup, Constants.Server.hotKeyCacheCounterCheckThreshold);
         this.enable = ProxyDynamicConf.getBoolean("hot.key.cache.enable", bid, bgroup, true);
         this.cacheNull = ProxyDynamicConf.getBoolean("hot.key.cache.null", bid, bgroup, Constants.Server.hotKeyCacheNeedCacheNull);

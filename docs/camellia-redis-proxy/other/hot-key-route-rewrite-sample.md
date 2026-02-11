@@ -20,7 +20,7 @@ camellia-redis-proxy:
   transpond:
     type: custom
     custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
 ```
 
 * camellia-redis-proxy.properties

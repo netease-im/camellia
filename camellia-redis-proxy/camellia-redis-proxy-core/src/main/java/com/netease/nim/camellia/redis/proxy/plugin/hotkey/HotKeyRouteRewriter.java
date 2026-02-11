@@ -34,8 +34,8 @@ public class HotKeyRouteRewriter implements HotKeyMonitorCallback, RouteRewriter
     @Override
     public void callback(IdentityInfo identityInfo, List<HotKeyInfo> hotKeys, long checkMillis, long checkThreshold) {
         callback.callback(identityInfo, hotKeys, checkMillis, checkThreshold);
-        String namespace = identityInfo.getBid() + "|" + identityInfo.getBgroup();
-        long expireMillis = ProxyDynamicConf.getLong("hotkey.route.rewrite.key.expire.millis", identityInfo.getBid(), identityInfo.getBgroup(), 5000L);
+        String namespace = identityInfo.bid() + "|" + identityInfo.bgroup();
+        long expireMillis = ProxyDynamicConf.getLong("hotkey.route.rewrite.key.expire.millis", identityInfo.bid(), identityInfo.bgroup(), 5000L);
         for (HotKeyInfo hotKey : hotKeys) {
             cache.put(namespace, new BytesKey(hotKey.getKey()), true, expireMillis);
         }

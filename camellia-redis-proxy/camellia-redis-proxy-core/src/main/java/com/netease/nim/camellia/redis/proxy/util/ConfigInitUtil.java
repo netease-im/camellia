@@ -2,8 +2,6 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
-import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
-import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusLeaderSelector;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultProxyClusterModeProvider;
@@ -14,6 +12,8 @@ import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
+import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
+import com.netease.nim.camellia.redis.proxy.route.RouteConfProviderEnums;
 import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeNodesProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeNodesProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
@@ -25,6 +25,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFact
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.DefaultUpstreamAddrConverter;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.UpstreamAddrConverter;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 
 
 
@@ -69,24 +71,14 @@ public class ConfigInitUtil {
         }
     }
 
-    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(ProxyCommandProcessor proxyCommandProcessor) {
+    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(RouteConfProvider provider) {
         String className = BeanInitUtils.getClassName("upstream.client.template.factory", UpstreamRedisClientTemplateFactory.class.getName());
         ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
         if (className == null || className.equals(UpstreamRedisClientTemplateFactory.class.getName())) {
-            return new UpstreamRedisClientTemplateFactory(proxyCommandProcessor);
+            return new UpstreamRedisClientTemplateFactory(provider);
         }
         return (IUpstreamClientTemplateFactory) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
     }
-
-    public static ClientAuthProvider initClientAuthProvider() {
-        String className = BeanInitUtils.getClassName("client.auth.provider", ClientAuthByConfigProvider.class.getName());
-        if (className == null || className.equals(ClientAuthByConfigProvider.class.getName())) {
-            return new ClientAuthByConfigProvider(ServerConf.password());
-        }
-        ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
-        return (ClientAuthProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
-    }
-
 
     public static MonitorCallback initMonitorCallback() {
         String className = BeanInitUtils.getClassName("monitor.callback", LoggingMonitorCallback.class.getName());
@@ -141,5 +133,27 @@ public class ConfigInitUtil {
             return null;
         }
         return (ShardingFunc) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+    }
+
+    public static RouteConfProvider initRouteConfProvider() {
+        try {
+            String providerName = ProxyDynamicConf.getString("route.conf.provider", RouteConfProviderEnums.simple_tenant.getName());
+            if (providerName == null) {
+                return null;
+            }
+            for (RouteConfProviderEnums value : RouteConfProviderEnums.values()) {
+                if (value.getName().equalsIgnoreCase(providerName)) {
+                    return value.getClazz().getConstructor().newInstance();
+                }
+            }
+            return (RouteConfProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(providerName));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("init route config provider error", e);
+        }
+    }
+
+    public static KVClient initKVClient(String namespace) {
+        String className = RedisKvConf.getClassName(namespace, "kv.client", null);
+        return (KVClient) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
     }
 }

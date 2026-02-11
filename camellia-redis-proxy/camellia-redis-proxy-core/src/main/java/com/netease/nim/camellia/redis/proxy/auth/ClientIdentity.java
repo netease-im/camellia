@@ -3,8 +3,8 @@ package com.netease.nim.camellia.redis.proxy.auth;
 public class ClientIdentity {
 
     public static final ClientIdentity AUTH_FAIL = new ClientIdentity(-1L, "default", false);
-    private Long bid;
 
+    private Long bid;
     private String bgroup;
 
     private boolean pass;

@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
-import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.EventLoopGroupResult;
 import com.netease.nim.camellia.redis.proxy.conf.NettyConf;
@@ -140,11 +139,7 @@ public class CamelliaRedisProxyServer {
         //cport
         int cport = ServerConf.cport();
         ProxyMode proxyMode = ServerConf.proxyMode();
-        if (proxyMode == ProxyMode.cluster) {
-            if (cport <= 0) {
-                cport = port + 10000;
-            }
-        } else if (proxyMode == ProxyMode.sentinel) {
+        if (proxyMode == ProxyMode.cluster || proxyMode == ProxyMode.sentinel) {
             if (cport <= 0) {
                 cport = port + 10000;
             }

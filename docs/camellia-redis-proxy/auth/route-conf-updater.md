@@ -27,21 +27,21 @@ camellia-redis-proxy:
   transpond:
     type: custom
     custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
       dynamic: true #表示支持多组配置，默认就是true
       bid: 1 #默认的bid，当客户端请求时没有声明自己的bid和bgroup时使用的bgroup，可以缺省，若缺省则不带bid/bgroup的请求会被拒绝
       bgroup: default #默认的bgroup，当客户端请求时没有声明自己的bid和bgroup时使用的bgroup，可以缺省，若缺省则不带bid/bgroup的请求会被拒绝
       reload-interval-millis: 600000 #使用ProxyRouteConfUpdater时，配置变更会通过回调自动更新，为了防止更新出现丢失，会有一个兜底轮询机制，本配置表示兜底轮询的间隔，默认10分钟
 ```
-上面的配置表示我们使用DynamicConfProxyRouteConfUpdater这个ProxyRouteConfUpdater的实现类，这个实现类下，配置托管给了ProxyDynamicConf(camellia-redis-proxy.properties)   
-使用DynamicConfProxyRouteConfUpdater时的配置方式是以k-v的形式进行配置，如下：
+上面的配置表示我们使用DynamicConfProxyRouteConfProvider这个ProxyRouteConfUpdater的实现类，这个实现类下，配置托管给了ProxyDynamicConf(camellia-redis-proxy.properties)   
+使用DynamicConfProxyRouteConfProvider时的配置方式是以k-v的形式进行配置，如下：
 ```
 #表示bid=1/bgroup=default的路由配置
 1.default.route.conf=redis://@127.0.0.1:6379
 #表示bid=2/bgroup=default的路由配置
 2.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
 ```
-除了camellia提供的DynamicConfProxyRouteConfUpdater，你可以自己实现一个自定义的ProxyRouteConfUpdater实现，从而对接到你们的配置中心中，下面提供了一个自定义实现的例子：
+除了camellia提供的DynamicConfProxyRouteConfProvider，你可以自己实现一个自定义的ProxyRouteConfUpdater实现，从而对接到你们的配置中心中，下面提供了一个自定义实现的例子：
 ```java
 public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
 

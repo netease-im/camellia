@@ -1,7 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv;
 
-import com.netease.nim.camellia.core.api.CamelliaApi;
-import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
@@ -16,6 +14,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.KvRunToCompletionMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.route.CamelliaDashboardRouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -313,13 +312,8 @@ public class RedisKvClient implements IUpstreamClient {
         }
     }
 
-    private KVClient initKVClient() {
-        String className = RedisKvConf.getClassName(namespace, "kv.client", null);
-        return (KVClient) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
-    }
-
     private Commanders initCommanders() {
-        KVClient kvClient = initKVClient();
+        KVClient kvClient = ConfigInitUtil.initKVClient(namespace);
         try {
             kvClient.init(namespace);
             //get for check and warm
@@ -367,29 +361,24 @@ public class RedisKvClient implements IUpstreamClient {
             }
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
             RedisProxyEnv env = GlobalRedisProxyEnv.getRedisProxyEnv();
+
             UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, resourceTable);
             RedisTemplate redisTemplate = new RedisTemplate(template);
             logger.info("redis template init success, namespace = {}, key = {}, resource = {}",
                     namespace, key, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)));
             return redisTemplate;
         } else if (type.equalsIgnoreCase("remote")) {
-            String dashboardUrl = RedisKvConf.getString(namespace, key + ".camellia.dashboard.url", null);
-            if (dashboardUrl == null) {
-                throw new KvException("illegal dashboardUrl");
-            }
-            boolean monitorEnable = RedisKvConf.getBoolean(namespace, key + ".camellia.dashboard.monitor.enable", true);
-            long checkIntervalMillis = RedisKvConf.getLong(namespace, key + ".camellia.dashboard.check.interval.millis", 3000L);
             long bid = RedisKvConf.getLong(namespace, key + ".bid", -1);
             String bgroup = RedisKvConf.getString(namespace, key + ".bgroup", "default");
             if (bid <= 0) {
                 throw new KvException("illegal bid");
             }
             RedisProxyEnv env = GlobalRedisProxyEnv.getRedisProxyEnv();
-            CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
-            UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
+            CamelliaDashboardRouteConfProvider routeConfProvider = new CamelliaDashboardRouteConfProvider();
+            UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, bid, bgroup, routeConfProvider);
             RedisTemplate redisTemplate = new RedisTemplate(template);
-            logger.info("redis template init success, namespace = {}, key = {}, dashboardUrl = {}, bid = {}, bgroup = {}",
-                    namespace, key, dashboardUrl, bid, bgroup);
+            logger.info("redis template init success, namespace = {}, key = {}, bid = {}, bgroup = {}",
+                    namespace, key, bid, bgroup);
             return redisTemplate;
         } else {
             throw new KvException("init redis template error");

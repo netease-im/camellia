@@ -50,9 +50,9 @@ public class HotKeyHunter {
         this.CALLBACK_NAME = callback.getClass().getName();
         // LRUCounter capacity
         int checkCacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.monitor.cache.max.capacity",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyMonitorCheckCacheMaxCapacity);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyMonitorCheckCacheMaxCapacity);
         this.checkMillis = ProxyDynamicConf.getLong("hot.key.monitor.counter.check.millis",
-                identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheCounterCheckMillis);
+                identityInfo.bid(), identityInfo.bgroup(), Constants.Server.hotKeyCacheCounterCheckMillis);
         // LRUCounter
         this.counter = new LRUCounter(checkCacheMaxCapacity,
                 checkCacheMaxCapacity, checkMillis);
@@ -62,8 +62,8 @@ public class HotKeyHunter {
     }
 
     private void reloadHotKeyConfig() {
-        Long bid = identityInfo.getBid();
-        String bgroup = identityInfo.getBgroup();
+        Long bid = identityInfo.bid();
+        String bgroup = identityInfo.bgroup();
         this.maxHotKeyCount = ProxyDynamicConf.getInt("hot.key.monitor.max.hot.key.count",
                 bid, bgroup, Constants.Server.hotKeyMonitorMaxHotKeyCount);
         this.checkThreshold = ProxyDynamicConf.getLong("hot.key.monitor.counter.check.threshold",

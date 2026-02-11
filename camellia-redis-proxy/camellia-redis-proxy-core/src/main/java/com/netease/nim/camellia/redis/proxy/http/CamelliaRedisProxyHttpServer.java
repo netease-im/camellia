@@ -31,16 +31,15 @@ public class CamelliaRedisProxyHttpServer {
         int port = ServerConf.httpPort();
         try {
             if (port <= 0) {
-                logger.info("CamelliaRedisProxyHttpServer disabled, skip start");
+                logger.info("CamelliaRedisProxyServer with http disabled, skip start");
                 return null;
             }
             EventLoopGroupResult result = NettyConf.serverEventLoopGroup(NettyConf.Type.http_server);
             GlobalRedisProxyEnv.setHttpEventLoopGroupResult(result);
 
-            ServerBootstrap bootstrap = new ServerBootstrap();
-
             int maxContentLength = ProxyDynamicConf.getInt("http.server.max.content.length", 20*1024*1024);
 
+            ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(result.bossGroup(), result.workGroup())
                     .channel(result.serverChannelClass())
                     .option(ChannelOption.SO_BACKLOG, NettyConf.soBacklog(NettyConf.Type.http_server))
@@ -62,11 +61,11 @@ public class CamelliaRedisProxyHttpServer {
                             pipeline.addLast(serverHandler);
                         }
                     });
-            logger.info("CamelliaRedisProxyHttpServer, boss_thread = {}, work_thread = {}", result.bossThread(), result.workThread());
-            logger.info("CamelliaRedisProxyHttpServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
+            logger.info("CamelliaRedisProxyServer with http, boss_thread = {}, work_thread = {}", result.bossThread(), result.workThread());
+            logger.info("CamelliaRedisProxyServer with http, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                     NettyConf.soBacklog(NettyConf.Type.http_server), NettyConf.soSndbuf(NettyConf.Type.http_server),
                     NettyConf.soRcvbuf(NettyConf.Type.http_server), NettyConf.soKeepalive(NettyConf.Type.http_server));
-            logger.info("CamelliaRedisProxyHttpServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}, max_content_length = {}",
+            logger.info("CamelliaRedisProxyServer with http, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}, max_content_length = {}",
                     NettyConf.tcpNoDelay(NettyConf.Type.http_server), NettyConf.writeBufferWaterMarkLow(NettyConf.Type.http_server),
                     NettyConf.writeBufferWaterMarkHigh(NettyConf.Type.http_server), maxContentLength);
             return new BindInfo(BindInfo.Type.HTTP, bootstrap, port);

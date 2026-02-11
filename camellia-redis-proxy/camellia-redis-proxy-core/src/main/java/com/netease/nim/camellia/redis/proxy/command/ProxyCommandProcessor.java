@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -11,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -52,8 +52,7 @@ public class ProxyCommandProcessor {
     private static final ErrorReply writeError = new ErrorReply("ERR configLoader write error");
 
     private ProxyPluginInitResp proxyPluginInitResp;
-    private JSONObject transpondConfig = null;
-    private ClientAuthProvider clientAuthProvider;
+    private RouteConfProvider routeConfProvider;
     private ProxyNodesDiscovery proxyNodesDiscovery;
 
     public ProxyCommandProcessor() {
@@ -73,16 +72,12 @@ public class ProxyCommandProcessor {
         this.proxyPluginInitResp = proxyPluginInitResp;
     }
 
-    public void setClientAuthProvider(ClientAuthProvider clientAuthProvider) {
-        this.clientAuthProvider = clientAuthProvider;
+    public void setRouteConfProvider(RouteConfProvider routeConfProvider) {
+        this.routeConfProvider = routeConfProvider;
     }
 
     public void setProxyNodesDiscovery(ProxyNodesDiscovery proxyNodesDiscovery) {
         this.proxyNodesDiscovery = proxyNodesDiscovery;
-    }
-
-    public void setTranspondConfig(JSONObject transpondConfig) {
-        this.transpondConfig = transpondConfig;
     }
 
     /**
@@ -149,15 +144,10 @@ public class ProxyCommandProcessor {
         } else {
             builder.append("upstream_client_template_factory:").append("\r\n");
         }
-        if (transpondConfig != null) {
-            builder.append("transpond_config:").append(transpondConfig.toJSONString()).append("\r\n");
+        if (routeConfProvider != null) {
+            builder.append("route_conf_provider:").append(Utils.className(routeConfProvider, simpleClassName)).append("\r\n");
         } else {
-            builder.append("transpond_config:").append("\r\n");
-        }
-        if (clientAuthProvider != null) {
-            builder.append("client_auth_provider:").append(Utils.className(clientAuthProvider, simpleClassName)).append("\r\n");
-        } else {
-            builder.append("client_auth_provider:").append("\r\n");
+            builder.append("route_conf_provider:").append("\r\n");
         }
         builder.append("proxy_mode:").append(ServerConf.proxyMode().name()).append("\r\n");
         builder.append("proxy_dynamic_conf_loader:").append(Utils.className(ProxyDynamicConf.getConfigLoader(), simpleClassName)).append("\r\n");

@@ -126,7 +126,7 @@ camellia-redis-proxy:
   transpond:
     type: custom
     custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
       dynamic: true
       bid: 1
       bgroup: default
@@ -164,7 +164,7 @@ camellia-redis-proxy:
   transpond:
     type: custom
     custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
       dynamic: true
       reload-interval-millis: 600000
 ```

@@ -1,9 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.redis.proxy.command.QueueFactory;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,7 +18,7 @@ public class ServerConf {
     private static int port;
     private static String applicationName = "camellia-redis-proxy";
     private static ProxyBeanFactory proxyBeanFactory = new DefaultBeanFactory();
-    private static CamelliaRouteProperties routeProperties = null;
+    private static QueueFactory queueFactory;
     private static String password;
     private static String cportPassword;
 
@@ -42,10 +44,7 @@ public class ServerConf {
         //
         password = ProxyDynamicConf.getString("password", null);
         cportPassword = ProxyDynamicConf.getString("cport.password", null);
-    }
-
-    public static void updateRouteProperties(CamelliaRouteProperties routeProperties) {
-        ServerConf.routeProperties = routeProperties;
+        queueFactory = ConfigInitUtil.initQueueFactory();
     }
 
     public static String getApplicationName() {
@@ -68,6 +67,10 @@ public class ServerConf {
         return ProxyDynamicConf.getInt("tls.port", -1);
     }
 
+    public static int httpPort() {
+        return ProxyDynamicConf.getInt("http.port", -1);
+    }
+
     public static String udsPath() {
         return ProxyDynamicConf.getString("uds.path", null);
     }
@@ -86,29 +89,6 @@ public class ServerConf {
 
     public static boolean isProxyProtocolEnable() {
         return ProxyDynamicConf.getBoolean("proxy.protocol.enable", false);
-    }
-
-    public static int httpPort() {
-        return ProxyDynamicConf.getInt("http.port", -1);
-    }
-
-    public static ProxyBeanFactory getProxyBeanFactory() {
-        return proxyBeanFactory;
-    }
-
-    public static CamelliaRouteProperties getRouteProperties() {
-        if (routeProperties != null) {
-            return routeProperties;
-        }
-        return RouteConfInitUtils.init();
-    }
-
-    public static boolean isMonitorEnable() {
-        return ProxyDynamicConf.getBoolean("monitor.enable", false);
-    }
-
-    public static int getMonitorIntervalSeconds() {
-        return ProxyDynamicConf.getInt("monitor.interval.seconds", 60);
     }
 
     public static Set<Integer> proxyProtocolPorts(int port, int tlsPort) {
@@ -133,5 +113,13 @@ public class ServerConf {
             }
         }
         return set;
+    }
+
+    public static ProxyBeanFactory getProxyBeanFactory() {
+        return proxyBeanFactory;
+    }
+
+    public static QueueFactory getQueueFactory() {
+        return queueFactory;
     }
 }

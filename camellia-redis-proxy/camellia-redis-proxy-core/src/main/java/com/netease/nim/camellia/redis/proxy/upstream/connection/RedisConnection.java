@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.tools.executor.CamelliaScheduleExecutor;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.netty.*;
@@ -17,8 +18,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
-import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -77,7 +76,7 @@ public class RedisConnection {
     private volatile RedisConnectionStatus status;
     private long lastCommandTime = TimeCache.currentMillis;
 
-    private final Queue<CompletableFuture<Reply>> queue = GlobalRedisProxyEnv.getQueueFactory().generateCommandReplyQueue();
+    private final Queue<CompletableFuture<Reply>> queue = ServerConf.getQueueFactory().generateCommandReplyQueue();
     private final Queue<CommandPack> cachedCommands = new ConcurrentLinkedQueue<>();
 
     private final CommandPackRecycler commandPackRecycler;

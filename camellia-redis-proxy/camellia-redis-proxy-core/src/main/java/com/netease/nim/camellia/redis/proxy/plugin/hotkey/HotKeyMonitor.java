@@ -23,8 +23,8 @@ public class HotKeyMonitor {
 
     public static void hotKey(IdentityInfo identityInfo, List<com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyInfo> hotKeys, long checkMillis, long checkThreshold) {
         try {
-            String bid = identityInfo.getBid() == null ? "default" : String.valueOf(identityInfo.getBid());
-            String bgroup = identityInfo.getBgroup() == null ? "default" : identityInfo.getBgroup();
+            String bid = identityInfo.bid() == null ? "default" : String.valueOf(identityInfo.bid());
+            String bgroup = identityInfo.bgroup() == null ? "default" : identityInfo.bgroup();
             for (com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyInfo hotKey : hotKeys) {
                 String key = Utils.bytesToString(hotKey.getKey());
                 String uniqueKey = bid + "|" + bgroup + "|" + key;

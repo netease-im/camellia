@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
+import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
@@ -35,11 +36,15 @@ public class CommandInvoker implements ICommandInvoker {
     private final CommandInvokeConfig commandInvokeConfig;
 
     public CommandInvoker() {
+
+        RouteConfProvider routeConfProvider = ConfigInitUtil.initRouteConfProvider();
+
         //init ProxyCommandProcessor
         ProxyCommandProcessor proxyCommandProcessor = new ProxyCommandProcessor();
+        proxyCommandProcessor.setRouteConfProvider(routeConfProvider);
 
         //init IUpstreamClientTemplateFactory
-        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(proxyCommandProcessor);
+        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(routeConfProvider);
         GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
         //init ProxyClusterModeProcessor/ProxySentinelModeProcessor
@@ -61,8 +66,7 @@ public class CommandInvoker implements ICommandInvoker {
         ProxyMonitorCollector.init(monitorCallback);
 
         //init AuthCommandProcessor
-        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider());
-        proxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
+        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(routeConfProvider);
 
         //init plugins
         DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory();

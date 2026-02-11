@@ -4,9 +4,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
-import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaRouteProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
@@ -34,7 +32,6 @@ public class CamelliaRedisProxyStarter {
     private static final AtomicBoolean startOk = new AtomicBoolean(false);
 
     private static final CamelliaServerProperties camelliaServerProperties = new CamelliaServerProperties();
-    private static CamelliaRouteProperties routeProperties = null;
 
     public static void start() {
         start(0, null);
@@ -60,7 +57,6 @@ public class CamelliaRedisProxyStarter {
                     return;
                 }
                 ServerConf.init(camelliaServerProperties, -1, null, null);
-                ServerConf.updateRouteProperties(routeProperties);
 
                 CamelliaRedisProxyServer server = new CamelliaRedisProxyServer();
                 server.start();
@@ -110,12 +106,8 @@ public class CamelliaRedisProxyStarter {
     }
 
     public static void updateRouteConf(String conf) {
-        routeProperties = new CamelliaRouteProperties();
-        routeProperties.setType(CamelliaRouteProperties.Type.LOCAL);
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(conf);
         RedisResourceUtil.checkResourceTable(resourceTable);
-        CamelliaRouteProperties.LocalProperties local = new CamelliaRouteProperties.LocalProperties();
-        local.setResourceTable(resourceTable);
-        routeProperties.setLocal(local);
+        camelliaServerProperties.getConfig().put("route.conf", conf);
     }
 }
