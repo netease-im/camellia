@@ -1,14 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -32,7 +31,7 @@ public class RedisProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
     private final String heartbeatKey;
     private List<ProxyNode> proxyNodeList = new ArrayList<>();
 
-    public RedisProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
+    public RedisProxyNodesDiscovery(ClusterModeProcessor proxyClusterModeProcessor, SentinelModeProcessor proxySentinelModeProcessor) {
         super(proxyClusterModeProcessor, proxySentinelModeProcessor);
         this.redisUrl = ProxyDynamicConf.getString("proxy.nodes.discovery.redis.url", "");
         if (redisUrl == null || redisUrl.trim().isEmpty()) {

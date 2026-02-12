@@ -44,12 +44,12 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.DELAY_DOUBLE_DELETE_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.DELAY_DOUBLE_DELETE_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.DELAY_DOUBLE_DELETE_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.DELAY_DOUBLE_DELETE_PLUGIN.getReplyOrder();
             }
         };
     }

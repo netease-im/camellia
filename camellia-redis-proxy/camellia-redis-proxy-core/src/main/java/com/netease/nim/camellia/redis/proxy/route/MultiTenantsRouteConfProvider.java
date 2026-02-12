@@ -99,7 +99,7 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
 
     protected final void update(List<MultiTenantConfig> multiTenantConfig) {
         Collections.sort(multiTenantConfig);
-        if (multiTenantConfig.equals(selector.getConfigList())) {
+        if (selector != null && multiTenantConfig.equals(selector.getConfigList())) {
             return;
         }
         MultiTenantConfigSelector newSelector = new MultiTenantConfigSelector(multiTenantConfig);

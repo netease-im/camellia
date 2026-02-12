@@ -25,9 +25,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by caojiajun on 2022/9/29
  */
-public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcessor {
+public class DefaultClusterModeProcessor implements ClusterModeProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultProxyClusterModeProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultClusterModeProcessor.class);
 
     private static final int executorSize;
     static {
@@ -57,7 +57,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
     private boolean clusterModeCommandMoveAlways;
     private boolean init = false;
 
-    public DefaultProxyClusterModeProcessor(ProxyClusterModeProvider provider) {
+    public DefaultClusterModeProcessor(ProxyClusterModeProvider provider) {
         this.provider = provider;
         GlobalRedisProxyEnv.addAfterStartCallback(this::init);
     }
@@ -180,7 +180,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
             }
             return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(DefaultProxyClusterModeProcessor.class, "is command move error", e);
+            ErrorLogCollector.collect(DefaultClusterModeProcessor.class, "is command move error", e);
             return null;
         }
     }
@@ -229,17 +229,17 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                         Reply reply = provider.proxyHeartbeat(command);
                         future.complete(reply);
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(DefaultProxyClusterModeProcessor.class, "proxyHeartbeat error", e);
+                        ErrorLogCollector.collect(DefaultClusterModeProcessor.class, "proxyHeartbeat error", e);
                         future.complete(ErrorReply.NOT_AVAILABLE);
                     }
                 });
             } catch (Exception e) {
-                ErrorLogCollector.collect(DefaultProxyClusterModeProcessor.class, "submit proxyHeartbeat task error", e);
+                ErrorLogCollector.collect(DefaultClusterModeProcessor.class, "submit proxyHeartbeat task error", e);
                 future.complete(ErrorReply.NOT_AVAILABLE);
             }
             return future;
         } else {
-            ErrorLogCollector.collect(DefaultProxyClusterModeProcessor.class, "not support cluster command, arg = " + arg);
+            ErrorLogCollector.collect(DefaultClusterModeProcessor.class, "not support cluster command, arg = " + arg);
             return CompletableFuture.completedFuture(Utils.commandNotSupport(redisCommand));
         }
     }

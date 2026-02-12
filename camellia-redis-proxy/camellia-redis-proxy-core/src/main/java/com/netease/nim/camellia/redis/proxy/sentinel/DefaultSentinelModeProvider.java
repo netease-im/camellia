@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Created by caojiajun on 2024/7/26
  */
-public class DefaultProxySentinelModeNodesProvider implements ProxySentinelModeNodesProvider {
+public class DefaultSentinelModeProvider implements SentinelModeProvider {
 
     @Override
     public void init(ProxyNode currentNode) {
@@ -20,7 +20,7 @@ public class DefaultProxySentinelModeNodesProvider implements ProxySentinelModeN
 
     @Override
     public List<ProxyNode> load() {
-        String string = ProxyDynamicConf.getString("proxy.sentinel.mode.nodes", null);
+        String string = ProxyDynamicConf.getString("sentinel.mode.nodes", null);
         if (string == null) {
             return null;
         }

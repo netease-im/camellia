@@ -127,10 +127,7 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
             } else {
                 configList = new ArrayList<>();
             }
-            this.currentHost = ProxyDynamicConf.getString("current.proxy.host", null);
-            if (this.currentHost == null) {
-                this.currentHost = ProxyCurrentNodeInfo.current().getHost();
-            }
+            this.currentHost = ProxyCurrentNodeInfo.current().getHost();
         } catch (Exception e) {
             logger.error("reload upstream addr converter config error", e);
         }

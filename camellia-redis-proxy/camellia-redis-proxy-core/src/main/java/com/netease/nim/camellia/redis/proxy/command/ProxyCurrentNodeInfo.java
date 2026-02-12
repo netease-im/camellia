@@ -14,7 +14,7 @@ public class ProxyCurrentNodeInfo {
 
     public static ProxyNode current() {
         String currentNodeHost = ProxyDynamicConf.getString("proxy.node.current.host", null);
-        if (currentNodeHost == null) {
+        if (currentNodeHost == null || currentNodeHost.isEmpty()) {
             String ignoredInterfaces = ProxyDynamicConf.getString("proxy.node.current.host.ignored.interfaces", null);
             String preferredNetworks = ProxyDynamicConf.getString("proxy.node.current.host.preferred.interfaces", null);
             InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress(ignoredInterfaces, preferredNetworks);

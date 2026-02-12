@@ -25,7 +25,7 @@ camellia-redis-proxy:
   password: pass123
   cluster-mode-enable: true
   cport: 16380 #cluster-mode下的心跳端口，默认是proxy端口+10000
-  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusProxyClusterModeProvider
+  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.
   config:
     "cluster.mode.consensus.leader.selector.class.name": "com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector"
     "redis.consensus.leader.selector.redis.url": "redis://@127.0.0.1:6379"

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
-import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProcessor;
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.DefaultClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
@@ -12,8 +12,8 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
-import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeProcessor;
-import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.sentinel.DefaultSentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -48,14 +48,14 @@ public class CommandInvoker implements ICommandInvoker {
         GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
         //init ProxyClusterModeProcessor/ProxySentinelModeProcessor
-        ProxyClusterModeProcessor clusterModeProcessor = null;
-        ProxySentinelModeProcessor sentinelModeProcessor = null;
+        ClusterModeProcessor clusterModeProcessor = null;
+        SentinelModeProcessor sentinelModeProcessor = null;
         ProxyMode proxyMode = ServerConf.proxyMode();
         if (proxyMode == ProxyMode.cluster) {
             ProxyClusterModeProvider provider = ConfigInitUtil.initProxyClusterModeProvider();
-            clusterModeProcessor = new DefaultProxyClusterModeProcessor(provider);
+            clusterModeProcessor = new DefaultClusterModeProcessor(provider);
         } else if (proxyMode == ProxyMode.sentinel) {
-            sentinelModeProcessor = new DefaultProxySentinelModeProcessor();
+            sentinelModeProcessor = new DefaultSentinelModeProcessor();
         }
 
         //init ProxyNodesDiscovery

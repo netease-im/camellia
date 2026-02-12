@@ -122,14 +122,14 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     /**
      * 根据类的全限定名或者别名获取插件。
      *
-     * @param classOrAlias 类的全限定名或者内建的插件的别名,内建插件别名必须是{@link BuildInProxyPluginEnum} 不然会报错
+     * @param classOrAlias 类的全限定名或者内建的插件的别名,内建插件别名必须是{@link ProxyPluginEnums} 不然会报错
      * @return 插件 {@link ProxyPlugin}对象
      */
     @Override
     public ProxyPlugin initProxyPlugin(String classOrAlias) {
         try {
             Class<?> clazz;
-            BuildInProxyPluginEnum pluginEnum = BuildInProxyPluginEnum.getByAlias(classOrAlias);
+            ProxyPluginEnums pluginEnum = ProxyPluginEnums.getByAlias(classOrAlias);
             if (pluginEnum != null) {
                 clazz = pluginEnum.getClazz();
             } else {

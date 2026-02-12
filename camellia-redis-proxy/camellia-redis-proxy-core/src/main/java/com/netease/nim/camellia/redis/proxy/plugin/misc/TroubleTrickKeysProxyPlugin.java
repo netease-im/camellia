@@ -36,12 +36,12 @@ public class TroubleTrickKeysProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.TROUBLE_TRICK_KEYS_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.TROUBLE_TRICK_KEYS_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.TROUBLE_TRICK_KEYS_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.TROUBLE_TRICK_KEYS_PLUGIN.getReplyOrder();
             }
         };
     }

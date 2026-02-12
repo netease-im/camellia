@@ -15,7 +15,6 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
-import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -31,9 +30,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by caojiajun on 2024/6/18
  */
-public class ConsensusProxyClusterModeProvider extends AbstractProxyClusterModeProvider {
+public class ConsensusClusterModeProvider extends AbstractClusterModeProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConsensusProxyClusterModeProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConsensusClusterModeProvider.class);
 
     private final ReentrantLock lock = new ReentrantLock();
     private final ReentrantLock initLock = new ReentrantLock();

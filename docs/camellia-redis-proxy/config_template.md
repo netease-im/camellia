@@ -1,4 +1,10 @@
 
+
+# camellia-redis-proxy.properties配置
+
+
+```properties
+
 #############基本配置##################
 
 # server
@@ -139,3 +145,5 @@ proxy.plugin.list=monitorPlugin,hotKeyPlugin,bigKeyPlugin
 
 #############其他配置##################
 
+
+```

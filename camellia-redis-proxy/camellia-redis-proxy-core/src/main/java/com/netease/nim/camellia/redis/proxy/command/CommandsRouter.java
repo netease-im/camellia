@@ -4,13 +4,13 @@ import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -43,8 +43,8 @@ public class CommandsRouter {
     private static final Logger logger = LoggerFactory.getLogger(CommandsRouter.class);
 
     private final AuthCommandProcessor authCommandProcessor;
-    private final ProxyClusterModeProcessor clusterModeProcessor;
-    private final ProxySentinelModeProcessor sentinelModeProcessor;
+    private final ClusterModeProcessor clusterModeProcessor;
+    private final SentinelModeProcessor sentinelModeProcessor;
     private final IUpstreamClientTemplateFactory factory;
     private final ProxyPluginFactory proxyPluginFactory;
     private final ProxyCommandProcessor proxyCommandProcessor;

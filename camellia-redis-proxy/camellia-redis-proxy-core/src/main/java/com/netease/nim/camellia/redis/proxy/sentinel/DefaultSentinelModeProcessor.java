@@ -33,9 +33,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * 当一台proxy节点挂了，会通知正在使用该节点的客户端进行伪master切换，从而达到高可用的作用
  * Created by caojiajun on 2023/12/26
  */
-public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProcessor {
+public class DefaultSentinelModeProcessor implements SentinelModeProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultProxySentinelModeProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSentinelModeProcessor.class);
 
     private static final ErrorReply UNKNOWN_MASTER_NAME = new ErrorReply("ERR sentinel unknown master name");
     private static final ErrorReply SENTINEL_MODE_NOT_AVAILABLE = new ErrorReply("ERR sentinel mode not available");
@@ -55,9 +55,9 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
     private final ReentrantLock initLock = new ReentrantLock();
     private final ReentrantLock lock = new ReentrantLock();
     private boolean init = false;
-    private ProxySentinelModeNodesProvider provider;
+    private SentinelModeProvider provider;
 
-    public DefaultProxySentinelModeProcessor() {
+    public DefaultSentinelModeProcessor() {
         GlobalRedisProxyEnv.addAfterStartCallback(this::init);
     }
 
@@ -66,25 +66,19 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
         try {
             if (init) return;
             //current node
-            String host = ProxyDynamicConf.getString("proxy.sentinel.mode.current.node.host", null);
-            ProxyNode proxyNode;
-            if (host != null) {
-                proxyNode = new ProxyNode(host, GlobalRedisProxyEnv.getPort(), GlobalRedisProxyEnv.getCport());
-            } else {
-                proxyNode = ProxyCurrentNodeInfo.current();
-            }
+            ProxyNode proxyNode = ProxyCurrentNodeInfo.current();
             if (proxyNode.getPort() == 0 || proxyNode.getCport() == 0) {
                 throw new IllegalStateException("redis proxy not start");
             }
             this.currentNode = proxyNode;
-            this.sentinelUserName = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.username", null);
-            this.sentinelPassword = ProxyDynamicConf.getString("proxy.sentinel.mode.sentinel.password", null);
+            this.sentinelUserName = ProxyDynamicConf.getString("sentinel.mode.sentinel.username", null);
+            this.sentinelPassword = ProxyDynamicConf.getString("sentinel.mode.sentinel.password", null);
             this.provider = ConfigInitUtil.initSentinelModeNodesProvider();
             this.provider.init(currentNode);
             //online nodes
             boolean success = reloadNodes();
             if (!success) {
-                throw new IllegalArgumentException("illegal 'proxy.sentinel.mode.nodes' in ProxyDynamicConf");
+                throw new IllegalArgumentException("init sentinel mode nodes error");
             }
             List<ProxyNode> onlineNodes = new ArrayList<>();
             for (ProxyNode node : allNodes) {
@@ -184,7 +178,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             }
             //get master addr by name
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME))) {
-                ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, sentinel command not support param = " + param);
+                ErrorLogCollector.collect(DefaultSentinelModeProcessor.class, "sentinel mode, sentinel command not support param = " + param);
                 return wrapper(connection, redisCommand, Utils.commandNotSupport(redisCommand));
             }
             if (args.length < 3) {
@@ -221,7 +215,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             String param = Utils.bytesToString(args[1]);
             //only support +switch-master
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.MASTER_SWITCH))) {
-                ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, subscribe command not support param = " + param);
+                ErrorLogCollector.collect(DefaultSentinelModeProcessor.class, "sentinel mode, subscribe command not support param = " + param);
                 return wrapper(connection, redisCommand, Utils.commandNotSupport(redisCommand));
             }
             Reply[] replies = new Reply[3];
@@ -233,7 +227,7 @@ public class DefaultProxySentinelModeProcessor implements ProxySentinelModeProce
             connection.subscribe = true;
             return future;
         }
-        ErrorLogCollector.collect(DefaultProxySentinelModeProcessor.class, "sentinel mode, not support command = " + redisCommand);
+        ErrorLogCollector.collect(DefaultSentinelModeProcessor.class, "sentinel mode, not support command = " + redisCommand);
         //other command not support
         return wrapper(connection, redisCommand, Utils.commandNotSupport(redisCommand));
     }

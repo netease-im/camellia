@@ -38,12 +38,12 @@ public class MonitorProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.MONITOR_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.MONITOR_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.MONITOR_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.MONITOR_PLUGIN.getReplyOrder();
             }
         };
     }

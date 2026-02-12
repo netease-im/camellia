@@ -2,9 +2,9 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusLeaderSelector;
-import com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultProxyClusterModeProvider;
+import com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector;
 import com.netease.nim.camellia.redis.proxy.command.*;
@@ -14,9 +14,9 @@ import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.route.RouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.route.RouteConfProviderEnums;
-import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeNodesProvider;
-import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeNodesProvider;
-import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.sentinel.DefaultSentinelModeProvider;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProvider;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider;
@@ -35,12 +35,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
  */
 public class ConfigInitUtil {
 
-    public static ProxySentinelModeNodesProvider initSentinelModeNodesProvider() {
-        String className = BeanInitUtils.getClassName("proxy.sentinel.mode.nodes.provider", DefaultProxySentinelModeNodesProvider.class.getName());
-        if (className.equalsIgnoreCase(DefaultProxySentinelModeNodesProvider.class.getName())) {
-            return new DefaultProxySentinelModeNodesProvider();
+    public static SentinelModeProvider initSentinelModeNodesProvider() {
+        String className = BeanInitUtils.getClassName("sentinel.mode.provider", DefaultSentinelModeProvider.class.getName());
+        if (className.equalsIgnoreCase(DefaultSentinelModeProvider.class.getName())) {
+            return new DefaultSentinelModeProvider();
         } else {
-            return (ProxySentinelModeNodesProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+            return (SentinelModeProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
     }
 
@@ -54,12 +54,12 @@ public class ConfigInitUtil {
     }
 
     public static ProxyClusterModeProvider initProxyClusterModeProvider() {
-        String className = BeanInitUtils.getClassName("proxy.cluster.mode.provider", DefaultProxyClusterModeProvider.class.getName());
+        String className = BeanInitUtils.getClassName("cluster.mode.provider", DefaultClusterModeProvider.class.getName());
         ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
         return (ProxyClusterModeProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
     }
 
-    public static ProxyNodesDiscovery initProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
+    public static ProxyNodesDiscovery initProxyNodesDiscovery(ClusterModeProcessor proxyClusterModeProcessor, SentinelModeProcessor proxySentinelModeProcessor) {
         String className = BeanInitUtils.getClassName("proxy.nodes.discovery", DefaultProxyNodesDiscovery.class.getName());
         if (className.equals(DefaultProxyNodesDiscovery.class.getName())) {
             return new DefaultProxyNodesDiscovery(proxyClusterModeProcessor, proxySentinelModeProcessor);

@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
-import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
-import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProcessor;
 
 import java.util.List;
 
@@ -11,15 +11,15 @@ import java.util.List;
  */
 public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery {
 
-    private final ProxyClusterModeProcessor proxyClusterModeProcessor;
-    private final ProxySentinelModeProcessor proxySentinelModeProcessor;
+    private final ClusterModeProcessor proxyClusterModeProcessor;
+    private final SentinelModeProcessor proxySentinelModeProcessor;
 
     /**
      * abstract proxy nodes discovery
      * @param proxyClusterModeProcessor proxyClusterModeProcessor
      * @param proxySentinelModeProcessor proxySentinelModeProcessor
      */
-    public AbstractProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
+    public AbstractProxyNodesDiscovery(ClusterModeProcessor proxyClusterModeProcessor, SentinelModeProcessor proxySentinelModeProcessor) {
         this.proxyClusterModeProcessor = proxyClusterModeProcessor;
         this.proxySentinelModeProcessor = proxySentinelModeProcessor;
     }

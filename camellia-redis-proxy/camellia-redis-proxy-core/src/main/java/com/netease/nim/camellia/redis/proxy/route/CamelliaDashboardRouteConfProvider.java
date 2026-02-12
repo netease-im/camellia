@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     private final ConcurrentHashMap<String, CamelliaApiResponse> map = new ConcurrentHashMap<>();
 
     public CamelliaDashboardRouteConfProvider() {
-        password = ProxyDynamicConf.getString("password", null);
+        password = ServerConf.password();
         dynamic = ProxyDynamicConf.getBoolean("camellia.dashboard.dynamic", true);
         long bid = ProxyDynamicConf.getLong("camellia.dashboard.bid", -1);
         String bgroup = ProxyDynamicConf.getString("camellia.dashboard.bgroup", "default");

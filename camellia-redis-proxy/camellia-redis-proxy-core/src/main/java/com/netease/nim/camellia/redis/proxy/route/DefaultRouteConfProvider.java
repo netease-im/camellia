@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.util.internal.StringUtil;
@@ -30,7 +31,7 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
     private ResourceTable resourceTable;
 
     public DefaultRouteConfProvider() {
-        password = ProxyDynamicConf.getString("password", null);
+        password = ServerConf.password();
         reload();
         int checkIntervalMillis = ProxyDynamicConf.getInt("route.conf.reload.interval.millis", 3000);
         scheduler.scheduleAtFixedRate(this::reload, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);

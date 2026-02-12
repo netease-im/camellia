@@ -44,12 +44,12 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.MULTI_WRITE_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.MULTI_WRITE_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.MULTI_WRITE_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.MULTI_WRITE_PLUGIN.getReplyOrder();
             }
         };
     }

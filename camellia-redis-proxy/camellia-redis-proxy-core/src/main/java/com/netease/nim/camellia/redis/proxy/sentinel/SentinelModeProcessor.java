@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public interface ProxySentinelModeProcessor {
+public interface SentinelModeProcessor {
 
 
     /**

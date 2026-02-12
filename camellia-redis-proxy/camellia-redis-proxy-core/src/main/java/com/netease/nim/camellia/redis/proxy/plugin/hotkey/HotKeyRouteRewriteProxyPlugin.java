@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.plugin.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriter;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriter;
@@ -36,12 +35,12 @@ public class HotKeyRouteRewriteProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.HOT_KEY_ROUTE_REWRITE_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.HOT_KEY_ROUTE_REWRITE_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.HOT_KEY_ROUTE_REWRITE_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.HOT_KEY_ROUTE_REWRITE_PLUGIN.getReplyOrder();
             }
         };
     }

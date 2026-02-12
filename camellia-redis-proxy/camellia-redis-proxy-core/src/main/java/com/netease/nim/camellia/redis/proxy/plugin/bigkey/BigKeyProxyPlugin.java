@@ -31,12 +31,12 @@ public class BigKeyProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.BIG_KEY_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.BIG_KEY_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.BIG_KEY_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.BIG_KEY_PLUGIN.getReplyOrder();
             }
         };
     }

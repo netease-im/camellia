@@ -35,12 +35,12 @@ public class HotKeyCacheProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.HOT_KEY_CACHE_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.HOT_KEY_CACHE_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.HOT_KEY_CACHE_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.HOT_KEY_CACHE_PLUGIN.getReplyOrder();
             }
         };
     }

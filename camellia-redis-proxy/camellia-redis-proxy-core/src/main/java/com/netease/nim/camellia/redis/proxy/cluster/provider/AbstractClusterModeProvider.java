@@ -5,7 +5,6 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.ProxyCurrentNodeInfo;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -21,9 +20,9 @@ import java.util.concurrent.*;
 /**
  * Created by caojiajun on 2024/6/19
  */
-public abstract class AbstractProxyClusterModeProvider implements ProxyClusterModeProvider {
+public abstract class AbstractClusterModeProvider implements ProxyClusterModeProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractProxyClusterModeProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractClusterModeProvider.class);
 
     /**
      * exeuctor size
@@ -55,7 +54,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
     /**
      * default constructor
      */
-    public AbstractProxyClusterModeProvider() {
+    public AbstractClusterModeProvider() {
     }
 
     /**
@@ -113,9 +112,9 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
         }
         Set<ProxyNode> initNodes = null;
         try {
-            String string = ProxyDynamicConf.getString("proxy.cluster.mode.nodes", null);
+            String string = ProxyDynamicConf.getString("cluster.mode.nodes", null);
             if (string == null) {
-                throw new IllegalArgumentException("missing 'proxy.cluster.mode.nodes' in ProxyDynamicConf");
+                throw new IllegalArgumentException("missing 'cluster.mode.nodes' in ProxyDynamicConf");
             }
             String[] split = string.split(",");
             initNodes = new HashSet<>();
@@ -125,7 +124,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
                 initNodes.add(node);
             }
             if (initNodes.isEmpty()) {
-                throw new IllegalArgumentException("parse 'proxy.cluster.mode.nodes' error");
+                throw new IllegalArgumentException("parse 'cluster.mode.nodes' error");
             }
         } catch (Exception e) {
             if (checkEmpty) {
@@ -146,13 +145,7 @@ public abstract class AbstractProxyClusterModeProvider implements ProxyClusterMo
      */
     protected final ProxyNode current() {
         if (current != null) return current;
-        String host = ProxyDynamicConf.getString("proxy.cluster.mode.current.node.host", null);
-        ProxyNode proxyNode;
-        if (host != null) {
-            proxyNode = new ProxyNode(host, GlobalRedisProxyEnv.getPort(), GlobalRedisProxyEnv.getCport());
-        } else {
-            proxyNode = ProxyCurrentNodeInfo.current();
-        }
+        ProxyNode proxyNode = ProxyCurrentNodeInfo.current();
         if (proxyNode.getPort() == 0 || proxyNode.getCport() == 0) {
             throw new IllegalStateException("redis proxy not start");
         }

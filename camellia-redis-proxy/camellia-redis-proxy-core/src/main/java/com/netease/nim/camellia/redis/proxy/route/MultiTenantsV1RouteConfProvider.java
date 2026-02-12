@@ -22,6 +22,7 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
     @Override
     public List<MultiTenantConfig> getMultiTenantConfig() {
         try {
+            Set<String> duplicateKeySet = new HashSet<>();
             List<MultiTenantConfig> list = new ArrayList<>();
             Map<String, String> map = ProxyDynamicConf.getAll();
             for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -33,6 +34,12 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
                         long bid = Long.parseLong(matcher.group(2));
                         String bgroup = matcher.group(3);
                         String route = entry.getValue();
+
+                        String duplicateKey = bid + "|" + bgroup;
+                        if (duplicateKeySet.contains(duplicateKey)) {
+                            throw new IllegalArgumentException("duplicate route conf on bid=" + bid + ",bgroup=" + bgroup);
+                        }
+                        duplicateKeySet.add(duplicateKey);
 
                         MultiTenantConfig config = new MultiTenantConfig();
                         config.setBid(bid);

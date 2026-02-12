@@ -16,7 +16,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.permission.*;
  * 一些内置的plugin，可以通过别名直接开启，而不需要全类目
  * Created by caojiajun on 2022/9/16
  */
-public enum BuildInProxyPluginEnum {
+public enum ProxyPluginEnums {
 
     //用于监控，主要是监控请求量和响应时间以及慢查询
     MONITOR_PLUGIN("monitorPlugin", MonitorProxyPlugin.class, Integer.MAX_VALUE, Integer.MIN_VALUE),
@@ -60,7 +60,7 @@ public enum BuildInProxyPluginEnum {
     private final int requestOrder;
     private final int replyOrder;
 
-    BuildInProxyPluginEnum(String alias, Class<? extends ProxyPlugin> clazz, int requestOrder, int replyOrder) {
+    ProxyPluginEnums(String alias, Class<? extends ProxyPlugin> clazz, int requestOrder, int replyOrder) {
         this.alias = alias;
         this.clazz = clazz;
         this.requestOrder = requestOrder;
@@ -83,8 +83,8 @@ public enum BuildInProxyPluginEnum {
         return ProxyDynamicConf.getInt(alias + ".build.in.plugin.reply.order", replyOrder);
     }
 
-    public static BuildInProxyPluginEnum getByAlias(String alias) {
-        for (BuildInProxyPluginEnum pluginEnum : BuildInProxyPluginEnum.values()) {
+    public static ProxyPluginEnums getByAlias(String alias) {
+        for (ProxyPluginEnums pluginEnum : ProxyPluginEnums.values()) {
             if (pluginEnum.alias.equals(alias)) {
                 return pluginEnum;
             }

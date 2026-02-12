@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 
-public interface ProxyClusterModeProcessor {
+public interface ClusterModeProcessor {
 
     /**
      * 命令是否要重定向

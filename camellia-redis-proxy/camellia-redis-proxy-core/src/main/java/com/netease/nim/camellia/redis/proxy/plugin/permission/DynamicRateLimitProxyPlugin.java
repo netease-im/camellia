@@ -61,12 +61,12 @@ public class DynamicRateLimitProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.DYNAMIC_RATE_LIMIT_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.DYNAMIC_RATE_LIMIT_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.DYNAMIC_RATE_LIMIT_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.DYNAMIC_RATE_LIMIT_PLUGIN.getReplyOrder();
             }
         };
     }

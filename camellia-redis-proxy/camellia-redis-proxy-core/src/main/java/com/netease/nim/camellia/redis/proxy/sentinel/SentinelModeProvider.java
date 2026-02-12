@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Created by caojiajun on 2024/7/26
  */
-public interface ProxySentinelModeNodesProvider {
+public interface SentinelModeProvider {
 
     void init(ProxyNode currentNode);
 

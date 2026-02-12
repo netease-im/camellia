@@ -14,7 +14,7 @@ camellia-redis-proxy:
   monitor-enable: false
   monitor-interval-seconds: 60
   cluster-mode-enable: true
-  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusProxyClusterModeProvider
+  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.
   config:
     "proxy.cluster.mode.command.move.always": true
     "cluster.mode.consensus.leader.selector.class.name": "com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector"

@@ -29,9 +29,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by caojiajun on 2022/9/30
  */
-public class DefaultProxyClusterModeProvider extends AbstractProxyClusterModeProvider {
+public class DefaultClusterModeProvider extends AbstractClusterModeProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultProxyClusterModeProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultClusterModeProvider.class);
 
     private final ReentrantLock lock = new ReentrantLock();
     private boolean init = false;

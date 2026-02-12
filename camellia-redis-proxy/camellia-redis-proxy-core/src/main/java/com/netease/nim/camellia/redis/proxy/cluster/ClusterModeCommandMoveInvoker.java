@@ -5,7 +5,6 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -50,9 +49,9 @@ public class ClusterModeCommandMoveInvoker {
     private long delayMillis;
     private int maxRetry;
     private int cacheMillis;
-    private final ProxyClusterModeProcessor processor;
+    private final ClusterModeProcessor processor;
 
-    public ClusterModeCommandMoveInvoker(ProxyClusterModeProcessor processor) {
+    public ClusterModeCommandMoveInvoker(ClusterModeProcessor processor) {
         this.processor = processor;
         int poolSize = ProxyDynamicConf.getInt("cluster.mode.command.move.graceful.execute.pool.size", executorSize);
         this.commandMoveExecutor = Executors.newScheduledThreadPool(poolSize, new DefaultThreadFactory("command-move-task"));
@@ -83,7 +82,7 @@ public class ClusterModeCommandMoveInvoker {
 
     private class CommandMoveTask implements Runnable {
 
-        private final ProxyClusterModeProcessor processor;
+        private final ClusterModeProcessor processor;
         private final long delayMillis;
         private final int maxRetry;
         private final CompletableFuture<Reply> future;
@@ -91,7 +90,7 @@ public class ClusterModeCommandMoveInvoker {
 
         private int retry;
 
-        public CommandMoveTask(ProxyClusterModeProcessor processor, long delayMillis, int maxRetry, int slot, CompletableFuture<Reply> future) {
+        public CommandMoveTask(ClusterModeProcessor processor, long delayMillis, int maxRetry, int slot, CompletableFuture<Reply> future) {
             this.processor = processor;
             this.delayMillis = delayMillis;
             this.maxRetry = maxRetry;

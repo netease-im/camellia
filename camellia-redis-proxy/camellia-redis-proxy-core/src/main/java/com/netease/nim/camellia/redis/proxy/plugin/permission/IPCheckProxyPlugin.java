@@ -67,12 +67,12 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.IP_CHECKER_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.IP_CHECKER_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.IP_CHECKER_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.IP_CHECKER_PLUGIN.getReplyOrder();
             }
         };
     }

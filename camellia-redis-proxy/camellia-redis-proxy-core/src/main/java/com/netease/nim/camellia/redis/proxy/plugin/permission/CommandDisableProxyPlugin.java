@@ -33,12 +33,12 @@ public class CommandDisableProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.COMMAND_DISABLE_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.COMMAND_DISABLE_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.COMMAND_DISABLE_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.COMMAND_DISABLE_PLUGIN.getReplyOrder();
             }
         };
     }

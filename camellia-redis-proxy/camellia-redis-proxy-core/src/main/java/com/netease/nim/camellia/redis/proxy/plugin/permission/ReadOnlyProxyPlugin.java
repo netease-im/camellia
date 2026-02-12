@@ -18,12 +18,12 @@ public class ReadOnlyProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.READ_ONLY_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.READ_ONLY_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.READ_ONLY_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.READ_ONLY_PLUGIN.getReplyOrder();
             }
         };
     }

@@ -55,12 +55,12 @@ public class ConverterProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.CONVERTER_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.CONVERTER_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.CONVERTER_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.CONVERTER_PLUGIN.getReplyOrder();
             }
         };
     }

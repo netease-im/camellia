@@ -25,9 +25,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2024/7/26
  */
-public class RedisProxySentinelModeNodesProvider implements ProxySentinelModeNodesProvider {
+public class RedisSentinelModeProvider implements SentinelModeProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisProxySentinelModeNodesProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisSentinelModeProvider.class);
 
     private static final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("leader-selector-scheduler"));
 
@@ -40,16 +40,16 @@ public class RedisProxySentinelModeNodesProvider implements ProxySentinelModeNod
     @Override
     public void init(ProxyNode currentNode) {
         this.currentNode = currentNode;
-        this.redisUrl = ProxyDynamicConf.getString("proxy.sentinel.mode.nodes.provider.redis.url", null);
+        this.redisUrl = ProxyDynamicConf.getString("sentinel.mode.provider.redis.url", null);
         if (redisUrl == null) {
-            throw new IllegalArgumentException("'proxy.sentinel.mode.nodes.provider.redis.url' is empty");
+            throw new IllegalArgumentException("'sentinel.mode.provider.redis.url' is empty");
         }
-        this.redisKey = ProxyDynamicConf.getString("proxy.sentinel.mode.nodes.provider.redis.key", null);
+        this.redisKey = ProxyDynamicConf.getString("sentinel.mode.provider.redis.key", null);
         if (redisKey == null) {
-            throw new IllegalArgumentException("'proxy.sentinel.mode.nodes.provider.redis.key' is empty");
+            throw new IllegalArgumentException("'sentinel.mode.provider.redis.key' is empty");
         }
         heartbeat();
-        int heartbeatIntervalSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.nodes.provider.heartbeat.interval.seconds", 5);
+        int heartbeatIntervalSeconds = ProxyDynamicConf.getInt("sentinel.mode.provider.heartbeat.interval.seconds", 5);
         heartbeatScheduler.scheduleAtFixedRate(this::heartbeat, heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
     }
 
@@ -62,13 +62,13 @@ public class RedisProxySentinelModeNodesProvider implements ProxySentinelModeNod
         try {
             byte[][] args1 = new byte[][] {RedisCommand.ZADD.raw(), Utils.stringToBytes(redisKey),
                     Utils.stringToBytes(String.valueOf(TimeCache.currentMillis)), Utils.stringToBytes(currentNode.toString())};
-            long expireSeconds = ProxyDynamicConf.getLong("proxy.sentinel.mode.nodes.provider.expire.seconds", 15);
+            long expireSeconds = ProxyDynamicConf.getLong("sentinel.mode.provider.expire.seconds", 15);
             byte[][] args2 = new byte[][] {RedisCommand.ZREMRANGEBYSCORE.raw(), Utils.stringToBytes(redisKey),
                     Utils.stringToBytes(String.valueOf(0)), Utils.stringToBytes(String.valueOf(TimeCache.currentMillis - expireSeconds * 1000L))};
             byte[][] args3 = new byte[][] {RedisCommand.EXPIRE.raw(), Utils.stringToBytes(redisKey), Utils.stringToBytes(String.valueOf(expireSeconds * 2))};
             byte[][] args4 = new byte[][] {RedisCommand.ZRANGEBYSCORE.raw(), Utils.stringToBytes(redisKey),
                     Utils.stringToBytes(String.valueOf(TimeCache.currentMillis - expireSeconds * 1000L)), Utils.stringToBytes(String.valueOf(TimeCache.currentMillis))};
-            long timeoutMillis = ProxyDynamicConf.getLong("proxy.sentinel.mode.nodes.provider.heartbeat.timeout.millis", 10000);
+            long timeoutMillis = ProxyDynamicConf.getLong("sentinel.mode.provider.heartbeat.timeout.millis", 10000);
             List<Command> commands = new ArrayList<>(4);
             commands.add(new Command(args1));
             commands.add(new Command(args2));

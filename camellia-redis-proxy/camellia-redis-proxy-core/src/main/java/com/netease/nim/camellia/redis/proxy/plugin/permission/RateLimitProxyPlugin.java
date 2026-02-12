@@ -39,12 +39,12 @@ public class RateLimitProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.RATE_LIMIT_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.RATE_LIMIT_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.RATE_LIMIT_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.RATE_LIMIT_PLUGIN.getReplyOrder();
             }
         };
     }

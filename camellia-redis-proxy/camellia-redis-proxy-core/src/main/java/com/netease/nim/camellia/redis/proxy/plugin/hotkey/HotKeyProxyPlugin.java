@@ -2,10 +2,8 @@ package com.netease.nim.camellia.redis.proxy.plugin.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
-import com.netease.nim.camellia.redis.proxy.plugin.bigkey.DummyBigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 
 import java.util.List;
@@ -30,12 +28,12 @@ public class HotKeyProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.HOT_KEY_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.HOT_KEY_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.HOT_KEY_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.HOT_KEY_PLUGIN.getReplyOrder();
             }
         };
     }

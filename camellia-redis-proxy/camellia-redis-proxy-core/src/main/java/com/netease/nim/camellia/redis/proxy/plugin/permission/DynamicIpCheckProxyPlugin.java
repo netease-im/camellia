@@ -60,12 +60,12 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return BuildInProxyPluginEnum.DYNAMIC_IP_CHECKER_PLUGIN.getRequestOrder();
+                return ProxyPluginEnums.DYNAMIC_IP_CHECKER_PLUGIN.getRequestOrder();
             }
 
             @Override
             public int reply() {
-                return BuildInProxyPluginEnum.DYNAMIC_IP_CHECKER_PLUGIN.getReplyOrder();
+                return ProxyPluginEnums.DYNAMIC_IP_CHECKER_PLUGIN.getReplyOrder();
             }
         };
     }
