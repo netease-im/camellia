@@ -57,6 +57,11 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最�
 ## 源码解读
 具体可见：[代码结构](code/proxy-code.md)
 
+## 配置
+* 配置是其他弄开的基础，camellia-redis-proxy默认读取本地配置文件，你也可以自定义配置的数据源，如etcd、nacos等
+* 配置原理见：[配置说明](conf/dynamic-conf.md)
+* 核心配置见：[核心配置](conf/config_template.md)
+
 ## 路由配置
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
 * 最简单的示例
@@ -78,8 +83,8 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最�
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
 * 基于lb组成集群（如lvs等，或者k8s中的service等）
 * 基于注册中心组成集群
-* 伪redis-cluster模式
-* 伪redis-sentinel模式
+* redis-cluster模式
+* redis-sentinel模式
 * jvm-in-sidecar模式
 * 优雅上下线
 
@@ -97,28 +102,19 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 
 ## 其他
 * 如何控制客户端连接数，具体见[客户端连接控制](other/connectlimit.md)
-* netty配置，具体见：[netty-conf](other/netty-conf.md)
-* 使用nacos托管proxy配置，具体见：[nacos-conf](other/nacos-conf.md)
 * 关于双（多）写的若干问题，具体见：[multi-write](other/multi-write.md)
 * 关于scan和相关说明，具体见：[scan](other/scan.md)
 * 关于lua/function/tfunction的相关说明，具体见：[lua](other/lua_function.md)
 * 使用redis-shake进行数据迁移的说明，具体见：[redis-shake](other/redis-shake.md)
 * 关于自定义分片函数，具体见：[sharding](other/sharding.md)
 * 如何使用spring管理bean生成，具体见：[spring](other/spring.md)
-* 关于多租户的一个完整示例，具体见：[multi-tenant](other/multi-tenant.md)
-* 另一个关于多租户的一个完整示例，具体见：[multi-tenant2](other/multi-tenant2.md)
 * 多读场景下自动摘除故障读节点，具体见：[multi-read](other/multi-read.md)
-* 关于ProxyDynamicConf(camellia-redis-proxy.properties)，具体见：[dynamic-conf](other/dynamic-conf.md)
 * 在使用haproxy/nginx等四层负载均衡器时，redis-proxy如何获取真实的客户端地址，具体见：[proxy_protocol](other/proxy_protocol.md)
 * 热key使用自定义转发路由的一个完整示例，具体见：[hot-key-route-rewrite-sample](other/hot-key-route-rewrite-sample.md)
 * redis和proxy混合部署时使用UpstreamAddrConverter提升服务性能的一个例子，具体见：[upstream-addr-converter](other/upstream-addr-converter.md)
 * 使用自定义分片时调整分片数量的一个思路，具体见：[custom_resharding](other/custom_resharding.md)
-* 使用etcd管理proxy配置的一个完整示例【运维实施】，具体见：[etcd-sample](other/etcd_sample.md)
-* 使用nacos管理proxy配置的一个完整示例【运维实施】，具体见：[nacos-sample](other/nacos_sample.md)
 * 使用proxy命令批量管理proxy集群配置的说明，具体见：[proxy_command](other/proxy_command.md)
 * 关于redis_proxy初始化和预热，具体见：[init](other/init.md)
-* 关于application.yml的配置项，具体见：[application_yml](other/application_yml.md)
-* 使用simple_config管理多租户配置，具体见：[simple_config](other/simple_config.md)
 
 ## 应用场景
 * 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）

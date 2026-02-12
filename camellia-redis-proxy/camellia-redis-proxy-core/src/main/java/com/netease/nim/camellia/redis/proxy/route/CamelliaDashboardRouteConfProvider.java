@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
@@ -85,17 +86,19 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     }
 
     @Override
-    public ResourceTable getRouteConfig(long bid, String bgroup) {
-        if (bid < 0 || bgroup == null || bgroup.isEmpty()) {
-            if (defaultResponse == null) {
-                return null;
-            }
-            return defaultResponse.getResourceTable();
+    public String getRouteConfig() {
+        if (defaultResponse == null) {
+            return null;
         }
+        return ReadableResourceTableUtil.readableResourceTable(defaultResponse.getResourceTable());
+    }
+
+    @Override
+    public String getRouteConfig(long bid, String bgroup) {
         String key = bid + "|" + bgroup;
         CamelliaApiResponse response = map.get(key);
         if (response != null) {
-            return response.getResourceTable();
+            return ReadableResourceTableUtil.readableResourceTable(response.getResourceTable());
         }
         response = map.computeIfAbsent(key, k -> {
             CamelliaApiResponse newResponse = camelliaApi.getResourceTable(bid, bgroup, null);
@@ -104,7 +107,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
             }
             return newResponse;
         });
-        return response.getResourceTable();
+        return ReadableResourceTableUtil.readableResourceTable(response.getResourceTable());
     }
 
     @Override
@@ -125,7 +128,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
                     continue;
                 }
                 map.put(key, newResponse);
-                invokeUpdateResourceTable(bid, bgroup, newResponse.getResourceTable());
+                invokeUpdateResourceTable(bid, bgroup, ReadableResourceTableUtil.readableResourceTable(newResponse.getResourceTable()));
             }
         } catch (Exception e) {
             logger.error("reload error", e);

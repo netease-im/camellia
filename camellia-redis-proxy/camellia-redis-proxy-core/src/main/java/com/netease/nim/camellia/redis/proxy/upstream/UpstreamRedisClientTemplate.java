@@ -104,7 +104,12 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         this.commandMonitor = provider.getCommandMonitor();
         multiWriteModeCallback.callback();
         ProxyDynamicConf.registerCallback(multiWriteModeCallback);
-        ResourceTable resourceTable = provider.getRouteConfig(bid, bgroup);
+        ResourceTable resourceTable;
+        if (bid > 0 && bgroup != null) {
+            resourceTable = ReadableResourceTableUtil.parseTable(provider.getRouteConfig(bid, bgroup));
+        } else {
+            resourceTable = ReadableResourceTableUtil.parseTable(provider.getRouteConfig());
+        }
         RedisResourceUtil.checkResourceTable(resourceTable);
         this.update(resourceTable);
         if (logger.isInfoEnabled()) {
@@ -1122,7 +1127,16 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         public void run() {
             if (running.compareAndSet(false, true)) {
                 try {
-                    ResourceTable resourceTable = provider.getRouteConfig(bid, bgroup);
+                    String routeConf;
+                    if (bid > 0 && bgroup != null) {
+                        routeConf = provider.getRouteConfig(bid, bgroup);
+                    } else {
+                        routeConf = provider.getRouteConfig();
+                    }
+                    if (routeConf == null) {
+                        return;
+                    }
+                    ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(routeConf);
                     try {
                         RedisResourceUtil.checkResourceTable(resourceTable);
                     } catch (Exception e) {

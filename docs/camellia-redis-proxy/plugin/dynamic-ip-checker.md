@@ -5,34 +5,10 @@
 * Supports blacklist mode, also supports whitelist mode, 
 * Configuration supports dynamic change via `Camellia-dashboard`
 
-### Enable method
-````yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console port, the default is 16379, if set to -16379, there will be a random available port, if set to 0, the console will not be started
-  password: pass123 #proxy password, if a custom client-auth-provider-class-name is set, the password parameter is invalid
-  monitor-enable: true #Whether to enable monitoring
-  monitor-interval-seconds: 60 #Monitor callback interval
-  plugins: #Use yml to configure plugins, built-in plugins can be enabled directly using aliases, custom plugins need to configure the full class name
-    - dynamicIpCheckerPlugin
-  transpond:
-    type: remote
-    remote:
-      url: http://127.0.0.1:8080 #camellia-dashboard's address
-      check-interval-millis: 5000 # Polling period to camellia-dashboard
-      dynamic: true # indicates that multiple sets of configurations are supported, the default is true
-      header-map:
-        api-key: secretToken
-````
-
-### Dynamic configuration (camellia-redis-proxy.properties)
-- The interval of updating the plugin configuration
+### configuration
 ````properties
+proxy.plugin.list=dynamicIpCheckerPlugin
+
 #The interval of updating the plugin configuration, the default is 5 seconds
 dynamic.ip.check.plugin.config.update.interval.seconds=5
 #camellia-dashboard configuration

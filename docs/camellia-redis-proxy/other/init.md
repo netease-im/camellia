@@ -32,26 +32,6 @@ camellia-redis-proxy:
 如果不希望执行上述初始化逻辑，则可以开启延迟初始化，则初始化逻辑会在proxy收到第一个来自客户端的命令时执行（可能导致客户端的第一个命令请求变慢）
 
 开启延迟初始化的方法：  
-
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  config:
-    "upstream.lazy.init.enable": true
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
-```
-
-也可以在camellia-redis-proxy.properties里配置：
 ```properties
 upstream.lazy.init.enable=true
 ```
@@ -72,104 +52,10 @@ upstream.lazy.init.enable=true
 `redis-proxies`和`redis-proxies-discovery`类型的后端，会发送ping给所有节点
 
 如果不希望启动时发送ping进行预热和检查，则可以如下方式关闭：
-
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
-    redis-conf:
-      preheat: false
+```properties
+upstream.preheat.enable=false
 ```
 
-#### 多租户场景
-
-对于开启多租户的proxy，初始化逻辑略有不同（remote和custom）  
-
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: remote
-    remote:
-      url: http://127.0.0.1:8080
-      check-interval-millis: 5000
-      dynamic: true
-      bid: 1
-      bgroup: default
-```
-
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: custom
-    custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
-      dynamic: true
-      bid: 1
-      bgroup: default
-      reload-interval-millis: 600000
-```
-
-上述两种配置下（remote和custom），只有bid=1，bgroup=default的路由中的redis地址，会被初始化和预热，其他bid/bgroup的路由需要等来自客户端的请求后才会初始化
-
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: remote
-    remote:
-      url: http://127.0.0.1:8080
-      check-interval-millis: 5000
-      dynamic: true
-```
-
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: custom
-    custom:
-      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfProvider
-      dynamic: true
-      reload-interval-millis: 600000
-```
-
-上述两种配置下（remote和custom），因为没有配置初始的bid/bgroup，没有一个路由的redis地址会被初始化和预热
 
 
 

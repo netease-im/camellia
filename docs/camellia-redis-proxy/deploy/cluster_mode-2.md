@@ -13,28 +13,13 @@
 
 ### 配置
 
-```yaml
-server:
-  port: 6381
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16378
-  password: pass123
-  cluster-mode-enable: true
-  cport: 16380 #cluster-mode下的心跳端口，默认是proxy端口+10000
-  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.
-  config:
-    "cluster.mode.consensus.leader.selector.class.name": "com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector"
-    "redis.consensus.leader.selector.redis.url": "redis://@127.0.0.1:6379"
-    "redis.consensus.leader.selector.redis.key": "xxxxx"
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis://@127.0.0.1:6379
+```properties
+proxy.mode=cluster
+cluster.mode.provider.class.name=com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusClusterModeProvider
+#### redis地址
+redis.consensus.leader.selector.redis.url=redis://@127.0.0.1:6379
+#### redis-key，一个集群一个key，建议用uuid
+redis.consensus.leader.selector.redis.key=xxx
 ```     
 
 #### cluster.mode.consensus.leader.selector.class.name

@@ -8,7 +8,7 @@
 
 ![img.png](img.png)
 
-* proxy基于伪redis-cluster模式运行，因此相同key会路由到同一个proxy节点
+* proxy基于redis-cluster模式运行，因此相同key会路由到同一个proxy节点
 * proxy内部多work-thread运行，每个命令根据key哈希到同一个work-thread运行
 * proxy本身弱状态
 * proxy依赖的服务逻辑上包括：key-meta-server、sub-key-server

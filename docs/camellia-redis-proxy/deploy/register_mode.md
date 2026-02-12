@@ -9,7 +9,7 @@
 ### zk为例
 
 camellia提供了一个基于zookeeper的注册发现模式的默认实现，你可以这样来使用它：
-1) 首先在redis proxy上引入maven依赖：
+#### 1) 首先在redis proxy上引入maven依赖：
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -17,7 +17,8 @@ camellia提供了一个基于zookeeper的注册发现模式的默认实现，你
     <version>a.b.c</version>
 </dependency>
 ``` 
-2) 在redis proxy的application.yml添加如下配置：
+####  2) 添加如下配置：
+* application.yml
 ```yaml
 server:
   port: 6380
@@ -25,18 +26,18 @@ spring:
   application:
     name: camellia-redis-proxy-server
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-
 camellia-redis-zk-registry:
   enable: true
   zk-url: 127.0.0.1:2181,127.0.0.2:2181
   base-path: /camellia
 ```
+* camellia-redis-proxy.properties
+```properties
+port=6380
+password=pass123
+route.conf=redis://@127.0.0.1:6379
+```
+
 则启动后redis proxy会注册到zk(127.0.0.1:2181,127.0.0.2:2181)  
 此时你需要自己从zk上获取proxy的地址列表，然后自己实现一下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
 

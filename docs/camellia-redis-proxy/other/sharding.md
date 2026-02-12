@@ -31,21 +31,8 @@ public class CustomShardingFunc extends AbstractSimpleShardingFunc {
     }
 }
 ```  
-然后在application.yml配置即可，类似于这样：
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-    redis-conf:
-      sharding-func: com.xxx.CustomShardingFunc
+配置方式：
+```properties
+sharding.func.class.name=com.xxx.CustomShardingFunc
 ```

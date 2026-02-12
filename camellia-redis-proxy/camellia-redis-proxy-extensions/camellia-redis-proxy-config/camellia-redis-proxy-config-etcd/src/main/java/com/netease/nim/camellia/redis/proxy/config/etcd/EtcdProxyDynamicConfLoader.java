@@ -46,7 +46,7 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         Map<String, String> map = new HashMap<>(initConf);
         map.putAll(conf);
         //dynamic specific conf
-        Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf, contentType);
+        Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf);
         if (pair.getSecond() != null) {
             map.putAll(pair.getSecond());
         }

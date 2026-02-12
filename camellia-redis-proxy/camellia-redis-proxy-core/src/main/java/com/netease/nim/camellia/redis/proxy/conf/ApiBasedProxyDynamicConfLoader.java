@@ -33,7 +33,7 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         //conf
         conf.putAll(camelliaConfig.getConf());
         //dynamic specific conf
-        Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf, ConfigContentType.properties);
+        Pair<String, Map<String, String>> pair = ProxyDynamicConfLoaderUtil.tryLoadDynamicConfBySpecificFilePath(conf);
         if (pair.getSecond() != null) {
             conf.putAll(pair.getSecond());
         }

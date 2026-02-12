@@ -28,15 +28,16 @@ camellia-redis-proxy:
 ```properties
 
 ### 多租户配置
-1.default.route.conf=redis://@127.0.0.1:6379
-2.default.route.conf=redis://@127.0.0.1:6380
-100.default.route.conf=redis://@127.0.0.1:6381
-200.default.route.conf=redis://@127.0.0.1:6382
-300.default.route.conf={"type":"simple","operation":{"read":{"resources":["redis://@127.0.0.1:6379","redis://@127.0.0.1:6380","redis://@127.0.0.1:6381"],"type":"random"},"type":"rw_separate","write":"redis://@127.0.0.1:6379"}}
+route.conf.provider=multi_tenants_v1
+####
+password123.password.1.default.route.conf=redis://@127.0.0.1:6379
+password456.password.2.default.route.conf=redis://@127.0.0.1:6380
+xxx1.password.100.default.route.conf=redis://@127.0.0.1:6381
+xxx2.password.200.default.route.conf=redis://@127.0.0.1:6382
+xxx3.password.300.default.route.conf={"type":"simple","operation":{"read":{"resources":["redis://@127.0.0.1:6379","redis://@127.0.0.1:6380","redis://@127.0.0.1:6381"],"type":"random"},"type":"rw_separate","write":"redis://@127.0.0.1:6379"}}
 
-##给DynamicConfClientAuthProvider使用
-password123.auth.conf=1|default
-password456.auth.conf=2|default
+### 插件配置
+proxy.plugin.list=hotKeyRouteRewritePlugin
 
 ### 热key配置
 #开关
@@ -51,14 +52,13 @@ hot.key.monitor.counter.check.threshold=500
 hot.key.monitor.max.hot.key.count=32
 
 ### 热key转发配置
-hot.key.route.rewriter.className=com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriter
+hot.key.route.rewriter.class.name=com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriter
 1.default.hotkey.route.rewrite.config=[{"command":"get","bid":100,"bgroup":"default"},{"command":"all_commands","bid":200,"bgroup":"default"}]
 2.default.hotkey.route.rewrite.config=[{"command":"read_commands","bid":300,"bgroup":"default"}]
 ```
 
 上述配置表示：  
-* 配置了5个路由，bid=1，2，100，200，300，bgroup=default
-* 配置了2个租户，使用password123登录表示租户1，默认路由给redis://@127.0.0.1:6379，使用password456登录表示租户2，默认路由给redis://@127.0.0.1:6380
+* 配置了5个租户，使用password123登录表示租户1，默认路由给redis://@127.0.0.1:6379，使用password456登录表示租户2，默认路由给redis://@127.0.0.1:6380
 * 如果租户1的命令达到了热key级别（1000ms内超过500次），如果是get命令，则转发给redis://@127.0.0.1:6381，其他命令则转发给redis://@127.0.0.1:6382
 * 如果租户2的命令达到了热key级别（1000ms内超过500次），如果是read命令，则随机转发给redis://@127.0.0.1:6379、redis://@127.0.0.1:6380、redis://@127.0.0.1:6381，如果是write命令则不变
 

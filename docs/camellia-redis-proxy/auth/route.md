@@ -34,16 +34,42 @@ route.conf=redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
 * 这是一个抽象类，有多种内置实现，你也可以自定义，类定义如下：
 
 ```java
+    /**
+     * 对应于auth或者hello命令
+     * @param userName 账号
+     * @param password 密码
+     * @return 校验结果+ bid/bgroup
+     */
     public abstract ClientIdentity auth(String userName, String password);
-
+    
+    /**
+     * 是否需要密码
+     * @return true/false
+     */
     public abstract boolean isPasswordRequired();
-
-    public abstract ResourceTable getRouteConfig(long bid, String bgroup);
-
+    
+    /**
+     * 默认路由，当客户端没有声明bid/bgroup时的路由配置
+     * @return route conf
+     */
+    public abstract String getRouteConfig();
+    
+    /**
+     * 当客户端声明bid/bgroup时的路由配置
+     * @param bid bid
+     * @param bgroup bgroup
+     * @return ResourceTable
+     */
+    public abstract String getRouteConfig(long bid, String bgroup);
+    
+    /**
+     * 是否支持多租户
+     * @return true/false
+     */
     public abstract boolean isMultiTenantsSupport();
 
-    public final void invokeUpdateResourceTable(long bid, String bgroup, ResourceTable resourceTable) {}
-    public final void invokeRemoveResourceTable(long bid, String bgroup) {}
+    protected final void invokeUpdateResourceTable(long bid, String bgroup, String routeConf) {}
+    protected final void invokeRemoveResourceTable(long bid, String bgroup) {}
 ```
 
 * `auth` 和 `isPasswordRequired` 在建立连接时使用，会返回登录成功或者失败
@@ -52,7 +78,6 @@ route.conf=redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
 * `isMultiTenantsSupport` 用于告诉proxy，当bid和bgroup不同时，ResourceTable是不是会不一样，如果 `isMultiTenantsSupport=true`，则代表有多条路由
 * `invokeUpdateResourceTable` 和 `invokeRemoveResourceTable` 是两个回调方法，当某个bid和bgroup对应的 `route.conf` 发生了变化，可以通过这两个回调来告诉proxy
 * 正是因为有这两个回调方法的存在，因此并不是每个 `get` 和 `set` 命令都会触发 `getRouteConfig` 方法的调用，proxy会缓存结果以便有更好的性能
-* 你可以调用 `ResourceTable ReadableResourceTableUtil.parseTable(String routeConf)` 方法，把 `route.conf` 转换为 `ResourceTable` 对象
 
 
 ### 内置的RouteConfProvider实现

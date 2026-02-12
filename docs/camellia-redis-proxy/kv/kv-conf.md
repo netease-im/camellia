@@ -1,34 +1,16 @@
 
 ## 通用配置
 
-```yaml
-server:
-  port: 6381
-spring:
-  application:
-    name: camellia-redis-proxy-server
+```properties
+port=6381
+console.port=16378
+password=pass123
+route.conf=redis-kv://d
 
-camellia-redis-proxy:
-  console-port: 16378
-  password: pass123
-  monitor-enable: false
-  monitor-interval-seconds: 60
-  cluster-mode-enable: true
-  cluster-mode-provider-class-name: com.netease.nim.camellia.redis.proxy.cluster.provider.
-  config:
-    "proxy.cluster.mode.command.move.always": true
-    "cluster.mode.consensus.leader.selector.class.name": "com.netease.nim.camellia.redis.proxy.cluster.provider.RedisConsensusLeaderSelector"
-    "redis.consensus.leader.selector.redis.url": "redis://@127.0.0.1:6379"
-    "redis.consensus.leader.selector.redis.key": "xxxxx" 
-  plugins:
-    - monitorPlugin
-    - bigKeyPlugin
-    - hotKeyPlugin
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-kv://d
+proxy.mode=cluster
+redis.consensus.leader.selector.redis.url=redis://@127.0.0.1:6379
+redis.consensus.leader.selector.redis.key=xxx
+proxy.cluster.mode.command.move.always=true
 ```
 
 
@@ -48,7 +30,6 @@ kv.zset.encode.version=0
 #支持不重启动态修改，仅对新key有效
 kv.set.encode.version=0
 
-
 #本地lru缓存开关，默认true
 #支持不重启动态修改
 kv.key.mete.local.cache.enable=true
@@ -56,13 +37,19 @@ kv.hash.local.cache.enable=true
 kv.zset.local.cache.enable=true
 kv.set.local.cache.enable=true
 
-#本地lru缓存的容量（key的数量），建议参考jvm堆内存和key大小后配置一个合适的值
+#本地lru缓存的容量，建议参考jvm堆内存配置一个合适的值
 #支持不重启动态修改
-kv.key.meta.lru.cache.capacity=500000
-kv.hash.lru.cache.capacity=100000
-kv.zset.lru.cache.capacity=100000
-kv.zset.index.lru.cache.capacity=100000
-kv.set.lru.cache.capacity=100000
+kv.key.meta.lru.cache.size=64M
+kv.key.meta.lru.null.cache.size=64M
+kv.hash.lru.write.cache.size=64M
+kv.hash.lru.read.cache.size=64M
+kv.set.lru.write.cache.size=64M
+kv.set.lru.read.cache.size=64M
+kv.zset.lru.write.cache.size=64M
+kv.zset.lru.read.cache.size=64M
+kv.zset.index.lru.write.cache.size=64M
+kv.zset.index.lru.read.cache.size=64M
+kv.lru.cache.max.capacity=10000000
 
 #write-buffer的开关，默认true
 #支持不重启动态修改

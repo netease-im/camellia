@@ -1,6 +1,6 @@
 
 
-# camellia-redis-proxy.properties配置
+# 核心配置
 
 
 ```properties

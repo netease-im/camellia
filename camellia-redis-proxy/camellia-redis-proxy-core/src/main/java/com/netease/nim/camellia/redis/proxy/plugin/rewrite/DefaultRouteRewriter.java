@@ -83,7 +83,7 @@ public class DefaultRouteRewriter implements RouteRewriter {
 
     private RewriteConfig init(String configStr) {
         try {
-            if (configStr == null || configStr.length() == 0) {
+            if (configStr == null || configStr.isEmpty()) {
                 return new RewriteConfig();
             }
             List<Config> configs = JSONArray.parseArray(configStr, Config.class);

@@ -9,8 +9,7 @@ PROXY命令用于查询和操作proxy本身的一些配置，1.3.0开始，限�
 127.0.0.1:6380> proxy info
 camellia_version:v1.3.7
 upstream_client_template_factory:UpstreamRedisClientTemplateFactory
-transpond_config:{"type":"local","multiTenantsSupport":false}
-client_auth_provider:ClientAuthByConfigProvider
+route_conf_provider:DefaultRouteConfProvider
 proxy_mode:standalone
 proxy_dynamic_conf_loader:FileBasedProxyDynamicConfLoader
 monitor_enable:false
@@ -23,9 +22,9 @@ reply_plugins:HotKeyProxyPlugin,BigKeyProxyPlugin,MonitorProxyPlugin
 包括了proxy版本，是否开启监控，路由配置，插件配置等信息
 
 ### 查询proxy列表
-* 有三种情况，开启伪redis-cluster模式、开启伪redis-sentinel模式、默认standalone模式
-* 如果开启了伪redis-cluster模式，则返回的是伪redis-cluster模式下自动发现的所有节点
-* 如果开启了伪redis-sentinel模式，则返回的是伪redis-sentinel模式下配置的所有节点
+* 有三种情况，开启redis-cluster模式、开启redis-sentinel模式、默认standalone模式
+* 如果开启了redis-cluster模式，则返回的是伪redis-cluster模式下自动发现的所有节点
+* 如果开启了redis-sentinel模式，则返回的是伪redis-sentinel模式下配置的所有节点
 * 如果是默认standalone模式，则需要从其他途径获取节点列表，默认提供了两种方式：
 * 方式一（默认）：
 * 配置文件中配置，如下：  
@@ -36,7 +35,7 @@ proxy.nodes=10.221.145.235:6380@7380,10.221.145.235:6381@7381
 * 配置文件中配置，如下：  
 ```properties
 #表示启用RedisProxyNodesDiscovery
-proxy.nodes.discovery.className=com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery
+proxy.nodes.discovery.class.name=com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery
 #表示RedisProxyNodesDiscovery使用的redis地址
 proxy.nodes.discovery.redis.url=redis://@127.0.0.1:6379
 ###
@@ -97,22 +96,11 @@ proxy.nodes.discovery.redis.heartbeat.timeout.seconds=30
 * init.config表示初始配置，也就是application.yml中config的配置（如下的：k1=v1,k2=v2），size表示数量，md5表示md5值
 ```yaml
 camellia-redis-proxy:
-#  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
-#  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
-  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
-  monitor-enable: false  #monitor enable/disable configure
-  monitor-interval-seconds: 60 #monitor data refresh interval seconds
   config:
     "k1": "v1"
     "k2": "v2"
-  transpond:
-    type: local #local、remote、custom
-    local:
-      type: simple #simple、complex
-      resource: redis://@127.0.0.1:6379
 ```
-* special.config表示特殊配置，也就是camellia-redis-proxy.properties或者camellia-redis-proxy.json中的配置，size表示数量，md5表示md5值，会覆盖init.config的配置
+* special.config表示特殊配置，也就是除了application.yml之外的配置，size表示数量，md5表示md5值，会覆盖init.config的配置
 ```properties
 k2=v222
 k3=v3
@@ -253,7 +241,6 @@ config.auto.sync.enable=true
 ### 应用场景
 * 可以选定某个节点，修改配置，然后broadcast到其他节点，这样就可以实现动态批量修改配置，从而不依赖于etcd/nacos等配置中心
 * 只有实现了WritableProxyDynamicConfLoader的ProxyDynamicConfLoader才可以这样操作
-* 内置的FileBasedProxyDynamicConfLoader（默认，基于camellia-redis-proxy.properties文件）实现了WritableProxyDynamicConfLoader
-* 内置的JsonFileBasedProxyDynamicConfLoader（基于camelia-redis-proxy.json文件）实现了WritableProxyDynamicConfLoader
+* 内置的FileBasedProxyDynamicConfLoader实现了WritableProxyDynamicConfLoader
 * 对于proxy节点的个性化配置（和集群内其他节点不一样的配置），配置在application.yml里 
 * 对于proxy节点的公共配置，则配置在camellia-redis-proxy.properties或者camellia-redis-proxy.json里

@@ -42,31 +42,8 @@ public interface ProxyPlugin {
 ```
 
 ### 如何启用插件
-* application.yml
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口，如果设置为0，则不启动console
-  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
-  plugins: #使用yml配置插件，内置插件可以直接使用别名启用，自定义插件需要配置全类名
-    - monitorPlugin
-    - bigKeyPlugin
-    - hotKeyPlugin
-    - com.xxx.xxx.CustomProxyPlugin
-  transpond:
-    type: local #使用本地配置
-    local:
-      type: simple
-      resource: redis://@127.0.0.1:6379 #转发的redis地址
 ```
-* camellia-redis-proxy.properties
-```
-#使用properties配置的插件可以运行期自定义增减
+#插件可以在运行期自定义增减
 proxy.plugin.list=monitorPlugin,bigKeyPlugin,com.xxx.xxx.CustomProxyPlugin
 ```
 
@@ -139,7 +116,7 @@ public enum BuildInProxyPluginEnum {
 * HotKeyRouteRewriteProxyPlugin，覆盖了HotKeyProxyPlugin的功能，用于监控热key并转发到自定义路由，具体见：[hot-key-route-rewrite](hot-key-route-rewrite.md)
 * ReadOnlyProxyPlugin，开启后，只接受读命令，具体见：[read-only](read-only.md)
 
-### 内置插件修改默认执行顺序的方法(1.2.4开始支持)
+### 内置插件修改默认执行顺序的方法
 在camellia-redis-proxy.properties或者application.yml的config中，配置如下key-value-config：
 ```
 ## 修改request的order
@@ -153,5 +130,5 @@ public enum BuildInProxyPluginEnum {
 * HotKeyMonitorPlugin/HotKeyCachePlugin，基于hot-key-sdk/hot-key-server的热key监控/缓存，具体见: [hot-key-cache-extension](hot-key-cache-extension.md)
 
 ### 自定义插件
-实现ProxyPlugin接口，并把实现类的全类名配置到application.yml或者camellia-redis-proxy.properties里即可
+实现ProxyPlugin接口，并把实现类的全类名配置到 `proxy.plugin.list` 即可
 

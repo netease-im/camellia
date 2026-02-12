@@ -34,7 +34,7 @@ public class ServerConf {
         }
         //
         ProxyDynamicConfLoader confLoader;
-        String className = serverProperties.getConfig().get("proxy.dynamic.conf.loader.class.name");
+        String className = serverProperties.getProxyDynamicConfLoaderClassName();
         if (className != null) {
             confLoader = (ProxyDynamicConfLoader) ServerConf.proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         } else {

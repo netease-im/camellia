@@ -19,28 +19,8 @@ PROXY,SELECT,HELLO,AUTH,SENTINEL,CLUSTER,ASKING,QUIT,CLIENT,
 
 ### 快速开始
 
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
-  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
-  monitor-enable: false  #monitor enable/disable configure
-  monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  http-port: 8080
-  plugins: #plugin list
-    - monitorPlugin
-    - bigKeyPlugin
-    - hotKeyPlugin
-  transpond:
-    type: local #local、remote、custom
-    local:
-      type: simple #simple、complex
-      resource: redis://@127.0.0.1:6379
+```properties
+http.port=8080
 ```
 
 

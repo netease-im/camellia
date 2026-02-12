@@ -7,55 +7,19 @@
 
 ### 配置示例一
 
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379
-  password: pass123  
-  monitor-enable: false
-  monitor-interval-seconds: 60
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
-```
-
 ```properties
+route.conf=redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
+
 upstream.addr.converter.enable=true
 upstream.addr.converter.config=[{"originalHost": "@CurrentHost@", "targetHost": "127.0.0.1"}]
 ```
 
 假设proxy部署在10.189.31.13这个节点上，则proxy访问本机的redis-server会走127.0.0.1，而不是走10.189.31.13
 
-
 ### 配置示例二
 
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379
-  password: pass123
-  monitor-enable: false
-  monitor-interval-seconds: 60
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
-```
-
 ```properties
+route.conf=redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
 upstream.addr.converter.enable=true
 upstream.addr.converter.config=[{"originalHost": "@CurrentHost@", "originalPort": 6601, "targetUdsPath": "/Users/caojiajun/temp/redis.sock"}]
 ```

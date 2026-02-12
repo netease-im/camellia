@@ -45,7 +45,7 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
                 String file = ProxyDynamicConf.getString("route.conf.file", null);
                 FileUtils.FileInfo fileInfo = FileUtils.readDynamic(file);
                 if (fileInfo == null) {
-                    throw new IllegalArgumentException("illegal 'route.conf.file'");
+                    throw new IllegalArgumentException("missing 'route.conf' and 'route.conf.file'");
                 }
                 routeConf = fileInfo.getFileContent();
             }
@@ -57,7 +57,7 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
             this.resourceTable = resourceTable;
             this.conf = routeConf;
             logger.info("route conf updated, conf = {}", routeConf);
-            invokeUpdateResourceTable(-1, "default", resourceTable);
+            invokeUpdateResourceTable(-1, "default", ReadableResourceTableUtil.readableResourceTable(resourceTable));
         } catch (Exception e) {
             logger.error("reload route conf error", e);
         }
@@ -80,8 +80,13 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
     }
 
     @Override
-    public ResourceTable getRouteConfig(long bid, String bgroup) {
-        return resourceTable;
+    public String getRouteConfig() {
+        return ReadableResourceTableUtil.readableResourceTable(resourceTable);
+    }
+
+    @Override
+    public String getRouteConfig(long bid, String bgroup) {
+        return null;
     }
 
     @Override

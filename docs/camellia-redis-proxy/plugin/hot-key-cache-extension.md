@@ -15,7 +15,7 @@
 <dependency>
 	<groupId>com.netease.nim</groupId>
 	<artifactId>camellia-redis-proxy-hot-key-monitor-plugin</artifactId>
-	<version>1.3.7</version>
+	<version>1.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -74,9 +74,9 @@ Hot-key-server配置
 
 ```xml
 <dependency>
-   <groupId>com.netease.nim</groupId>
-   <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
-   <version>1.3.7</version>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
+    <version>1.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -123,7 +123,7 @@ camellia-redis-proxy.properties
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
-    <version>1.3.7</version>
+    <version>1.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -133,7 +133,7 @@ camellia-redis-proxy.properties
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-    <version>1.3.7</version>
+    <version>1.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -143,7 +143,7 @@ proxy配置文件-camellia-redis-proxy.properties
 hot.key.server.zk.zkUrl=192.168.88.130:2181
 hot.key.server.zk.basePath=/camellia-hot-key
 hot.key.server.zk.applicationName=camellia-hot-key-server
-hot.key.server.discovery.className=com.netease.nim.camellia.redis.proxy.hotkey.discovery.zk.ProxyZkHotKeyServerDiscoveryFactory
+hot.key.server.discovery.class.name=com.netease.nim.camellia.redis.proxy.hotkey.discovery.zk.ProxyZkHotKeyServerDiscoveryFactory
 ```
 
 在server和proxy，application.yaml中加入zk配置
@@ -170,7 +170,7 @@ Proxy处添加依赖，代表插件的发现机制。
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
-    <version>1.3.7</version>
+    <version>1.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -179,7 +179,7 @@ proxy配置文件-camellia-redis-proxy.properties
 ```properties
 hot.key.server.eureka.applicationName=camellia-hot-key-server
 hot.key.server.eureka.refreshIntervalSeconds=5
-hot.key.server.discovery.className=com.netease.nim.camellia.redis.proxy.hotkey.discovery.eureka.ProxyEurekaHotKeyServerDiscoveryFactory
+hot.key.server.discovery.class.name=com.netease.nim.camellia.redis.proxy.hotkey.discovery.eureka.ProxyEurekaHotKeyServerDiscoveryFactory
 ```
 
 hot-key-server处添加依赖：
@@ -210,7 +210,7 @@ eureka:
 #### environment
 
 |          node          |  specs   |
-| :--------------------: | :------: |
+|:----------------------:|:--------:|
 |      redis-proxy       | 8C16G VM |
 |    redis-standalone    | 8C16G VM |
 | redis-benchmark client | 8C16G VM |

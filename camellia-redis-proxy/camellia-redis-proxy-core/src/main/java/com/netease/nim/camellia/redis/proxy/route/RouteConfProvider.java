@@ -26,12 +26,38 @@ public abstract class RouteConfProvider {
     private final ConcurrentHashMap<String, ResourceTableUpdateCallback> updateCallbackMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ResourceTableRemoveCallback> removeCallbackMap = new ConcurrentHashMap<>();
 
+    /**
+     * 对应于auth或者hello命令
+     * @param userName 账号
+     * @param password 密码
+     * @return 校验结果+ bid/bgroup
+     */
     public abstract ClientIdentity auth(String userName, String password);
 
+    /**
+     * 是否需要密码
+     * @return true/false
+     */
     public abstract boolean isPasswordRequired();
 
-    public abstract ResourceTable getRouteConfig(long bid, String bgroup);
+    /**
+     * 默认路由，当客户端没有声明bid/bgroup时的路由配置
+     * @return route conf
+     */
+    public abstract String getRouteConfig();
 
+    /**
+     * 当客户端声明bid/bgroup时的路由配置
+     * @param bid bid
+     * @param bgroup bgroup
+     * @return route conf
+     */
+    public abstract String getRouteConfig(long bid, String bgroup);
+
+    /**
+     * 是否支持多租户
+     * @return true/false
+     */
     public abstract boolean isMultiTenantsSupport();
 
     public CommandMonitor getCommandMonitor() {
@@ -41,7 +67,8 @@ public abstract class RouteConfProvider {
     //
     //
 
-    public final void invokeUpdateResourceTable(long bid, String bgroup, ResourceTable resourceTable) {
+    protected final void invokeUpdateResourceTable(long bid, String bgroup, String routeConf) {
+        ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(routeConf);
         checkResourceTable(resourceTable);
         ResourceTableUpdateCallback callback = updateCallbackMap.get(bid + "|" + bgroup);
         if (callback != null) {
@@ -52,7 +79,7 @@ public abstract class RouteConfProvider {
         }
     }
 
-    public final void invokeRemoveResourceTable(long bid, String bgroup) {
+    protected final void invokeRemoveResourceTable(long bid, String bgroup) {
         String key = bid + "|" + bgroup;
         ResourceTableRemoveCallback callback = removeCallbackMap.get(key);
         if (callback != null) {

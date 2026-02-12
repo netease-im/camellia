@@ -26,16 +26,31 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
     protected static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-multi-tenants-route"));
 
     private MultiTenantConfigSelector selector;
+    private final long defaultBid;
+    private final String defaultBgroup;
 
     public MultiTenantsRouteConfProvider() {
         List<MultiTenantConfig> multiTenantConfig = getMultiTenantConfig();
         if (multiTenantConfig == null) {
             throw new IllegalArgumentException("multi config init error");
         }
+        defaultBid = ProxyDynamicConf.getInt("multi.tenant.route.default.bid", -1);
+        defaultBgroup = ProxyDynamicConf.getString("multi.tenant.route.default.bgroup", "default");
         selector = new MultiTenantConfigSelector(multiTenantConfig);
+        if (defaultBid > 0 && defaultBgroup != null) {
+            selector.selectResourceTable(defaultBid, defaultBgroup);
+        }
         ProxyDynamicConf.registerCallback(this::reload);
         int reloadIntervalMillis = ProxyDynamicConf.getInt("multi.tenant.route.conf.reload.interval.millis", 30000);
         scheduler.scheduleAtFixedRate(this::reload, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public String getRouteConfig() {
+        if (defaultBid > 0 && defaultBgroup != null) {
+            return ReadableResourceTableUtil.readableResourceTable(selector.selectResourceTable(defaultBid, defaultBgroup));
+        }
+        return null;
     }
 
     @Override
@@ -53,8 +68,8 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
     }
 
     @Override
-    public ResourceTable getRouteConfig(long bid, String bgroup) {
-        return selector.selectResourceTable(bid, bgroup);
+    public String getRouteConfig(long bid, String bgroup) {
+        return ReadableResourceTableUtil.readableResourceTable(selector.selectResourceTable(bid, bgroup));
     }
 
     @Override
@@ -108,13 +123,17 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
         this.selector = newSelector;
         Set<String> set = new HashSet<>(oldMap.keySet());
         set.addAll(newMap.keySet());
-        for (String bgroup : set) {
-            ResourceTable oldTable = oldMap.get(bgroup);
-            ResourceTable newTable = newMap.get(bgroup);
+        for (String key : set) {
+            String[] split = key.split("\\|");
+            long bid = Long.parseLong(split[0]);
+            String bgroup = split[1];
+            //
+            ResourceTable oldTable = oldMap.get(key);
+            ResourceTable newTable = newMap.get(key);
             if (newTable == null && oldTable != null) {
                 boolean enable = ProxyDynamicConf.getBoolean("route.config.remove.enable", true);
                 if (enable) {
-                    invokeRemoveResourceTable(1L, bgroup);
+                    invokeRemoveResourceTable(bid, bgroup);
                 }
                 continue;
             }
@@ -122,7 +141,7 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
                 String newJson = ReadableResourceTableUtil.readableResourceTable(newTable);
                 String oldJson = ReadableResourceTableUtil.readableResourceTable(oldTable);
                 if (newJson != null && oldJson != null && !newJson.equals(oldJson)) {
-                    invokeUpdateResourceTable(1L, bgroup, newTable);
+                    invokeUpdateResourceTable(bid, bgroup, newJson);
                 }
             }
         }

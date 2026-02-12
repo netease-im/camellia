@@ -30,57 +30,19 @@
 ```
 
 ### 启用方法（生产端）
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口，如果设置为0，则不启动console
-  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
-  monitor-enable: true  #是否开启监控
-  monitor-interval-seconds: 60 #监控回调的间隔
-  plugins: #使用yml配置插件，内置插件可以直接使用别名启用，自定义插件需要配置全类名
-    - com.netease.nim.camellia.redis.proxy.mq.common.MqMultiWriteProducerProxyPlugin
-  transpond:
-    type: local #使用本地配置
-    local:
-      type: simple
-      resource: redis://@127.0.0.1:6379 #转发的redis地址
-```
-添加配置
 ```properties
+proxy.plugin.list=com.netease.nim.camellia.redis.proxy.mq.common.MqMultiWriteProducerProxyPlugin
+
 #生产端kafka的地址和topic，反斜杠分隔
 mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
 #使用KafkaMqPackSender来进行mq的异步写入，你也可以自己实现一个走其他mq的
-mq.multi.write.sender.className=com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackSender
+mq.multi.write.sender.class.name=com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackSender
 ```
 
 ### 启用方式（消费端）
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口，如果设置为0，则不启动console
-  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
-  monitor-enable: true  #是否开启监控
-  monitor-interval-seconds: 60 #监控回调的间隔
-  plugins: #使用yml配置插件，内置插件可以直接使用别名启用，自定义插件需要配置全类名
-    - com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackConsumerProxyPlugin
-  transpond:
-    type: local #使用本地配置
-    local:
-      type: simple
-      resource: redis://@127.0.0.1:6379 #转发的redis地址
-```
-添加配置
 ```properties
+proxy.plugin.list=com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackConsumerProxyPlugin
+
 #消费端kafka的地址和topic，反斜杠分隔
 mq.multi.write.consumer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
 ```

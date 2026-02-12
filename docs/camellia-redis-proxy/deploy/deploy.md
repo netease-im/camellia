@@ -6,8 +6,8 @@
 ### 部署模式
 * 基于lb组成集群（如lvs，或者k8s中的service等），见：[standalone_mode](standalone_mode.md)
 * 基于注册中心组成集群，见：[register_mode](register_mode.md)
-* 伪redis-cluster模式，见：[cluster_mode](cluster_mode.md)
-* 伪redis-sentinel模式，见：[sentinel_mode](sentinel_mode.md)
+* redis-cluster模式，见：[cluster_mode](cluster_mode.md)
+* redis-sentinel模式，见：[sentinel_mode](sentinel_mode.md)
 * jvm-in-sidecar模式，见：[jvm-in-sidecar](jvm-in-sidecar.md)
 
 ### 其他

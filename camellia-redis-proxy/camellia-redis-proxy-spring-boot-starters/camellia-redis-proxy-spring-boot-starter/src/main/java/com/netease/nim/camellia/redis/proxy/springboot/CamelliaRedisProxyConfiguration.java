@@ -4,6 +4,8 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({CamelliaRedisProxyProperties.class})
 public class CamelliaRedisProxyConfiguration implements ApplicationContextAware {
 
+    private static final Logger log = LoggerFactory.getLogger(CamelliaRedisProxyConfiguration.class);
     private ApplicationContext applicationContext;
 
     @Value("${server.port:6379}")
@@ -40,6 +43,7 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
     @Bean
     public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
         CamelliaServerProperties serverProperties = new CamelliaServerProperties();
+        serverProperties.setProxyDynamicConfLoaderClassName(properties.getProxyDynamicConfLoaderClassName());
         serverProperties.setConfig(properties.getConfig());
 
         ServerConf.init(serverProperties, port, applicationName, springProxyBeanFactory());

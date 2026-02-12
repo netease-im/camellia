@@ -53,4 +53,4 @@ camellia-redis-proxy:
 配置如下：  
 <img src="etcd.jpg" width="100%" height="100%">
 
-如果希望是其他配置中心（如nacos等），则替换ProxyDynamicConfLoader实现即可，具体见: [dynamic-conf](dynamic-conf.md)  
+如果希望是其他配置中心（如nacos等），则替换ProxyDynamicConfLoader实现即可，具体见: [dynamic-conf](../conf/dynamic-conf.md)  

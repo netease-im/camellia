@@ -1,6 +1,6 @@
-## 伪redis-sentinel模式
+## redis-sentinel模式
 
-* 伪redis-sentinel模式，如下：  
+* redis-sentinel模式，如下：  
   <img src="redis-proxy-sentinel.png" width="60%" height="60%">
 
 * 此时，可以把proxy节点同时当作sentinel节点和redis节点，通过不同的端口区分，通过cport去模拟sentinel获取master节点的请求，返回的是proxy自己（多个proxy节点哈希选一个，从而不同的proxy节点返回的master是相同的）     
@@ -11,60 +11,32 @@
 * 对于不同的客户端，会下发不同的proxy节点作为伪master，从而达到负载均衡的效果
 * 当一台proxy节点挂了，会通知正在使用该节点的客户端进行伪master切换，从而达到高可用的效果
 
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
 
-camellia-redis-proxy:
-  #port: -6379 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
-  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口
-  cport: 16380 #cluster-mode下的心跳端口，默认是proxy端口+10000
-  password: pass123
-  sentinel-mode-enable: true #cluster-mode，把proxy伪装成cluster，需要在camellia-redis-proxy.properties配置proxy.cluster.mode.nodes
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-```     
-
-配置节点发现规则（基于配置文件）
+配置方案一：基于配置文件
 ```properties
 ### 此时集群内的节点会通过配置文件彼此发现
-proxy.sentinel.mode.nodes.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.
+sentinel.mode.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.DefaultSentinelModeProvider
 #把所有proxy节点配置上，格式为ip:port@cport
-proxy.sentinel.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
+sentinel.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
 ```
-配置节点发现规则（基于redis）
+
+配置方案二：基于redis
 ```properties
 ### 此时集群内的节点会通过redis自动彼此发现，优点是可以不需要提前知道节点ip，适用于k8s环境
-proxy.sentinel.mode.nodes.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.
+sentinel.mode.provider.class.name=com.netease.nim.camellia.redis.proxy.sentinel.RedisSentinelModeProvider
 proxy.sentinel.mode.nodes.provider.redis.url=redis://passwd@127.0.0.1
 proxy.sentinel.mode.nodes.provider.redis.key=xxxx
 ```
 
 
 配置sentinel的名字
-```
+```properties
 #sentinel里模拟的master的名字，默认是camellia_sentinel
-proxy.sentinel.mode.master.name=camellia_sentinel
-```
-
-其他可以配置的参数：
-```
-#proxy节点间的心跳间隔，表示了心跳请求的频率
-proxy.sentinel.mode.heartbeat.interval.seconds=5
-#proxy节点间的心跳超时，20s没有收到心跳，则会剔除该节点
-proxy.sentinel.mode.heartbeat.timeout.seconds=20
-#proxy节点的ip，默认会自动获取本机ip，一般不需要配置
-proxy.sentinel.mode.current.node.host=10.1.1.1
+sentinel.mode.master.name=camellia_sentinel
 #sentinel的账号，默认null
-proxy.sentinel.mode.sentinel.username=xxx
+sentinel.mode.sentinel.username=xxx
 #sentinel的密码，默认null
-proxy.sentinel.mode.sentinel.password=xxx
+sentinel.mode.sentinel.password=xxx
 ```
 
 ```高可用原理

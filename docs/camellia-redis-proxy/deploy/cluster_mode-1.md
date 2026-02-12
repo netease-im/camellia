@@ -10,42 +10,15 @@
 
 ### 配置：
 
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  #port: -6379 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
-  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口
-  cport: 16380 #cluster-mode下的心跳端口，默认是proxy端口+10000
-  password: pass123
-  cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster，需要在camellia-redis-proxy.properties配置proxy.cluster.mode.nodes
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-```     
-随后你需要在camellia-redis-proxy.properties里选择若干个个proxy节点配置，如下：
-```
+```properties
+proxy.mode=cluster
+cluster.mode.provider.class.name=com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultClusterModeProvider
 #随机挑选几个proxy节点配置即可（都配上当然更好，不需要全部配置，但是配置的必须是活着的节点，否则重启会失败），格式为ip:port@cport
-proxy.cluster.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
-```
+cluster.mode.nodes=10.0.0.1:6380@6381,10.0.0.2:6380@6381
+```     
+
 依次启动所有proxy即可    
 节点宕机、节点扩容，proxy集群内部会通过心跳自动感知（心跳通过cport和自定义的redis协议去实现）
-
-其他可以配置的参数：
-```
-#proxy节点间的心跳间隔，表示了心跳请求的频率
-proxy.cluster.mode.heartbeat.interval.seconds=5
-#proxy节点间的心跳超时，20s没有收到心跳，则会剔除该节点
-proxy.cluster.mode.heartbeat.timeout.seconds=20
-#proxy节点的ip，默认会自动获取本机ip，一般不需要配置
-proxy.cluster.mode.current.node.host=10.1.1.1
-```
 
 伪redis-cluster模式下常见操作的逻辑如下：
 ```

@@ -87,13 +87,26 @@ public class ConfigurationUtil {
         }
     }
 
+    public static ConfigContentType configContentType(String fileName) {
+        if (fileName == null) {
+            return ConfigContentType.properties;
+        }
+        if (fileName.endsWith(".properties")) {
+            return ConfigContentType.properties;
+        } else if (fileName.endsWith(".json")) {
+            return ConfigContentType.json;
+        } else {
+            return ConfigContentType.properties;
+        }
+    }
+
     public static Map<String, String> contentToMap(String content, ConfigContentType contentType) {
         if (contentType == ConfigContentType.properties) {
             String[] split = content.split("\n");
             Map<String, String> conf = new HashMap<>();
             for (String line : split) {
                 line = line.trim();
-                if (line.length() == 0) {
+                if (line.isEmpty()) {
                     continue;
                 }
                 if (line.startsWith("#")) {

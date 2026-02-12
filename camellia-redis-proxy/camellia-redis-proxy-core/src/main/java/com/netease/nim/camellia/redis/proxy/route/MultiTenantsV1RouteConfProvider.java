@@ -23,6 +23,7 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
     public List<MultiTenantConfig> getMultiTenantConfig() {
         try {
             Set<String> duplicateKeySet = new HashSet<>();
+            Set<String> duplicatePasswordSet = new HashSet<>();
             List<MultiTenantConfig> list = new ArrayList<>();
             Map<String, String> map = ProxyDynamicConf.getAll();
             for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -40,6 +41,10 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
                             throw new IllegalArgumentException("duplicate route conf on bid=" + bid + ",bgroup=" + bgroup);
                         }
                         duplicateKeySet.add(duplicateKey);
+                        if (duplicatePasswordSet.contains(password)) {
+                            throw new IllegalArgumentException("duplicate route conf on password=" + password);
+                        }
+                        duplicatePasswordSet.add(password);
 
                         MultiTenantConfig config = new MultiTenantConfig();
                         config.setBid(bid);

@@ -1,396 +1,128 @@
 
 # camellia-redis-proxy([中文版](redis-proxy-zh.md))
-## Instruction  
-camellia-redis-proxy is a high performance proxy for redis, which base on netty4/java21.  
+## Introduction
+camellia-redis-proxy is a high-performance redis proxy developed with netty4, requiring a minimum of Java 21.
 
 ## Features
-* support redis-standalone、redis-sentinel、redis-cluster
-* support read write separation
-* support double(multi) write
-* support double(multi) read
-* support set password
-* support SELECT commands, only upstream do not contain redis-cluster(in this case, only support SELECT 0), upstream can be redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-separate
-* support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX and so on
-* support pub-sub commands
-* support transaction command, only when proxy route to redis-standalone/redis-sentinel/redis-cluster with no-sharding/no-read-write-separate
-* support stream commands of redis5.0
-* support scan command of redis-standalone/redis-sentinel/redis-cluster, even custom sharding
-* supported commands, see: [supported_commands](supported_commands.md)
-* support custom sharding
-* support ssl/tls, both client to proxy and proxy to upstream redis
-* support unix-domain-socket, client can access proxy by uds
-* support use http to access proxy, like [webdis](https://github.com/nicolasff/webdis) , see: [redis_over_http](/docs/camellia-redis-proxy/other/redis_over_http.md)
-* support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
-* support route config refresh online
-* support multi-tenants, then proxy will route business-A to redis1, business-B to redis2 
-* support plugin, and build in some plugin, such as bigKeyPlugin, hotKeyPlugin, converterPlugin and so on
-* support monitor, such as commands request count、commands spend time, support setting MonitorCallback
-* provider http api to get monitor metric data
-* provide spring-boot-starter，you can quick start a proxy cluster
-* provide default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool  
-* provide spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate
+* Supports proxying to redis-standalone, redis-sentinel, redis-cluster
+* Supports using other proxies as backends (such as in dual-write migration scenarios), like [twemproxy](https://github.com/twitter/twemproxy), [codis](https://github.com/CodisLabs/codis), etc.
+* Supports [kvrocks](https://github.com/apache/kvrocks), [pika](https://github.com/OpenAtomFoundation/pika), [tendis](https://github.com/Tencent/Tendis) as backends
+* Supports using hbase/obkv/tikv and others as underlying storage to build a redis-like system, see: [kv](./kv/kv.md)
+* Supports common commands like GET/SET/EVAL, as well as MGET/MSET, blocking commands like BLPOP, PUBSUB and TRANSACTION, STREAMS/JSON/SEARCH, and TAIR_HASH/TAIR_ZSET/TAIR_STRING
+* For the list of supported commands, see: [supported_commands](supported_commands.md)
+* Supports custom sharding
+* Supports read-write separation
+* Supports dual (multiple) writes - can directly write to two proxies, or use MQ (like kafka) for dual-write, or customize dual-write rules based on the plugin system
+* Supports dual (multiple) reads
+* Supports password authentication
+* Supports SELECT command (currently only when backend redis does not include redis-cluster, in which case only SELECT 0 is supported); can be redis-standalone/redis-sentinel/redis-proxies or their combinations (sharding/read-write separation)
+* Supports blocking commands like BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX, etc.
+* Supports PUBSUB series commands (supported when proxying to redis-standalone/redis-sentinel/redis-cluster)
+* Supports transaction commands (MULTI/EXEC/DISCARD/WATCH/UNWATCH) (supported when proxying to redis-standalone/redis-sentinel/redis-cluster)
+* Supports Redis 5.0 STREAMS series commands
+* Supports SCAN command (supported when proxying to redis-standalone/redis-sentinel/redis-cluster, and also supported with custom sharding)
+* Supports Alibaba TairZSet, TairHash, TairString series commands
+* Supports RedisJSON and RedisSearch series commands
+* Supports reading from slaves (both redis-sentinel and redis-cluster support configuring read from slave nodes)
+* Supports SSL/TLS (both proxy-to-client and proxy-to-redis supported), see: [ssl/tls](/docs/camellia-redis-proxy/other/tls.md)
+* Supports unix-domain-socket (both client-to-proxy and proxy-to-redis supported), see: [uds](/docs/camellia-redis-proxy/other/uds.md)
+* Supports accessing proxy via HTTP protocol, similar to [webdis](https://github.com/nicolasff/webdis) but with different interface definitions, see: [redis_over_http](/docs/camellia-redis-proxy/other/redis_over_http.md)
+* Supports multi-tenancy, i.e., tenant A routes to redis1, tenant B routes to redis2 (can be distinguished by different clientname or different password)
+* Supports multi-tenant dynamic routing, supports custom dynamic routing data sources (built-in: local config file, nacos, etcd, etc., can also be customized)
+* Supports custom plugins, with many built-in plugins available for use as needed (including: large key monitoring, hot key monitoring, hot key caching, key namespace, IP blacklist/whitelist, rate limiting, etc.)
+* Supports rich monitoring, can monitor client connections, call volume, method latency, large keys, hot keys, backend redis connections and latency, and supports obtaining monitoring data via HTTP interface
+* Supports using prometheus/grafana to monitor proxy clusters, see: [prometheus-grafana](prometheus/prometheus-grafana.md)
+* Supports info command to get server related information (including backend redis cluster information)
+* Provides a spring-boot-starter for quickly building a proxy cluster
+* High availability, can form clusters based on LB, or based on registry, or can masquerade as redis-cluster to form a cluster, or can masquerade as redis-sentinel to form a cluster
+* Provides a default registry discovery implementation component (depends on zookeeper); if the client side is Java, you can simply replace JedisPool with RedisProxyJedisPool to access redis proxy
+* Provides a spring-boot-starter for SpringRedisTemplate to access proxy in registry discovery mode
 
 
-## Quick Start
-1) you need a spring-boot project first, then add dependency in your pom.xml，like this   
-```
-<dependency>
-  <groupId>com.netease.nim</groupId>
-  <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>a.b.c</version>
-</dependency>
-```
-2) code Main Class Application.java, like this: 
-```java
-import com.netease.nim.camellia.redis.proxy.springboot.EnableCamelliaRedisProxyServer;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+## Quick Start 1 (Based on installation package)
+See: [quick-start-package](quickstart/quick-start-package.md)
 
-@SpringBootApplication
-@EnableCamelliaRedisProxyServer
-public class Application {
+## Quick Start 2 (Based on source code compilation, personalized configuration)
+See: [camellia-redis-proxy-bootstrap](other/camellia-redis-proxy-bootstrap.md)
 
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class);
-    }
-}
-```
-3) add config in application.yml, like this:  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+## Quick Start 3 (Suitable for Java developers, using spring-boot-starter)
+See: [quick-start-spring-boot](quickstart/quick-start-spring-boot.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
-```
-4) run Application.java, then a redis proxy to redis cluster is running.  
-you can use redis-cli to connect proxy, port is 6380, password is pass123, if you don't want have a password, remove it in application.yml   
-```
-➜ ~ ./redis-cli -h 127.0.0.1 -p 6380 -a pass123
-127.0.0.1:6380> set k1 v1
-OK
-127.0.0.1:6380> get k1
-"v1"
-127.0.0.1:6380> mget k1 k2 k3
-1) "v1"
-2) (nil)
-3) (nil)
-```
+## Quick Start 4 (Suitable for Java developers, without using spring-boot-stater)
+See: [quick-start-no-spring-boot](quickstart/quick-start-no-spring-boot.md)
 
-## Quick Start by release package
-see [quick_start](quickstart/quick-start-package.md)  
+## Quick Start 5 (docker)
+See: [quick-start-docker](deploy/quick-start-docker.md)
 
-## Different Yaml Config Samples
-### 1) route to standalone redis server  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+## Source Code Interpretation
+See: [Code Structure](code/proxy-code.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis://passwd@127.0.0.1:6379
-```
-### 2) route to redis sentinel  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+## Configuration
+* Configuration is the foundation of everything else. camellia-redis-proxy reads local configuration files by default. You can also customize configuration data sources like etcd, nacos, etc.
+* For configuration principles, see: [Configuration Description](conf/dynamic-conf-en.md)
+* For core configuration, see: [Core Configuration](conf/config_template-en.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis-sentinel://passwd@127.0.0.1:6379,127.0.0.1:6377/master
-```
-### 3) route with read write separation(need two files)  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+## Routing Configuration
+Routing configuration defines the forwarding rules after camellia-redis-proxy receives redis commands from clients, including:
+* Simplest example
+* Supported backend redis types
+* Complex configurations (read-write separation, sharding, etc.)
+* Built-in routing configuration solutions
+* Custom routing configuration data sources
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-```
-* resource-table.json  
-```json
-{
-  "type": "simple",
-  "operation": {
-    "read": "redis://passwd123@127.0.0.1:6379",
-    "type": "rw_separate",
-    "write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"
-  }
-}
-```
-it means write commands will route to redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master, and read commands will route to redis://passwd123@127.0.0.1:6379
-### 4) route with sharding(need two files)  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+See: [Routing Configuration](auth/route-en.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-```
-* resource-table.json  
-```json
-{
-  "type": "sharding",
-  "operation": {
-    "operationMap": {
-      "0-2-4": "redis://password1@127.0.0.1:6379",
-      "1-3-5": "redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381"
-    },
-    "bucketSize": 6
-  }
-}
-```
-it means keys will sharding in 6 buckets, bucket.index=[0,2,4] route to redis://password1@127.0.0.1:6379, others route to redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381 
-### 5) route with double write(need two files)  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+## Plugin System
+* Plugins use a unified interface to intercept and control requests and responses
+* proxy has many built-in plugins that can be used directly with simple configuration, choose as needed
+* You can also implement custom plugins
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-```
-* resource-table.json  
-```json
-{
-  "type": "simple",
-  "operation": {
-    "read": "redis://passwd1@127.0.0.1:6379",
-    "type": "rw_separate",
-    "write": {
-      "resources": [
-        "redis://passwd1@127.0.0.1:6379",
-        "redis://passwd2@127.0.0.1:6380"
-      ],
-      "type": "multi"
-    }
-  }
-}
-```
-it means:  
-all the write-commands(like setex/zadd/hset and so on) will route to both redis://passwd1@127.0.0.1:6379 and redis://passwd2@127.0.0.1:6380, specially redis-cli wll get the command reply from first config write resource=redis://passwd1@127.0.0.1:6379;   
-all the read-commands(like get/zrange/mget and so on) will route to redis://passwd1@127.0.0.1:6379.
-### 6）route with multi read(need two files)  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+See: [Plugins](plugin/plugin-en.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-```
-* resource-table.json  
-```json
-{
-  "type": "simple",
-  "operation": {
-    "read": {
-      "resources": [
-        "redis://password1@127.0.0.1:6379",
-        "redis://password2@127.0.0.1:6380"
-      ],
-      "type": "random"
-    },
-    "type": "rw_separate",
-    "write": "redis://passwd1@127.0.0.1:6379"
-  }
-}
-```
-it means:  
-all the write-commands(like setex/zadd/hset and so on) will route to redis://passwd1@127.0.0.1:6379   
-all the read-commands(like get/zrange/mget and so on) will route to redis://passwd1@127.0.0.1:6379 or redis://password2@127.0.0.1:6380 in random
-### 7) proxy with sharding/read-write-separation/double-write/multi-read(need two files)  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+## Deployment and Access
+In production environments, you need to deploy at least 2 proxy instances to ensure high availability, and proxy can be horizontally expanded, including:
+* Cluster based on LB (like LVS, or service in k8s, etc.)
+* Cluster based on registry
+* redis-cluster mode
+* redis-sentinel mode
+* jvm-in-sidecar mode
+* Graceful online/offline
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-```
-* resource-table.json  
-```json
-{
-  "type": "sharding",
-  "operation": {
-    "operationMap": {
-      "4": {
-        "read": "redis://password1@127.0.0.1:6379",
-        "type": "rw_separate",
-        "write": {
-          "resources": [
-            "redis://password1@127.0.0.1:6379",
-            "redis://password2@127.0.0.1:6380"
-          ],
-          "type": "multi"
-        }
-      },
-      "5": {
-        "read": {
-          "resources": [
-            "redis://password1@127.0.0.1:6379",
-            "redis://password2@127.0.0.1:6380"
-          ],
-          "type": "random"
-        },
-        "type": "rw_separate",
-        "write": {
-          "resources": [
-            "redis://password1@127.0.0.1:6379",
-            "redis://password2@127.0.0.1:6380"
-          ],
-          "type": "multi"
-        }
-      },
-      "0-2": "redis://password1@127.0.0.1:6379",
-      "1-3": "redis://password2@127.0.0.1:6380"
-    },
-    "bucketSize": 6
-  }
-}
-```
-it means keys sharding in 6 buckets, and bucket.index=4 is read-write-separation and double-write, bucket.index=5 is read-write-separation and double-write/multi-read 
-### 7) config from camellia-dashboard  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+See: [Deployment and Access](deploy/deploy-en.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: remote
-    remote:
-      bid: 1
-      bgroup: default
-      url: http://127.0.0.1:8080
-      check-interval-millis: 5000
-      header-map: # custom header map for request to camellia-dashboard (optional)
-        api-key: secretToken # header name: api-key, header value: secretToken
-```
-it means config will get from camellia-dashboard, config named bid=1 and bgroup=default will be used.
-furthermore, config will reload if config changed in camellia-dashboard, redis proxy use http protocol to check config if change, default check interval is 5s.  
+## Monitoring
+camellia-redis-proxy provides rich monitoring functions, including:
+* Provided monitoring items
+* Monitoring data acquisition methods
+* Get server related information through info command
+* Use proxy as a platform to monitor redis cluster status (exposed via HTTP interface)
+* Use prometheus and grafana to monitor proxy clusters
 
-### 8) config from camellia-dashboard with multi-config  
-* application.yml  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+See: [Monitoring](monitor/monitor-en.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: remote
-    remote:
-      url: http://127.0.0.1:8080
-      check-interval-millis: 5000
-      dynamic: true
-      header-map: # custom header map for request to camellia-dashboard (optional)
-        api-key: secretToken # header name: api-key, header value: secretToken
-```
-it means redis proxy support route business-A to redis1, business-B to redis2.   
-this feature requires redis-cli declare business type, client can use client setname command to declare, client name with camellia_10_default means use config with bid=10 and bgroup=defualt from camellia-dashboard.
-```
-➜ ~ ./redis-cli -h 127.0.0.1 -p 6380 -a pass123
-127.0.0.1:6379> client setname camellia_10_default
-OK
-127.0.0.1:6380> set k1 v1
-OK
-127.0.0.1:6380> get k1
-"v1"
-127.0.0.1:6380> mget k1 k2 k3
-1) "v1"
-2) (nil)
-3) (nil)
-```
-take java/jedis as example, you need init JedisPool like this:  
-```java
-public class Test {
-    public static void main(String[] args) {
-        JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), "127.0.0.1", 6380,
-                2000, "pass123", 0, "camellia_10_default");
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.setex("k1", 10, "v1");
-        } finally {
-            if (jedis != null) {
-                jedis.close();
-            }
-        }
-    }
-}
-```
+## Others
+* How to control client connections, see [Client Connection Control](other/connectlimit.md)
+* Questions about dual (multiple) writes, see: [multi-write](other/multi-write.md)
+* About scan and related instructions, see: [scan](other/scan.md)
+* About lua/function/tfunction related instructions, see: [lua](other/lua_function.md)
+* Instructions for using redis-shake for data migration, see: [redis-shake](other/redis-shake.md)
+* About custom sharding functions, see: [sharding](other/sharding.md)
+* How to use spring for bean generation, see: [spring](other/spring.md)
+* Automatically remove failed read nodes in multi-read scenarios, see: [multi-read](other/multi-read.md)
+* How redis-proxy gets real client addresses when using 4-layer load balancers like haproxy/nginx, see: [proxy_protocol](other/proxy_protocol.md)
+* A complete example of using custom forwarding routing for hot keys, see: [hot-key-route-rewrite-sample](other/hot-key-route-rewrite-sample.md)
+* An example of using UpstreamAddrConverter to improve service performance when redis and proxy are deployed in a mixed manner, see: [upstream-addr-converter](other/upstream-addr-converter.md)
+* An idea for adjusting the number of shards when using custom sharding, see: [custom_resharding](other/custom_resharding.md)
+* Instructions for using proxy commands to batch manage proxy cluster configurations, see: [proxy_command](other/proxy_command.md)
+* About redis_proxy initialization and warm-up, see: [init](other/init.md)
 
-### performance report
-[v1.2.10](performance/performance.md)   
+## Application Scenarios
+* Business initially used redis-standalone or redis-sentinel, now needs to switch to redis-cluster, but the client needs modification (for example, jedis accessing redis-sentinel and redis-cluster is different). In this case, you can use proxy to achieve no modification (using 4-layer proxy LB) or minimal modification (using registry)
+* Use dual-write functionality for cluster migration or disaster recovery
+* Use sharding functionality to deal with insufficient single-cluster capacity (a single redis-cluster cluster has node and capacity limits)
+* Use built-in or custom plugins to monitor and control client access (hot keys, large keys, IP blacklist/whitelist, rate limiting, key namespace, data encryption/decryption, etc.)
+* Use rich monitoring functions to control system operation
+* And more
+
+## Performance Test Report
+[Performance Test Report based on v1.2.10](performance/performance.md)

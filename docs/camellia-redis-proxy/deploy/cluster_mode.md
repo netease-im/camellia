@@ -1,7 +1,7 @@
 
-## 伪redis-cluster模式
+## redis-cluster模式
 
-伪redis-cluster模式，如下：  
+redis-cluster模式，如下：  
   <img src="redis-proxy-cluster.jpg" width="60%" height="60%">
 
 此时，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群

@@ -47,25 +47,8 @@ ZPOPMAX,ZPOPMIN,BZPOPMAX,BZPOPMIN,ZRANDMEMBER,
 * ZSetConverter 可以对zset中的每个member进行转换
 
 ### 启用方式
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口，如果设置为0，则不启动console
-  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
-  monitor-enable: true  #是否开启监控
-  monitor-interval-seconds: 60 #监控回调的间隔
-  plugins: #使用yml配置插件，内置插件可以直接使用别名启用，自定义插件需要配置全类名
-    - converterPlugin
-  transpond:
-    type: local #使用本地配置
-    local:
-      type: simple
-      resource: redis://@127.0.0.1:6379 #转发的redis地址
+```properties
+proxy.plugin.list=converterPlugin
 ```
 
 以StringConverter为例，接口定义如下：
@@ -125,14 +108,14 @@ public class CustomStringConverter implements StringConverter {
 随后，你需要在camellia-redis-proxy.properties里配置：
 ```
 #string的value的转换器
-converter.string.className=com.xxxx.CustomStringConverter
+converter.string.class.name=com.xxxx.CustomStringConverter
 
 ##其他转换器
-#converter.key.className=com.xxxx.CustomXXX
-#converter.hash.className=com.xxxx.CustomXXX
-#converter.set.className=com.xxxx.CustomXXX
-#converter.zset.className=com.xxxx.CustomXXX
-#converter.list.className=com.xxxx.CustomXXX
+#converter.key.class.name=com.xxxx.CustomXXX
+#converter.hash.class.name=com.xxxx.CustomXXX
+#converter.set.class.name=com.xxxx.CustomXXX
+#converter.zset.class.name=com.xxxx.CustomXXX
+#converter.list.class.name=com.xxxx.CustomXXX
 ```
 
 上述示例中，如果key是k1，则value里面的abc会被转换为***再存储到redis里面；当你get时，***会被转换回abc后再返回给客户端，整个过程对于客户端是透明的
@@ -141,7 +124,7 @@ converter.string.className=com.xxxx.CustomStringConverter
 这个转换器会对不同的租户设置不同的key前缀，从而进行key的命名空间隔离  
 ```
 #以bid=1,bgroup=default为例，key=abc，会被转换为key=1|default|abc
-converter.key.className=com.netease.nim.camellia.redis.proxy.plugin.converter.DefaultMultiTenantNamespaceKeyConverter
+converter.key.class.name=com.netease.nim.camellia.redis.proxy.plugin.converter.DefaultMultiTenantNamespaceKeyConverter
 ```
 
 ### 使用CamelliaCompressor/CamelliaEncryptor来做透明的解压缩或者加解密

@@ -13,26 +13,10 @@
 
 #### step2，配置proxy
 
-* application.yml里开启tls-port，小于等于0则表示不开启
+* 开启tls-port，小于等于0则表示不开启
 
-```yml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
-  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
-  monitor-enable: false  #monitor enable/disable configure
-  monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  tls-port: 6381
-  transpond:
-    type: local #local、remote、custom
-    local:
-      type: simple #simple、complex
-      resource: rediss://@127.0.0.1:6379
+```properties
+tls.port=6381
 ```
 
 * camellia-redis-proxy.properties配置证书路径  
@@ -49,7 +33,7 @@ proxy.frontend.tls.ca.cert.file.path=/xxx/redis-7.0.11/tests/tls/ca.crt
 proxy.frontend.tls.key.file.path=/xxx/redis-7.0.11/tests/tls/server.key
 ```
 
-上述描述的是默认配置方法，你也可以自定义，实现ProxyFrontendTlsProvider接口即可，然后配置到application.yml里，如下：
+上述描述的是默认配置方法，你也可以自定义，实现ProxyFrontendTlsProvider接口即可，如下：
 ```java
 public interface ProxyFrontendTlsProvider {
 
@@ -58,25 +42,8 @@ public interface ProxyFrontendTlsProvider {
     SslHandler createSslHandler(SSLContext sslContext);
 }
 ```
-```yml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
-  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
-  monitor-enable: false  #monitor enable/disable configure
-  monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  tls-port: 6381
-  proxy-frontend-tls-provider-class-name: xxx.xxx.xxx.MyProxyFrontendTlsProvider
-  transpond:
-    type: local #local、remote、custom
-    local:
-      type: simple #simple、complex
-      resource: rediss://@127.0.0.1:6379
+```properties
+proxy.frontend.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
 ```
 
 * 默认开启双向认证，如果要关闭客户端认证，可以这样配置
@@ -137,23 +104,6 @@ public interface ProxyUpstreamTlsProvider {
     SslHandler createSslHandler(Resource resource);
 }
 ```
-```yml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
-  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
-  monitor-enable: false  #monitor enable/disable configure
-  monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  transpond:
-    type: local #local、remote、custom
-    local:
-      type: simple #simple、complex
-      resource: rediss://@127.0.0.1:6379
-    redis-conf:
-      proxy-upstream-tls-provider-class-name: xx.xx.MyProxyUpstreamTlsProvider
+```properties
+proxy.upstream.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider
 ```
