@@ -15,7 +15,6 @@
 表示需要配置的所有写地址都返回了，才返回给客户端，并且会校验是否所有地址都是返回的非error结果，如果是，则返回第一个地址的返回结果；否则返回第一个错误结果，你可以这样配置来生效这种模式：
 
 配置方法如下：
-camellia-redis-proxy.properties
 ```properties
 multi.write.mode=first_resource_only
 #multi.write.mode=all_resources_no_check

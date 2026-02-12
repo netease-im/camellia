@@ -97,6 +97,7 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
         Set<String> passwordSet = new HashSet<>();
         Set<String> bidBgroupSet = new HashSet<>();
         for (MultiTenantConfig config : configList) {
+            checkValid(config);
             String password = config.getPassword();
             if (passwordSet.contains(password)) {
                 throw new IllegalArgumentException("duplicate password");

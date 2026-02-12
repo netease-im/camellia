@@ -17,29 +17,8 @@
 
 	<modules>
 		<module>camellia-redis-proxy-spring-boot-starter</module>
-
-		<module>camellia-redis-proxy-nacos-spring-boot-starter</module>
-
 		<module>camellia-redis-proxy-zk-registry-spring-boot-starter</module>
-
 		<module>camellia-spring-redis-base</module>
-
-		<module>camellia-spring-redis-eureka-discovery-spring-boot</module>
-		<module>camellia-spring-redis-eureka-discovery-spring-boot-starter</module>
-		<module>camellia-spring-redis-eureka-discovery-spring-boot3-starter</module>
-
-		<module>camellia-spring-redis-zk-discovery-spring-boot</module>
-		<module>camellia-spring-redis-zk-discovery-spring-boot-starter</module>
-		<module>camellia-spring-redis-zk-discovery-spring-boot3-starter</module>
-
 		<module>camellia-spring-redis3-base</module>
-
-		<module>camellia-spring-redis3-eureka-discovery-spring-boot</module>
-		<module>camellia-spring-redis3-eureka-discovery-spring-boot-starter</module>
-		<module>camellia-spring-redis3-eureka-discovery-spring-boot3-starter</module>
-
-		<module>camellia-spring-redis3-zk-discovery-spring-boot</module>
-        <module>camellia-spring-redis3-zk-discovery-spring-boot-starter</module>
-        <module>camellia-spring-redis3-zk-discovery-spring-boot3-starter</module>
 	</modules>
 </project>
