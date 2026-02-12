@@ -76,7 +76,7 @@ route.conf=redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
 * `auth` 和 `isPasswordRequired` 在建立连接时使用，会返回登录成功或者失败
 * `ClientIdentity` 内部包含了bid和bgroup两个字段，proxy会把相关信息绑定到建立好的客户端连接上
 * 当客户端连接建立好后，发起redis命令，如 `get` 和 `set`，proxy会取出连接上的bid和bgroup信息，去调用 `getRouteConfig` 方法，获取到路由配置，并做转发
-* `isMultiTenantsSupport` 用于告诉proxy，当bid和bgroup不同时，ResourceTable是不是会不一样，如果 `isMultiTenantsSupport=true`，则代表有多条路由
+* `isMultiTenantsSupport` 用于告诉proxy，是否有多组路由，如果 `isMultiTenantsSupport=true`，则代表有多条路由
 * `invokeUpdateResourceTable` 和 `invokeRemoveResourceTable` 是回调方法，当某个bid和bgroup对应的 `route.conf` 发生了变化，可以通过这三个回调来告诉proxy
 * 正是因为有这三个回调方法的存在，因此并不是每个 `get` 和 `set` 命令都会触发 `getRouteConfig` 方法的调用，proxy会缓存结果以便有更好的性能
 

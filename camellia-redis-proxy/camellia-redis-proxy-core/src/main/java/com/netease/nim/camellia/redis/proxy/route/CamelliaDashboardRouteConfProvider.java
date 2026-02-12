@@ -8,6 +8,8 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
+import com.netease.nim.camellia.redis.proxy.monitor.CommandMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.DashboardCommandMonitor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
@@ -37,6 +39,8 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     private final long defaultBid;
     private final String defaultBgroup;
 
+    private CommandMonitor commandMonitor;
+
     private final CamelliaApiResponse defaultResponse;
     private final ConcurrentHashMap<String, CamelliaApiResponse> map = new ConcurrentHashMap<>();
 
@@ -49,6 +53,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
         int connectTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.connect.timeout.millis", 10000);
         int readTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.read.timeout.millis", 10000);
         String headers = ProxyDynamicConf.getString("camellia.dashboard.headers", null);
+
         Map<String, String> headerMap = new HashMap<>();
         if (headers != null) {
             JSONObject jsonObject = JSONObject.parseObject(headers);
@@ -57,6 +62,9 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
             }
         }
         camelliaApi = CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
+        if (ProxyDynamicConf.getBoolean("camellia.dashboard.monitor.enable", false)) {
+            commandMonitor = new DashboardCommandMonitor(camelliaApi);
+        }
         if (defaultBid > 0 && !defaultBgroup.isEmpty()) {
             defaultResponse = camelliaApi.getResourceTable(defaultBid, defaultBgroup, null);
             if (defaultResponse.getCode() != 200) {
@@ -114,6 +122,11 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     @Override
     public boolean isMultiTenantsSupport() {
         return dynamic;
+    }
+
+    @Override
+    public CommandMonitor getCommandMonitor() {
+        return commandMonitor;
     }
 
     private void reload() {

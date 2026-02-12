@@ -58,7 +58,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最�
 具体可见：[代码结构](code/proxy-code.md)
 
 ## 配置
-* 配置是其他弄开的基础，camellia-redis-proxy默认读取本地配置文件，你也可以自定义配置的数据源，如etcd、nacos等
+* 配置是其他模块的基础，camellia-redis-proxy默认读取本地配置文件，你也可以自定义配置的数据源，如etcd、nacos等
 * 配置原理见：[配置说明](conf/dynamic-conf.md)
 * 核心配置见：[核心配置](conf/config_template.md)
 
