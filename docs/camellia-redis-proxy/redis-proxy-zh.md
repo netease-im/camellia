@@ -61,10 +61,9 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最�
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
 * 最简单的示例
 * 支持的后端redis类型
-* 动态配置和复杂配置（读写分离、分片等）
-* 多租户支持
-* 使用camellia-dashboard管理多租户动态路由
-* 集成ProxyRouteConfUpdater自定义管理多租户动态路由
+* 复杂配置（读写分离、分片等）
+* 内置路由配置方案
+* 自定义路由配置数据源
 
 具体可见：[路由配置](auth/route.md)
 

@@ -96,6 +96,7 @@ route.conf.provider=default
 #### 优先看route.conf，如果没有则看route.conf.file
 #### 支持单个地址，也支持复杂配置（json）
 route.conf=redis://@127.0.0.1:6379
+#route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
 #### 支持外置其他配置文件作为数据原，支持class_path下的文件名，也支持绝对路径下的文件地址
 route.conf.file=resource-table.json
 #### 配置检查更新的间隔

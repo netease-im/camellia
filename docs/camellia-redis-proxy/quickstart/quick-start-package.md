@@ -3,9 +3,9 @@
 
 download *.tar.gz（v1.3.7）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.3.7/camellia-redis-proxy-1.3.7.tar.gz
-tar zxvf camellia-redis-proxy-1.3.7.tar.gz
-cd camellia-redis-proxy-1.3.7/
+wget https://github.com/netease-im/camellia/releases/download/1.4.0/camellia-redis-proxy-1.4.0.tar.gz
+tar zxvf camellia-redis-proxy-1.4.0.tar.gz
+cd camellia-redis-proxy-1.4.0/
 ```
 modify config in ./BOOT-INF/classes/
 * application.yml

@@ -1,17 +1,10 @@
+package com.netease.nim.camellia.tests.redis.proxy;
 
-## 快速开始（不基于spring-boot-starter）
+import com.netease.nim.camellia.redis.proxy.util.CamelliaRedisProxyStarter;
 
-首先，引入依赖：
-```
-<dependency>
-    <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis-proxy-core</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
-</dependency>
-```
-
-其次，如下：
-```java
+/**
+ * Created by caojiajun on 2026/2/12
+ */
 public class TestStartNoSpringBoot {
 
     public static void main(String[] args) {
@@ -23,5 +16,3 @@ public class TestStartNoSpringBoot {
         CamelliaRedisProxyStarter.start();
     }
 }
-
-```
