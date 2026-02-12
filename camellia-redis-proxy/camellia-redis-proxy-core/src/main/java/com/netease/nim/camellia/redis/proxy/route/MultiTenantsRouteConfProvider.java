@@ -30,13 +30,14 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
     private final String defaultBgroup;
 
     public MultiTenantsRouteConfProvider() {
-        List<MultiTenantConfig> multiTenantConfig = getMultiTenantConfig();
-        if (multiTenantConfig == null) {
+        List<MultiTenantConfig> configList = getMultiTenantConfig();
+        if (configList == null) {
             throw new IllegalArgumentException("multi config init error");
         }
+        check(configList);
         defaultBid = ProxyDynamicConf.getInt("multi.tenant.route.default.bid", -1);
         defaultBgroup = ProxyDynamicConf.getString("multi.tenant.route.default.bgroup", "default");
-        selector = new MultiTenantConfigSelector(multiTenantConfig);
+        selector = new MultiTenantConfigSelector(configList);
         if (defaultBid > 0 && defaultBgroup != null) {
             selector.selectResourceTable(defaultBid, defaultBgroup);
         }
@@ -48,7 +49,7 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
     @Override
     public String getRouteConfig() {
         if (defaultBid > 0 && defaultBgroup != null) {
-            return ReadableResourceTableUtil.readableResourceTable(selector.selectResourceTable(defaultBid, defaultBgroup));
+            return selector.selectResourceTable(defaultBid, defaultBgroup);
         }
         return null;
     }
@@ -69,7 +70,7 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
 
     @Override
     public String getRouteConfig(long bid, String bgroup) {
-        return ReadableResourceTableUtil.readableResourceTable(selector.selectResourceTable(bid, bgroup));
+        return selector.selectResourceTable(bid, bgroup);
     }
 
     @Override
@@ -81,13 +82,31 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
 
     protected synchronized final void reload() {
         try {
-            List<MultiTenantConfig> config = getMultiTenantConfig();
-            if (config == null) {
+            List<MultiTenantConfig> configList = getMultiTenantConfig();
+            if (configList == null) {
                 return;
             }
-            update(config);
+            check(configList);
+            update(configList);
         } catch (Exception e) {
             logger.error("reload multi tenant config error", e);
+        }
+    }
+
+    private void check(List<MultiTenantConfig> configList) {
+        Set<String> passwordSet = new HashSet<>();
+        Set<String> bidBgroupSet = new HashSet<>();
+        for (MultiTenantConfig config : configList) {
+            String password = config.getPassword();
+            if (passwordSet.contains(password)) {
+                throw new IllegalArgumentException("duplicate password");
+            }
+            passwordSet.add(password);
+            String key = config.getBid() + "|" + config.getBgroup();
+            if (bidBgroupSet.contains(key)) {
+                throw new IllegalArgumentException("duplicate bid/bgroup");
+            }
+            bidBgroupSet.add(key);
         }
     }
 
@@ -112,14 +131,14 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
         }
     }
 
-    protected final void update(List<MultiTenantConfig> multiTenantConfig) {
-        Collections.sort(multiTenantConfig);
-        if (selector != null && multiTenantConfig.equals(selector.getConfigList())) {
+    protected final void update(List<MultiTenantConfig> configList) {
+        Collections.sort(configList);
+        if (selector != null && configList.equals(selector.getConfigList())) {
             return;
         }
-        MultiTenantConfigSelector newSelector = new MultiTenantConfigSelector(multiTenantConfig);
-        Map<String, ResourceTable> oldMap = this.selector.getResourceTableMap();
-        Map<String, ResourceTable> newMap = newSelector.getResourceTableMap();
+        MultiTenantConfigSelector newSelector = new MultiTenantConfigSelector(configList);
+        Map<String, String> oldMap = this.selector.getResourceTableMap();
+        Map<String, String> newMap = newSelector.getResourceTableMap();
         this.selector = newSelector;
         Set<String> set = new HashSet<>(oldMap.keySet());
         set.addAll(newMap.keySet());
@@ -128,20 +147,18 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
             long bid = Long.parseLong(split[0]);
             String bgroup = split[1];
             //
-            ResourceTable oldTable = oldMap.get(key);
-            ResourceTable newTable = newMap.get(key);
-            if (newTable == null && oldTable != null) {
-                boolean enable = ProxyDynamicConf.getBoolean("route.config.remove.enable", true);
+            String oldRoute = oldMap.get(key);
+            String newRoute = newMap.get(key);
+            if (newRoute == null && oldRoute != null) {
+                boolean enable = ProxyDynamicConf.getBoolean("multi.tenant.route.conf.remove.enable", true);
                 if (enable) {
                     invokeRemoveResourceTable(bid, bgroup);
                 }
                 continue;
             }
-            if (newTable != null && oldTable != null) {
-                String newJson = ReadableResourceTableUtil.readableResourceTable(newTable);
-                String oldJson = ReadableResourceTableUtil.readableResourceTable(oldTable);
-                if (newJson != null && oldJson != null && !newJson.equals(oldJson)) {
-                    invokeUpdateResourceTable(bid, bgroup, newJson);
+            if (newRoute != null && oldRoute != null) {
+                if (!newRoute.equals(oldRoute)) {
+                    invokeUpdateResourceTable(bid, bgroup, newRoute);
                 }
             }
         }

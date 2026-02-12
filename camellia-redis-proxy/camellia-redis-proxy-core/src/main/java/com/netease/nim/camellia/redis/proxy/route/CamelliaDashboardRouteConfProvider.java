@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
-import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -35,6 +34,8 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     private final String password;
     private final CamelliaApi camelliaApi;
     private final boolean dynamic;
+    private final long defaultBid;
+    private final String defaultBgroup;
 
     private final CamelliaApiResponse defaultResponse;
     private final ConcurrentHashMap<String, CamelliaApiResponse> map = new ConcurrentHashMap<>();
@@ -42,8 +43,8 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     public CamelliaDashboardRouteConfProvider() {
         password = ServerConf.password();
         dynamic = ProxyDynamicConf.getBoolean("camellia.dashboard.dynamic", true);
-        long bid = ProxyDynamicConf.getLong("camellia.dashboard.bid", -1);
-        String bgroup = ProxyDynamicConf.getString("camellia.dashboard.bgroup", "default");
+        defaultBid = ProxyDynamicConf.getLong("camellia.dashboard.bid", -1);
+        defaultBgroup = ProxyDynamicConf.getString("camellia.dashboard.bgroup", "default");
         String url = ProxyDynamicConf.getString("camellia.dashboard.url", null);
         int connectTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.connect.timeout.millis", 10000);
         int readTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.read.timeout.millis", 10000);
@@ -56,12 +57,12 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
             }
         }
         camelliaApi = CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
-        if (bid > 0 && !bgroup.isEmpty()) {
-            defaultResponse = camelliaApi.getResourceTable(bid, bgroup, null);
+        if (defaultBid > 0 && !defaultBgroup.isEmpty()) {
+            defaultResponse = camelliaApi.getResourceTable(defaultBid, defaultBgroup, null);
             if (defaultResponse.getCode() != 200) {
                 throw new IllegalArgumentException("code=" + defaultResponse.getCode());
             }
-            map.put(bid + "|" + bgroup, defaultResponse);
+            map.put(defaultBid + "|" + defaultBgroup, defaultResponse);
         } else {
             defaultResponse = null;
         }
@@ -129,6 +130,9 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
                 }
                 map.put(key, newResponse);
                 invokeUpdateResourceTable(bid, bgroup, ReadableResourceTableUtil.readableResourceTable(newResponse.getResourceTable()));
+                if (bid == defaultBid && bgroup.equals(defaultBgroup)) {
+                    invokeUpdateResourceTable(ReadableResourceTableUtil.readableResourceTable(newResponse.getResourceTable()));
+                }
             }
         } catch (Exception e) {
             logger.error("reload error", e);

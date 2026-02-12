@@ -70,7 +70,7 @@ Routing configuration defines the forwarding rules after camellia-redis-proxy re
 * Built-in routing configuration solutions
 * Custom routing configuration data sources
 
-See: [Routing Configuration](auth/route-en.md)
+See: [Routing Configuration](route/route-en.md)
 
 ## Plugin System
 * Plugins use a unified interface to intercept and control requests and responses

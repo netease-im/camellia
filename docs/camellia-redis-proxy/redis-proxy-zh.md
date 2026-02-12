@@ -70,7 +70,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最�
 * 内置路由配置方案
 * 自定义路由配置数据源
 
-具体可见：[路由配置](auth/route.md)
+具体可见：[路由配置](route/route.md)
 
 ## 插件体系
 * 插件使用统一的接口来拦截和控制请求和响应  

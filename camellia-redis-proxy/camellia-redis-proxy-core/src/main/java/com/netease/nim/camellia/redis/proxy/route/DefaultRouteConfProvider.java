@@ -27,8 +27,7 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
 
     private final String password;
 
-    private String conf;
-    private ResourceTable resourceTable;
+    private String routeConf;
 
     public DefaultRouteConfProvider() {
         password = ServerConf.password();
@@ -49,15 +48,14 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
                 }
                 routeConf = fileInfo.getFileContent();
             }
-            if (Objects.equals(routeConf, conf)) {
+            if (Objects.equals(routeConf, this.routeConf)) {
                 return;
             }
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(routeConf);
             checkResourceTable(resourceTable);
-            this.resourceTable = resourceTable;
-            this.conf = routeConf;
+            this.routeConf = ReadableResourceTableUtil.readableResourceTable(resourceTable);
             logger.info("route conf updated, conf = {}", routeConf);
-            invokeUpdateResourceTable(-1, "default", ReadableResourceTableUtil.readableResourceTable(resourceTable));
+            invokeUpdateResourceTable(this.routeConf);
         } catch (Exception e) {
             logger.error("reload route conf error", e);
         }
@@ -81,7 +79,7 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
 
     @Override
     public String getRouteConfig() {
-        return ReadableResourceTableUtil.readableResourceTable(resourceTable);
+        return routeConf;
     }
 
     @Override

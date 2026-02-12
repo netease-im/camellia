@@ -20,4 +20,4 @@ uds.path=/tmp/camellia-redis-proxy.sock
 
 ### proxy到redis开启方法
 
-resource配置方法参考[redis-resource](../auth/redis-resources.md)
+resource配置方法参考[redis-resource](../route/redis-resources.md)

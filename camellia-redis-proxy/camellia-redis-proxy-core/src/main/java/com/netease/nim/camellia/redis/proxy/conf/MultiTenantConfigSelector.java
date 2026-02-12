@@ -15,7 +15,7 @@ import java.util.Map;
 public class MultiTenantConfigSelector {
 
     private final Map<String, ClientIdentity> clientIdentityMap = new HashMap<>();
-    private final Map<String, ResourceTable> resourceTableMap = new HashMap<>();
+    private final Map<String, String> resourceTableMap = new HashMap<>();
 
     private final List<MultiTenantConfig> configList;
 
@@ -25,7 +25,7 @@ public class MultiTenantConfigSelector {
             clientIdentityMap.put(config.getPassword(), new ClientIdentity(config.getBid(), config.getBgroup(), true));
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(config.getRoute());
             RedisResourceUtil.checkResourceTable(resourceTable);
-            resourceTableMap.put(config.getBid() + "|" + config.getBgroup(), resourceTable);
+            resourceTableMap.put(config.getBid() + "|" + config.getBgroup(), ReadableResourceTableUtil.readableResourceTable(resourceTable));
         }
     }
 
@@ -33,7 +33,7 @@ public class MultiTenantConfigSelector {
         return clientIdentityMap.get(password);
     }
 
-    public ResourceTable selectResourceTable(long bid, String bgroup) {
+    public String selectResourceTable(long bid, String bgroup) {
         return resourceTableMap.get(bid + "|" + bgroup);
     }
 
@@ -45,7 +45,7 @@ public class MultiTenantConfigSelector {
         return new HashMap<>(clientIdentityMap);
     }
 
-    public Map<String, ResourceTable> getResourceTableMap() {
+    public Map<String, String> getResourceTableMap() {
         return new HashMap<>(resourceTableMap);
     }
 }

@@ -144,7 +144,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         initEnv();
         this.multiTenantsSupport = provider.isMultiTenantsSupport();
         if (!multiTenantsSupport && !lazyInitEnable) {
-            this.instance = new UpstreamRedisClientTemplate(env, -1, "default", provider);
+            this.instance = initInstance(-1, "default");
         }
         boolean preheatEnable = ProxyDynamicConf.getBoolean("upstream.preheat.enable", true);
         if (preheatEnable && instance != null) {

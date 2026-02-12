@@ -67,6 +67,10 @@ public abstract class RouteConfProvider {
     //
     //
 
+    protected final void invokeUpdateResourceTable(String routeConf) {
+        invokeUpdateResourceTable(-1, "default", routeConf);
+    }
+
     protected final void invokeUpdateResourceTable(long bid, String bgroup, String routeConf) {
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(routeConf);
         checkResourceTable(resourceTable);

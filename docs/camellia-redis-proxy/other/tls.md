@@ -79,7 +79,7 @@ proxy.upstream.tls.key.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/c
 proxy.upstream.tls.config=[{"resource":"rediss://@127.0.0.1:6379","ca.cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt","cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt","key.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key"}]
 ```
 * 配置是一个json数组，每一项代表一个映射关系
-* resource是redis地址(注意需要使用带tls带地址串，如rediss://@127.0.0.1:6379，而不能使用redis://@127.0.0.1:6379)，具体见：[redis-resources](../auth/redis-resources.md)
+* resource是redis地址(注意需要使用带tls带地址串，如rediss://@127.0.0.1:6379，而不能使用redis://@127.0.0.1:6379)，具体见：[redis-resources](../route/redis-resources.md)
 * ca.cert.file.path、cert.file.path、key.file.path是证书路径
 * ca.cert.file、cert.file、key.file是证书名称（classpath下），和路径二选一
 * cert.file和key.file是可选的，如果不配置，则表示走单向认证
