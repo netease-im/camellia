@@ -152,20 +152,7 @@ http://127.0.0.1:16379/detect?url=redis-cluster://@127.0.0.1:7000,127.0.0.1:7001
 
 ### 备注
 当把proxy作为一个监控平台使用时，proxy启动时可能不知道要访问后端redis地址，为了避免proxy启动失败，可以配置启动时不进行预热（preheat参数设置为false），如下：
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  console-port: 16379 #console端口，默认是16379，detect接口需要走这个端口
-  transpond:
-    type: local #使用本地配置
-    local:
-      type: simple
-      resource: redis://@127.0.0.1:6379 #转发的redis地址
-    redis-conf:
-      preheat: false #表示是否启动时检查后端redis的联通性，默认true，如果后端redis不可达，则proxy无法启动
+```properties
+upstream.preheat.enable=false
+```
 ```

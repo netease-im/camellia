@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
 import com.netease.nim.camellia.redis.proxy.http.CamelliaRedisProxyHttpServer;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
-import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.ServerTlsProvider;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -39,7 +39,7 @@ public class CamelliaRedisProxyServer {
     public void start() throws Exception {
         ServerBootstrap bootstrap = new ServerBootstrap();
         final boolean sslEnable;
-        ProxyFrontendTlsProvider proxyFrontendTlsProvider;
+        ServerTlsProvider proxyFrontendTlsProvider;
         int tlsPort = ServerConf.tlsPort();
         if (tlsPort > 0) {
             proxyFrontendTlsProvider = ConfigInitUtil.initProxyFrontendTlsProvider();

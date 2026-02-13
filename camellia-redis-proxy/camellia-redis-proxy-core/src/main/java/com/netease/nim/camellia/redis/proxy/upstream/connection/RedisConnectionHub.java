@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.conf.NettyConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.UpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.TlsEnableCache;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -63,7 +63,7 @@ public class RedisConnectionHub {
 
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
 
-    private ProxyUpstreamTlsProvider tlsProvider;
+    private UpstreamTlsProvider tlsProvider;
     private UpstreamAddrConverter upstreamAddrConverter;
 
     public static RedisConnectionHub instance = new RedisConnectionHub();

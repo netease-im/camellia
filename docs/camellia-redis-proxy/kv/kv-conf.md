@@ -10,7 +10,7 @@ route.conf=redis-kv://d
 proxy.mode=cluster
 redis.consensus.leader.selector.redis.url=redis://@127.0.0.1:6379
 redis.consensus.leader.selector.redis.key=xxx
-proxy.cluster.mode.command.move.always=true
+cluster.mode.command.move.always=true
 ```
 
 

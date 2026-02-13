@@ -47,7 +47,7 @@ route.conf=redis://@127.0.0.1:6379
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
+    <artifactId>camellia-zk</artifactId>
     <version>a.b.c</version>
 </dependency>
 <dependency>
@@ -70,13 +70,13 @@ public class TestRedisProxyJedisPool {
         String zkUrl = "127.0.0.1:2181,127.0.0.2:2181";
         String basePath = "/camellia";
         String applicationName = "camellia-redis-proxy-server";
-        ZkProxyDiscovery zkProxyDiscovery = new ZkProxyDiscovery(zkUrl, basePath, applicationName);
+        ZkDiscovery zkDiscovery = new ZkDiscovery(zkUrl, basePath, applicationName);
 
         RedisProxyJedisPool jedisPool = new RedisProxyJedisPool.Builder()
                 .poolConfig(new JedisPoolConfig())
 //                .bid(1)
 //                .bgroup("default")
-                .proxyDiscovery(zkProxyDiscovery)
+                .proxyDiscovery(zkDiscovery)
                 .password("pass123")
                 .timeout(2000)
                 .build();

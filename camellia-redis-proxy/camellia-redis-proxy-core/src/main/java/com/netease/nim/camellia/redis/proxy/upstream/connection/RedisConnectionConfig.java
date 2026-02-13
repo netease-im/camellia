@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.UpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import io.netty.channel.EventLoop;
 
@@ -37,7 +37,7 @@ public class RedisConnectionConfig {
 
     private FastFailStats fastFailStats;
 
-    private ProxyUpstreamTlsProvider proxyUpstreamTlsProvider;
+    private UpstreamTlsProvider proxyUpstreamTlsProvider;
 
     private IUpstreamClient upstreamClient;
 
@@ -221,11 +221,11 @@ public class RedisConnectionConfig {
         this.fastFailStats = fastFailStats;
     }
 
-    public ProxyUpstreamTlsProvider getProxyUpstreamTlsProvider() {
+    public UpstreamTlsProvider getProxyUpstreamTlsProvider() {
         return proxyUpstreamTlsProvider;
     }
 
-    public void setProxyUpstreamTlsProvider(ProxyUpstreamTlsProvider proxyUpstreamTlsProvider) {
+    public void setProxyUpstreamTlsProvider(UpstreamTlsProvider proxyUpstreamTlsProvider) {
         this.proxyUpstreamTlsProvider = proxyUpstreamTlsProvider;
     }
 

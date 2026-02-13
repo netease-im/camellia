@@ -22,9 +22,9 @@ import java.util.concurrent.*;
 /**
  * Created by caojiajun on 2023/8/9
  */
-public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider {
+public class DefaultUpstreamTlsProvider implements UpstreamTlsProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultProxyUpstreamTlsProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultUpstreamTlsProvider.class);
 
     private SSLContext defaultSSLContext;
     private final ConcurrentHashMap<String, SSLContext> sslContextMap = new ConcurrentHashMap<>();
@@ -35,14 +35,14 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
     public boolean init() {
         reload();
         ProxyDynamicConf.registerCallback(this::reload);
-        this.startTls = ProxyDynamicConf.getBoolean("proxy.upstream.tls.startTls.enable", false);
-        int poolSize = ProxyDynamicConf.getInt("proxy.upstream.tls.executor.pool.size", 0);
-        int queueSize = ProxyDynamicConf.getInt("proxy.upstream.tls.executor.queue.size", 10240);
+        this.startTls = ProxyDynamicConf.getBoolean("upstream.tls.startTls.enable", false);
+        int poolSize = ProxyDynamicConf.getInt("upstream.tls.executor.pool.size", 0);
+        int queueSize = ProxyDynamicConf.getInt("upstream.tls.executor.queue.size", 10240);
         if (poolSize <= 0) {
             this.executor = ImmediateExecutor.INSTANCE;
         } else {
             this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(queueSize), new DefaultThreadFactory("proxy-upstream-tls-executor"),
+                    new LinkedBlockingQueue<>(queueSize), new DefaultThreadFactory("upstream-tls-executor"),
                     new ThreadPoolExecutor.CallerRunsPolicy());
         }
         return true;
@@ -74,7 +74,7 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
                     logger.error("init default SSLContext error", e);
                 }
             }
-            String string = ProxyDynamicConf.getString("proxy.upstream.tls.config", null);
+            String string = ProxyDynamicConf.getString("upstream.tls.config", null);
             if (string != null) {
                 JSONArray array = JSONArray.parseArray(string);
                 for (Object o : array) {
@@ -136,9 +136,9 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
 
     private void initDefaultSSLContext() {
         String caCertFilePath;
-        String caFile = ProxyDynamicConf.getString("proxy.upstream.tls.ca.cert.file", null);
+        String caFile = ProxyDynamicConf.getString("upstream.tls.ca.cert.file", null);
         if (caFile == null) {
-            caCertFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.ca.cert.file.path", null);
+            caCertFilePath = ProxyDynamicConf.getString("upstream.tls.ca.cert.file.path", null);
         } else {
             caCertFilePath = FileUtils.getClasspathFilePath(caFile);
         }
@@ -146,20 +146,20 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
             return;
         }
         String certFilePath;
-        String crtFile = ProxyDynamicConf.getString("proxy.upstream.tls.cert.file", null);
+        String crtFile = ProxyDynamicConf.getString("upstream.tls.cert.file", null);
         if (crtFile == null) {
-            certFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.cert.file.path", null);
+            certFilePath = ProxyDynamicConf.getString("upstream.tls.cert.file.path", null);
         } else {
             certFilePath = FileUtils.getClasspathFilePath(crtFile);
         }
         String keyFilePath;
-        String keyFile = ProxyDynamicConf.getString("proxy.upstream.tls.key.file", null);
+        String keyFile = ProxyDynamicConf.getString("upstream.tls.key.file", null);
         if (keyFile == null) {
-            keyFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.key.file.path", null);
+            keyFilePath = ProxyDynamicConf.getString("upstream.tls.key.file.path", null);
         } else {
             keyFilePath = FileUtils.getClasspathFilePath(keyFile);
         }
-        String password = ProxyDynamicConf.getString("proxy.upstream.tls.password", null);
+        String password = ProxyDynamicConf.getString("upstream.tls.password", null);
         defaultSSLContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
         logger.info("proxy upstream default SSLContext init success, caFilePath = {}, crtFilePath = {}, keyFilePath = {}",
                 caCertFilePath, certFilePath, keyFilePath);

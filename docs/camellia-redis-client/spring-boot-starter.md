@@ -2,21 +2,20 @@
 ## 使用spring-boot-starter来使用CamelliaRedisTemplate
 
 ### maven依赖
-* 底层依赖jedis-2.9.3
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-spring-boot-starter</artifactId>
-  <version>1.3.7</version>
+  <version>1.4.0-SNAPSHOT</version>
 </dependency>
 ```
-* 底层依赖jedis-3.6.3
 ```
-<dependency>
-  <groupId>com.netease.nim</groupId>
-  <artifactId>camellia-redis3-spring-boot-starter</artifactId>
-  <version>1.3.7</version>
-</dependency>
+camellia-redis-spring-boot-starter
+camellia-redis-spring-boot3-starter
+camellia-redis3-spring-boot-starter
+camellia-redis3-spring-boot3-starter
+camellia-redis5-spring-boot-starter
+camellia-redis5-spring-boot3-starter
 ```
 
 ### 自动注入

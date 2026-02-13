@@ -17,10 +17,10 @@ import com.netease.nim.camellia.redis.proxy.route.RouteConfProviderEnums;
 import com.netease.nim.camellia.redis.proxy.sentinel.DefaultSentinelModeProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProvider;
 import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeProcessor;
-import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider;
-import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
-import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider;
-import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultServerTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.ServerTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultUpstreamTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.UpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.DefaultUpstreamAddrConverter;
@@ -97,19 +97,19 @@ public class ConfigInitUtil {
         return null;
     }
 
-    public static ProxyFrontendTlsProvider initProxyFrontendTlsProvider() {
-        String className = BeanInitUtils.getClassName("proxy.frontend.tls.provider", DefaultProxyFrontendTlsProvider.class.getName());
+    public static ServerTlsProvider initProxyFrontendTlsProvider() {
+        String className = BeanInitUtils.getClassName("server.tls.provider", DefaultServerTlsProvider.class.getName());
         if (className != null) {
             ProxyBeanFactory proxyBeanFactory = ServerConf.getProxyBeanFactory();
-            return (ProxyFrontendTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+            return (ServerTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
 
-    public static ProxyUpstreamTlsProvider initProxyUpstreamTlsProvider() {
-        String className = BeanInitUtils.getClassName("proxy.upstream.tls.provider", DefaultProxyUpstreamTlsProvider.class.getName());
+    public static UpstreamTlsProvider initProxyUpstreamTlsProvider() {
+        String className = BeanInitUtils.getClassName("upstream.tls.provider", DefaultUpstreamTlsProvider.class.getName());
         if (className != null) {
-            return (ProxyUpstreamTlsProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+            return (UpstreamTlsProvider) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }

@@ -22,20 +22,20 @@ tls.port=6381
 * camellia-redis-proxy.properties配置证书路径  
 * classpath下配置示例
 ```properties
-proxy.frontend.tls.ca.cert.file=ca.crt
-proxy.frontend.tls.cert.file=server.crt
-proxy.frontend.tls.key.file=server.key
+server.tls.ca.cert.file=ca.crt
+server.tls.cert.file=server.crt
+server.tls.key.file=server.key
 ```
 * 绝对路径下配置示例
 ```properties
-proxy.frontend.tls.cert.file.path=/xxx/redis-7.0.11/tests/tls/server.crt
-proxy.frontend.tls.ca.cert.file.path=/xxx/redis-7.0.11/tests/tls/ca.crt
-proxy.frontend.tls.key.file.path=/xxx/redis-7.0.11/tests/tls/server.key
+server.tls.cert.file.path=/xxx/redis-7.0.11/tests/tls/server.crt
+server.tls.ca.cert.file.path=/xxx/redis-7.0.11/tests/tls/ca.crt
+server.tls.key.file.path=/xxx/redis-7.0.11/tests/tls/server.key
 ```
 
-上述描述的是默认配置方法，你也可以自定义，实现ProxyFrontendTlsProvider接口即可，如下：
+上述描述的是默认配置方法，你也可以自定义，实现ServerTlsProvider接口即可，如下：
 ```java
-public interface ProxyFrontendTlsProvider {
+public interface ServerTlsProvider {
 
     boolean init();
 
@@ -43,14 +43,14 @@ public interface ProxyFrontendTlsProvider {
 }
 ```
 ```properties
-proxy.frontend.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
+server.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultServerTlsProvider
 ```
 
 * 默认开启双向认证，如果要关闭客户端认证，可以这样配置
 ```properties
-proxy.frontend.tls.need.client.auth=false
-proxy.frontend.tls.want.client.auth=false
-#此时，proxy.frontend.tls.ca.cert.file可以不配置
+server.tls.need.client.auth=false
+server.tls.want.client.auth=false
+#此时，server.tls.ca.cert.file可以不配置
 ```
 
 
@@ -63,20 +63,20 @@ proxy.frontend.tls.want.client.auth=false
 * 配置默认证书（camellia-redis-proxy.properties)
 * classpath下配置示例
 ```properties
-proxy.upstream.tls.ca.cert.file=ca.crt
-proxy.upstream.tls.cert.file=client.crt
-proxy.upstream.tls.key.file=client.key
+upstream.tls.ca.cert.file=ca.crt
+upstream.tls.cert.file=client.crt
+upstream.tls.key.file=client.key
 ```
 * 绝对路径下配置示例
 ```properties
-proxy.upstream.tls.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt
-proxy.upstream.tls.ca.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt
-proxy.upstream.tls.key.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key
+upstream.tls.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt
+upstream.tls.ca.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt
+upstream.tls.key.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key
 ```      
 
 * 配置映射关系（camellia-redis-proxy.properties)
 ```properties
-proxy.upstream.tls.config=[{"resource":"rediss://@127.0.0.1:6379","ca.cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt","cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt","key.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key"}]
+upstream.tls.config=[{"resource":"rediss://@127.0.0.1:6379","ca.cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt","cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt","key.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key"}]
 ```
 * 配置是一个json数组，每一项代表一个映射关系
 * resource是redis地址(注意需要使用带tls带地址串，如rediss://@127.0.0.1:6379，而不能使用redis://@127.0.0.1:6379)，具体见：[redis-resources](../route/redis-resources.md)
@@ -97,7 +97,7 @@ json示例：
 
 上述描述的是默认配置方法，你也可以自定义，实现ProxyUpstreamTlsProvider接口即可，然后配置到application.yml里，如下：
 ```java
-public interface ProxyUpstreamTlsProvider {
+public interface UpstreamTlsProvider {
 
     boolean init();
 
@@ -105,5 +105,5 @@ public interface ProxyUpstreamTlsProvider {
 }
 ```
 ```properties
-proxy.upstream.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider
+upstream.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultUpstreamTlsProvider
 ```
