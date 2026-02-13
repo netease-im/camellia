@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
+import com.netease.nim.camellia.core.api.CamelliaApiV2Response;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -66,7 +67,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
             commandMonitor = new DashboardCommandMonitor(camelliaApi);
         }
         if (defaultBid > 0 && !defaultBgroup.isEmpty()) {
-            defaultResponse = camelliaApi.getResourceTable(defaultBid, defaultBgroup, null);
+            defaultResponse = get(defaultBid, defaultBgroup, null);
             if (defaultResponse.getCode() != 200) {
                 throw new IllegalArgumentException("code=" + defaultResponse.getCode());
             }
@@ -110,7 +111,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
             return ReadableResourceTableUtil.readableResourceTable(response.getResourceTable());
         }
         response = map.computeIfAbsent(key, k -> {
-            CamelliaApiResponse newResponse = camelliaApi.getResourceTable(bid, bgroup, null);
+            CamelliaApiResponse newResponse = get(bid, bgroup, null);
             if (newResponse.getCode() != 200) {
                 throw new IllegalArgumentException("code=" + newResponse.getCode());
             }
@@ -137,7 +138,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
                 long bid = Long.parseLong(split[0]);
                 String bgroup = split[1];
                 CamelliaApiResponse response = map.get(key);
-                CamelliaApiResponse newResponse = camelliaApi.getResourceTable(bid, bgroup, response.getMd5());
+                CamelliaApiResponse newResponse = get(bid, bgroup, response.getMd5());
                 if (newResponse == null || newResponse.getCode() != 200) {
                     continue;
                 }
@@ -149,6 +150,24 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
             }
         } catch (Exception e) {
             logger.error("reload error", e);
+        }
+    }
+
+    private CamelliaApiResponse get(long bid, String bgroup, String md5) {
+        String version = ProxyDynamicConf.getString("dashboard.api.version", "v2");
+        if (version.equals("v1")) {
+            return camelliaApi.getResourceTable(bid, bgroup, md5);
+        } else if (version.equals("v2")) {
+            CamelliaApiV2Response resourceTableV2 = camelliaApi.getResourceTableV2(bid, bgroup, md5);
+            CamelliaApiResponse response = new CamelliaApiResponse();
+            response.setCode(resourceTableV2.getCode());
+            response.setMd5(resourceTableV2.getMd5());
+            if (resourceTableV2.getRouteTable() != null) {
+                response.setResourceTable(ReadableResourceTableUtil.parseTable(resourceTableV2.getRouteTable()));
+            }
+            return response;
+        } else {
+            return camelliaApi.getResourceTable(bid, bgroup, md5);
         }
     }
 }
