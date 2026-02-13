@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.discovery.zk;
+package com.netease.nim.camellia.redis.zk.registry.springboot;
 
 /**
  * Created by caojiajun on 2023/5/12

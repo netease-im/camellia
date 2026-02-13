@@ -407,32 +407,12 @@
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
-                <version>${camellia.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.netease.nim</groupId>
                 <artifactId>camellia-redis-proxy-hot-key-common</artifactId>
                 <version>${camellia.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
-                <version>${camellia.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-redis-proxy-hot-key-discovery-zk</artifactId>
-                <version>${camellia.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
-                <version>${camellia.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.netease.nim</groupId>
-                <artifactId>camellia-redis-proxy-hot-key-monitor-plugin</artifactId>
+                <artifactId>camellia-redis-proxy-hot-key-server</artifactId>
                 <version>${camellia.version}</version>
             </dependency>
             <dependency>

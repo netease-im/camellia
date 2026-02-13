@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.zk.registry.springboot;
 
-import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyConstants;
 import com.netease.nim.camellia.zk.ZkConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
