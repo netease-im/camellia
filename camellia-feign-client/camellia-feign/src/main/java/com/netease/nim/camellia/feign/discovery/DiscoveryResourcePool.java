@@ -192,8 +192,8 @@ public class DiscoveryResourcePool implements FeignResourcePool {
         }
     }
 
-    private FeignResource toFeignResource(ServerNode feignServerInfo) {
-        return new FeignResource(discoveryResource.getProtocol() + feignServerInfo.getHost() + ":" + feignServerInfo.getPort());
+    private FeignResource toFeignResource(ServerNode node) {
+        return new FeignResource(discoveryResource.getProtocol() + node.getHost() + ":" + node.getPort());
     }
 
     private FeignServerInfo toServerInfo(FeignResource feignResource) {
