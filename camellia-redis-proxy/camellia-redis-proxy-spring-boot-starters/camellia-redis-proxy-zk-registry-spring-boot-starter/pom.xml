@@ -46,7 +46,7 @@
 		</dependency>
         <dependency>
             <groupId>com.netease.nim</groupId>
-            <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
+            <artifactId>camellia-zk</artifactId>
             <version>${revision}</version>
         </dependency>
     </dependencies>
