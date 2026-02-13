@@ -95,10 +95,10 @@ public class DefaultSentinelModeProcessor implements SentinelModeProcessor {
             }
             Collections.sort(onlineNodes);
             this.onlineNodes = onlineNodes;
-            this.masterName = ProxyDynamicConf.getString("proxy.sentinel.mode.master.name", "camellia_sentinel");
+            this.masterName = ProxyDynamicConf.getString("sentinel.mode.master.name", "camellia_sentinel");
             logger.info("sentinel mode init success, masterName = {}, currentNode = {}, onlineNodes = {}, allNodes = {}, nodesProvider = {}",
                     this.masterName, this.currentNode, this.onlineNodes, this.allNodes, provider.getClass().getName());
-            int intervalSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.interval.seconds", 5);
+            int intervalSeconds = ProxyDynamicConf.getInt("sentinel.mode.heartbeat.interval.seconds", 5);
             scheduler.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
             logger.info("sentinel mode heartbeat schedule start success, intervalSeconds = {}", intervalSeconds);
             init = true;
@@ -411,7 +411,7 @@ public class DefaultSentinelModeProcessor implements SentinelModeProcessor {
         try {
             RedisConnection connection = RedisConnectionHub.getInstance().get(null, node.getHost(), node.getCport(), null, ServerConf.cportPassword());
             CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.SENTINEL.raw(), Utils.stringToBytes(heartbeat));
-            int timeoutSeconds = ProxyDynamicConf.getInt("proxy.sentinel.mode.heartbeat.timeout.seconds", 20);
+            int timeoutSeconds = ProxyDynamicConf.getInt("sentinel.mode.heartbeat.timeout.seconds", 20);
             Reply reply = future.get(timeoutSeconds, TimeUnit.SECONDS);
             if (reply instanceof StatusReply) {
                 return ((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus());

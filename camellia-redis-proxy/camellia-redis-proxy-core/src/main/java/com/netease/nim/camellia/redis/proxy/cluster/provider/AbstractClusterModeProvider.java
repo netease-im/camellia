@@ -98,7 +98,7 @@ public abstract class AbstractClusterModeProvider implements ProxyClusterModePro
      * @return heartbeatTimeoutSeconds
      */
     protected final int heartbeatTimeoutSeconds() {
-        return ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.timeout.seconds", 10);
+        return ProxyDynamicConf.getInt("cluster.mode.heartbeat.request.timeout.seconds", 10);
     }
 
     /**

@@ -22,5 +22,5 @@ redis-cluster模式，如下：
 
 ```properties
 #是否对每一个命令都检查slot以及是否要重定向，默认false
-proxy.cluster.mode.command.move.always=false
+cluster.mode.command.move.always=false
 ```

@@ -119,7 +119,7 @@ public class DefaultClusterModeProvider extends AbstractClusterModeProvider {
                 if (!heartbeatMap.containsKey(node)) {
                     logger.warn("proxy check heartbeat reply fail, node = {}", node);
                     //检查失败，则再等一下
-                    int delaySeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.init.delay.check.seconds", 10);
+                    int delaySeconds = ProxyDynamicConf.getInt("cluster.mode.heartbeat.init.delay.check.seconds", 10);
                     schedule.schedule(this::checkHeartbeatReply, delaySeconds, TimeUnit.SECONDS);
                     return;
                 }
@@ -143,7 +143,7 @@ public class DefaultClusterModeProvider extends AbstractClusterModeProvider {
                 continue;
             }
             Long lastHeartbeatTime = heartbeatMap.get(node);
-            int timeoutSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.timeout.seconds", 20);
+            int timeoutSeconds = ProxyDynamicConf.getInt("cluster.mode.heartbeat.timeout.seconds", 20);
             if (lastHeartbeatTime == null || System.currentTimeMillis() - lastHeartbeatTime > timeoutSeconds*1000L) {
                 offlineNodes.add(node);
             }
@@ -165,7 +165,7 @@ public class DefaultClusterModeProvider extends AbstractClusterModeProvider {
             Set<ProxyNode> heartbeatNodes = new HashSet<>(onlineNodes);
             heartbeatNodes.addAll(pendingNodes);
             heartbeatNodes.addAll(initNodes(true));
-            int times = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.fail.times", 3);
+            int times = ProxyDynamicConf.getInt("cluster.mode.heartbeat.request.fail.times", 3);
             heartbeatTargetNodes.entrySet().removeIf(entry -> entry.getValue().get() > times);//心跳连续三次失败，则剔除出去
             heartbeatNodes.addAll(heartbeatTargetNodes.keySet());
             for (ProxyNode node : heartbeatNodes) {
