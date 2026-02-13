@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
-import com.netease.nim.camellia.core.api.CamelliaApiV2Response;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ClientIdentity;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
@@ -158,14 +158,7 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
         if (version.equals("v1")) {
             return camelliaApi.getResourceTable(bid, bgroup, md5);
         } else if (version.equals("v2")) {
-            CamelliaApiV2Response resourceTableV2 = camelliaApi.getResourceTableV2(bid, bgroup, md5);
-            CamelliaApiResponse response = new CamelliaApiResponse();
-            response.setCode(resourceTableV2.getCode());
-            response.setMd5(resourceTableV2.getMd5());
-            if (resourceTableV2.getRouteTable() != null) {
-                response.setResourceTable(ReadableResourceTableUtil.parseTable(resourceTableV2.getRouteTable()));
-            }
-            return response;
+            return ResourceTableUtil.toV1Response(camelliaApi.getResourceTableV2(bid, bgroup, md5));
         } else {
             return camelliaApi.getResourceTable(bid, bgroup, md5);
         }
