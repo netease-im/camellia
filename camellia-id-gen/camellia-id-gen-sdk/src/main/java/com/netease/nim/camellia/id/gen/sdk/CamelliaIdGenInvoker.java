@@ -34,6 +34,7 @@ public class CamelliaIdGenInvoker {
                 throw new CamelliaIdGenException("url/discovery is empty");
             }
             this.all = new ArrayList<>(Collections.singletonList(new IdGenServer(url)));
+            this.dynamic = new ArrayList<>();
         } else {
             this.all = new ArrayList<>(toIdGenServerList(this.discovery.findAll()));
             if (all.isEmpty()) {

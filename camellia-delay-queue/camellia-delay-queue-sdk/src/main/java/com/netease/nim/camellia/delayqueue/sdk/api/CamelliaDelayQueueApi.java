@@ -43,6 +43,7 @@ public class CamelliaDelayQueueApi {
             }
             DelayQueueServer server = new DelayQueueServer(url);
             this.all = new ArrayList<>(Collections.singletonList(server));
+            this.dynamic = new ArrayList<>();
         } else {
             this.all = new ArrayList<>(toServerList(discovery.findAll()));
             if (all.isEmpty()) {
