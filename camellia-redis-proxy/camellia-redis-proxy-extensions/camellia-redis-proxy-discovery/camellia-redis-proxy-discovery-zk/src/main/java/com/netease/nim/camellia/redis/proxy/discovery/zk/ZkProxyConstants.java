@@ -6,6 +6,5 @@ package com.netease.nim.camellia.redis.proxy.discovery.zk;
 public class ZkProxyConstants {
 
     public static final String basePath = "/camellia";
-    public static boolean sideCarFirst = false;
     public static boolean preferredHostName = false;
 }

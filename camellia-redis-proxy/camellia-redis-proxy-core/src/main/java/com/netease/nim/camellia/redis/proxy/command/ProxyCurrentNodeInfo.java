@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.tools.utils.InetUtils;
 
 import java.net.InetAddress;

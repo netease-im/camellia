@@ -3,11 +3,11 @@ package com.netease.nim.camellia.feign.springboot;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.discovery.ReloadableDiscoveryFactory;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.feign.CamelliaFeignEnv;
 import com.netease.nim.camellia.feign.CamelliaFeignProps;
 import com.netease.nim.camellia.feign.CamelliaFeignClientFactory;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
-import com.netease.nim.camellia.feign.discovery.FeignServerInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -43,14 +43,14 @@ public class CamelliaFeignConfiguration {
         if (discoveryClient == null) {
             return CamelliaFeignEnv.defaultFeignEnv();
         }
-        ReloadableDiscoveryFactory<FeignServerInfo> factory = new ReloadableDiscoveryFactory<>(serviceName -> {
+        ReloadableDiscoveryFactory factory = new ReloadableDiscoveryFactory(serviceName -> {
             List<ServiceInstance> instances = discoveryClient.getInstances(serviceName);
-            Set<FeignServerInfo> servers = new HashSet<>();
+            Set<ServerNode> servers = new HashSet<>();
             for (ServiceInstance instance : instances) {
-                FeignServerInfo serverInfo = new FeignServerInfo();
-                serverInfo.setHost(instance.getHost());
-                serverInfo.setPort(instance.getPort());
-                servers.add(serverInfo);
+                ServerNode node = new ServerNode();
+                node.setHost(instance.getHost());
+                node.setPort(instance.getPort());
+                servers.add(node);
             }
             return new ArrayList<>(servers);
         });

@@ -1,9 +1,6 @@
 package com.netease.nim.camellia.feign.discovery;
 
-import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
-import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
-import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
-import com.netease.nim.camellia.core.discovery.GlobalDiscoveryEnv;
+import com.netease.nim.camellia.core.discovery.*;
 import com.netease.nim.camellia.feign.GlobalCamelliaFeignEnv;
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
@@ -22,7 +19,7 @@ public class DiscoveryResourcePool implements FeignResourcePool {
 
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryResourcePool.class);
 
-    private final CamelliaDiscovery<FeignServerInfo> discovery;
+    private final CamelliaDiscovery discovery;
     private final CamelliaServerSelector<FeignResource> serverSelector;
     private final CamelliaServerHealthChecker<FeignServerInfo> healthChecker;
     private final FeignDiscoveryResource discoveryResource;
@@ -33,7 +30,7 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     private final Object lock = new Object();
 
     public DiscoveryResourcePool(FeignDiscoveryResource discoveryResource,
-                                 CamelliaDiscovery<FeignServerInfo> discovery,
+                                 CamelliaDiscovery discovery,
                                  CamelliaServerSelector<FeignResource> serverSelector,
                                  CamelliaServerHealthChecker<FeignServerInfo> healthChecker,
                                  ScheduledExecutorService scheduledExecutor) {
@@ -51,14 +48,14 @@ public class DiscoveryResourcePool implements FeignResourcePool {
         if (originalList.isEmpty()) {
             logger.warn("server list is empty, camellia-feign-service = {}", discoveryResource.getUrl());
         }
-        discovery.setCallback(new CamelliaDiscovery.Callback<FeignServerInfo>() {
+        discovery.setCallback(new CamelliaDiscovery.Callback() {
             @Override
-            public void add(FeignServerInfo server) {
+            public void add(ServerNode server) {
                 DiscoveryResourcePool.this.add(toFeignResource(server));
             }
 
             @Override
-            public void remove(FeignServerInfo server) {
+            public void remove(ServerNode server) {
                 DiscoveryResourcePool.this.remove(toFeignResource(server));
             }
         });
@@ -180,10 +177,10 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     }
 
     private void reload() {
-        List<FeignServerInfo> all = discovery.findAll();
+        List<ServerNode> all = discovery.findAll();
         List<FeignResource> list = new ArrayList<>();
-        for (FeignServerInfo feignServerInfo : all) {
-            list.add(toFeignResource(feignServerInfo));
+        for (ServerNode serverNode : all) {
+            list.add(toFeignResource(serverNode));
         }
         Collections.sort(list);
         this.originalList = new ArrayList<>(list);
@@ -195,7 +192,7 @@ public class DiscoveryResourcePool implements FeignResourcePool {
         }
     }
 
-    private FeignResource toFeignResource(FeignServerInfo feignServerInfo) {
+    private FeignResource toFeignResource(ServerNode feignServerInfo) {
         return new FeignResource(discoveryResource.getProtocol() + feignServerInfo.getHost() + ":" + feignServerInfo.getPort());
     }
 

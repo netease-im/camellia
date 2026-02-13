@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.reply.*;

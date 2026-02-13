@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.discovery.common;
 
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,15 +13,15 @@ public class AffinityProxySelector implements IProxySelector {
 
     private static final Logger logger = LoggerFactory.getLogger(AffinityProxySelector.class);
 
-    private final ConcurrentLinkedQueue<Proxy> dynamicProxyQueue = new ConcurrentLinkedQueue<>();
-    private final CopyOnWriteArrayList<Proxy> proxyList = new CopyOnWriteArrayList<>();
+    private final ConcurrentLinkedQueue<ServerNode> dynamicProxyQueue = new ConcurrentLinkedQueue<>();
+    private final CopyOnWriteArrayList<ServerNode> proxyList = new CopyOnWriteArrayList<>();
 
     @Override
-    public Proxy next() {
+    public ServerNode next() {
         int retry = 2;
         while (retry -- > 0) {
             //双向循环队列，从头上拿出来，再塞回到队尾
-            Proxy ret = dynamicProxyQueue.poll();
+            ServerNode ret = dynamicProxyQueue.poll();
             if (ret == null) continue;
             dynamicProxyQueue.offer(ret);
             return ret;
@@ -40,10 +40,10 @@ public class AffinityProxySelector implements IProxySelector {
     }
 
     @Override
-    public Proxy next(Boolean affinity) {
+    public ServerNode next(Boolean affinity) {
         //如果保持亲和性，则一直使用同一个proxy
         if (Boolean.TRUE.equals(affinity)) {
-            Proxy head = dynamicProxyQueue.peek();
+            ServerNode head = dynamicProxyQueue.peek();
             if (head != null) {
                 return head;
             }
@@ -52,7 +52,7 @@ public class AffinityProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean ban(Proxy proxy) {
+    public boolean ban(ServerNode proxy) {
         try {
             logger.warn("proxy {}:{} was baned", proxy.getHost(),proxy.getPort());
             dynamicProxyQueue.remove(proxy);
@@ -64,7 +64,7 @@ public class AffinityProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean add(Proxy proxy) {
+    public boolean add(ServerNode proxy) {
         try {
             if (!dynamicProxyQueue.contains(proxy)) {
                 dynamicProxyQueue.add(proxy);
@@ -80,7 +80,7 @@ public class AffinityProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean remove(Proxy proxy) {
+    public boolean remove(ServerNode proxy) {
         try {
             if (dynamicProxyQueue.size() == 1) {
                 if (logger.isWarnEnabled()) {
@@ -101,13 +101,13 @@ public class AffinityProxySelector implements IProxySelector {
     }
 
     @Override
-    public Set<Proxy> getAll() {
+    public Set<ServerNode> getAll() {
         return new HashSet<>(dynamicProxyQueue);
     }
 
     @Override
-    public List<Proxy> sort(List<Proxy> list) {
-        List<Proxy> ret = new ArrayList<>(list);
+    public List<ServerNode> sort(List<ServerNode> list) {
+        List<ServerNode> ret = new ArrayList<>(list);
         Collections.shuffle(ret);
         return ret;
     }

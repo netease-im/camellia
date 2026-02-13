@@ -16,6 +16,7 @@
 
 	<modules>
 		<module>camellia-codec</module>
+		<module>camellia-discovery-spring</module>
 		<module>camellia-http-console</module>
 		<module>camellia-mq-isolation</module>
 		<module>camellia-tools</module>

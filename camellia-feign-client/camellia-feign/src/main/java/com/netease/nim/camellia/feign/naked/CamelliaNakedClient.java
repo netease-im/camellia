@@ -432,7 +432,7 @@ public class CamelliaNakedClient<R, W> {
                     if (resource instanceof FeignResource) {
                         pool = new SimpleResourcePool((FeignResource) resource);
                     } else if (resource instanceof FeignDiscoveryResource) {
-                        CamelliaDiscovery<FeignServerInfo> discovery = feignEnv.getDiscoveryFactory().getDiscovery(((FeignDiscoveryResource) resource).getServiceName());
+                        CamelliaDiscovery discovery = feignEnv.getDiscoveryFactory().getDiscovery(((FeignDiscoveryResource) resource).getServiceName());
                         CamelliaServerHealthChecker<FeignServerInfo> healthChecker = feignEnv.getHealthChecker();
                         CamelliaServerSelector<FeignResource> serverSelector = new RandomCamelliaServerSelector<>();
                         if (dynamicOptionGetter != null) {

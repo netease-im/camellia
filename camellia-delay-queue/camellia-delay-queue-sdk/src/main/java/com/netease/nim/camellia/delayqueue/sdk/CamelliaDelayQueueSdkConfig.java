@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.delayqueue.sdk;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
-import com.netease.nim.camellia.delayqueue.sdk.api.DelayQueueServerDiscovery;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
 import java.util.concurrent.Executors;
@@ -17,7 +17,7 @@ public class CamelliaDelayQueueSdkConfig {
             new CamelliaThreadFactory("camellia-delay-queue-sdk-schedule", true));
 
     private String url;
-    private DelayQueueServerDiscovery discovery;
+    private CamelliaDiscovery discovery;
     private ScheduledExecutorService scheduleThreadPool = defaultScheduleThreadPool;
     private CamelliaDelayMsgListenerConfig listenerConfig = new CamelliaDelayMsgListenerConfig();
     private CamelliaDelayMsgHttpConfig httpConfig = new CamelliaDelayMsgHttpConfig();
@@ -98,11 +98,11 @@ public class CamelliaDelayQueueSdkConfig {
         this.url = url;
     }
 
-    public DelayQueueServerDiscovery getDiscovery() {
+    public CamelliaDiscovery getDiscovery() {
         return discovery;
     }
 
-    public void setDiscovery(DelayQueueServerDiscovery discovery) {
+    public void setDiscovery(CamelliaDiscovery discovery) {
         this.discovery = discovery;
     }
 

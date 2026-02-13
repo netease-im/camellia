@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.info.UpstreamInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;

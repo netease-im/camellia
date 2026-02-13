@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.netty.BindInfo;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.InitHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;

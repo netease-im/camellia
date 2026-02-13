@@ -1,8 +1,9 @@
 package com.netease.nim.camellia.delayqueue.sdk.springboot;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.CamelliaDiscoveryFactory;
 import com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayQueueSdk;
 import com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayQueueSdkConfig;
-import com.netease.nim.camellia.delayqueue.sdk.api.DelayQueueServerDiscovery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -16,12 +17,14 @@ import org.springframework.context.annotation.Configuration;
 public class CamelliaDelayQueueSdkConfiguration {
 
     @Autowired(required = false)
-    private DelayQueueServerDiscovery discovery;
+    private CamelliaDiscoveryFactory discoveryFactory;
 
     @Bean
     public CamelliaDelayQueueSdk camelliaDelayQueueSdk(CamelliaDelayQueueSdkProperties properties) {
         CamelliaDelayQueueSdkConfig sdkConfig = new CamelliaDelayQueueSdkConfig();
-        sdkConfig.setDiscovery(discovery);
+        if (discoveryFactory != null && properties.getServiceName() != null) {
+            sdkConfig.setDiscovery(discoveryFactory.getDiscovery(properties.getServiceName()));
+        }
         sdkConfig.setUrl(properties.getUrl());
         sdkConfig.setListenerConfig(properties.getListenerConfig());
         sdkConfig.setDiscoveryReloadIntervalSeconds(properties.getDiscoveryReloadIntervalSeconds());

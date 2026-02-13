@@ -9,13 +9,13 @@ import java.util.Set;
 /**
  * Created by caojiajun on 2022/3/2
  */
-public abstract class AbstractCamelliaDiscovery<T> implements CamelliaDiscovery<T> {
+public abstract class AbstractCamelliaDiscovery implements CamelliaDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCamelliaDiscovery.class);
-    private final Set<Callback<T>> callbackSet = new HashSet<>();
+    private final Set<Callback> callbackSet = new HashSet<>();
 
-    public void invokeAddCallback(T server) {
-        for (Callback<T> callback : callbackSet) {
+    public void invokeAddCallback(ServerNode server) {
+        for (Callback callback : callbackSet) {
             try {
                 callback.add(server);
             } catch (Exception e) {
@@ -24,8 +24,8 @@ public abstract class AbstractCamelliaDiscovery<T> implements CamelliaDiscovery<
         }
     }
 
-    public void invokeRemoveCallback(T server) {
-        for (Callback<T> callback : callbackSet) {
+    public void invokeRemoveCallback(ServerNode server) {
+        for (Callback callback : callbackSet) {
             try {
                 callback.remove(server);
             } catch (Exception e) {
@@ -35,14 +35,14 @@ public abstract class AbstractCamelliaDiscovery<T> implements CamelliaDiscovery<
     }
 
     @Override
-    public final void setCallback(Callback<T> callback) {
+    public final void setCallback(Callback callback) {
         synchronized (callbackSet) {
             callbackSet.add(callback);
         }
     }
 
     @Override
-    public final void clearCallback(Callback<T> callback) {
+    public final void clearCallback(Callback callback) {
         synchronized (callbackSet) {
             callbackSet.remove(callback);
         }

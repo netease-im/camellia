@@ -1,14 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisProxiesDiscoveryResource;
-import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.base.resource.RedissProxiesDiscoveryResource;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +28,15 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
     private final String userName;
     private final String password;
     private final int db;
-    private final IProxyDiscovery proxyDiscovery;
+    private final CamelliaDiscovery discovery;
 
     public RedisProxiesDiscoveryClient(RedisProxiesDiscoveryResource resource) {
         this.resource = resource;
         if (GlobalRedisProxyEnv.getDiscoveryFactory() == null) {
             throw new CamelliaRedisException("RedisProxiesClient init fail, proxy discovery not init");
         }
-        this.proxyDiscovery = GlobalRedisProxyEnv.getDiscoveryFactory().getProxyDiscovery(resource.getProxyName());
-        if (proxyDiscovery == null) {
+        this.discovery = GlobalRedisProxyEnv.getDiscoveryFactory().getDiscovery(resource.getProxyName());
+        if (discovery == null) {
             throw new CamelliaRedisException("RedisProxiesClient init fail, proxy discovery init fail, resource = " + resource.getUrl());
         }
         this.userName = resource.getUserName();
@@ -50,8 +49,8 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
         if (GlobalRedisProxyEnv.getDiscoveryFactory() == null) {
             throw new CamelliaRedisException("RedisProxiesClient init fail, proxy discovery not init");
         }
-        this.proxyDiscovery = GlobalRedisProxyEnv.getDiscoveryFactory().getProxyDiscovery(resource.getProxyName());
-        if (proxyDiscovery == null) {
+        this.discovery = GlobalRedisProxyEnv.getDiscoveryFactory().getDiscovery(resource.getProxyName());
+        if (discovery == null) {
             throw new CamelliaRedisException("RedisProxiesClient init fail, proxy discovery init fail, resource = " + resource.getUrl());
         }
         this.userName = resource.getUserName();
@@ -61,15 +60,15 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
 
     @Override
     public void start() {
-        proxyDiscovery.setCallback(new CamelliaDiscovery.Callback<>() {
+        discovery.setCallback(new CamelliaDiscovery.Callback() {
             @Override
-            public void add(Proxy proxy) {
+            public void add(ServerNode proxy) {
                 logger.info("proxy add, proxy = {}, resource = {}", proxy, resource);
                 RedisProxiesDiscoveryClient.this.add(toAddr(proxy));
             }
 
             @Override
-            public void remove(Proxy proxy) {
+            public void remove(ServerNode proxy) {
                 logger.info("proxy remove, proxy = {}, resource = {}", proxy, resource);
                 RedisProxiesDiscoveryClient.this.remove(toAddr(proxy));
             }
@@ -83,20 +82,20 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
         return resource;
     }
 
-    private RedisConnectionAddr toAddr(Proxy proxy) {
+    private RedisConnectionAddr toAddr(ServerNode proxy) {
         return new RedisConnectionAddr(proxy.getHost(), proxy.getPort(), userName, password, db);
     }
 
     @Override
     public List<RedisConnectionAddr> getAll() {
         try {
-            List<Proxy> proxies = proxyDiscovery.findAll();
+            List<ServerNode> proxies = discovery.findAll();
             if (proxies == null || proxies.isEmpty()) {
                 logger.warn("proxies findAll empty, resource = {}", resource);
                 return null;
             }
             List<RedisConnectionAddr> list = new ArrayList<>();
-            for (Proxy proxy : proxies) {
+            for (ServerNode proxy : proxies) {
                 RedisConnectionAddr addr = toAddr(proxy);
                 list.add(addr);
             }

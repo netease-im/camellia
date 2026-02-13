@@ -1,16 +1,15 @@
 package com.netease.nim.camellia.redis.zk.registry.springboot;
 
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
-import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyRegistry;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import com.netease.nim.camellia.tools.utils.InetUtils;
+import com.netease.nim.camellia.zk.ZkRegistry;
 import com.netease.nim.camellia.zk.ZkRegistryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
 
 /**
  *
@@ -20,9 +19,9 @@ public class CamelliaRedisProxyZkRegisterBoot {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyZkRegisterBoot.class);
 
-    private ZkProxyRegistry registry;
+    private ZkRegistry registry;
 
-    public CamelliaRedisProxyZkRegisterBoot(CamelliaRedisProxyZkRegistryProperties properties, String applicationName, int port, int tlsPort) {
+    public CamelliaRedisProxyZkRegisterBoot(CamelliaRedisProxyZkRegistryProperties properties, String applicationName, int port) {
         if (!properties.isEnable()) {
             logger.info("camellia redis proxy zk registry not enable");
             return;
@@ -31,11 +30,10 @@ public class CamelliaRedisProxyZkRegisterBoot {
             logger.warn("zkUrl is null, skip camellia redis proxy zk registry");
             return;
         }
-        Proxy proxy;
+        ServerNode proxy;
         try {
-            proxy = new Proxy();
+            proxy = new ServerNode();
             proxy.setPort(port);
-            proxy.setTlsPort(tlsPort);
             String host = properties.getHost();
             if (host != null && !host.isEmpty()) {
                 proxy.setHost(host);
@@ -57,7 +55,7 @@ public class CamelliaRedisProxyZkRegisterBoot {
         } catch (UnknownHostException e) {
             throw new ZkRegistryException(e);
         }
-        registry = new ZkProxyRegistry(properties.getZkUrl(), properties.getSessionTimeoutMs(),
+        registry = new ZkRegistry(properties.getZkUrl(), properties.getSessionTimeoutMs(),
                 properties.getConnectionTimeoutMs(), properties.getBaseSleepTimeMs(), properties.getMaxRetries(),
                 properties.getBasePath(), applicationName, proxy);
 
@@ -79,7 +77,7 @@ public class CamelliaRedisProxyZkRegisterBoot {
         }
     }
 
-    public ZkProxyRegistry getRegistry() {
+    public ZkRegistry getRegistry() {
         return registry;
     }
 }

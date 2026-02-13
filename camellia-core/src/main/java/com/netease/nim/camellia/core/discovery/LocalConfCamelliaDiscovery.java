@@ -5,23 +5,23 @@ import java.util.List;
 /**
  * Created by caojiajun on 2022/3/2
  */
-public class LocalConfCamelliaDiscovery<T> implements CamelliaDiscovery<T> {
-    private final List<T> list;
+public class LocalConfCamelliaDiscovery implements CamelliaDiscovery {
+    private final List<ServerNode> list;
 
-    public LocalConfCamelliaDiscovery(List<T> list) {
+    public LocalConfCamelliaDiscovery(List<ServerNode> list) {
         this.list = list;
     }
 
     @Override
-    public List<T> findAll() {
+    public List<ServerNode> findAll() {
         return list;
     }
 
     @Override
-    public void setCallback(Callback<T> callback) {
+    public void setCallback(Callback callback) {
     }
 
     @Override
-    public void clearCallback(Callback<T> callback) {
+    public void clearCallback(Callback callback) {
     }
 }

@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.redis.discovery.jedis;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.LocalConfCamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.ServerNode;
+import com.netease.nim.camellia.core.util.ServerNodeUtils;
 import com.netease.nim.camellia.redis.proxy.discovery.common.AffinityProxySelector;
-import com.netease.nim.camellia.redis.proxy.discovery.common.LocalConfProxyDiscovery;
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.common.RandomProxySelector;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import org.junit.After;
@@ -62,11 +64,11 @@ public class RedisProxyJedisPoolTest {
         return mockInitializer;
     }
 
-    private LocalConfProxyDiscovery mockProxyDiscovery() {
-        LocalConfProxyDiscovery localConfProxyDiscovery = Mockito.spy(new LocalConfProxyDiscovery("127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"));
-        List<Proxy> proxies = new ArrayList<>();
+    private CamelliaDiscovery mockProxyDiscovery() {
+        LocalConfCamelliaDiscovery localConfProxyDiscovery = Mockito.spy(new LocalConfCamelliaDiscovery(ServerNodeUtils.parse("127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381")));
+        List<ServerNode> proxies = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            proxies.add(new Proxy("127.0.0.1", 26379 + i));
+            proxies.add(new ServerNode("127.0.0.1", 26379 + i));
         }
 
         Mockito.doReturn(proxies).when(localConfProxyDiscovery).findAll();

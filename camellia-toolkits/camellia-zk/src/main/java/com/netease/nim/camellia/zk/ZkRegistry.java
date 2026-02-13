@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.zk;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.state.ConnectionState;
@@ -18,11 +19,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Created by caojiajun on 2020/8/12
  */
-public class ZkRegistry<T> {
+public class ZkRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(ZkRegistry.class);
 
-    private final Class<T> clazz;
     private final String zkUrl;
     private int sessionTimeoutMs = ZkConstants.sessionTimeoutMs;
     private int connectionTimeoutMs = ZkConstants.connectionTimeoutMs;
@@ -31,7 +31,7 @@ public class ZkRegistry<T> {
 
     private final String basePath;
     private final String applicationName;
-    private final T instance;
+    private final ServerNode serverNode;
     private final String id = UUID.randomUUID().toString().replaceAll("-", "");
 
     private CuratorFramework client;
@@ -39,20 +39,17 @@ public class ZkRegistry<T> {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private boolean registerOk;
     private boolean deregister = false;
-    private InstanceInfo<T> instanceInfo;
 
-    public ZkRegistry(Class<T> clazz, String zkUrl, String basePath, String applicationName, T instance) {
-        this.clazz = clazz;
+    public ZkRegistry(String zkUrl, String basePath, String applicationName, ServerNode serverNode) {
         this.zkUrl = zkUrl;
         this.basePath = basePath;
         this.applicationName = applicationName;
-        this.instance = instance;
+        this.serverNode = serverNode;
         init();
     }
 
-    public ZkRegistry(Class<T> clazz, String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
-                      int baseSleepTimeMs, int maxRetries, String basePath, String applicationName, T instance) {
-        this.clazz = clazz;
+    public ZkRegistry(String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
+                      int baseSleepTimeMs, int maxRetries, String basePath, String applicationName, ServerNode serverNode) {
         this.zkUrl = zkUrl;
         this.sessionTimeoutMs = sessionTimeoutMs;
         this.connectionTimeoutMs = connectionTimeoutMs;
@@ -60,7 +57,7 @@ public class ZkRegistry<T> {
         this.maxRetries = maxRetries;
         this.basePath = basePath;
         this.applicationName = applicationName;
-        this.instance = instance;
+        this.serverNode = serverNode;
         init();
     }
 
@@ -73,8 +70,6 @@ public class ZkRegistry<T> {
                 .build();
         client.start();
         this.client = client;
-        this.instanceInfo = new InstanceInfo<>();
-        instanceInfo.setInstance(instance);
         client.getConnectionStateListenable().addListener((curatorFramework, connectionState) -> {
             if (connectionState == ConnectionState.LOST) {
                 logger.warn("zk connectionState LOST");
@@ -98,7 +93,7 @@ public class ZkRegistry<T> {
             try {
                 deregister();
             } catch (Exception e) {
-                logger.error("deregister error, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(),  JSONObject.toJSONString(instanceInfo));
+                logger.error("deregister error, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(),  serverNode);
             }
         }));
     }
@@ -114,21 +109,19 @@ public class ZkRegistry<T> {
                 if (registerOk) return;
                 while (true) {
                     try {
-                        instanceInfo.setRegisterTime(System.currentTimeMillis());
-                        byte[] data = InstanceInfoSerializeUtil.serialize(instanceInfo);
+                        byte[] data = InstanceInfoSerializeUtil.serialize(serverNode);
                         client.create().creatingParentContainersIfNeeded()
                                 .withMode(CreateMode.EPHEMERAL).forPath(registerPath(), data);
                         registerOk = true;
-                        logger.info("register to zk success, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(instanceInfo));
+                        logger.info("register to zk success, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(serverNode));
                         break;
                     } catch (KeeperException.NodeExistsException e) {
                         try {
                             byte[] data = client.getData().forPath(registerPath());
-                            InstanceInfo<?> instanceInfo = InstanceInfoSerializeUtil.deserialize(data, clazz);
-                            if (instanceInfo != null) {
-                                if (Objects.equals(instanceInfo.getInstance(), this.instanceInfo.getInstance())) {
-                                    this.instanceInfo.setRegisterTime(instanceInfo.getRegisterTime());
-                                    logger.info("has register to zk, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(instanceInfo));
+                            ServerNode node = InstanceInfoSerializeUtil.deserialize(data);
+                            if (node != null) {
+                                if (Objects.equals(node, serverNode)) {
+                                    logger.info("has register to zk, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(serverNode));
                                     break;
                                 }
                             }
@@ -153,12 +146,10 @@ public class ZkRegistry<T> {
                 if (!registerOk) return;
                 client.delete().forPath(registerPath());
                 registerOk = false;
-                instanceInfo.setRegisterTime(-1);
-                logger.info("deregister to zk, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(instanceInfo));
+                logger.info("deregister to zk, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(serverNode));
             } catch (KeeperException.NoNodeException e) {
                 registerOk = false;
-                instanceInfo.setRegisterTime(-1);
-                logger.info("not register to zk, skip deregister, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(instanceInfo));
+                logger.info("not register to zk, skip deregister, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(), JSONObject.toJSONString(serverNode));
             } catch (Exception e) {
                 throw new ZkRegistryException(e);
             } finally {
@@ -171,7 +162,7 @@ public class ZkRegistry<T> {
         return registerOk;
     }
 
-    public InstanceInfo<T> getInstanceInfo() {
-        return instanceInfo;
+    public ServerNode getServerNode() {
+        return serverNode;
     }
 }

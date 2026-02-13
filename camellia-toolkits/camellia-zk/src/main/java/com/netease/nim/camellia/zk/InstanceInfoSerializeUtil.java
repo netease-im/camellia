@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.zk;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 
 import java.nio.charset.StandardCharsets;
 
@@ -10,8 +11,10 @@ import java.nio.charset.StandardCharsets;
  */
 public class InstanceInfoSerializeUtil {
 
-    public static <T> byte[] serialize(InstanceInfo<T> instanceInfo) {
-        if (instanceInfo == null) return null;
+    public static byte[] serialize(ServerNode serverNode) {
+        JSONObject instanceInfo = new JSONObject();
+        instanceInfo.put("instance", serverNode);
+        instanceInfo.put("registerTime", System.currentTimeMillis());
         String string = JSONObject.toJSONString(instanceInfo);
         JSONObject jsonObject = JSONObject.parseObject(string);
         JSONObject instance = jsonObject.getJSONObject("instance");
@@ -19,16 +22,13 @@ public class InstanceInfoSerializeUtil {
         return jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8);
     }
 
-    public static <T> InstanceInfo<T> deserialize(byte[] data, Class<T> clazz) {
+    public static ServerNode deserialize(byte[] data) {
         if (data == null || data.length == 0) return null;
         JSONObject json = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8));
-        InstanceInfo<T> instanceInfo = new InstanceInfo<>();
-        instanceInfo.setRegisterTime(json.getLong("registerTime"));
-        T instance = json.getObject("instance", clazz);
-        if (instance == null) {
-            instance = json.getObject("proxy", clazz);//为了兼容低版本的camellia-redis-proxy-discovery-zk
+        ServerNode serverNode = json.getObject("instance", ServerNode.class);
+        if (serverNode == null) {
+            serverNode = json.getObject("proxy", ServerNode.class);//为了兼容低版本的camellia-redis-proxy-discovery-zk
         }
-        instanceInfo.setInstance(instance);
-        return instanceInfo;
+        return serverNode;
     }
 }

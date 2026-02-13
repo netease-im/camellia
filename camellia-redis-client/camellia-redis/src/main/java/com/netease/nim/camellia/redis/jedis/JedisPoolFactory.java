@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.jedis;
 
+import com.netease.nim.camellia.core.discovery.DetectedLocalConfCamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.RedisProxiesContext;
-import com.netease.nim.camellia.redis.proxy.discovery.common.DetectedLocalConfProxyDiscovery;
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.JedisPool;
@@ -180,11 +180,11 @@ public interface JedisPoolFactory {
                     redisProxyJedisPool = map4.get(resource.getUrl());
                     if (redisProxyJedisPool == null) {
                         List<RedisProxiesResource.Node> nodes = resource.getNodes();
-                        List<Proxy> list = new ArrayList<>();
+                        List<ServerNode> list = new ArrayList<>();
                         for (RedisProxiesResource.Node node : nodes) {
-                            list.add(new Proxy(node.getHost(), node.getPort()));
+                            list.add(new ServerNode(node.getHost(), node.getPort()));
                         }
-                        DetectedLocalConfProxyDiscovery discovery = new DetectedLocalConfProxyDiscovery(list);
+                        DetectedLocalConfCamelliaDiscovery discovery = new DetectedLocalConfCamelliaDiscovery(list);
                         redisProxyJedisPool = new RedisProxyJedisPool.Builder()
                                 .timeout(timeout)
                                 .poolConfig(poolConfig)

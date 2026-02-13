@@ -1,16 +1,15 @@
 package com.netease.nim.camellia.redis.zk.registry.springboot;
 
-import com.netease.nim.camellia.hot.key.extensions.discovery.zk.ZkHotKeyServerRegistry;
-import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.hot.key.server.netty.ServerStatus;
 import com.netease.nim.camellia.tools.utils.InetUtils;
+import com.netease.nim.camellia.zk.ZkRegistry;
 import com.netease.nim.camellia.zk.ZkRegistryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
 
 /**
  * Created by caojiajun on 2023/5/15
@@ -18,7 +17,7 @@ import java.util.Collections;
 public class CamelliaHotKeyServerZkRegisterBoot {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHotKeyServerZkRegisterBoot.class);
 
-    private ZkHotKeyServerRegistry registry;
+    private ZkRegistry registry;
 
     public CamelliaHotKeyServerZkRegisterBoot(CamelliaHotKeyServerZkRegistryProperties properties, String applicationName, int port) {
         if (!properties.isEnable()) {
@@ -29,7 +28,7 @@ public class CamelliaHotKeyServerZkRegisterBoot {
             logger.warn("zkUrl is null, skip camellia hot key server zk registry");
             return;
         }
-        HotKeyServerAddr addr;
+        ServerNode addr;
         try {
             String host = properties.getHost();
             if (host == null || host.isEmpty()) {
@@ -47,11 +46,11 @@ public class CamelliaHotKeyServerZkRegisterBoot {
                     }
                 }
             }
-            addr = new HotKeyServerAddr(host, port);
+            addr = new ServerNode(host, port);
         } catch (UnknownHostException e) {
             throw new ZkRegistryException(e);
         }
-        registry = new ZkHotKeyServerRegistry(properties.getZkUrl(), properties.getSessionTimeoutMs(),
+        registry = new ZkRegistry(properties.getZkUrl(), properties.getSessionTimeoutMs(),
                 properties.getConnectionTimeoutMs(), properties.getBaseSleepTimeMs(), properties.getMaxRetries(),
                 properties.getBasePath(), applicationName, addr);
 
@@ -73,7 +72,7 @@ public class CamelliaHotKeyServerZkRegisterBoot {
         }
     }
 
-    public ZkHotKeyServerRegistry getRegistry() {
+    public ZkRegistry getRegistry() {
         return registry;
     }
 }

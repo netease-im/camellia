@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.discovery.common;
 
 
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,12 +19,12 @@ public class SideCarFirstProxySelector implements IProxySelector {
     private final Object lock = new Object();
 
     private final String localhost;
-    private Proxy sideCarProxy;
-    private Proxy dynamicSideCarProxy;
-    private final Set<Proxy> proxySetSameRegion = new HashSet<>();
-    private List<Proxy> dynamicProxyListSameRegion = new ArrayList<>();
-    private final Set<Proxy> proxySetOtherRegion = new HashSet<>();
-    private List<Proxy> dynamicProxyListOtherRegion = new ArrayList<>();
+    private ServerNode sideCarProxy;
+    private ServerNode dynamicSideCarProxy;
+    private final Set<ServerNode> proxySetSameRegion = new HashSet<>();
+    private List<ServerNode> dynamicProxyListSameRegion = new ArrayList<>();
+    private final Set<ServerNode> proxySetOtherRegion = new HashSet<>();
+    private List<ServerNode> dynamicProxyListOtherRegion = new ArrayList<>();
 
     private final RegionResolver regionResolver;
     private final String localRegion;
@@ -36,14 +36,14 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public Proxy next() {
+    public ServerNode next() {
         try {
             if (dynamicSideCarProxy != null) {
                 return dynamicSideCarProxy;
             }
             int retry = 0;
             while (retry < 2) {
-                Proxy proxy = tryPick(dynamicProxyListSameRegion);
+                ServerNode proxy = tryPick(dynamicProxyListSameRegion);
                 if (proxy != null) return proxy;
                 proxy = tryPick(dynamicProxyListOtherRegion);
                 if (proxy != null) return proxy;
@@ -62,7 +62,7 @@ public class SideCarFirstProxySelector implements IProxySelector {
         dynamicProxyListOtherRegion = new ArrayList<>(proxySetOtherRegion);
     }
 
-    private Proxy tryPick(List<Proxy> dynamicProxyList) {
+    private ServerNode tryPick(List<ServerNode> dynamicProxyList) {
         try {
             if (!dynamicProxyList.isEmpty()) {
                 int index = ThreadLocalRandom.current().nextInt(dynamicProxyList.size());
@@ -76,7 +76,7 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean ban(Proxy proxy) {
+    public boolean ban(ServerNode proxy) {
         try {
             synchronized (lock) {
                 if (proxy == null) {
@@ -101,7 +101,7 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean add(Proxy proxy) {
+    public boolean add(ServerNode proxy) {
         try {
             synchronized (lock) {
                 if (proxy == null) {
@@ -129,7 +129,7 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean remove(Proxy proxy) {
+    public boolean remove(ServerNode proxy) {
         try {
             synchronized (lock) {
                 if (proxy == null) return false;
@@ -169,8 +169,8 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public Set<Proxy> getAll() {
-        Set<Proxy> proxySet = new HashSet<>();
+    public Set<ServerNode> getAll() {
+        Set<ServerNode> proxySet = new HashSet<>();
         if (sideCarProxy != null) {
             proxySet.add(sideCarProxy);
         }
@@ -180,19 +180,19 @@ public class SideCarFirstProxySelector implements IProxySelector {
     }
 
     @Override
-    public List<Proxy> sort(List<Proxy> list) {
-        List<Proxy> shuffleList = new ArrayList<>(list);
+    public List<ServerNode> sort(List<ServerNode> list) {
+        List<ServerNode> shuffleList = new ArrayList<>(list);
         SideCarFirstProxySelector selector = new SideCarFirstProxySelector(localhost, regionResolver);
-        for (Proxy proxy : shuffleList) {
+        for (ServerNode proxy : shuffleList) {
             selector.add(proxy);
         }
-        List<Proxy> ret = new ArrayList<>(list.size());
+        List<ServerNode> ret = new ArrayList<>(list.size());
         if (selector.sideCarProxy != null) {
             ret.add(selector.sideCarProxy);
         }
-        List<Proxy> proxySetSameRegion = new ArrayList<>(selector.proxySetSameRegion);
+        List<ServerNode> proxySetSameRegion = new ArrayList<>(selector.proxySetSameRegion);
         Collections.shuffle(proxySetSameRegion);
-        List<Proxy> proxySetOtherRegion = new ArrayList<>(selector.proxySetOtherRegion);
+        List<ServerNode> proxySetOtherRegion = new ArrayList<>(selector.proxySetOtherRegion);
         Collections.shuffle(proxySetOtherRegion);
         ret.addAll(proxySetSameRegion);
         ret.addAll(proxySetOtherRegion);

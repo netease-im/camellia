@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
 import java.util.concurrent.*;
@@ -19,7 +20,7 @@ public class CamelliaIdGenSdkConfig {
             new CamelliaThreadFactory("camellia-id-gen-sdk-schedule", true));
 
     private String url;
-    private IdGenServerDiscovery discovery;
+    private CamelliaDiscovery discovery;
     private int discoveryReloadIntervalSeconds = 60;
     private int maxRetry = 5;
     private long connectTimeoutMillis = 5000;
@@ -100,11 +101,11 @@ public class CamelliaIdGenSdkConfig {
         this.url = url;
     }
 
-    public IdGenServerDiscovery getDiscovery() {
+    public CamelliaDiscovery getDiscovery() {
         return discovery;
     }
 
-    public void setDiscovery(IdGenServerDiscovery discovery) {
+    public void setDiscovery(CamelliaDiscovery discovery) {
         this.discovery = discovery;
     }
 

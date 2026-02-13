@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.mq.kafka;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;

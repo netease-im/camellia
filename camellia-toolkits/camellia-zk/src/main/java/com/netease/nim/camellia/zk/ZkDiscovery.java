@@ -3,6 +3,7 @@ package com.netease.nim.camellia.zk;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.discovery.AbstractCamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -12,9 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,22 +23,20 @@ import java.util.concurrent.TimeUnit;
  *
  * Created by caojiajun on 2020/8/10
  */
-public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements CamelliaDiscovery<T> {
+public class ZkDiscovery extends AbstractCamelliaDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(ZkDiscovery.class);
 
-    private final Class<T> clazz;
     private final String applicationName;
     private final CuratorFramework client;
     private final String path;
-    private ConcurrentHashMap<String, InstanceInfo<T>> map = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ServerNode> map = new ConcurrentHashMap<>();
 
-    public ZkDiscovery(Class<T> clazz, String zkUrl, String basePath, String applicationName) {
-        this(clazz, ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
+    public ZkDiscovery(String zkUrl, String basePath, String applicationName) {
+        this(ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
     }
 
-    public ZkDiscovery(Class<T> clazz, CuratorFramework client, String basePath, String applicationName, long reloadIntervalSeconds) {
-        this.clazz = clazz;
+    public ZkDiscovery(CuratorFramework client, String basePath, String applicationName, long reloadIntervalSeconds) {
         this.applicationName = applicationName;
         this.client = client;
         this.path = basePath + "/" + applicationName;
@@ -57,22 +54,22 @@ public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements Came
                     if (data == null) {
                         logger.warn("child_added, but data is null, path = {}", path);
                     } else {
-                        InstanceInfo<T> instanceInfo = InstanceInfoSerializeUtil.deserialize(data, clazz);
+                        ServerNode serverNode = InstanceInfoSerializeUtil.deserialize(data);
                         int index = path.lastIndexOf("/") + 1;
                         String id = path.substring(index);
-                        map.put(id, instanceInfo);
-                        invokeAddCallback(instanceInfo.getInstance());
-                        logger.info("instanceInfo add, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
+                        map.put(id, serverNode);
+                        invokeAddCallback(serverNode);
+                        logger.info("instanceInfo add, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(serverNode));
                     }
                 } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
                     ChildData childData = event.getData();
                     String path = childData.getPath();
                     int index = path.lastIndexOf("/") + 1;
                     String id = path.substring(index);
-                    InstanceInfo<T> instanceInfo = map.remove(id);
-                    if (instanceInfo != null) {
-                        invokeRemoveCallback(instanceInfo.getInstance());
-                        logger.info("instanceInfo remove, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
+                    ServerNode serverNode = map.remove(id);
+                    if (serverNode != null) {
+                        invokeRemoveCallback(serverNode);
+                        logger.info("instanceInfo remove, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(serverNode));
                     } else {
                         logger.info("instanceInfo try remove, but not found, path = {}", path);
                     }
@@ -101,12 +98,12 @@ public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements Came
         try {
             List<String> strings = client.getChildren().forPath(path);
             if (strings != null) {
-                ConcurrentHashMap<String, InstanceInfo<T>> map = new ConcurrentHashMap<>();
+                ConcurrentHashMap<String, ServerNode> map = new ConcurrentHashMap<>();
                 for (String id : strings) {
                     byte[] data = client.getData().forPath(path + "/" + id);
-                    InstanceInfo<T> instanceInfo = InstanceInfoSerializeUtil.deserialize(data, clazz);
-                    if (instanceInfo != null) {
-                        map.put(id, instanceInfo);
+                    ServerNode serverNode = InstanceInfoSerializeUtil.deserialize(data);
+                    if (serverNode != null) {
+                        map.put(id, serverNode);
                     }
                 }
                 if (!map.isEmpty()) {
@@ -119,12 +116,8 @@ public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements Came
     }
 
     @Override
-    public List<T> findAll() {
-        Set<T> proxySet = new HashSet<>();
-        for (InstanceInfo<T> instanceInfo : map.values()) {
-            proxySet.add(instanceInfo.getInstance());
-        }
-        return new ArrayList<>(proxySet);
+    public List<ServerNode> findAll() {
+        return new ArrayList<>(map.values());
     }
 
     public String getApplicationName() {

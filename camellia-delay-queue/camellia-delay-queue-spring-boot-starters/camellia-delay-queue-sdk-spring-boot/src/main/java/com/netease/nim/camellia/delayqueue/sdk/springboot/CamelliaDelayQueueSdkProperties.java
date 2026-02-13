@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CamelliaDelayQueueSdkProperties {
 
     private String url;
+    private String serviceName;
     private CamelliaDelayMsgListenerConfig listenerConfig = new CamelliaDelayMsgListenerConfig();
     private CamelliaDelayMsgHttpConfig httpConfig = new CamelliaDelayMsgHttpConfig();
     private int discoveryReloadIntervalSeconds = CamelliaDelayQueueConstants.discoveryReloadIntervalSeconds;
@@ -87,6 +88,14 @@ public class CamelliaDelayQueueSdkProperties {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public CamelliaDelayMsgListenerConfig getListenerConfig() {

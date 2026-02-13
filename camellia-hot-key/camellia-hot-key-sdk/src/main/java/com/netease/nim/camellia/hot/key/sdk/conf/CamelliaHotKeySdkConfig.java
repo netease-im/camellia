@@ -1,15 +1,17 @@
 package com.netease.nim.camellia.hot.key.sdk.conf;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscoveryFactory;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.sdk.collect.CollectorType;
-import com.netease.nim.camellia.hot.key.sdk.discovery.HotKeyServerDiscovery;
 
 /**
  * Created by caojiajun on 2023/5/6
  */
 public class CamelliaHotKeySdkConfig {
 
-    private HotKeyServerDiscovery discovery;
+
+    private String serviceName;
+    private CamelliaDiscoveryFactory discoveryFactory;
     private long pushIntervalMillis = HotKeyConstants.Client.pushIntervalMillis;
     private int pushBatch = HotKeyConstants.Client.pushBatch;
     private int capacity = HotKeyConstants.Client.capacity;
@@ -17,12 +19,20 @@ public class CamelliaHotKeySdkConfig {
     private boolean async = false;//是否是异步的
     private int asyncQueueCapacity = HotKeyConstants.Client.asyncQueueCapacity;
 
-    public HotKeyServerDiscovery getDiscovery() {
-        return discovery;
+    public String getServiceName() {
+        return serviceName;
     }
 
-    public void setDiscovery(HotKeyServerDiscovery discovery) {
-        this.discovery = discovery;
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public CamelliaDiscoveryFactory getDiscoveryFactory() {
+        return discoveryFactory;
+    }
+
+    public void setDiscoveryFactory(CamelliaDiscoveryFactory discoveryFactory) {
+        this.discoveryFactory = discoveryFactory;
     }
 
     public long getPushIntervalMillis() {

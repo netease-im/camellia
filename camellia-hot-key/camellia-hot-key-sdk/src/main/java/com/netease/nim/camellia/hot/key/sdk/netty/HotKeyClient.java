@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.sdk.netty;
 
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.hot.key.common.netty.*;
 import com.netease.nim.camellia.hot.key.common.netty.handler.HotKeyPackDecoder;
 import com.netease.nim.camellia.hot.key.common.netty.handler.HotKeyPackEncoder;
@@ -24,13 +25,13 @@ public class HotKeyClient {
     private static final AtomicLong idGen = new AtomicLong(0);
 
     private final long id;
-    private final HotKeyServerAddr addr;
+    private final ServerNode addr;
     private final SeqManager seqManager = new SeqManager();
 
     private Channel channel = null;
     private volatile boolean valid;
 
-    public HotKeyClient(HotKeyServerAddr addr, HotKeyPackConsumer consumer) {
+    public HotKeyClient(ServerNode addr, HotKeyPackConsumer consumer) {
         this.id = idGen.incrementAndGet();
         this.addr = addr;
         try {

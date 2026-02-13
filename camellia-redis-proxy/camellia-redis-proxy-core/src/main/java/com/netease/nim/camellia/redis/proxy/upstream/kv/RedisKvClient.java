@@ -12,7 +12,7 @@ import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.KvRunToCompletionMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.route.CamelliaDashboardRouteConfProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;

@@ -1,8 +1,7 @@
 package com.netease.nim.camellia.redis.eureka.base;
 
 import com.netease.nim.camellia.core.discovery.ReloadableCamelliaDiscovery;
-import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netflix.appinfo.InstanceInfo;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -17,7 +16,7 @@ import java.util.Set;
  *
  * Created by caojiajun on 2019/11/26.
  */
-public class EurekaProxyDiscovery extends ReloadableCamelliaDiscovery<Proxy> implements IProxyDiscovery {
+public class EurekaProxyDiscovery extends ReloadableCamelliaDiscovery {
 
     private final String applicationName;
     private final DiscoveryClient discoveryClient;
@@ -29,13 +28,13 @@ public class EurekaProxyDiscovery extends ReloadableCamelliaDiscovery<Proxy> imp
     }
 
     @Override
-    public List<Proxy> findAll() {
+    public List<ServerNode> findAll() {
         return new ArrayList<>(refreshProxySet());
     }
 
-    private Set<Proxy> refreshProxySet() {
+    private Set<ServerNode> refreshProxySet() {
         List<ServiceInstance> instances = discoveryClient.getInstances(applicationName);
-        Set<Proxy> proxySet = new HashSet<>();
+        Set<ServerNode> proxySet = new HashSet<>();
         for (ServiceInstance instance : instances) {
             try {
                 if (instance instanceof EurekaDiscoveryClient.EurekaServiceInstance) {
@@ -43,14 +42,14 @@ public class EurekaProxyDiscovery extends ReloadableCamelliaDiscovery<Proxy> imp
                     if (instanceInfo.getStatus() != InstanceInfo.InstanceStatus.UP) continue;
                     String ipAddr = instanceInfo.getIPAddr();
                     int port = instanceInfo.getPort();
-                    Proxy proxy = new Proxy(ipAddr, port);
+                    ServerNode proxy = new ServerNode(ipAddr, port);
                     proxySet.add(proxy);
                 } else {
-                    Proxy proxy = new Proxy(instance.getHost(), instance.getPort());
+                    ServerNode proxy = new ServerNode(instance.getHost(), instance.getPort());
                     proxySet.add(proxy);
                 }
             } catch (Throwable e) {
-                Proxy proxy = new Proxy(instance.getHost(), instance.getPort());
+                ServerNode proxy = new ServerNode(instance.getHost(), instance.getPort());
                 proxySet.add(proxy);
             }
         }

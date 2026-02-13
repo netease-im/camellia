@@ -5,18 +5,18 @@ import java.util.List;
 /**
  * Created by caojiajun on 2022/3/2
  */
-public interface CamelliaDiscovery<T> {
+public interface CamelliaDiscovery {
 
-    List<T> findAll();
+    List<ServerNode> findAll();
 
-    void setCallback(Callback<T> callback);
+    void setCallback(Callback callback);
 
-    void clearCallback(Callback<T> callback);
+    void clearCallback(Callback callback);
 
-    interface Callback<T> {
+    interface Callback {
 
-        void add(T server);
+        void add(ServerNode server);
 
-        void remove(T server);
+        void remove(ServerNode server);
     }
 }

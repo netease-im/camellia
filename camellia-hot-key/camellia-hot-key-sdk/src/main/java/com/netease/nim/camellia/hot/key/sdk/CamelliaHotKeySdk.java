@@ -60,7 +60,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
 
     public CamelliaHotKeySdk(CamelliaHotKeySdkConfig config) {
         this.config = config;
-        if (config.getDiscovery() == null) {
+        if (config.getDiscoveryFactory() == null || config.getServiceName() == null) {
             throw new CamelliaHotKeyException("discovery is missing");
         }
         CollectorType collectorType = config.getCollectorType();
@@ -74,7 +74,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
             throw new IllegalArgumentException("unknown collectorType");
         }
 
-        HotKeyClientHub.getInstance().registerDiscovery(config.getDiscovery());
+        HotKeyClientHub.getInstance().registerDiscovery(config.getDiscoveryFactory(), config.getServiceName());
         HotKeyClientHub.getInstance().registerListener(new DefaultHotKeyClientListener(this));
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-sdk-schedule")).scheduleAtFixedRate(this::schedulePush,
                 config.getPushIntervalMillis(), config.getPushIntervalMillis(), TimeUnit.MILLISECONDS);
@@ -136,7 +136,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     @Override
     public HotKeyConfig getHotKeyConfig(String namespace) {
         try {
-            HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), UUID.randomUUID().toString());
+            HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getServiceName(), UUID.randomUUID().toString());
             if (client == null) {
                 logger.warn("not found valid HotKeyClient, return null HotKeyConfig");
                 throw new CamelliaHotKeyException("can not found valid hot key server");
@@ -156,7 +156,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     @Override
     public void sendHotkeyCacheStats(List<HotKeyCacheStats> statsList) {
         try {
-            HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), UUID.randomUUID().toString());
+            HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getServiceName(), UUID.randomUUID().toString());
             if (client == null) {
                 logger.warn("not found valid HotKeyClient, sendHotkeyCacheStats fail");
                 throw new CamelliaHotKeyException("can not found valid hot key server");
@@ -195,7 +195,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
             List<KeyCounter> collect = collector.collect();
             Map<HotKeyClient, List<KeyCounter>> map = new HashMap<>();
             for (KeyCounter counter : collect) {
-                HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), counter.getKey());
+                HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getServiceName(), counter.getKey());
                 List<KeyCounter> counters = CamelliaMapUtils.computeIfAbsent(map, client, k -> new ArrayList<>(collectListInitSize));
                 counters.add(counter);
             }

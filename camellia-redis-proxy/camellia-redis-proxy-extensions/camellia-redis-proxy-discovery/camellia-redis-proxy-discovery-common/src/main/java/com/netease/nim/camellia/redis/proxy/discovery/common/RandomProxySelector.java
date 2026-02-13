@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.discovery.common;
 
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,11 +17,11 @@ public class RandomProxySelector implements IProxySelector {
 
     private final Object lock = new Object();
 
-    private final Set<Proxy> proxySet = new HashSet<>();
-    private List<Proxy> dynamicProxyList = new ArrayList<>();
+    private final Set<ServerNode> proxySet = new HashSet<>();
+    private List<ServerNode> dynamicProxyList = new ArrayList<>();
 
     @Override
-    public Proxy next() {
+    public ServerNode next() {
         try {
             if (dynamicProxyList.isEmpty()) {
                 dynamicProxyList = new ArrayList<>(proxySet);
@@ -34,7 +34,7 @@ public class RandomProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean ban(Proxy proxy) {
+    public boolean ban(ServerNode proxy) {
         try {
             synchronized (lock) {
                 dynamicProxyList.remove(proxy);
@@ -47,7 +47,7 @@ public class RandomProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean add(Proxy proxy) {
+    public boolean add(ServerNode proxy) {
         try {
             synchronized (lock) {
                 proxySet.add(proxy);
@@ -61,7 +61,7 @@ public class RandomProxySelector implements IProxySelector {
     }
 
     @Override
-    public boolean remove(Proxy proxy) {
+    public boolean remove(ServerNode proxy) {
         try {
             synchronized (lock) {
                 if (proxySet.size() == 1) {
@@ -80,13 +80,13 @@ public class RandomProxySelector implements IProxySelector {
     }
 
     @Override
-    public Set<Proxy> getAll() {
+    public Set<ServerNode> getAll() {
         return new HashSet<>(proxySet);
     }
 
     @Override
-    public List<Proxy> sort(List<Proxy> list) {
-        List<Proxy> ret = new ArrayList<>(list);
+    public List<ServerNode> sort(List<ServerNode> list) {
+        List<ServerNode> ret = new ArrayList<>(list);
         Collections.shuffle(ret);
         return ret;
     }

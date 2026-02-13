@@ -2,6 +2,7 @@ package com.netease.nim.camellia.delayqueue.sdk.api;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayMsgErrorCode;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayQueueException;
@@ -11,10 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +25,7 @@ public class CamelliaDelayQueueApi {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaDelayQueueApi.class);
 
-    private final DelayQueueServerDiscovery discovery;
+    private final CamelliaDiscovery discovery;
     private final OkHttpClient okHttpClient;
 
     private List<DelayQueueServer> all;
@@ -37,54 +35,69 @@ public class CamelliaDelayQueueApi {
     public CamelliaDelayQueueApi(CamelliaDelayQueueSdkConfig sdkConfig) {
         this.okHttpClient = initOkHttpClient(sdkConfig);
 
-        DelayQueueServerDiscovery discovery = sdkConfig.getDiscovery();
-        if (discovery != null) {
-            this.discovery = discovery;
-        } else {
+        discovery = sdkConfig.getDiscovery();
+        if (discovery == null) {
             String url = sdkConfig.getUrl();
             if (url == null || url.trim().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "url/discovery is empty");
             }
-            this.discovery = new LocalConfDelayQueueServerDiscovery(sdkConfig.getUrl());
-        }
-        this.all = new ArrayList<>(this.discovery.findAll());
-        if (all.isEmpty()) {
-            throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "delay queue server is empty");
-        }
-        this.dynamic = new ArrayList<>(all);
-        sdkConfig.getScheduleThreadPool()
-                .scheduleAtFixedRate(this::reload, sdkConfig.getDiscoveryReloadIntervalSeconds(), sdkConfig.getDiscoveryReloadIntervalSeconds(), TimeUnit.SECONDS);
-        this.discovery.setCallback(new CamelliaDiscovery.Callback<DelayQueueServer>() {
-            @Override
-            public void add(DelayQueueServer server) {
-                try {
-                    synchronized (lock) {
-                        all.add(server);
-                        dynamic = new ArrayList<>(all);
-                    }
-                } catch (Exception e) {
-                    logger.error("add error", e);
-                }
+            DelayQueueServer server = new DelayQueueServer(url);
+            this.all = new ArrayList<>(Collections.singletonList(server));
+        } else {
+            this.all = new ArrayList<>(toServerList(discovery.findAll()));
+            if (all.isEmpty()) {
+                throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "delay queue server is empty");
             }
-
-            @Override
-            public void remove(DelayQueueServer server) {
-                try {
-                    synchronized (lock) {
-                        ArrayList<DelayQueueServer> list = new ArrayList<>(all);
-                        list.remove(server);
-                        if (list.isEmpty()) {
-                            logger.warn("last delay queue server, skip remove");
-                            return;
+            this.dynamic = new ArrayList<>(all);
+            sdkConfig.getScheduleThreadPool()
+                    .scheduleAtFixedRate(this::reload, sdkConfig.getDiscoveryReloadIntervalSeconds(), sdkConfig.getDiscoveryReloadIntervalSeconds(), TimeUnit.SECONDS);
+            this.discovery.setCallback(new CamelliaDiscovery.Callback() {
+                @Override
+                public void add(ServerNode server) {
+                    try {
+                        synchronized (lock) {
+                            all.add(toServer(server));
+                            dynamic = new ArrayList<>(all);
                         }
-                        all = list;
-                        dynamic = new ArrayList<>(all);
+                    } catch (Exception e) {
+                        logger.error("add error", e);
                     }
-                } catch (Exception e) {
-                    logger.error("remove error", e);
                 }
-            }
-        });
+
+                @Override
+                public void remove(ServerNode server) {
+                    try {
+                        synchronized (lock) {
+                            ArrayList<DelayQueueServer> list = new ArrayList<>(all);
+                            list.remove(toServer(server));
+                            if (list.isEmpty()) {
+                                logger.warn("last delay queue server, skip remove");
+                                return;
+                            }
+                            all = list;
+                            dynamic = new ArrayList<>(all);
+                        }
+                    } catch (Exception e) {
+                        logger.error("remove error", e);
+                    }
+                }
+            });
+        }
+    }
+
+    private DelayQueueServer toServer(ServerNode serverNode) {
+        return new DelayQueueServer("http://" + serverNode.getHost() + ":" + serverNode.getPort());
+    }
+
+    private List<DelayQueueServer> toServerList(List<ServerNode> serverNodeList) {
+        if (serverNodeList == null) {
+            return null;
+        }
+        List<DelayQueueServer> list = new ArrayList<>();
+        for (ServerNode serverNode : serverNodeList) {
+            list.add(toServer(serverNode));
+        }
+        return list;
     }
 
     private OkHttpClient initOkHttpClient(CamelliaDelayQueueSdkConfig sdkConfig) {
@@ -103,7 +116,7 @@ public class CamelliaDelayQueueApi {
 
     private void reload() {
         try {
-            List<DelayQueueServer> all = discovery.findAll();
+            List<DelayQueueServer> all = toServerList(discovery.findAll());
             if (!all.isEmpty()) {
                 synchronized (lock) {
                     this.all = new ArrayList<>(all);

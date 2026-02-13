@@ -23,6 +23,6 @@ public class CamelliaRedisProxyZkRegistryConfiguration {
 
     @Bean
     public CamelliaRedisProxyZkRegisterBoot camelliaRedisProxyZkRegisterBoot(CamelliaRedisProxyZkRegistryProperties properties) {
-        return new CamelliaRedisProxyZkRegisterBoot(properties, redisProxyBoot.getApplicationName(), redisProxyBoot.getPort(), redisProxyBoot.getTlsPort());
+        return new CamelliaRedisProxyZkRegisterBoot(properties, redisProxyBoot.getApplicationName(), redisProxyBoot.getPort());
     }
 }

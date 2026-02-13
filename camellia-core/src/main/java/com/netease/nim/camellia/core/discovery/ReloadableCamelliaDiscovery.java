@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by caojiajun on 2022/3/7
  */
-public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T> {
+public class ReloadableCamelliaDiscovery extends AbstractCamelliaDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(ReloadableCamelliaDiscovery.class);
 
@@ -21,71 +21,71 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
 
     private final AtomicBoolean initOk = new AtomicBoolean(false);
 
-    private ServerListGetter<T> serverListGetter;
-    private Set<T> set;
+    private ServerNodeGetter serverListGetter;
+    private Set<ServerNode> set;
 
     public ReloadableCamelliaDiscovery() {
     }
 
-    public ReloadableCamelliaDiscovery(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds) {
+    public ReloadableCamelliaDiscovery(ServerNodeGetter serverListGetter, long reloadIntervalSeconds) {
         init(serverListGetter, reloadIntervalSeconds, defaultSchedule);
     }
 
-    public ReloadableCamelliaDiscovery(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
+    public ReloadableCamelliaDiscovery(ServerNodeGetter serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
         init(serverListGetter, reloadIntervalSeconds, schedule);
     }
 
-    protected void init(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds) {
+    protected void init(ServerNodeGetter serverListGetter, long reloadIntervalSeconds) {
         init(serverListGetter, reloadIntervalSeconds, null);
     }
 
-    protected void init(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
+    protected void init(ServerNodeGetter serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
         if (initOk.compareAndSet(false, true)) {
             this.serverListGetter = serverListGetter;
             this.set = new HashSet<>(serverListGetter.findAll());
             if (schedule == null) {
                 schedule = defaultSchedule;
             }
-            schedule.scheduleAtFixedRate(new RefreshThread<>(this), reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
+            schedule.scheduleAtFixedRate(new RefreshThread(this), reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
         } else {
             throw new IllegalStateException("duplicate init");
         }
     }
 
-    public static interface ServerListGetter<T> {
-        List<T> findAll();
+    public static interface ServerNodeGetter {
+        List<ServerNode> findAll();
     }
 
     @Override
-    public List<T> findAll() {
+    public List<ServerNode> findAll() {
         if (!initOk.get()) {
             throw new IllegalStateException("not init");
         }
         return serverListGetter.findAll();
     }
 
-    private static class RefreshThread<T> implements Runnable {
+    private static class RefreshThread implements Runnable {
 
-        private final ReloadableCamelliaDiscovery<T> discovery;
+        private final ReloadableCamelliaDiscovery discovery;
 
-        RefreshThread(ReloadableCamelliaDiscovery<T> discovery) {
+        RefreshThread(ReloadableCamelliaDiscovery discovery) {
             this.discovery = discovery;
         }
 
         @Override
         public void run() {
             try {
-                Set<T> newSet = new HashSet<>(discovery.serverListGetter.findAll());
-                Set<T> oldSet = new HashSet<>(discovery.set);
+                Set<ServerNode> newSet = new HashSet<>(discovery.serverListGetter.findAll());
+                Set<ServerNode> oldSet = new HashSet<>(discovery.set);
 
                 //new - old = add
-                Set<T> addSet = new HashSet<>(newSet);
+                Set<ServerNode> addSet = new HashSet<>(newSet);
                 addSet.removeAll(oldSet);
                 if (!addSet.isEmpty()) {
-                    List<T> added = new ArrayList<>(addSet);
+                    List<ServerNode> added = new ArrayList<>(addSet);
                     Collections.shuffle(added);
                     //callback add
-                    for (T server : added) {
+                    for (ServerNode server : added) {
                         try {
                             discovery.invokeAddCallback(server);
                         } catch (Exception e) {
@@ -95,13 +95,13 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
                 }
 
                 //old - new = remove
-                Set<T> removeSet = new HashSet<>(oldSet);
+                Set<ServerNode> removeSet = new HashSet<>(oldSet);
                 removeSet.removeAll(newSet);
                 if (!removeSet.isEmpty()) {
-                    List<T> removed = new ArrayList<>(removeSet);
+                    List<ServerNode> removed = new ArrayList<>(removeSet);
                     Collections.shuffle(removed);
                     //callback remove
-                    for (T server : removed) {
+                    for (ServerNode server : removed) {
                         try {
                             discovery.invokeRemoveCallback(server);
                         } catch (Exception e) {

@@ -5,7 +5,7 @@ import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.channel.ChannelFuture;
 

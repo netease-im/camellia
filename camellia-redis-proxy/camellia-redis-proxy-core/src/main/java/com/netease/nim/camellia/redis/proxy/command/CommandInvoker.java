@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyMode;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;

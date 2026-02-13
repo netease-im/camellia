@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
-import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.core.discovery.CamelliaDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.ConsensusLeaderSelector;
 import com.netease.nim.camellia.redis.proxy.cluster.provider.DefaultClusterModeProvider;
@@ -89,10 +89,10 @@ public class ConfigInitUtil {
         return null;
     }
 
-    public static ProxyDiscoveryFactory initProxyDiscoveryFactory() {
+    public static CamelliaDiscoveryFactory initProxyDiscoveryFactory() {
         String className = BeanInitUtils.getClassName("proxy.discovery.factory", null);
         if (className != null) {
-            return (ProxyDiscoveryFactory) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
+            return (CamelliaDiscoveryFactory) ServerConf.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }

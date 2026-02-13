@@ -16,6 +16,5 @@
 
 	<modules>
 		<module>camellia-hot-key-config</module>
-		<module>camellia-hot-key-discovery</module>
 	</modules>
 </project>

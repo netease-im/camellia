@@ -102,7 +102,7 @@ public class FeignCallback<T> implements MethodInterceptor {
                     pool = new SimpleResourcePool((FeignResource) resource);
                     GlobalCamelliaFeignEnv.register(resource, serverSelector, Collections.singletonList(pool.getResource(null)));
                 } else if (resource instanceof FeignDiscoveryResource) {
-                    CamelliaDiscovery<FeignServerInfo> discovery = feignEnv.getDiscoveryFactory().getDiscovery(((FeignDiscoveryResource) resource).getServiceName());
+                    CamelliaDiscovery discovery = feignEnv.getDiscoveryFactory().getDiscovery(((FeignDiscoveryResource) resource).getServiceName());
                     CamelliaServerHealthChecker<FeignServerInfo> healthChecker = feignEnv.getHealthChecker();
                     pool = new DiscoveryResourcePool((FeignDiscoveryResource) resource, discovery, serverSelector, healthChecker, feignEnv.getScheduledExecutor());
                 } else {

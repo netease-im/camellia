@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.sdk.netty;
 
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
 
 import java.util.ArrayList;
@@ -14,10 +15,10 @@ public class HotKeyClientGroup {
 
     private final List<HotKeyClient> clientList = new CopyOnWriteArrayList<>();
     private final int connectNum;
-    private final HotKeyServerAddr addr;
+    private final ServerNode addr;
     private final HotKeyPackConsumer consumer;
 
-    public HotKeyClientGroup(HotKeyServerAddr addr, HotKeyPackConsumer consumer, int connectNum) {
+    public HotKeyClientGroup(ServerNode addr, HotKeyPackConsumer consumer, int connectNum) {
         this.addr = addr;
         this.consumer = consumer;
         this.connectNum = connectNum;

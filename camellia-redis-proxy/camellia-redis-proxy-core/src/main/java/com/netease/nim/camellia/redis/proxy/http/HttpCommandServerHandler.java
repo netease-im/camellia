@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.http;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.base.proxy.ProxyUtil;
+import com.netease.nim.camellia.redis.base.utils.ProxyUtil;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;

@@ -1,13 +1,14 @@
 package com.netease.nim.camellia.hot.key.sdk.netty;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.core.discovery.CamelliaDiscoveryFactory;
+import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HeartbeatPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HeartbeatRepPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCommand;
-import com.netease.nim.camellia.hot.key.sdk.discovery.HotKeyServerDiscovery;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
@@ -26,11 +27,11 @@ public class HotKeyClientHub {
 
     private final AtomicBoolean scheduleLock = new AtomicBoolean(false);
     //name -> addr -> client
-    private final ConcurrentHashMap<String, ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup>> clientGroupMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<ServerNode, HotKeyClientGroup>> clientGroupMap = new ConcurrentHashMap<>();
     //name -> discovery
-    private final ConcurrentHashMap<String, HotKeyServerDiscovery> discoveryMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CamelliaDiscovery> discoveryMap = new ConcurrentHashMap<>();
     //name -> addr-list
-    private final ConcurrentHashMap<String, List<HotKeyServerAddr>> addrMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, List<ServerNode>> addrMap = new ConcurrentHashMap<>();
     //lock-map
     private final ConcurrentHashMap<String, AtomicBoolean> lockMap = new ConcurrentHashMap<>();
 
@@ -71,21 +72,22 @@ public class HotKeyClientHub {
 
     /**
      * 注册一个服务器发现discovery
-     * @param discovery discovery
+     * @param discoveryFactory discoveryFactory
+     * @param serviceName service name
      */
-    public void registerDiscovery(HotKeyServerDiscovery discovery) {
-        String name = discovery.getName();
-        HotKeyServerDiscovery old = discoveryMap.putIfAbsent(name, discovery);
+    public void registerDiscovery(CamelliaDiscoveryFactory discoveryFactory, String serviceName) {
+        CamelliaDiscovery discovery = discoveryFactory.getDiscovery(serviceName);
+        CamelliaDiscovery old = discoveryMap.putIfAbsent(serviceName, discovery);
         if (old != null) {
-            logger.info("HotKeyServerDiscovery duplicate register, will skip, name = {}", name);
+            logger.info("HotKeyServerDiscovery duplicate register, will skip, name = {}", serviceName);
             return;
         }
-        ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
-        List<HotKeyServerAddr> addrList = CamelliaMapUtils.computeIfAbsent(addrMap, name, k -> new ArrayList<>());
+        ConcurrentHashMap<ServerNode, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, serviceName, k -> new ConcurrentHashMap<>());
+        List<ServerNode> addrList = CamelliaMapUtils.computeIfAbsent(addrMap, serviceName, k -> new ArrayList<>());
 
-        List<HotKeyServerAddr> all = discovery.findAll();
-        List<HotKeyServerAddr> valid = new ArrayList<>();
-        for (HotKeyServerAddr addr : all) {
+        List<ServerNode> all = discovery.findAll();
+        List<ServerNode> valid = new ArrayList<>();
+        for (ServerNode addr : all) {
             HotKeyClientGroup clientGroup = new HotKeyClientGroup(addr, consumer, connectNum);
             if (clientGroup.isValid()) {
                 map.put(addr, clientGroup);
@@ -94,27 +96,26 @@ public class HotKeyClientHub {
             }
         }
         Collections.sort(addrList);
-        discovery.setCallback(new CamelliaDiscovery.Callback<HotKeyServerAddr>() {
+        discovery.setCallback(new CamelliaDiscovery.Callback() {
             @Override
-            public void add(HotKeyServerAddr server) {
-                HotKeyClientHub.this.add(discovery.getName(), server);
+            public void add(ServerNode server) {
+                HotKeyClientHub.this.add(serviceName, server);
             }
             @Override
-            public void remove(HotKeyServerAddr server) {
-                HotKeyClientHub.this.remove(discovery.getName(), server);
+            public void remove(ServerNode server) {
+                HotKeyClientHub.this.remove(serviceName, server);
             }
         });
-        logger.info("HotKeyServerDiscovery init {}, name = {} size = {}, all.list = {}, valid.list = {}", !valid.isEmpty(), name, map.size(), all, valid);
+        logger.info("HotKeyServerDiscovery init {}, name = {} size = {}, all.list = {}, valid.list = {}", !valid.isEmpty(), serviceName, map.size(), all, valid);
     }
 
     /**
      * 选择一个HotKeyClient，基于hash规则，相同的key总是选择相同的client
-     * @param discovery discovery
+     * @param name name
      * @param key key
      * @return HotKeyClient
      */
-    public HotKeyClient selectClient(HotKeyServerDiscovery discovery, String key) {
-        String name = discovery.getName();
+    public HotKeyClient selectClient(String name, String key) {
         HotKeyClient client = select0(name, key);
         if (client != null) {
             return client;
@@ -128,20 +129,20 @@ public class HotKeyClientHub {
                     return client;
                 }
             }
-            reload(discovery);
+            reload(name);
         }
         return null;
     }
 
     private HotKeyClient select0(String name, String key) {
         try {
-            List<HotKeyServerAddr> addrs = addrMap.get(name);
+            List<ServerNode> addrs = addrMap.get(name);
             if (addrs == null || addrs.isEmpty()) {
                 return null;
             }
             int index = Math.abs(key.hashCode()) % addrs.size();
-            HotKeyServerAddr addr = addrs.get(index);
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = clientGroupMap.get(name);
+            ServerNode addr = addrs.get(index);
+            ConcurrentHashMap<ServerNode, HotKeyClientGroup> map = clientGroupMap.get(name);
             if (map == null || map.isEmpty()) {
                 return null;
             }
@@ -167,13 +168,13 @@ public class HotKeyClientHub {
     private void scheduleHeartbeat() {
         if (scheduleLock.compareAndSet(false, true)) {
             try {
-                ConcurrentHashMap<String, List<HotKeyServerAddr>> map = new ConcurrentHashMap<>(addrMap);
-                for (Map.Entry<String, List<HotKeyServerAddr>> entry : map.entrySet()) {
+                ConcurrentHashMap<String, List<ServerNode>> map = new ConcurrentHashMap<>(addrMap);
+                for (Map.Entry<String, List<ServerNode>> entry : map.entrySet()) {
                     String name = entry.getKey();
-                    ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> clientSubMap = clientGroupMap.get(name);
+                    ConcurrentHashMap<ServerNode, HotKeyClientGroup> clientSubMap = clientGroupMap.get(name);
                     if (clientSubMap == null) continue;
-                    List<HotKeyServerAddr> list = new ArrayList<>(entry.getValue());
-                    for (HotKeyServerAddr addr : list) {
+                    List<ServerNode> list = new ArrayList<>(entry.getValue());
+                    for (ServerNode addr : list) {
                         HotKeyClientGroup clientGroup = clientSubMap.get(addr);
                         clientGroup.addIfNotFull();
                         for (HotKeyClient client : clientGroup.getClientList()) {
@@ -205,9 +206,8 @@ public class HotKeyClientHub {
     //定时reload
     private void reload() {
         try {
-            Set<HotKeyServerDiscovery> discoverySet = new HashSet<>(discoveryMap.values());
-            for (HotKeyServerDiscovery discovery : discoverySet) {
-                reload(discovery);
+            for (Map.Entry<String, CamelliaDiscovery> entry : discoveryMap.entrySet()) {
+                reload(entry.getKey());
             }
         } catch (Exception e) {
             logger.error("reload error", e);
@@ -215,23 +215,27 @@ public class HotKeyClientHub {
     }
 
     //reload
-    private void reload(HotKeyServerDiscovery discovery) {
-        String name = discovery.getName();
+    private void reload(String name) {
+        CamelliaDiscovery discovery = discoveryMap.get(name);
+        if (discovery == null) {
+            logger.warn("skip reload for discovery not found, name = {}", name);
+            return;
+        }
         AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(lockMap, name, k -> new AtomicBoolean(false));
         if (lock.compareAndSet(false, true)) {
             try {
-                Set<HotKeyServerAddr> addrSet = new HashSet<>(discovery.findAll());
+                Set<ServerNode> addrSet = new HashSet<>(discovery.findAll());
                 if (addrSet.isEmpty()) {
                     return;
                 }
 
-                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> newClientGroupMap = new ConcurrentHashMap<>();
-                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> oldClientGroupMap = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
+                ConcurrentHashMap<ServerNode, HotKeyClientGroup> newClientGroupMap = new ConcurrentHashMap<>();
+                ConcurrentHashMap<ServerNode, HotKeyClientGroup> oldClientGroupMap = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
 
                 List<HotKeyClientGroup> toRemoveClientGroup = new ArrayList<>();
-                List<HotKeyServerAddr> toRemoveAddr = new ArrayList<>();
-                for (Map.Entry<HotKeyServerAddr, HotKeyClientGroup> entry : oldClientGroupMap.entrySet()) {
-                    HotKeyServerAddr addr = entry.getKey();
+                List<ServerNode> toRemoveAddr = new ArrayList<>();
+                for (Map.Entry<ServerNode, HotKeyClientGroup> entry : oldClientGroupMap.entrySet()) {
+                    ServerNode addr = entry.getKey();
                     HotKeyClientGroup oldClientGroup = entry.getValue();
                     if (addrSet.contains(addr)) {
                         oldClientGroup.addIfNotFull();
@@ -242,7 +246,7 @@ public class HotKeyClientHub {
                         toRemoveClientGroup.add(oldClientGroup);
                     }
                 }
-                for (HotKeyServerAddr addr : addrSet) {
+                for (ServerNode addr : addrSet) {
                     HotKeyClientGroup clientGroup = newClientGroupMap.get(addr);
                     if (clientGroup == null || !clientGroup.isValid()) {
                         HotKeyClientGroup newClientGroup = new HotKeyClientGroup(addr, consumer, connectNum);
@@ -260,7 +264,7 @@ public class HotKeyClientHub {
                 if (addrSet.isEmpty()) {
                     return;
                 }
-                List<HotKeyServerAddr> newAddrs = new ArrayList<>(addrSet);
+                List<ServerNode> newAddrs = new ArrayList<>(addrSet);
                 Collections.sort(newAddrs);
                 addrMap.put(name, newAddrs);
                 clientGroupMap.put(name, newClientGroupMap);
@@ -277,10 +281,10 @@ public class HotKeyClientHub {
     }
 
     //增加一个节点
-    private synchronized void add(String name, HotKeyServerAddr addr) {
+    private synchronized void add(String name, ServerNode addr) {
         try {
             boolean valid = false;
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
+            ConcurrentHashMap<ServerNode, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
 
             HotKeyClientGroup clientGroup = map.get(addr);
             if (clientGroup == null || !clientGroup.isValid()) {
@@ -291,10 +295,10 @@ public class HotKeyClientHub {
                 valid = true;
             }
             if (valid) {
-                List<HotKeyServerAddr> addrs = CamelliaMapUtils.computeIfAbsent(addrMap, name, k -> new ArrayList<>());
-                HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
+                List<ServerNode> addrs = CamelliaMapUtils.computeIfAbsent(addrMap, name, k -> new ArrayList<>());
+                HashSet<ServerNode> set = new HashSet<>(addrs);
                 set.add(addr);
-                List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
+                List<ServerNode> newAddrs = new ArrayList<>(set);
                 Collections.sort(newAddrs);
                 addrMap.put(name, newAddrs);
                 logger.info("HotKeyServerDiscovery = {}, add addr = {}, newAddrs = {}", name, addr, newAddrs);
@@ -307,20 +311,20 @@ public class HotKeyClientHub {
     }
 
     //移除一个节点
-    private synchronized void remove(String name, HotKeyServerAddr addr) {
+    private synchronized void remove(String name, ServerNode addr) {
         try {
-            List<HotKeyServerAddr> addrs = addrMap.get(name);
-            HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
+            List<ServerNode> addrs = addrMap.get(name);
+            HashSet<ServerNode> set = new HashSet<>(addrs);
             set.remove(addr);
             //如果已经是最后一个了，则不允许移除
             if (set.isEmpty()) {
                 logger.error("HotKeyServerDiscovery = {}, last HotKeyServerAddr, skip remove = {}", name, addr);
                 return;
             }
-            List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
+            List<ServerNode> newAddrs = new ArrayList<>(set);
             Collections.sort(newAddrs);
             addrMap.put(name, newAddrs);
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = clientGroupMap.get(name);
+            ConcurrentHashMap<ServerNode, HotKeyClientGroup> map = clientGroupMap.get(name);
             if (map != null) {
                 HotKeyClientGroup clientGroup = map.remove(addr);
                 if (clientGroup != null) {

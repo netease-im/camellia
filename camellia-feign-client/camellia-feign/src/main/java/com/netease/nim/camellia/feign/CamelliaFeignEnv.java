@@ -7,7 +7,6 @@ import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Created by caojiajun on 2022/3/1
@@ -17,7 +16,7 @@ public class CamelliaFeignEnv {
     private static final ScheduledExecutorService defaultScheduledExecutor = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), new CamelliaThreadFactory("camellia-feign-schedule"));
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
-    private CamelliaDiscoveryFactory<FeignServerInfo> discoveryFactory;
+    private CamelliaDiscoveryFactory discoveryFactory;
     private CamelliaServerHealthChecker<FeignServerInfo> healthChecker = new DummyCamelliaServerHealthChecker<>();
     private FallbackExceptionChecker fallbackExceptionChecker = new FallbackExceptionChecker.Default();
     private ScheduledExecutorService scheduledExecutor = defaultScheduledExecutor;
@@ -25,7 +24,7 @@ public class CamelliaFeignEnv {
     private CamelliaFeignEnv() {
     }
 
-    private CamelliaFeignEnv(ProxyEnv proxyEnv, CamelliaDiscoveryFactory<FeignServerInfo> discoveryFactory,
+    private CamelliaFeignEnv(ProxyEnv proxyEnv, CamelliaDiscoveryFactory discoveryFactory,
                              CamelliaServerHealthChecker<FeignServerInfo> healthChecker,
                              FallbackExceptionChecker fallbackExceptionChecker, ScheduledExecutorService scheduledExecutor) {
         this.proxyEnv = proxyEnv;
@@ -39,7 +38,7 @@ public class CamelliaFeignEnv {
         return new CamelliaFeignEnv();
     }
 
-    public CamelliaDiscoveryFactory<FeignServerInfo> getDiscoveryFactory() {
+    public CamelliaDiscoveryFactory getDiscoveryFactory() {
         return discoveryFactory;
     }
 
@@ -79,7 +78,7 @@ public class CamelliaFeignEnv {
             return this;
         }
 
-        public Builder discoveryFactory(CamelliaDiscoveryFactory<FeignServerInfo> discoveryFactory) {
+        public Builder discoveryFactory(CamelliaDiscoveryFactory discoveryFactory) {
             feignEnv.discoveryFactory = discoveryFactory;
             return this;
         }
