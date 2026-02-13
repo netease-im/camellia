@@ -14,6 +14,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,32 +32,32 @@ public class CamelliaRedisProxyStarter {
     private static final AtomicBoolean starting = new AtomicBoolean(false);
     private static final AtomicBoolean startOk = new AtomicBoolean(false);
 
-    private static final CamelliaServerProperties camelliaServerProperties = new CamelliaServerProperties();
+    private static final CamelliaServerProperties properties = new CamelliaServerProperties();
 
     public static void start() {
-        start(0, null);
+        start(0, null, null);
     }
 
     public static void start(boolean enableConsole) {
         if (enableConsole) {
-            start(Constants.Server.consolePort, new ConsoleServiceAdaptor());
+            start(Constants.Server.consolePort, new ConsoleServiceAdaptor(), null);
         } else {
             start();
         }
     }
 
     public static void start(int consolePort) {
-        start(consolePort, new ConsoleServiceAdaptor());
+        start(consolePort, new ConsoleServiceAdaptor(), null);
     }
 
-    public static void start(int consolePort, ConsoleService consoleService) {
+    public static void start(int consolePort, ConsoleService consoleService, ProxyBeanFactory proxyBeanFactory) {
         if (starting.compareAndSet(false, true)) {
             try {
                 if (startOk.get()) {
                     logger.warn("CamelliaRedisProxyServer has started");
                     return;
                 }
-                ServerConf.init(camelliaServerProperties, -1, null, null);
+                ServerConf.init(properties, -1, null, proxyBeanFactory);
 
                 CamelliaRedisProxyServer server = new CamelliaRedisProxyServer();
                 server.start();
@@ -83,13 +84,12 @@ public class CamelliaRedisProxyStarter {
      * 获取监控数据
      * @return monitor string
      */
-    public static String getRedisProxyMonitorString() {
+    public static Stats getStats() {
         try {
-            Stats stats = ProxyMonitorCollector.getStats();
-            return StatsJsonConverter.converter(stats);
+            return ProxyMonitorCollector.getStats();
         } catch (Exception e) {
-            logger.error("getRedisProxyMonitorString error", e);
-            return "";
+            logger.error("getStats error", e);
+            return null;
         }
     }
 
@@ -97,17 +97,21 @@ public class CamelliaRedisProxyStarter {
         return startOk.get();
     }
 
+    public static CamelliaServerProperties getProperties() {
+        return properties;
+    }
+
     public static void updatePort(int port) {
-        camelliaServerProperties.getConfig().put("port", String.valueOf(port));
+        properties.getConfig().put("port", String.valueOf(port));
     }
 
     public static void updatePassword(String password) {
-        camelliaServerProperties.getConfig().put("password", password);
+        properties.getConfig().put("password", password);
     }
 
     public static void updateRouteConf(String conf) {
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(conf);
         RedisResourceUtil.checkResourceTable(resourceTable);
-        camelliaServerProperties.getConfig().put("route.conf", conf);
+        properties.getConfig().put("route.conf", conf);
     }
 }
