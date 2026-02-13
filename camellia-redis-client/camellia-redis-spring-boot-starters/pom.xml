@@ -16,9 +16,6 @@
 	</parent>
 
 	<modules>
-		<module>camellia-redis-eureka-base</module>
-		<module>camellia-redis-eureka-base3</module>
-
 		<module>camellia-redis-spring-boot</module>
 		<module>camellia-redis-spring-boot-starter</module>
 		<module>camellia-redis-spring-boot3-starter</module>
