@@ -60,6 +60,18 @@ public abstract class RouteConfProvider {
      */
     public abstract boolean isMultiTenantsSupport();
 
+    /**
+     * 是否支持通过client setname camellia_{bid}_{bgroup} 命令选择租户
+     * @return true/false
+     */
+    public boolean isClientCommandMultiTenantSupport() {
+        return false;
+    }
+
+    /**
+     * CommandMonitor
+     * @return CommandMonitor
+     */
     public CommandMonitor getCommandMonitor() {
         return null;
     }

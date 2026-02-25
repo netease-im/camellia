@@ -119,7 +119,7 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
                 command.setHttpCommandTask(commandTask);
             }
             //check auth
-            AuthCommandProcessor authCommandProcessor = invoker.getCommandInvokeConfig().getAuthCommandProcessor();
+            AuthCommandProcessor authCommandProcessor = invoker.getCommandInvokeConfig().authCommandProcessor();
             if (authCommandProcessor.isPasswordRequired() && httpCommandRequest.getPassword() == null) {
                 commandTask.write(wrapperError(httpCommandRequest, FORBIDDEN, "password required"));
                 return;
@@ -131,7 +131,8 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             }
             //check bid/bgroup
             if (httpCommandRequest.getBid() != null && httpCommandRequest.getBid() > 0 && httpCommandRequest.getBgroup() != null) {
-                boolean updateClientName = ClientCommandUtil.updateClientName(channelInfo, ProxyUtil.buildClientName(httpCommandRequest.getBid(), httpCommandRequest.getBgroup()));
+                boolean updateClientName = ClientCommandUtil.updateClientName(channelInfo, ProxyUtil.buildClientName(httpCommandRequest.getBid(), httpCommandRequest.getBgroup()),
+                        authCommandProcessor.provider().isClientCommandMultiTenantSupport());
                 if (!updateClientName) {
                     commandTask.write(wrapperError(httpCommandRequest, FORBIDDEN, "bid/bgroup conflict to username/password"));
                     return;

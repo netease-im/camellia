@@ -126,6 +126,11 @@ public class CamelliaDashboardRouteConfProvider extends RouteConfProvider {
     }
 
     @Override
+    public boolean isClientCommandMultiTenantSupport() {
+        return true;
+    }
+
+    @Override
     public CommandMonitor getCommandMonitor() {
         return commandMonitor;
     }

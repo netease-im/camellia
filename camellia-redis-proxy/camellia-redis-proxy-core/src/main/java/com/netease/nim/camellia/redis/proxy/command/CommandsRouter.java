@@ -1,9 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
-import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
-import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
@@ -54,11 +52,11 @@ public class CommandsRouter {
 
     public CommandsRouter(IUpstreamClientTemplateFactory factory, CommandInvokeConfig commandInvokeConfig) {
         this.factory = factory;
-        this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
-        this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
-        this.sentinelModeProcessor = commandInvokeConfig.getSentinelModeProcessor();
-        this.proxyPluginFactory = commandInvokeConfig.getProxyPluginFactory();
-        this.proxyCommandProcessor = commandInvokeConfig.getProxyCommandProcessor();
+        this.authCommandProcessor = commandInvokeConfig.authCommandProcessor();
+        this.clusterModeProcessor = commandInvokeConfig.clusterModeProcessor();
+        this.sentinelModeProcessor = commandInvokeConfig.sentinelModeProcessor();
+        this.proxyPluginFactory = commandInvokeConfig.proxyPluginFactory();
+        this.proxyCommandProcessor = commandInvokeConfig.proxyCommandProcessor();
         this.proxyPluginInitResp = proxyPluginFactory.initPlugins();
         // 刷新插件用的
         proxyPluginFactory.registerPluginUpdate(() -> proxyPluginInitResp = proxyPluginFactory.initPlugins());
@@ -275,7 +273,7 @@ public class CommandsRouter {
                     //hello命令
                     if (redisCommand == RedisCommand.HELLO) {
                         boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
-                        Reply reply = HelloCommandUtil.invokeHelloCommand(channelInfo, authCommandProcessor, command);
+                        Reply reply = authCommandProcessor.invokeHelloCommand(channelInfo, command);
                         if (!hasBidBgroup) {
                             boolean pass = checkConnectLimit(channelInfo);
                             if (!pass) return;
@@ -347,7 +345,7 @@ public class CommandsRouter {
                     //client命令，可以用于选择路由
                     if (redisCommand == RedisCommand.CLIENT) {
                         boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
-                        Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
+                        Reply reply = authCommandProcessor.invokeClientCommand(channelInfo, command);
                         if (!hasBidBgroup) {
                             boolean pass = checkConnectLimit(channelInfo);
                             if (!pass) return;

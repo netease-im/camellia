@@ -14,21 +14,12 @@ import org.slf4j.LoggerFactory;
  * auth command processor
  * Created by caojiajun on 2021/08/18
  */
-public class AuthCommandProcessor {
+public record AuthCommandProcessor(RouteConfProvider provider) {
+
     private static final Logger logger = LoggerFactory.getLogger(AuthCommandProcessor.class);
 
-    private final RouteConfProvider provider;
-
     /**
-     * constructor
-     * @param provider RouteConfProvider
-     */
-    public AuthCommandProcessor(RouteConfProvider provider) {
-        this.provider = provider;
-    }
-
-    /**
-     * invoke command
+     * invoke auth command
      * @param channelInfo channel info
      * @param auth auth command
      * @return reply
@@ -91,9 +82,30 @@ public class AuthCommandProcessor {
 
     /**
      * is password required
+     *
      * @return result
      */
     public boolean isPasswordRequired() {
         return provider.isPasswordRequired();
+    }
+
+    /**
+     * invoke client command
+     * @param channelInfo channel info
+     * @param command command
+     * @return reply
+     */
+    public Reply invokeClientCommand(ChannelInfo channelInfo, Command command) {
+        return ClientCommandUtil.invokeClientCommand(channelInfo, command, provider.isClientCommandMultiTenantSupport());
+    }
+
+    /**
+     * invoke hello command
+     * @param channelInfo channel info
+     * @param command command
+     * @return reply
+     */
+    public Reply invokeHelloCommand(ChannelInfo channelInfo, Command command) {
+        return HelloCommandUtil.invokeHelloCommand(channelInfo, this, command);
     }
 }

@@ -40,7 +40,7 @@ public class HelloCommandUtil {
                 if (param.equalsIgnoreCase("SETNAME")) {
                     try {
                         String clientName = Utils.bytesToString(objects[i + 1]);
-                        ClientCommandUtil.updateClientName(channelInfo, clientName);
+                        ClientCommandUtil.updateClientName(channelInfo, clientName, authCommandProcessor.provider().isClientCommandMultiTenantSupport());
                     } catch (Exception e) {
                         return SETNAME_SYNTAX_ERROR;
                     }

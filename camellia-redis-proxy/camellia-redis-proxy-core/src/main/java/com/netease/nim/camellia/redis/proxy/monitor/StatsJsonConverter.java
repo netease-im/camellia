@@ -190,7 +190,7 @@ public class StatsJsonConverter {
             JSONObject json = new JSONObject();
             json.put("bid", routeConf.getBid() == null ? "default" : routeConf.getBid());
             json.put("bgroup", routeConf.getBgroup() == null ? "default" : routeConf.getBgroup());
-            if (ProxyDynamicConf.getBoolean("resource.table.monitor.json.format.enable", false)) {
+            if (ProxyDynamicConf.getBoolean("resource.table.monitor.json.format.enable", true)) {
                 try {
                     String jsonString = JSON.toJSONString(JSONObject.parseObject(routeConf.getResourceTable()), SerializerFeature.PrettyFormat);
                     json.put("resourceTable", jsonString);

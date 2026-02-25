@@ -20,7 +20,7 @@ public class ClientCommandUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientCommandUtil.class);
 
-    public static Reply invokeClientCommand(ChannelInfo channelInfo, Command command) {
+    public static Reply invokeClientCommand(ChannelInfo channelInfo, Command command, boolean isClientCommandMultiTenantSupport) {
         try {
             byte[][] objects = command.getObjects();
             if (objects.length < 2) {
@@ -45,12 +45,12 @@ public class ClientCommandUtil {
                     ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, arg = " + section);
                     return ErrorReply.SYNTAX_ERROR;
                 }
-                String clienName = Utils.bytesToString(objects[2]);
+                String clientName = Utils.bytesToString(objects[2]);
                 if (channelInfo == null) {
                     ErrorLogCollector.collect(ClientCommandUtil.class, "client command syntax error, channel info null");
                     return ErrorReply.SYNTAX_ERROR;
                 }
-                boolean success = updateClientName(channelInfo, clienName);
+                boolean success = updateClientName(channelInfo, clientName, isClientCommandMultiTenantSupport);
                 if (!success) {
                     return ErrorReply.REPEAT_OPERATION;
                 }
@@ -110,7 +110,11 @@ public class ClientCommandUtil {
         }
     }
 
-    public static boolean updateClientName(ChannelInfo channelInfo, String clientName) {
+    public static boolean updateClientName(ChannelInfo channelInfo, String clientName, boolean isClientCommandMultiTenantSupport) {
+        if (!isClientCommandMultiTenantSupport) {
+            channelInfo.setClientName(clientName);
+            return true;
+        }
         Long bid = ProxyUtil.parseBid(clientName);
         String bgroup = ProxyUtil.parseBgroup(clientName);
         if (bid == null && bgroup == null) {
