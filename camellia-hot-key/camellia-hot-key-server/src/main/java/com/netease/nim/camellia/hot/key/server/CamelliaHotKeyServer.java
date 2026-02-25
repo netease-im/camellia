@@ -12,13 +12,17 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollIoHandler;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueIoHandler;
+import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.uring.IoUring;
 import io.netty.channel.uring.IoUringIoHandler;
+import io.netty.channel.uring.IoUringServerSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,24 +64,29 @@ public class CamelliaHotKeyServer {
             }
             EventLoopGroup boss;
             EventLoopGroup work;
+            Class<? extends ServerSocketChannel> channelClass;
             if (nettyTransportMode == NettyTransportMode.io_uring) {
                 boss = new MultiThreadIoEventLoopGroup(properties.getNettyBossThread(), new DefaultThreadFactory(boss_name), IoUringIoHandler.newFactory());
                 work = new MultiThreadIoEventLoopGroup(properties.getNettyWorkThread(), new DefaultThreadFactory(work_name), IoUringIoHandler.newFactory());
+                channelClass = IoUringServerSocketChannel.class;
             } else if (nettyTransportMode == NettyTransportMode.epoll) {
                 boss = new MultiThreadIoEventLoopGroup(properties.getNettyBossThread(), new DefaultThreadFactory(boss_name), EpollIoHandler.newFactory());
                 work = new MultiThreadIoEventLoopGroup(properties.getNettyWorkThread(), new DefaultThreadFactory(work_name), EpollIoHandler.newFactory());
+                channelClass = EpollServerSocketChannel.class;
             } else if (nettyTransportMode == NettyTransportMode.kqueue) {
                 boss = new MultiThreadIoEventLoopGroup(properties.getNettyBossThread(), new DefaultThreadFactory(boss_name), KQueueIoHandler.newFactory());
                 work = new MultiThreadIoEventLoopGroup(properties.getNettyWorkThread(), new DefaultThreadFactory(work_name), KQueueIoHandler.newFactory());
+                channelClass = KQueueServerSocketChannel.class;
             } else if (nettyTransportMode == NettyTransportMode.nio) {
                 boss = new MultiThreadIoEventLoopGroup(properties.getNettyBossThread(), new DefaultThreadFactory(boss_name), NioIoHandler.newFactory());
                 work = new MultiThreadIoEventLoopGroup(properties.getNettyWorkThread(), new DefaultThreadFactory(work_name), NioIoHandler.newFactory());
+                channelClass = NioServerSocketChannel.class;
             } else {
                 throw new UnsupportedOperationException("not support netty transport mode = " + nettyTransportMode);
             }
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(boss, work)
-                    .channel(NioServerSocketChannel.class)
+                    .channel(channelClass)
                     .option(ChannelOption.SO_BACKLOG, properties.getSoBacklog())
                     .childOption(ChannelOption.SO_SNDBUF, properties.getSoSndbuf())
                     .childOption(ChannelOption.SO_RCVBUF, properties.getSoRcvbuf())
