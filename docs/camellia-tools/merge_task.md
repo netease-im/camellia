@@ -13,7 +13,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-toolkit</artifactId>
-    <version>1.3.7</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 

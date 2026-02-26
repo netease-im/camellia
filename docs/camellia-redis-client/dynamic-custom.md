@@ -2,9 +2,9 @@
 ### 动态配置（自定义）
 如果你想让你的CamelliaRedisTemplate可以动态变更ResourceTable配置，但是又不想引入camellia-dashboard，也不想用独立配置文件的方式，camellia还额外提供了一种自定义的方式，如下：
 
-首先你要实现一个自定义的RedisTemplateResourceTableUpdater，如下：
+首先你要实现一个自定义的RedisTemplateResourceTableProvider，如下：
 ```java
-public class CustomRedisTemplateResourceTableUpdater extends RedisTemplateResourceTableUpdater {
+public class CustomRedisTemplateResourceTableProvider extends RedisTemplateResourceTableProvider {
 
     private String url = "redis://@127.0.0.1:6379";
 
@@ -32,12 +32,12 @@ public class CustomRedisTemplateResourceTableUpdater extends RedisTemplateResour
 }
 ```
 
-其次，使用自定义的RedisTemplateResourceTableUpdater去初始化CamelliaRedisTemplate即可
+其次，使用自定义的RedisTemplateResourceTableProvider去初始化CamelliaRedisTemplate即可
 ```java
-public class TestRedisTemplateResourceTableUpdater {
+public class TestRedisTemplateResourceTableProvider {
 
     public static void main(String[] args) throws InterruptedException {
-        CamelliaRedisTemplate template = new CamelliaRedisTemplate(CamelliaRedisEnv.defaultRedisEnv(), new CustomRedisTemplateResourceTableUpdater());
+        CamelliaRedisTemplate template = new CamelliaRedisTemplate(CamelliaRedisEnv.defaultRedisEnv(), new CustomRedisTemplateResourceTableProvider());
         while (true) {
             System.out.println(template.get("k1"));
             Thread.sleep(1000);

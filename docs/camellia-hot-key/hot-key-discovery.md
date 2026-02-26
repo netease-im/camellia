@@ -13,7 +13,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-    <version>1.3.7</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 
@@ -85,7 +85,7 @@ public class MyConsoleService extends ConsoleServiceAdaptor {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-discovery-zk</artifactId>
-    <version>1.3.7</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 
@@ -194,15 +194,6 @@ public class MyConsoleService extends ConsoleServiceAdaptor {
 ```
 
 #### sdk侧
-* 额外引入依赖
-
-```
-<dependency>
-    <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-hot-key-discovery-eureka</artifactId>
-    <version>1.3.7</version>
-</dependency>
-```
 
 * 编写代码如下： 
 ```java
@@ -213,11 +204,10 @@ public class TestEureka {
 
     public void test() {
         String applicationName = "camellia-hot-key-server";
-        int refreshIntervalSeconds = 5;
-        EurekaHotKeyServerDiscovery discovery = new EurekaHotKeyServerDiscovery(discoveryClient, applicationName, refreshIntervalSeconds);
 
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
-        config.setDiscovery(discovery);
+        config.setDiscoveryFactory(new SpringCamelliaDiscoveryFactory(discoveryClient));
+        config.setServiceName(applicationName);
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
 
         //设置相关参数，一般来说默认即可
@@ -251,13 +241,13 @@ public class TestNoRegister {
 
     public static void main(String[] args) {
         String applicationName = "camellia-hot-key-server";
-        List<HotKeyServerAddr> list = new ArrayList<>();
-        list.add(new HotKeyServerAddr("127.0.0.1", 7070));
-        list.add(new HotKeyServerAddr("127.0.0.2", 7070));
-        LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery(applicationName, list);
+        List<ServerNode> list = new ArrayList<>();
+        list.add(new ServerNode("127.0.0.1", 7070));
+        list.add(new ServerNode("127.0.0.2", 7070));
 
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
-        config.setDiscovery(discovery);
+        config.setDiscoveryFactory(new LocalConfCamelliaDiscoveryFactory(applicationName, new LocalConfCamelliaDiscovery(list)));
+        config.setServiceName(applicationName);
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
 
         //设置相关参数，一般来说默认即可
