@@ -14,7 +14,7 @@ import com.netease.nim.camellia.hbase.conf.CamelliaHBaseConf;
 import com.netease.nim.camellia.hbase.connection.CamelliaHBaseConnectionFactory;
 import com.netease.nim.camellia.hbase.exception.CamelliaHBaseException;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
-import com.netease.nim.camellia.hbase.resource.HBaseTemplateResourceTableUpdater;
+import com.netease.nim.camellia.hbase.resource.HBaseTemplateResourceTableProvider;
 import com.netease.nim.camellia.hbase.util.CamelliaHBaseInitUtil;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
@@ -130,11 +130,11 @@ public class CamelliaHBaseConfiguration {
             return new CamelliaHBaseTemplate(env, camelliaApi, remote.getBid(), remote.getBgroup(), remote.isMonitor(), remote.getCheckIntervalMillis());
         } else if (type == CamelliaHBaseProperties.Type.CUSTOM) {
             CamelliaHBaseProperties.Custom custom = properties.getCustom();
-            String className = custom.getResourceTableUpdaterClassName();
+            String className = custom.getResourceTableProviderClassName();
             if (className == null) {
-                throw new IllegalArgumentException("resourceTableUpdaterClassName missing");
+                throw new IllegalArgumentException("resourceTableProviderClassName missing");
             }
-            HBaseTemplateResourceTableUpdater updater;
+            HBaseTemplateResourceTableProvider provider;
             try {
                 Class<?> clazz;
                 try {
@@ -142,10 +142,10 @@ public class CamelliaHBaseConfiguration {
                 } catch (ClassNotFoundException e) {
                     clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
                 }
-                updater = (HBaseTemplateResourceTableUpdater) clazz.getConstructor().newInstance();
-                logger.info("HBaseTemplateResourceTableUpdater init success, class = {}", className);
+                provider = (HBaseTemplateResourceTableProvider) clazz.getConstructor().newInstance();
+                logger.info("HBaseTemplateResourceTableProvider init success, class = {}", className);
             } catch (Exception e) {
-                logger.error("HBaseTemplateResourceTableUpdater init error, class = {}", className, e);
+                logger.error("HBaseTemplateResourceTableProvider init error, class = {}", className, e);
                 throw new CamelliaHBaseException(e);
             }
             Map<String, String> conf = custom.getConf();
@@ -157,7 +157,7 @@ public class CamelliaHBaseConfiguration {
                     .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
                     .proxyEnv(proxyEnv())
                     .build();
-            return new CamelliaHBaseTemplate(env, updater);
+            return new CamelliaHBaseTemplate(env, provider);
         } else {
             throw new IllegalArgumentException("only support local/remote/custom");
         }

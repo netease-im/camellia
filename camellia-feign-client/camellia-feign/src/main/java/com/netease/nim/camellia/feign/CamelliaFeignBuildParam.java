@@ -3,7 +3,7 @@ package com.netease.nim.camellia.feign;
 import com.netease.nim.camellia.core.client.annotation.RetryPolicy;
 import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.feign.client.DynamicOption;
-import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
+import com.netease.nim.camellia.feign.route.FeignResourceTableProvider;
 
 /**
  * Created by caojiajun on 2022/3/28
@@ -15,7 +15,7 @@ public class CamelliaFeignBuildParam<T> {
     private Class<T> apiType;
     private CamelliaFeignFallbackFactory<T> fallbackFactory;
     private CamelliaFeignProps feignProps;
-    private FeignResourceTableUpdater updater;
+    private FeignResourceTableProvider provider;
     private CamelliaFeignEnv feignEnv;
     private DynamicOption dynamicOption;
     private Monitor monitor;
@@ -26,14 +26,14 @@ public class CamelliaFeignBuildParam<T> {
     public CamelliaFeignBuildParam() {
     }
 
-    public CamelliaFeignBuildParam(long bid, String bgroup, Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory, CamelliaFeignProps feignProps, FeignResourceTableUpdater updater,
+    public CamelliaFeignBuildParam(long bid, String bgroup, Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory, CamelliaFeignProps feignProps, FeignResourceTableProvider provider,
                                    CamelliaFeignEnv feignEnv, DynamicOption dynamicOption, Monitor monitor, CamelliaFeignFailureListener failureListener) {
         this.bid = bid;
         this.bgroup = bgroup;
         this.apiType = apiType;
         this.fallbackFactory = fallbackFactory;
         this.feignProps = feignProps;
-        this.updater = updater;
+        this.provider = provider;
         this.feignEnv = feignEnv;
         this.dynamicOption = dynamicOption;
         this.monitor = monitor;
@@ -41,7 +41,7 @@ public class CamelliaFeignBuildParam<T> {
     }
 
     public CamelliaFeignBuildParam<T> duplicate() {
-        CamelliaFeignBuildParam<T> param = new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor, failureListener);
+        CamelliaFeignBuildParam<T> param = new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, provider, feignEnv, dynamicOption, monitor, failureListener);
         param.setRetry(retry);
         param.setRetryPolicy(retryPolicy);
         return param;
@@ -79,12 +79,12 @@ public class CamelliaFeignBuildParam<T> {
         this.fallbackFactory = fallbackFactory;
     }
 
-    public FeignResourceTableUpdater getUpdater() {
-        return updater;
+    public FeignResourceTableProvider getProvider() {
+        return provider;
     }
 
-    public void setUpdater(FeignResourceTableUpdater updater) {
-        this.updater = updater;
+    public void setProvider(FeignResourceTableProvider provider) {
+        this.provider = provider;
     }
 
     public CamelliaFeignProps getFeignProps() {

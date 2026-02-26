@@ -5,11 +5,11 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 /**
  * Created by caojiajun on 2022/3/2
  */
-public class SimpleFeignResourceTableUpdater extends FeignResourceTableUpdater {
+public class SimpleFeignResourceTableProvider extends FeignResourceTableProvider {
 
     private final ResourceTable resourceTable;
 
-    public SimpleFeignResourceTableUpdater(ResourceTable resourceTable) {
+    public SimpleFeignResourceTableProvider(ResourceTable resourceTable) {
         checkResourceTable(resourceTable);
         this.resourceTable = resourceTable;
     }

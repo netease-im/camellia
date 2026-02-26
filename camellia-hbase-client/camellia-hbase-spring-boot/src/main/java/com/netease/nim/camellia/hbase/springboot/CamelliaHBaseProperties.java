@@ -304,15 +304,15 @@ public class CamelliaHBaseProperties {
     }
 
     public static class Custom {
-        private String resourceTableUpdaterClassName;
+        private String resourceTableProviderClassName;
         private Map<String, String> conf = new HashMap<>();
 
-        public String getResourceTableUpdaterClassName() {
-            return resourceTableUpdaterClassName;
+        public String getResourceTableProviderClassName() {
+            return resourceTableProviderClassName;
         }
 
-        public void setResourceTableUpdaterClassName(String resourceTableUpdaterClassName) {
-            this.resourceTableUpdaterClassName = resourceTableUpdaterClassName;
+        public void setResourceTableProviderClassName(String resourceTableProviderClassName) {
+            this.resourceTableProviderClassName = resourceTableProviderClassName;
         }
 
         public Map<String, String> getConf() {

@@ -20,7 +20,7 @@ import com.netease.nim.camellia.feign.exception.CamelliaFeignFallbackErrorExcept
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
-import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
+import com.netease.nim.camellia.feign.route.FeignResourceTableProvider;
 import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreaker;
 import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreakerException;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
@@ -86,9 +86,9 @@ public class FeignCallback<T> implements MethodInterceptor {
         this.serverSelector = buildParam.getDynamicOption() == null ? new RandomCamelliaServerSelector<>() : buildParam.getDynamicOption().getServerSelector();
         annotationValueGetterCache.preheatAnnotationValueByParameterField(apiType, LoadBalanceKey.class);
         readWriteOperationCache.preheat(apiType);
-        FeignResourceTableUpdater updater = buildParam.getUpdater();
-        refresh(updater.getResourceTable(), true);
-        updater.addCallback(resourceTable -> refresh(resourceTable, false));
+        FeignResourceTableProvider provider = buildParam.getProvider();
+        refresh(provider.getResourceTable(), true);
+        provider.addCallback(resourceTable -> refresh(resourceTable, false));
     }
 
     private void refresh(ResourceTable resourceTable, boolean throwError) {

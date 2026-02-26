@@ -16,11 +16,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2022/3/2
  */
-public class CamelliaDashboardFeignResourceTableUpdater extends FeignResourceTableUpdater {
+public class CamelliaDashboardFeignResourceTableProvider extends FeignResourceTableProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaDashboardFeignResourceTableUpdater.class);
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaDashboardFeignResourceTableProvider.class);
     private static final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
-            new CamelliaThreadFactory(CamelliaDashboardFeignResourceTableUpdater.class, true));
+            new CamelliaThreadFactory(CamelliaDashboardFeignResourceTableProvider.class, true));
 
     private final CamelliaApi camelliaApi;
     private final long bid;
@@ -28,7 +28,7 @@ public class CamelliaDashboardFeignResourceTableUpdater extends FeignResourceTab
     private String md5;
     private final ResourceTable defaultResourceTable;
 
-    public CamelliaDashboardFeignResourceTableUpdater(CamelliaApi camelliaApi, long bid, String bgroup, ResourceTable defaultResourceTable, long checkIntervalMillis) {
+    public CamelliaDashboardFeignResourceTableProvider(CamelliaApi camelliaApi, long bid, String bgroup, ResourceTable defaultResourceTable, long checkIntervalMillis) {
         this.camelliaApi = camelliaApi;
         this.bid = bid;
         this.bgroup = bgroup;

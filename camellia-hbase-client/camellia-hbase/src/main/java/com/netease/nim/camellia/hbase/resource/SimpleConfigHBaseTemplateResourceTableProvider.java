@@ -16,22 +16,22 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2025/8/6
  */
-public class SimpleConfigHBaseTemplateResourceTableUpdater extends HBaseTemplateResourceTableUpdater {
+public class SimpleConfigHBaseTemplateResourceTableProvider extends HBaseTemplateResourceTableProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleConfigHBaseTemplateResourceTableUpdater.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleConfigHBaseTemplateResourceTableProvider.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
-            new CamelliaThreadFactory(SimpleConfigHBaseTemplateResourceTableUpdater.class));
+            new CamelliaThreadFactory(SimpleConfigHBaseTemplateResourceTableProvider.class));
 
     private final String biz;
     private final SimpleConfigFetcher fetcher;
     private ResourceTable resourceTable;
     private String config;
 
-    public SimpleConfigHBaseTemplateResourceTableUpdater() {
+    public SimpleConfigHBaseTemplateResourceTableProvider() {
         this(System.getProperty("simple.config.fetch.url"), System.getProperty("simple.config.hbase.biz"));
     }
 
-    public SimpleConfigHBaseTemplateResourceTableUpdater(String url, String biz) {
+    public SimpleConfigHBaseTemplateResourceTableProvider(String url, String biz) {
         this.biz = biz;
         this.fetcher = new SimpleConfigFetcher(url, biz);
         fetch();
@@ -41,7 +41,7 @@ public class SimpleConfigHBaseTemplateResourceTableUpdater extends HBaseTemplate
         scheduler.scheduleAtFixedRate(this::fetch, 1, 1, TimeUnit.SECONDS);
     }
 
-    public SimpleConfigHBaseTemplateResourceTableUpdater(String url, String biz, String key, String secret) {
+    public SimpleConfigHBaseTemplateResourceTableProvider(String url, String biz, String key, String secret) {
         this.biz = biz;
         this.fetcher = new SimpleConfigFetcher(url, biz, key, secret);
         fetch();

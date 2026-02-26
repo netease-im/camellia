@@ -65,10 +65,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         this.pipelinePool = new PipelinePool(env);
     }
 
-    public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableUpdater updater) {
-        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), RedisClientResourceUtil.RedisResourceTableChecker),
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableProvider provider) {
+        this(env, new LocalDynamicCamelliaApi(provider.getResourceTable(), RedisClientResourceUtil.RedisResourceTableChecker),
                 defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
-        updater.addCallback(new ResourceTableUpdateCallback() {
+        provider.addCallback(new ResourceTableUpdateCallback() {
             @Override
             public void callback(ResourceTable resourceTable) {
                 if (service instanceof LocalDynamicCamelliaApi) {
@@ -79,8 +79,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         });
     }
 
-    public CamelliaRedisTemplate(RedisTemplateResourceTableUpdater updater) {
-        this(CamelliaRedisEnv.defaultRedisEnv(), updater);
+    public CamelliaRedisTemplate(RedisTemplateResourceTableProvider provider) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), provider);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,

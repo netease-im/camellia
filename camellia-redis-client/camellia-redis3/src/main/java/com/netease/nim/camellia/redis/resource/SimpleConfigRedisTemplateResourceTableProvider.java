@@ -15,22 +15,22 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2025/8/14
  */
-public class SimpleConfigRedisTemplateResourceTableUpdater extends RedisTemplateResourceTableUpdater {
+public class SimpleConfigRedisTemplateResourceTableProvider extends RedisTemplateResourceTableProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleConfigRedisTemplateResourceTableUpdater.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleConfigRedisTemplateResourceTableProvider.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
-            new CamelliaThreadFactory(SimpleConfigRedisTemplateResourceTableUpdater.class));
+            new CamelliaThreadFactory(SimpleConfigRedisTemplateResourceTableProvider.class));
 
     private final String biz;
     private final SimpleConfigFetcher fetcher;
     private ResourceTable resourceTable;
     private String config;
 
-    public SimpleConfigRedisTemplateResourceTableUpdater() {
+    public SimpleConfigRedisTemplateResourceTableProvider() {
         this(System.getProperty("simple.config.fetch.url"), System.getProperty("simple.config.redis.biz"));
     }
 
-    public SimpleConfigRedisTemplateResourceTableUpdater(String url, String biz) {
+    public SimpleConfigRedisTemplateResourceTableProvider(String url, String biz) {
         this.biz = biz;
         this.fetcher = new SimpleConfigFetcher(url, biz);
         fetch();
@@ -40,7 +40,7 @@ public class SimpleConfigRedisTemplateResourceTableUpdater extends RedisTemplate
         scheduler.scheduleAtFixedRate(this::fetch, 1, 1, TimeUnit.SECONDS);
     }
 
-    public SimpleConfigRedisTemplateResourceTableUpdater(String url, String biz, String key, String secret) {
+    public SimpleConfigRedisTemplateResourceTableProvider(String url, String biz, String key, String secret) {
         this.biz = biz;
         this.fetcher = new SimpleConfigFetcher(url, biz, key, secret);
         fetch();

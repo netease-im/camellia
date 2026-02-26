@@ -11,9 +11,9 @@ import java.util.Set;
 /**
  * Created by caojiajun on 2022/3/2
  */
-public abstract class ResourceTableUpdater {
+public abstract class ResourceTableProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResourceTableUpdater.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceTableProvider.class);
     private final Set<ResourceTableUpdateCallback> callbackSet = new HashSet<>();
 
     public abstract ResourceTable getResourceTable();
@@ -29,7 +29,7 @@ public abstract class ResourceTableUpdater {
             }
         }
         if (logger.isInfoEnabled()) {
-            logger.info("ResourceTableUpdater resourceTable update, resourceTable = {}", ReadableResourceTableUtil.readableResourceTable(resourceTable));
+            logger.info("ResourceTableProvider resourceTable update, resourceTable = {}", ReadableResourceTableUtil.readableResourceTable(resourceTable));
         }
     }
 

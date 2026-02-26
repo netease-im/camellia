@@ -11,9 +11,9 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
 import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
-import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
-import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
-import com.netease.nim.camellia.feign.route.SimpleFeignResourceTableUpdater;
+import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableProvider;
+import com.netease.nim.camellia.feign.route.FeignResourceTableProvider;
+import com.netease.nim.camellia.feign.route.SimpleFeignResourceTableProvider;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -194,7 +194,7 @@ public final class CamelliaFeign {
         }
 
         public <T> T target(Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory) {
-            FeignResourceTableUpdater updater = null;
+            FeignResourceTableProvider provider = null;
             //指定配置 优于 注解配置
             //bid/bgroup/CamelliaApi 优于 固定配置
             CamelliaFeignClient annotation = apiType.getAnnotation(CamelliaFeignClient.class);
@@ -223,13 +223,13 @@ public final class CamelliaFeign {
                     bgroup = defaultBgroup;
                 }
                 if (camelliaApi != null) {
-                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
+                    provider = new CamelliaDashboardFeignResourceTableProvider(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
                     this.camelliaApi = camelliaApi;
                 }
             }
-            if (updater == null) {
+            if (provider == null) {
                 if (resourceTable == null) {
-                    if (annotation != null && annotation.route() != null && annotation.route().trim().length() != 0) {
+                    if (annotation != null && annotation.route() != null && !annotation.route().trim().isEmpty()) {
                         resourceTable = ReadableResourceTableUtil.parseTable(annotation.route());
                     }
                 }
@@ -237,7 +237,7 @@ public final class CamelliaFeign {
                     throw new IllegalArgumentException("resourceTable is null");
                 }
                 FeignResourceUtils.checkResourceTable(resourceTable);
-                updater = new SimpleFeignResourceTableUpdater(resourceTable);
+                provider = new SimpleFeignResourceTableProvider(resourceTable);
             }
 
             //获取动态配置
@@ -290,7 +290,7 @@ public final class CamelliaFeign {
                 }
             }
 
-            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor, failureListener);
+            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, provider, feignEnv, dynamicOption, monitor, failureListener);
 
             int retry = 0;
             RetryPolicy retryPolicy = null;

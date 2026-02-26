@@ -8,7 +8,6 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
@@ -68,10 +67,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         this.pipelinePool = new PipelinePool(env);
     }
 
-    public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableUpdater updater) {
-        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), RedisClientResourceUtil.RedisResourceTableChecker),
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableProvider provider) {
+        this(env, new LocalDynamicCamelliaApi(provider.getResourceTable(), RedisClientResourceUtil.RedisResourceTableChecker),
                 defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
-        updater.addCallback(new ResourceTableUpdateCallback() {
+        provider.addCallback(new ResourceTableUpdateCallback() {
             @Override
             public void callback(ResourceTable resourceTable) {
                 if (service instanceof LocalDynamicCamelliaApi) {
@@ -82,8 +81,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         });
     }
 
-    public CamelliaRedisTemplate(RedisTemplateResourceTableUpdater updater) {
-        this(CamelliaRedisEnv.defaultRedisEnv(), updater);
+    public CamelliaRedisTemplate(RedisTemplateResourceTableProvider provider) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), provider);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,

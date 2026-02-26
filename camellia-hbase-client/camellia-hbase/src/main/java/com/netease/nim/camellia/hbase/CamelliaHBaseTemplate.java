@@ -7,7 +7,7 @@ import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.resource.HBaseResourceWrapper;
-import com.netease.nim.camellia.hbase.resource.HBaseTemplateResourceTableUpdater;
+import com.netease.nim.camellia.hbase.resource.HBaseTemplateResourceTableProvider;
 import com.netease.nim.camellia.hbase.util.CamelliaHBaseInitUtil;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import org.apache.hadoop.hbase.client.*;
@@ -43,10 +43,10 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
                 .build();
     }
 
-    public CamelliaHBaseTemplate(CamelliaHBaseEnv env, HBaseTemplateResourceTableUpdater updater) {
-        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), HBaseResourceUtil.HBaseResourceTableChecker),
+    public CamelliaHBaseTemplate(CamelliaHBaseEnv env, HBaseTemplateResourceTableProvider provider) {
+        this(env, new LocalDynamicCamelliaApi(provider.getResourceTable(), HBaseResourceUtil.HBaseResourceTableChecker),
                 defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
-        updater.addCallback(new ResourceTableUpdateCallback() {
+        provider.addCallback(new ResourceTableUpdateCallback() {
             @Override
             public void callback(ResourceTable resourceTable) {
                 if (service instanceof LocalDynamicCamelliaApi) {
@@ -61,8 +61,8 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
         factory.reload(false);
     }
 
-    public CamelliaHBaseTemplate(HBaseTemplateResourceTableUpdater updater) {
-        this(CamelliaHBaseEnv.defaultHBaseEnv(), updater);
+    public CamelliaHBaseTemplate(HBaseTemplateResourceTableProvider provider) {
+        this(CamelliaHBaseEnv.defaultHBaseEnv(), provider);
     }
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, String url, long bid, String bgroup,

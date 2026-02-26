@@ -114,7 +114,7 @@ public interface JedisPoolFactory {
                     jedisPool = map1.get(resource.getUrl());
                     if (jedisPool == null) {
                         String password = resource.getPassword();
-                        if (password == null || password.length() == 0) {
+                        if (password == null || password.isEmpty()) {
                             password = null;
                         }
                         jedisPool = new JedisPool(poolConfig, resource.getHost(),
@@ -140,7 +140,7 @@ public interface JedisPoolFactory {
                         }
                         String password = resource.getPassword();
                         int db = resource.getDb();
-                        if (password == null || password.length() == 0) {
+                        if (password == null || password.isEmpty()) {
                             password = null;
                         }
                         jedisSentinelPool = new JedisSentinelPool(resource.getMaster(), sentinels,

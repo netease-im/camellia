@@ -10,7 +10,7 @@ import com.netease.nim.camellia.core.util.AnnotationValueGetterCache;
 import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
-import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
+import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableProvider;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
@@ -86,7 +86,7 @@ public class FeignDynamicRouteCallback<T> implements MethodInterceptor {
                     }
                     param.setMonitor(monitor);
                     param.setDynamicOption(camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup));
-                    param.setUpdater(new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, defaultResourceTable, checkIntervalMillis));
+                    param.setProvider(new CamelliaDashboardFeignResourceTableProvider(camelliaApi, bid, bgroup, defaultResourceTable, checkIntervalMillis));
                     param.setBgroup(bgroup);
                     client = ProxyClientFactory.createProxy(param.getApiType(), new FeignCallback<>(param));
                     clientMap.put(bgroup, client);

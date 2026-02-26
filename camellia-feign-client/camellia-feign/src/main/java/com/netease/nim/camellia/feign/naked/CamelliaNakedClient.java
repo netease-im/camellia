@@ -24,8 +24,8 @@ import com.netease.nim.camellia.feign.discovery.SimpleResourcePool;
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
-import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
-import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
+import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableProvider;
+import com.netease.nim.camellia.feign.route.FeignResourceTableProvider;
 import com.netease.nim.camellia.feign.naked.exception.CamelliaNakedClientException;
 import com.netease.nim.camellia.feign.naked.exception.CamelliaNakedClientNoRetriableException;
 import com.netease.nim.camellia.feign.naked.exception.CamelliaNakedClientRetriableException;
@@ -73,7 +73,7 @@ public class CamelliaNakedClient<R, W> {
     private ResourceSelector resourceSelector;
     private final ConcurrentHashMap<String, ResourceSelector> resourceSelectorMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CamelliaCircuitBreaker> circuitBreakerMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, CamelliaDashboardFeignResourceTableUpdater> updaterMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CamelliaDashboardFeignResourceTableProvider> providerMap = new ConcurrentHashMap<>();
 
     private CamelliaNakedClient() {
     }
@@ -460,10 +460,10 @@ public class CamelliaNakedClient<R, W> {
             if (bgroup == null) {
                 bgroup = this.bgroup;
             }
-            return new Pair<>(getResourceChooserByBgroup(bgroup), bgroup);
+            return new Pair<>(getResourceSelectorByBgroup(bgroup), bgroup);
         }
         if (bid > 0 && camelliaApi != null) {
-            return new Pair<>(getResourceChooserByBgroup(bgroup), bgroup);
+            return new Pair<>(getResourceSelectorByBgroup(bgroup), bgroup);
         }
         if (resourceSelector == null && resourceTable != null) {
             resourceSelector = new ResourceSelector(resourceTable, feignEnv.getProxyEnv());
@@ -481,33 +481,33 @@ public class CamelliaNakedClient<R, W> {
         }
     }
 
-    private ResourceSelector getResourceChooserByBgroup(String bgroup) {
+    private ResourceSelector getResourceSelectorByBgroup(String bgroup) {
         ResourceSelector resourceSelector = resourceSelectorMap.get(bgroup);
         if (resourceSelector == null) {
-            FeignResourceTableUpdater updater = initUpdater(bgroup);
+            FeignResourceTableProvider provider = initProvider(bgroup);
             resourceSelector = resourceSelectorMap.get(bgroup);
             if (resourceSelector == null) {
-                return new ResourceSelector(updater.getResourceTable(), feignEnv.getProxyEnv());
+                return new ResourceSelector(provider.getResourceTable(), feignEnv.getProxyEnv());
             }
         }
         return resourceSelector;
     }
 
-    private FeignResourceTableUpdater initUpdater(String bgroup) {
-        CamelliaDashboardFeignResourceTableUpdater updater = updaterMap.get(bgroup);
-        if (updater == null) {
-            synchronized (updaterMap) {
-                updater = updaterMap.get(bgroup);
-                if (updater == null) {
-                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
-                    ResourceTable resourceTable = updater.getResourceTable();
+    private FeignResourceTableProvider initProvider(String bgroup) {
+        CamelliaDashboardFeignResourceTableProvider provider = providerMap.get(bgroup);
+        if (provider == null) {
+            synchronized (providerMap) {
+                provider = providerMap.get(bgroup);
+                if (provider == null) {
+                    provider = new CamelliaDashboardFeignResourceTableProvider(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
+                    ResourceTable resourceTable = provider.getResourceTable();
                     ResourceSelector resourceSelector = new ResourceSelector(resourceTable, feignEnv.getProxyEnv());
-                    updater.addCallback(table -> resourceSelectorMap.put(bgroup, new ResourceSelector(table, feignEnv.getProxyEnv())));
+                    provider.addCallback(table -> resourceSelectorMap.put(bgroup, new ResourceSelector(table, feignEnv.getProxyEnv())));
                     resourceSelectorMap.put(bgroup, resourceSelector);
-                    updaterMap.put(bgroup, updater);
+                    providerMap.put(bgroup, provider);
                 }
             }
         }
-        return updater;
+        return provider;
     }
 }
