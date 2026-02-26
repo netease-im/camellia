@@ -65,6 +65,8 @@ public class CamelliaNamingDiscovery implements CamelliaDiscovery {
     @Override
     public void clearCallback(Callback callback) {
         String id = callbackMap.remove(callback);
-        namingService.unsubscribe(serviceName, id);
+        if (id != null) {
+            namingService.unsubscribe(serviceName, id);
+        }
     }
 }

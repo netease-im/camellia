@@ -27,7 +27,7 @@ public class HotKeyServerMonitorPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String className = BeanInitUtils.getClassName("hot.key.server.discovery", CamelliaDiscoveryFactory.class.getName());
+        String className = BeanInitUtils.getClassName("hot.key.server.discovery.factory", CamelliaDiscoveryFactory.class.getName());
         String name = ProxyDynamicConf.getString("hot.key.server.name", null);
 
         CamelliaDiscoveryFactory discoveryFactory;
