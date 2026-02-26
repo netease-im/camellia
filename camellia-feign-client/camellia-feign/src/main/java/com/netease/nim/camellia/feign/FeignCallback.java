@@ -11,6 +11,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.feign.client.DynamicOption;
+import com.netease.nim.camellia.feign.conf.InvokeLogLevel;
 import com.netease.nim.camellia.feign.discovery.DiscoveryResourcePool;
 import com.netease.nim.camellia.feign.discovery.FeignResourcePool;
 import com.netease.nim.camellia.feign.discovery.FeignServerInfo;
@@ -145,8 +146,22 @@ public class FeignCallback<T> implements MethodInterceptor {
                 }
             }
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("camellia-feign, service = {}, method = {}, resource = {}", className, readWriteOperationCache.getMethodName(method), resource.getUrl());
+        if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.TRACE) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("camellia-feign, service = {}, method = {}, resource = {}", className, readWriteOperationCache.getMethodName(method), resource.getUrl());
+            }
+        } else if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.DEBUG) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("camellia-feign, service = {}, method = {}, resource = {}", className, readWriteOperationCache.getMethodName(method), resource.getUrl());
+            }
+        } else if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.INFO) {
+            if (logger.isInfoEnabled()) {
+                logger.info("camellia-feign, service = {}, method = {}, resource = {}", className, readWriteOperationCache.getMethodName(method), resource.getUrl());
+            }
+        } else if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.WARN) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("camellia-feign, service = {}, method = {}, resource = {}", className, readWriteOperationCache.getMethodName(method), resource.getUrl());
+            }
         }
         FeignResourcePool pool = map.get(resource.getUrl());
         FeignResource feignResource = pool.getResource(loadBalanceKey);

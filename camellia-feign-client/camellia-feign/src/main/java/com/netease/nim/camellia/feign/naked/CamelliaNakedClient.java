@@ -9,6 +9,7 @@ import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
 import com.netease.nim.camellia.core.discovery.RandomCamelliaServerSelector;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.feign.conf.InvokeLogLevel;
 import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceSelector;
@@ -306,9 +307,26 @@ public class CamelliaNakedClient<R, W> {
                 monitor.incrWrite(resource.getUrl(), className, "write");
             }
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("camellia-naked-client, bid = {}, bgroup = {}, name = {}, method = {}, resource = {}",
-                    bid, bgroup, name, operationType, resource);
+        if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.TRACE) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("camellia-naked-client, bid = {}, bgroup = {}, name = {}, method = {}, resource = {}",
+                        bid, bgroup, name, operationType, resource);
+            }
+        } else if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.DEBUG) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("camellia-naked-client, bid = {}, bgroup = {}, name = {}, method = {}, resource = {}",
+                        bid, bgroup, name, operationType, resource);
+            }
+        } else if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.INFO) {
+            if (logger.isInfoEnabled()) {
+                logger.info("camellia-naked-client, bid = {}, bgroup = {}, name = {}, method = {}, resource = {}",
+                        bid, bgroup, name, operationType, resource);
+            }
+        } else if (feignEnv.getInvokeLogLevel() == InvokeLogLevel.WARN) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("camellia-naked-client, bid = {}, bgroup = {}, name = {}, method = {}, resource = {}",
+                        bid, bgroup, name, operationType, resource);
+            }
         }
         if (maxRetry <= 0) maxRetry = 0;
         int retry = 0;

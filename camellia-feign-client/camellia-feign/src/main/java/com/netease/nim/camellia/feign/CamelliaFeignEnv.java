@@ -2,6 +2,7 @@ package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.discovery.*;
+import com.netease.nim.camellia.feign.conf.InvokeLogLevel;
 import com.netease.nim.camellia.feign.discovery.FeignServerInfo;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
@@ -20,6 +21,7 @@ public class CamelliaFeignEnv {
     private CamelliaServerHealthChecker<FeignServerInfo> healthChecker = new DummyCamelliaServerHealthChecker<>();
     private FallbackExceptionChecker fallbackExceptionChecker = new FallbackExceptionChecker.Default();
     private ScheduledExecutorService scheduledExecutor = defaultScheduledExecutor;
+    private InvokeLogLevel invokeLogLevel = InvokeLogLevel.DEBUG;
 
     private CamelliaFeignEnv() {
     }
@@ -58,6 +60,10 @@ public class CamelliaFeignEnv {
         return scheduledExecutor;
     }
 
+    public InvokeLogLevel getInvokeLogLevel() {
+        return invokeLogLevel;
+    }
+
     public static class Builder {
         private final CamelliaFeignEnv feignEnv;
         public Builder() {
@@ -90,6 +96,11 @@ public class CamelliaFeignEnv {
 
         public Builder scheduledExecutor(ScheduledExecutorService scheduledExecutor) {
             feignEnv.scheduledExecutor = scheduledExecutor;
+            return this;
+        }
+
+        public Builder invokeLogLevel(InvokeLogLevel invokeLogLevel) {
+            feignEnv.invokeLogLevel = invokeLogLevel;
             return this;
         }
 
