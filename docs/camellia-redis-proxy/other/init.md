@@ -3,20 +3,9 @@
 
 #### 初始化 
 
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: simple
-      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
+```properties
+password=pass123
+route.conf=redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
 ```
 
 如上配置下，redis-proxy在启动时会尝试初始化到`redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377`的连接，主要是为了获取`redis-cluster`的初始拓扑信息，并开启定时刷新拓扑的定时任务，`redis-cluster-slaves`资源类型也是类似的
