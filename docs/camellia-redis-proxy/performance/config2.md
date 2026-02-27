@@ -2,7 +2,7 @@
 
 * camellia-redis-proxy配置：
 ```
-./jdk-17.0.2/bin/java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
+./jdk-17.0.2/bin/java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms2048m -Xmx2048m -server org.springframework.boot.loader.launch.JarLauncher
 ```
 ```yml
 server:

@@ -15,7 +15,7 @@
 <dependency>
 	<groupId>com.netease.nim</groupId>
 	<artifactId>camellia-redis-proxy-hot-key-monitor-plugin</artifactId>
-	<version>1.4.0-SNAPSHOT</version>
+	<version>a.b.c</version>
 </dependency>
 ```
 
@@ -76,7 +76,7 @@ Hot-key-server配置
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 
@@ -123,7 +123,7 @@ camellia-redis-proxy.properties
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 
@@ -133,7 +133,7 @@ camellia-redis-proxy.properties
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 
@@ -170,7 +170,7 @@ Proxy处添加依赖，代表插件的发现机制。
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 

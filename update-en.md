@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.4.0 (2026/01/xx)
+# 1.4.0 (2026/02/27)
 ### New Features
 * camellia-redis-proxy supports FT._LIST command
 * Added camellia-naming module, supports zk and nacos
@@ -28,6 +28,7 @@
 * Streamlined spring-boot-starters to improve code maintainability, some jars deleted (breaking change)
 * camellia-redis-proxy routing configuration methods refactored, unified under the same framework (breaking change)
 * ResourceTableUpdater renamed to ResourceTableProvider (breaking change)
+* The cluster nodes command returns the real cport.
 
 ### Fixes
 * Fixed issue where camellia-dashboard dirty cache during updates prevented configuration from taking effect immediately

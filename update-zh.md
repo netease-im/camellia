@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.4.0（2026/01/xx）
+# 1.4.0（2026/02/27）
 ### 新增
 * camellia-redis-proxy支持FT._LIST命令
 * 新增camellia-naming模块，支持zk和nacos
@@ -28,6 +28,7 @@
 * 对spring-boot-starters的数量做了瘦身，提供代码可维护性，部分jar被删除（破坏性更新）
 * camellia-redis-proxy的路由配置方法做了重构，统一在相同框架下（破坏性更新）
 * ResourceTableUpdater重命名为ResourceTableProvider（破坏性更新）
+* cluster nodes命令返回真实的cport
 
 ### fix
 * 修复camellia-dashboard更新时产生脏缓存导致配置没有立即生效的问题

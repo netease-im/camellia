@@ -101,7 +101,7 @@ This is a loader provided by proxy for integrating nacos to obtain configuration
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-config-nacos</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 Then configure as follows:
@@ -137,7 +137,7 @@ This is a loader provided by proxy for integrating etcd to obtain configuration.
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-config-etcd</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>a.b.c</version>
 </dependency>
 ```
 Then configure as follows:
