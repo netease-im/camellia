@@ -139,7 +139,7 @@ public class ProxyClusterSlotMap {
         for (Map.Entry<ProxyNode, List<Integer>> entry : map.entrySet()) {
             ProxyNode proxyNode = entry.getKey();
             builder.append(MD5Util.md5(proxyNode.toString())).append(" ");
-            builder.append(proxyNode.getHost()).append(":").append(proxyNode.getPort()).append("@").append(proxyNode.getPort() + 1000).append(" ");
+            builder.append(proxyNode.getHost()).append(":").append(proxyNode.getPort()).append("@").append(proxyNode.getCport()).append(" ");
             if (proxyNode.equals(currentNode)) {
                 builder.append("myself,master").append(" ");
             } else {
