@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+metadata:
+  name: {{ printf "%s-config" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+data:
+
+  application-sample.yml: |
+    server:
+      port: 6380
+    spring:
+      application:
+        name: camellia-redis-proxy-server
+    camellia-redis-proxy:
+      config: 
+        # base
+        "monitor.enable": true
+        "console.port": 16379
+        "monitor.interval.seconds": 60
+        # plugin
+        "proxy.plugin.list": "monitorPlugin,bigKeyPlugin,hotKeyPlugin,hotKeyCachePlugin"
+        # route
+        "route.conf.provider": "default"
+        "route.conf.file": "/root/resource-sample.json"
+        "route.conf.reload.interval.millis": 30000
+        "sharding.func.class.name": "com.netease.nim.camellia.core.client.env.CRC16HashTagShardingFunc"
+        # others
+        "check.redis.resource.valid.not.active.threshold.seconds": 600
+        "info.command.executor.pool.size": 1
+        "info.command.executor.queue.size": 1000
+        "upstream.preheat.enable": false
+        "upstream.close.idle.connection": false
+  resource-sample.json: |
+    {
+      "type": "simple",
+      "operation": {
+        "read": {
+          "resources": [
+            "redis://@{{ template "redis.svc.fullname" . }}:6379"
+          ],
+          "type": "random"
+        },
+        "type": "rw_separate",
+        "write": "redis://@{{ template "redis.svc.fullname" . }}:6379"
+      }
+    }

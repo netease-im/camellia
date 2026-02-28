@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "redis.sts.fullname" . }}
+  labels:
+    {{- include "redis.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "redis.selectorLabels" . | nindent 6 }}
+  serviceName: {{ template "redis.fullname" . }}
+  template:
+    metadata:
+      {{- with .Values.redis.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "redis.selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      
+        - name: "redis"
+          image: "{{ .Values.redis.image.name }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy | quote }}
+          args:
+            - "redis-server"
+            {{- if .Values.redis.persistence.enabled }}
+            - "--appendonly"
+            - "yes"
+            {{- end }}
+            {{- if (and .Values.redis.config.secretName .Values.redis.config.secretKey) }}
+            - "--requirepass"
+            - "$(REDIS_PASSWORD)"
+            {{- end }}
+          {{- if (and .Values.redis.config.secretName .Values.redis.config.secretKey) }}
+          env:
+            - name: "REDIS_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.config.secretName | quote }}
+                  key: {{ .Values.redis.config.secretKey | quote }}
+          {{- end }}
+      securityContext:
+      {{- if (not .Values.redis.persistence.enabled) }}
+      volumes:
+        - name: "storage"
+          emptyDir: {}
+      {{- else if .Values.redis.persistence.volumeClaimName }}
+      volumes:
+        - name: "storage"
+          persistentVolumeClaim:
+            claimName: {{ .Values.redis.persistence.volumeClaimName | quote }}
+      {{- end }}
+      {{- with .Values.redis.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if (and .Values.redis.persistence.enabled (not .Values.redis.persistence.volumeClaimName)) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: "storage"
+        {{- if .Values.redis.persistence.k8up.enabled }}
+        labels:
+          k8up.io/backup-target: "true"
+        {{- end }}
+      spec:
+        accessModes:
+          - {{ .Values.redis.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size | quote }}
+        {{- if .Values.redis.persistence.storageClass }}
+        storageClassName: {{ .Values.redis.persistence.storageClass | quote }}
+        {{- end }}
+  {{- end }}

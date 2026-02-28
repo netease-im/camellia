@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ printf "%s" (include "common.names.fullname" .) }}
+  labels:
+    {{- include "redis.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.camellia.replicas }}
+  serviceName: {{ printf "%s" (include "common.names.fullname" .) }}
+  selector:
+    matchLabels:
+      {{- include "camellia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.camellia.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "camellia.selectorLabels" . | nindent 8 }}
+    spec:
+      enableServiceLinks: false
+      {{- with .Values.camellia.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.camellia.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.camellia.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: container-camellia
+        image: "{{ .Values.camellia.image.name }}"
+        resources:
+          {{- with .Values.camellia.resources }}
+          {{- toYaml . | nindent 12 }}
+          {{- else }}
+          {}
+          {{- end }}
+        # command:
+        # - sleep
+        # - "3600000"
+        command:
+        - java
+        - "-XX:+UseG1GC"
+        - "-XX:+UseContainerSupport"
+        - "-Dio.netty.tryReflectionSetAccessible=true" 
+        - "--add-opens"
+        - "java.base/java.lang=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.io=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.math=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.net=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.nio=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.security=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.text=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.time=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/java.util=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/jdk.internal.access=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/jdk.internal.misc=ALL-UNNAMED" 
+        - "--add-opens"
+        - "java.base/sun.net.util=ALL-UNNAMED"
+        - "-Dcom.sun.management.jmxremote"
+        - "-Dcom.sun.management.jmxremote.port=6666"
+        - "-Dcom.sun.management.jmxremote.rmi.port=6666"
+        - "-Dcom.sun.management.jmxremote.ssl=false"
+        - "-Dcom.sun.management.jmxremote.authenticate=false"
+        - "-Djava.rmi.server.hostname=0.0.0.0"
+        - "-Xms1024m"
+        - "-Xmx1024m"
+        - "-server"
+        - "org.springframework.boot.loader.launch.JarLauncher"
+        ports:
+          - containerPort: 6380
+            name: db
+            protocol: TCP
+        volumeMounts:
+        - name: {{ printf "%s-config" (include "common.names.fullname" .) }}
+          mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/application.yml
+          subPath:  application-sample.yml
+        - name: {{ printf "%s-config" (include "common.names.fullname" .) }}
+          mountPath: /root/
+      volumes:
+      - name: {{ printf "%s-config" (include "common.names.fullname" .) }}
+        configMap:
+          name: {{ printf "%s-config" (include "common.names.fullname" .) }}

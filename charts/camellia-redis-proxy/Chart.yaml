@@ -1,0 +1,11 @@
+apiVersion: v2
+name: camellia-redis-proxy
+version: 1.4.0
+description: camellia-redis-proxy是一款高性能的redis代理，使用netty4开发，最低要求java21
+sources:
+  - https://github.com/lsst-sqre/charts/tree/main/charts/redis
+maintainers:
+  - name: 48n6e
+
+
+  
