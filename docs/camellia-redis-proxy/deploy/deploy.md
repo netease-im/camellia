@@ -12,4 +12,4 @@
 
 ### 其他
 * 优雅上下线，见：[console](console.md)
-* 使用docker/k8s, 见：[quick-start-docker](quick-start-docker.md)
+* 使用docker/k8s/helm, 见：[quick-start-docker](quick-start-docker.md)
