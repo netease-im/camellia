@@ -98,7 +98,7 @@ route.conf=redis://@127.0.0.1:6379
 #### Support external configuration files as data sources, support file names under class_path, also support file addresses under absolute paths
 route.conf.file=resource-table.json
 #### Configuration check update interval
-route.conf.reload.interval.millis=3000
+route.conf.check.interval.millis=3000
 
 ### camellia dashboard route
 camellia.dashboard.url=http://127.0.0.1:8080
