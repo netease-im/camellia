@@ -73,9 +73,11 @@ public enum RedisType {
     //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     RedissProxiesDiscovery("rediss-proxies-discovery://", true),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
+    //格式：sentinel://username:passwd@host:port,host:port
     //camellia-redis-proxy内部使用
     Sentinel("sentinel://", false),
 
+    //格式：ssentinel://username:passwd@host:port,host:port
     //camellia-redis-proxy内部使用
     SSentinel("ssentinel://", true),
 

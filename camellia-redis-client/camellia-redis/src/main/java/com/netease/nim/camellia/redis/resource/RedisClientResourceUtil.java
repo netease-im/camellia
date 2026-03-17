@@ -63,28 +63,27 @@ public class RedisClientResourceUtil {
             if (!substring.contains("@")) {
                 throw new CamelliaRedisException("missing @");
             }
-            int index = substring.lastIndexOf("@");
-            String password = substring.substring(0, index);
-            if (password.length() == 0) {
-                password = null;
+            String urlWithoutQueryString = RedisResourceUtil.getUrlWithoutQueryString(substring);
+            int index = urlWithoutQueryString.lastIndexOf("@");
+
+            String[] userNameAndPassword = RedisResourceUtil.getUserNameAndPassword(urlWithoutQueryString.substring(0, index));
+            String userName = userNameAndPassword[0];
+            if (userName != null) {
+                throw new CamelliaRedisException("not support set username");
             }
+            String password = userNameAndPassword[1];
+
+            String proxyName = urlWithoutQueryString.substring(index + 1);
+
+            Map<String, String> paramMap = RedisResourceUtil.getParamMap(substring);
 
             CamelliaRedisProxyResource camelliaRedisProxyResource;
-            String proxyName;
-            if (!substring.contains("?")) {
-                proxyName = substring.substring(index + 1);
-                camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
+            String bid = paramMap.get("bid");
+            String bgroup = paramMap.get("bgroup");
+            if (bid != null && bgroup != null) {
+                camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName, Long.parseLong(bid), bgroup);
             } else {
-                int i = substring.lastIndexOf("?");
-                proxyName = substring.substring(index + 1, i);
-                String queryString = substring.substring(i + 1);
-                Map<String, String> params = RedisResourceUtil.getParams(queryString);
-                String bidStr = params.get("bid");
-                long bid = bidStr == null ? -1 : Long.parseLong(bidStr);
-                String bgroup = params.get("bgroup");
-                String dbStr = params.get("db");
-                int db = dbStr == null ? 0 : Integer.parseInt(dbStr);
-                camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName, bid, bgroup, db);
+                camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
             }
             CamelliaRedisProxyFactory factory = CamelliaRedisProxyContext.getFactory();
             if (factory == null) {
