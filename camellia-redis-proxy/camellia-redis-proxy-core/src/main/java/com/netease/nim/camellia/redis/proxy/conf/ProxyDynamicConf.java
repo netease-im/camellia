@@ -32,7 +32,6 @@ public class ProxyDynamicConf {
     private static final ConcurrentHashMap<String, Boolean> booleanCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Double> doubleCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> stringCache = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
 
 
     /**
@@ -129,7 +128,6 @@ public class ProxyDynamicConf {
         booleanCache.clear();
         doubleCache.clear();
         stringCache.clear();
-        cache.clear();
     }
 
     /**
@@ -294,44 +292,6 @@ public class ProxyDynamicConf {
                 return defaultValue;
             }
             stringCache.put(confKey, value);
-            return value;
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-
-    private static <T> T get(String key, T defaultValue, Class<T> tClass) {
-        return ConfigurationUtil.get(conf, key, defaultValue, tClass);
-    }
-
-    /**
-     * Get value from {@link ProxyDynamicConf#conf}. Use caching to avoid duplicate creation.
-     *
-     * @param key          key
-     * @param bid          id
-     * @param bgroup       group
-     * @param defaultValue defaultValue
-     * @param tClass       the type of the return value
-     * @param <T>          T
-     * @return value
-     */
-    public static <T> T get(String key, Long bid, String bgroup, T defaultValue, Class<T> tClass) {
-        try {
-            if (conf.isEmpty()) return defaultValue;
-            String confKey = buildConfKey(key, bid, bgroup);
-            T value;
-            T cacheValue = (T) cache.get(confKey);
-            if (cacheValue != null) return cacheValue;
-            value = get(confKey, null, tClass);
-            if (value == null) {
-                value = get(key, null, tClass);
-            }
-            if (value == null) {
-                cache.put(confKey, defaultValue);
-                return defaultValue;
-            }
-            cache.put(confKey, value);
             return value;
         } catch (Exception e) {
             return defaultValue;

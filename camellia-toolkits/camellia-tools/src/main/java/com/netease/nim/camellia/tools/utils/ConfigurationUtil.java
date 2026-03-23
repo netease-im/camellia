@@ -67,26 +67,6 @@ public class ConfigurationUtil {
         }
     }
 
-    public static <T> T get(Map<String, String> conf, String key, T defaultValue, Class<T> tClass) {
-        try {
-            String v = conf.get(key);
-            if (v == null) return defaultValue;
-            if (tClass == Integer.class) {
-                return (T) Integer.valueOf(v);
-            } else if (tClass == Boolean.class) {
-                return (T) Boolean.valueOf(v);
-            } else if (tClass == Long.class) {
-                return (T) Long.valueOf(v);
-            } else if (tClass == Double.class) {
-                return (T) Double.valueOf(v);
-            } else {
-                return (T) v;
-            }
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
     public static ConfigContentType configContentType(String fileName) {
         if (fileName == null) {
             return ConfigContentType.properties;
@@ -115,7 +95,7 @@ public class ConfigurationUtil {
                 int index = line.indexOf("=");
                 String key = line.substring(0, index);
                 String value = line.substring(index + 1);
-                conf.put(key, value);
+                conf.put(key.trim(), value.trim());
             }
             return conf;
         } else if (contentType == ConfigContentType.json) {
