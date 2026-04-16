@@ -2,7 +2,6 @@ package com.netease.nim.camellia.zk;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.discovery.AbstractCamelliaDiscovery;
-import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.ServerNode;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.apache.curator.framework.CuratorFramework;

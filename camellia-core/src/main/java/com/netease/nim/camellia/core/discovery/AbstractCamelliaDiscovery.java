@@ -3,7 +3,9 @@ package com.netease.nim.camellia.core.discovery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -15,7 +17,8 @@ public abstract class AbstractCamelliaDiscovery implements CamelliaDiscovery {
     private final Set<Callback> callbackSet = new HashSet<>();
 
     public void invokeAddCallback(ServerNode server) {
-        for (Callback callback : callbackSet) {
+        List<Callback> callbacks = getCallbackSnapshot();
+        for (Callback callback : callbacks) {
             try {
                 callback.add(server);
             } catch (Exception e) {
@@ -25,7 +28,8 @@ public abstract class AbstractCamelliaDiscovery implements CamelliaDiscovery {
     }
 
     public void invokeRemoveCallback(ServerNode server) {
-        for (Callback callback : callbackSet) {
+        List<Callback> callbacks = getCallbackSnapshot();
+        for (Callback callback : callbacks) {
             try {
                 callback.remove(server);
             } catch (Exception e) {
@@ -45,6 +49,12 @@ public abstract class AbstractCamelliaDiscovery implements CamelliaDiscovery {
     public final void clearCallback(Callback callback) {
         synchronized (callbackSet) {
             callbackSet.remove(callback);
+        }
+    }
+
+    private List<Callback> getCallbackSnapshot() {
+        synchronized (callbackSet) {
+            return new ArrayList<>(callbackSet);
         }
     }
 }

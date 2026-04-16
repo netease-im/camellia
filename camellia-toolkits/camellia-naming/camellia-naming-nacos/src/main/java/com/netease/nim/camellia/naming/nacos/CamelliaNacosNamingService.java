@@ -90,12 +90,12 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
             EventListener eventListener = event -> {
                 try {
                     boolean change = false;
-                    synchronized (instanceMap) {
-                        if (event instanceof NamingChangeEvent) {
-                            if (((NamingChangeEvent) event).isAdded()) {
-                                Set<InstanceInfo> set = CamelliaMapUtils.computeIfAbsent(instanceMap, serviceName, k -> new HashSet<>());
-                                Set<InstanceInfo> added = toSet(((NamingChangeEvent) event).getAddedInstances());
-                                set.addAll(added);
+                    if (event instanceof NamingChangeEvent) {
+                        NamingChangeEvent namingChangeEvent = (NamingChangeEvent) event;
+                        if (namingChangeEvent.isAdded()) {
+                            Set<InstanceInfo> added = toSet(namingChangeEvent.getAddedInstances());
+                            if (!added.isEmpty()) {
+                                updateCachedInstances(serviceName, added, true);
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("instance info added, list = {}", JSONObject.toJSON(added));
                                 }
@@ -108,10 +108,11 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
                                 }
                                 change = true;
                             }
-                            if (((NamingChangeEvent) event).isRemoved()) {
-                                Set<InstanceInfo> set = CamelliaMapUtils.computeIfAbsent(instanceMap, serviceName, k -> new HashSet<>());
-                                Set<InstanceInfo> removed = toSet(((NamingChangeEvent) event).getRemovedInstances());
-                                set.removeAll(removed);
+                        }
+                        if (namingChangeEvent.isRemoved()) {
+                            Set<InstanceInfo> removed = toSet(namingChangeEvent.getRemovedInstances());
+                            if (!removed.isEmpty()) {
+                                updateCachedInstances(serviceName, removed, false);
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("instance info removed, list = {}", JSONObject.toJSON(removed));
                                 }
@@ -222,7 +223,7 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
     }
 
     private void reloadAndNotify(String serviceName) throws NacosException {
-        Set<InstanceInfo> oldSet = new HashSet<>(instanceMap.get(serviceName));
+        Set<InstanceInfo> oldSet = getInstanceSetSnapshot(serviceName);
         Set<InstanceInfo> newSet = reload(serviceName);
         Set<InstanceInfo> added = new HashSet<>(newSet);
         added.removeAll(oldSet);
@@ -265,6 +266,28 @@ public class CamelliaNacosNamingService implements ICamelliaNamingService {
         instanceMap.put(serviceName, new HashSet<>(set));
         timeMap.put(serviceName, System.currentTimeMillis());
         return set;
+    }
+
+    private Set<InstanceInfo> getInstanceSetSnapshot(String serviceName) {
+        Set<InstanceInfo> set = instanceMap.get(serviceName);
+        if (set == null) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(set);
+    }
+
+    private void updateCachedInstances(String serviceName, Collection<InstanceInfo> instances, boolean add) {
+        synchronized (instanceMap) {
+            Set<InstanceInfo> current = instanceMap.get(serviceName);
+            Set<InstanceInfo> newSet = current == null ? new HashSet<>() : new HashSet<>(current);
+            if (add) {
+                newSet.addAll(instances);
+            } else {
+                newSet.removeAll(instances);
+            }
+            instanceMap.put(serviceName, newSet);
+        }
+        timeMap.put(serviceName, System.currentTimeMillis());
     }
 
     private static class CallbackItem {

@@ -234,10 +234,7 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
                             logger.warn("child_added, but data is null, serviceName = {}, path = {}", serviceName, path);
                         } else {
                             InstanceInfo instanceInfo = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), InstanceInfo.class);
-                            synchronized (instanceMap) {
-                                Set<InstanceInfo> set = CamelliaMapUtils.computeIfAbsent(instanceMap, serviceName, k -> new HashSet<>());
-                                set.add(instanceInfo);
-                            }
+                            updateCachedInstances(serviceName, Collections.singleton(instanceInfo), true);
                             if (logger.isDebugEnabled()) {
                                 logger.debug("instance info added, instance = {}", JSONObject.toJSON(instanceInfo));
                             }
@@ -263,10 +260,7 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
                             logger.warn("child_removed, but data is null, serviceName = {}, path = {}", serviceName, path);
                         } else {
                             InstanceInfo instanceInfo = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), InstanceInfo.class);
-                            synchronized (instanceMap) {
-                                Set<InstanceInfo> set = CamelliaMapUtils.computeIfAbsent(instanceMap, serviceName, k -> new HashSet<>());
-                                set.remove(instanceInfo);
-                            }
+                            updateCachedInstances(serviceName, Collections.singleton(instanceInfo), false);
                             if (logger.isDebugEnabled()) {
                                 logger.debug("instance info removed, instance = {}", JSONObject.toJSON(instanceInfo));
                             }
@@ -311,7 +305,7 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
     }
 
     private void reloadAndNotify(String serviceName) {
-        Set<InstanceInfo> oldSet = new HashSet<>(instanceMap.get(serviceName));
+        Set<InstanceInfo> oldSet = getInstanceSetSnapshot(serviceName);
         Set<InstanceInfo> newSet = reload(serviceName);
         Set<InstanceInfo> added = new HashSet<>(newSet);
         added.removeAll(oldSet);
@@ -373,6 +367,28 @@ public class CamelliaZkNamingService implements ICamelliaNamingService {
             logger.error("reload error, serviceName = {}", serviceName, e);
             throw new CamelliaNamingException(e);
         }
+    }
+
+    private Set<InstanceInfo> getInstanceSetSnapshot(String serviceName) {
+        Set<InstanceInfo> set = instanceMap.get(serviceName);
+        if (set == null) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(set);
+    }
+
+    private void updateCachedInstances(String serviceName, Collection<InstanceInfo> instances, boolean add) {
+        synchronized (instanceMap) {
+            Set<InstanceInfo> current = instanceMap.get(serviceName);
+            Set<InstanceInfo> newSet = current == null ? new HashSet<>() : new HashSet<>(current);
+            if (add) {
+                newSet.addAll(instances);
+            } else {
+                newSet.removeAll(instances);
+            }
+            instanceMap.put(serviceName, newSet);
+        }
+        timeMap.put(serviceName, System.currentTimeMillis());
     }
 
 }

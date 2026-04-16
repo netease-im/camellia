@@ -37,7 +37,7 @@ public class DetectedLocalConfCamelliaDiscovery extends AbstractCamelliaDiscover
     }
 
     private void init(List<ServerNode> list, int detectIntervalSeconds) {
-        this.originalList = list;
+        this.originalList = new ArrayList<>(list);
         checkAndUpdate();
         if (aliveList.isEmpty()) {
             throw new IllegalArgumentException("all node is not alive");
