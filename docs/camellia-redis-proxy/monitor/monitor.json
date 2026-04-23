@@ -4,6 +4,11 @@
       "connect": 53
     }
   ],
+  "pendingCommandsStats": [
+    {
+      "pendingCommands": 7
+    }
+  ],
   "bidBgroupConnectStats": [
     {
       "bid": "1",

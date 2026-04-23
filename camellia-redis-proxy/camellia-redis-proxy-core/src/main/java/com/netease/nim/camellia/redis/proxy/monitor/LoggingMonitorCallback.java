@@ -21,6 +21,7 @@ public class LoggingMonitorCallback implements MonitorCallback {
         try {
             logger.info(">>>>>>>START>>>>>>>");
             logger.info("connect.count={}", stats.getClientConnectCount());
+            logger.info("pending.commands={}", stats.getPendingCommands());
             for (BidBgroupConnectStats bidBgroupConnectStats : stats.getBidBgroupConnectStatsList()) {
                 logger.info("{}.{}.connect.count={}", bidBgroupConnectStats.getBid(), bidBgroupConnectStats.getBgroup(), bidBgroupConnectStats.getConnect());
             }

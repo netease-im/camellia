@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupConnectStats;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
@@ -77,6 +78,18 @@ public class ChannelMonitor {
 
     public static Map<String, ChannelInfo> getChannelMap() {
         return new HashMap<>(map);
+    }
+
+    public static long getPendingCommands() {
+        Map<String, ChannelInfo> channelMap = getChannelMap();
+        long pendingCommands = 0;
+        for (Map.Entry<String, ChannelInfo> entry : channelMap.entrySet()) {
+            CommandTaskQueue commandTaskQueue = entry.getValue().getCommandTaskQueue();
+            if (commandTaskQueue != null) {
+                pendingCommands += commandTaskQueue.getPendingCommands();
+            }
+        }
+        return pendingCommands;
     }
 
     public static ChannelInfo getChannel(String consid) {

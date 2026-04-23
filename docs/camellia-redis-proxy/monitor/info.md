@@ -6,7 +6,7 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 * Upstream 后端redis连接数
 * Memory 内存
 * GC 垃圾回收相关信息
-* Stats 统计信息（请求次数、QPS等）
+* Stats 统计信息（请求次数、QPS、待处理命令数等）
 * Upstream-Info 后端redis集群的信息，包括后端redis的内存使用率、版本、主从分布情况、slot分布情况等
 
 你可以直接输入info，则返回除了Upstream-Info之外的所有信息，如下：
@@ -91,6 +91,7 @@ gc1_collection_time:0
 commands_count:4158008   ##proxy启动至今的请求数
 read_commands_count:928037   ##proxy启动至今的读请求数
 write_commands_count:3229970   ##proxy启动至今的写请求数
+pending_commands:9   ##proxy当前待处理的客户端命令数
 avg_commands_qps:34183.18   ##proxy启动至今的平均QPS
 avg_read_commands_qps:7629.44    ##proxy启动至今的平均读QPS
 avg_write_commands_qps:26553.74   ##proxy启动至今的平均写QPS

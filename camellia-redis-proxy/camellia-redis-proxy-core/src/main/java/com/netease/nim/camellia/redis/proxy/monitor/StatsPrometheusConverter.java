@@ -35,6 +35,10 @@ public class StatsPrometheusConverter {
             sb.append("# TYPE redis_proxy_connect_count gauge\n");
             sb.append("redis_proxy_connect_count ").append(stats.getClientConnectCount()).append("\n");
 
+            sb.append("# HELP redis_proxy_pending_commands Redis Proxy Pending Commands\n");
+            sb.append("# TYPE redis_proxy_pending_commands gauge\n");
+            sb.append("redis_proxy_pending_commands ").append(stats.getPendingCommands()).append("\n");
+
             sb.append("# HELP redis_proxy_total Redis Proxy Total\n");
             sb.append("# TYPE redis_proxy_total gauge\n");
             String totalFormat = "redis_proxy_total{type=\"%s\",} %d\n";
@@ -385,4 +389,3 @@ public class StatsPrometheusConverter {
         }
     }
 }
-

@@ -338,6 +338,7 @@ public class ProxyInfoUtils {
         builder.append("commands_count:").append(commandsCount).append("\r\n");
         builder.append("read_commands_count:").append(readCommandsCount).append("\r\n");
         builder.append("write_commands_count:").append(writeCommandsCount).append("\r\n");
+        builder.append("pending_commands:").append(ChannelMonitor.getPendingCommands()).append("\r\n");
         builder.append("avg_commands_qps:").append(String.format("%.2f", avgCommandsQps)).append("\r\n");
         builder.append("avg_read_commands_qps:").append(String.format("%.2f", avgReadCommandsQps)).append("\r\n");
         builder.append("avg_write_commands_qps:").append(String.format("%.2f", avgWriteCommandsQps)).append("\r\n");

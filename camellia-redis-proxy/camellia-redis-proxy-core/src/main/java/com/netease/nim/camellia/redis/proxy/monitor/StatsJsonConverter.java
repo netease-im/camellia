@@ -29,6 +29,12 @@ public class StatsJsonConverter {
         connectJsonArray.add(connectJson);
         monitorJson.put("connectStats", connectJsonArray);
 
+        JSONArray pendingCommandsJsonArray = new JSONArray();
+        JSONObject pendingCommandsJson = new JSONObject();
+        pendingCommandsJson.put("pendingCommands", stats.getPendingCommands());
+        pendingCommandsJsonArray.add(pendingCommandsJson);
+        monitorJson.put("pendingCommandsStats", pendingCommandsJsonArray);
+
         List<BidBgroupConnectStats> bidBgroupConnectStatsList = stats.getBidBgroupConnectStatsList();
         JSONArray bidBgroupConnectStatsJsonArray = new JSONArray();
         for (BidBgroupConnectStats connectStats : bidBgroupConnectStatsList) {

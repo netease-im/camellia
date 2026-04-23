@@ -93,6 +93,9 @@ docker-compose up
 # HELP redis_proxy_connect_count Redis Proxy Connect Count
 # TYPE redis_proxy_connect_count gauge
 redis_proxy_connect_count 271
+# HELP redis_proxy_pending_commands Redis Proxy Pending Commands
+# TYPE redis_proxy_pending_commands gauge
+redis_proxy_pending_commands 7
 # HELP redis_proxy_total Redis Proxy Total
 # TYPE redis_proxy_total counter
 redis_proxy_total{type="all",} 1664519
@@ -247,4 +250,3 @@ redis_proxy_slow_command_stats{bid="3",bgroup="tass",command="incr",} 76
 # TYPE redis_proxy_upstream_fail_stats gauge
 redis_proxy_upstream_fail_stats{resource="redis://@127.0.0.1:6379",command="get",msg="ERR proxy upstream connection not available",} 2
 ```
-

@@ -14,6 +14,7 @@ public class Stats {
 
     private int intervalSeconds;
     private long clientConnectCount;
+    private long pendingCommands;
     private List<BidBgroupConnectStats> bidBgroupConnectStatsList = new ArrayList<>();
     private long count;
     private long totalReadCount;
@@ -62,6 +63,14 @@ public class Stats {
 
     public void setClientConnectCount(long clientConnectCount) {
         this.clientConnectCount = clientConnectCount;
+    }
+
+    public long getPendingCommands() {
+        return pendingCommands;
+    }
+
+    public void setPendingCommands(long pendingCommands) {
+        this.pendingCommands = pendingCommands;
     }
 
     public List<BidBgroupConnectStats> getBidBgroupConnectStatsList() {

@@ -21,6 +21,7 @@ Implemented using MonitorProxyPlugin, see: [monitor-plugin](../plugin/monitor-pl
 
 ### Other Monitoring Data
 * Client connection count
+* Client pending command count
 * Backend redis connection count
 * Backend redis response time
 * Routing information

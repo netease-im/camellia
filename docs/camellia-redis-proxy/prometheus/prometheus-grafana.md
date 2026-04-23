@@ -98,6 +98,9 @@ gc{name="G1 Old Generation", type="time"} 0
 # HELP client_connect Redis Proxy Connect Count
 # TYPE client_connect gauge
 client_connect 71
+# HELP pending_commands Redis Proxy Client Pending Commands
+# TYPE pending_commands gauge
+pending_commands 7
 # HELP client_connect_detail Redis Proxy Connect Count Detail
 # TYPE client_connect_detail gauge
 client_connect_detail{tenant="1_default"} 46

@@ -110,6 +110,11 @@ public class PrometheusMetrics {
         builder.append("# TYPE client_connect gauge\n");
         builder.append(prefix).append("client_connect ").append(ChannelMonitor.connect()).append("\n");
 
+        //client_connect
+        builder.append("# HELP pending_commands Redis Proxy Client Pending Commands\n");
+        builder.append("# TYPE pending_commands gauge\n");
+        builder.append(prefix).append("pending_commands ").append(ChannelMonitor.getPendingCommands()).append("\n");
+
         //qps
         builder.append("# HELP qps Redis Proxy QPS\n");
         builder.append("# TYPE qps gauge\n");

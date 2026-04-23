@@ -102,6 +102,7 @@ public class ProxyMonitorCollector {
             Stats stats = new Stats();
             stats.setIntervalSeconds(intervalSeconds);
             stats.setClientConnectCount(ChannelMonitor.connect());
+            stats.setPendingCommands(ChannelMonitor.getPendingCommands());
             stats.setBidBgroupConnectStatsList(ChannelMonitor.bidBgroupConnect());
 
             CommandCountMonitor.CommandCounterStats commandCounterStats = CommandCountMonitor.collect();

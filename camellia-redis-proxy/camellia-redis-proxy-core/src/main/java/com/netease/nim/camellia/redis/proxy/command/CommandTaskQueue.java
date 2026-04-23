@@ -54,6 +54,10 @@ public class CommandTaskQueue {
         return offer;
     }
 
+    public int getPendingCommands() {
+        return queue.size();
+    }
+
     public void clear() {
         queue.clear();
     }

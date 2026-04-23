@@ -10,6 +10,11 @@
       "connect": 53  //客户端连接数，虽然是一个数组，但是其实只有一个
     }
   ],
+  "pendingCommandsStats": [
+    {
+      "pendingCommands": 7 //客户端命令队列中待处理的命令总数
+    }
+  ],
   "bidBgroupConnectStats": [//按bid/bgroup分别统计客户端连接数
     {
       "bid": "1",
