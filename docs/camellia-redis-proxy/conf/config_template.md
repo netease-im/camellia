@@ -118,10 +118,14 @@ camellia.dashboard.headers={"k1":"v1"}
 pass123.password.1.default.route.conf=redis://@127.0.0.1:6379
 #### 表示pass456密码指向bid=2/bgroup=default，路由是一个复杂的配置
 pass456.password.2.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
+#### 可选地带上username做更细粒度划分，精确匹配(username,password)优先，未命中则回退到仅password
+username.userA.password.pass123.3.userA.route.conf=redis://@127.0.0.1:6380
 
 ### multi_tenants_v2
 ####指向了一个json数组，包含了3组路由
 multi.tenant.route.config=[{"bid":1,"bgroup":"route1","password":"passwd1","route":"redis://passxx@127.0.0.1:16379"},{"bid":1,"bgroup":"route2","password":"passwd2","route":"redis-cluster://@127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382"},{"bid":1,"bgroup":"route3","password":"passwd3","route":{"type":"simple","operation":{"read":"redis://passwd123@127.0.0.1:6379","type":"rw_separate","write":"redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}}]
+#### 也支持可选username字段
+multi.tenant.route.config=[{"bid":1,"bgroup":"route1","password":"passwd1","route":"redis://passxx@127.0.0.1:16379"},{"bid":1,"bgroup":"route2","username":"userA","password":"passwd1","route":"redis://@127.0.0.1:6380"}]
 
 ### multi_tenants_simple_config
 #### 外部系统（满足simple_config的接口规范即可）
@@ -132,6 +136,8 @@ simple.config.fetch.secret=xxx
 pass123.password.1.default.route.conf.biz=biz1
 #### 表示pass456密码指向bid=2/bgroup=default，路由biz=biz2，路由配置通过外部系统获取
 pass456.password.2.default.route.conf.biz=biz2
+#### 可选地带上username做更细粒度划分
+username.userA.password.pass123.3.userA.route.conf.biz=biz3
 
 
 #############插件配置##################

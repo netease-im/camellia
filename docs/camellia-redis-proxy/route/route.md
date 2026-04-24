@@ -132,6 +132,8 @@ route.conf.provider=multi_tenants_v1
 pass123.password.1.default.route.conf=redis://@127.0.0.1:6379
 #### 表示pass456密码指向bid=2/bgroup=default，路由是一个复杂的配置
 pass456.password.2.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
+#### 也支持可选username字段，精确匹配(username,password)优先，未命中则回退到仅password
+username.userA.password.pass123.3.userA.route.conf=redis://@127.0.0.1:6380
 
 ```
 
@@ -154,6 +156,13 @@ pass456.password.2.default.route.conf={"type": "simple","operation": {"read": "r
       "bgroup": "route2",
       "password": "passwd2",
       "route": "redis-cluster://@127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382"
+    },
+    {
+      "bid": 1,
+      "bgroup": "route2_userA",
+      "username": "userA",
+      "password": "passwd2",
+      "route": "redis://@127.0.0.1:6383"
     },
     {
       "bid": 1,
@@ -188,6 +197,8 @@ simple.config.fetch.secret=xxx
 pass123.password.1.default.route.conf.biz=biz1
 #### 表示pass456密码指向bid=2/bgroup=default，路由biz=biz2，路由配置通过外部simple_config系统获取
 pass456.password.2.default.route.conf.biz=biz2
+#### 可选地带上username做更细粒度划分
+username.userA.password.pass123.3.userA.route.conf.biz=biz3
 ```
 
 #### 当然你也可以自定义

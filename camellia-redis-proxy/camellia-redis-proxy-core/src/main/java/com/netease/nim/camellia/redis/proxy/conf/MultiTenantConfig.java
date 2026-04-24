@@ -8,6 +8,7 @@ import java.util.Objects;
 public class MultiTenantConfig implements Comparable<MultiTenantConfig> {
     private long bid;
     private String bgroup;
+    private String username;
     private String password;
     private String route;
 
@@ -25,6 +26,14 @@ public class MultiTenantConfig implements Comparable<MultiTenantConfig> {
 
     public void setBgroup(String bgroup) {
         this.bgroup = bgroup;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -47,12 +56,16 @@ public class MultiTenantConfig implements Comparable<MultiTenantConfig> {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         MultiTenantConfig config = (MultiTenantConfig) o;
-        return bid == config.bid && Objects.equals(bgroup, config.bgroup) && Objects.equals(password, config.password) && Objects.equals(route, config.route);
+        return bid == config.bid
+                && Objects.equals(bgroup, config.bgroup)
+                && Objects.equals(username, config.username)
+                && Objects.equals(password, config.password)
+                && Objects.equals(route, config.route);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(bid, bgroup, password, route);
+        return Objects.hash(bid, bgroup, username, password, route);
     }
 
     @Override
@@ -60,6 +73,7 @@ public class MultiTenantConfig implements Comparable<MultiTenantConfig> {
         return "MultiTenantConfig{" +
                 "bid=" + bid +
                 ", bgroup='" + bgroup + '\'' +
+                ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", route='" + route + '\'' +
                 '}';

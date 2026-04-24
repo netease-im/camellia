@@ -131,6 +131,8 @@ route.conf.provider=multi_tenants_v1
 pass123.password.1.default.route.conf=redis://@127.0.0.1:6379
 #### Indicates that password pass456 points to bid=2/bgroup=default, route is a complex configuration
 pass456.password.2.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
+#### Optional username-aware rule. Exact (username,password) match wins, then falls back to password-only
+username.userA.password.pass123.3.userA.route.conf=redis://@127.0.0.1:6380
 
 ```
 
@@ -153,6 +155,13 @@ pass456.password.2.default.route.conf={"type": "simple","operation": {"read": "r
       "bgroup": "route2",
       "password": "passwd2",
       "route": "redis-cluster://@127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382"
+    },
+    {
+      "bid": 1,
+      "bgroup": "route2_userA",
+      "username": "userA",
+      "password": "passwd2",
+      "route": "redis://@127.0.0.1:6383"
     },
     {
       "bid": 1,
@@ -187,6 +196,8 @@ simple.config.fetch.secret=xxx
 pass123.password.1.default.route.conf.biz=biz1
 #### Indicates that password pass456 points to bid=2/bgroup=default, route biz=biz2, route configuration is obtained through external simple_config system
 pass456.password.2.default.route.conf.biz=biz2
+#### Optional username-aware rule for finer tenant split
+username.userA.password.pass123.3.userA.route.conf.biz=biz3
 ```
 
 #### Of course, you can also customize

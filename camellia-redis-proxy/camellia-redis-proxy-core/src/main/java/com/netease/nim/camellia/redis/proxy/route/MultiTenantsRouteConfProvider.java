@@ -56,7 +56,7 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
 
     @Override
     public ClientIdentity auth(String userName, String password) {
-        ClientIdentity clientIdentity = selector.selectClientIdentity(password);
+        ClientIdentity clientIdentity = selector.selectClientIdentity(userName, password);
         if (clientIdentity == null) {
             return ClientIdentity.AUTH_FAIL;
         }
@@ -94,15 +94,25 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
     }
 
     private void check(List<MultiTenantConfig> configList) {
-        Set<String> passwordSet = new HashSet<>();
+        Set<String> exactAuthSet = new HashSet<>();
+        Set<String> fallbackPasswordSet = new HashSet<>();
         Set<String> bidBgroupSet = new HashSet<>();
         for (MultiTenantConfig config : configList) {
             checkValid(config);
+            String userName = config.getUsername();
             String password = config.getPassword();
-            if (passwordSet.contains(password)) {
-                throw new IllegalArgumentException("duplicate password");
+            if (userName == null) {
+                if (fallbackPasswordSet.contains(password)) {
+                    throw new IllegalArgumentException("duplicate password");
+                }
+                fallbackPasswordSet.add(password);
+            } else {
+                String authKey = userName + "|" + password;
+                if (exactAuthSet.contains(authKey)) {
+                    throw new IllegalArgumentException("duplicate username/password");
+                }
+                exactAuthSet.add(authKey);
             }
-            passwordSet.add(password);
             String key = config.getBid() + "|" + config.getBgroup();
             if (bidBgroupSet.contains(key)) {
                 throw new IllegalArgumentException("duplicate bid/bgroup");
@@ -121,6 +131,9 @@ public abstract class MultiTenantsRouteConfProvider extends RouteConfProvider {
             }
             if (config.getBgroup() == null) {
                 throw new IllegalArgumentException("multi tenant config illegal bgroup");
+            }
+            if (config.getUsername() != null && config.getUsername().isEmpty()) {
+                throw new IllegalArgumentException("multi tenant config illegal username");
             }
             if (config.getPassword() == null) {
                 throw new IllegalArgumentException("multi tenant config illegal password");

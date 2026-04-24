@@ -17,7 +17,8 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
 
     private static final Logger logger = LoggerFactory.getLogger(MultiTenantsV1RouteConfProvider.class);
 
-    private static final Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)\\.password\\.(\\d+)\\.([a-zA-Z0-9_]+)\\.route\\.conf$");
+    private static final Pattern LEGACY_PATTERN = Pattern.compile("^([a-zA-Z0-9_]+)\\.password\\.(\\d+)\\.([a-zA-Z0-9_]+)\\.route\\.conf$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^username\\.([a-zA-Z0-9_]+)\\.password\\.([a-zA-Z0-9_]+)\\.(\\d+)\\.([a-zA-Z0-9_]+)\\.route\\.conf$");
 
     @Override
     public List<MultiTenantConfig> getMultiTenantConfig() {
@@ -27,18 +28,8 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
                     String key = entry.getKey();
-                    Matcher matcher = pattern.matcher(key);
-                    if (matcher.matches()) {
-                        String password = matcher.group(1);
-                        long bid = Long.parseLong(matcher.group(2));
-                        String bgroup = matcher.group(3);
-                        String route = entry.getValue();
-
-                        MultiTenantConfig config = new MultiTenantConfig();
-                        config.setBid(bid);
-                        config.setBgroup(bgroup);
-                        config.setPassword(password);
-                        config.setRoute(route);
+                    MultiTenantConfig config = tryBuildConfig(key, entry.getValue());
+                    if (config != null) {
                         checkValid(config);
                         list.add(config);
                     }
@@ -51,6 +42,29 @@ public class MultiTenantsV1RouteConfProvider extends MultiTenantsRouteConfProvid
             logger.error("multi config parse error", e);
             return null;
         }
+    }
+
+    private MultiTenantConfig tryBuildConfig(String key, String route) {
+        Matcher usernameMatcher = USERNAME_PATTERN.matcher(key);
+        if (usernameMatcher.matches()) {
+            MultiTenantConfig config = new MultiTenantConfig();
+            config.setUsername(usernameMatcher.group(1));
+            config.setPassword(usernameMatcher.group(2));
+            config.setBid(Long.parseLong(usernameMatcher.group(3)));
+            config.setBgroup(usernameMatcher.group(4));
+            config.setRoute(route);
+            return config;
+        }
+        Matcher legacyMatcher = LEGACY_PATTERN.matcher(key);
+        if (legacyMatcher.matches()) {
+            MultiTenantConfig config = new MultiTenantConfig();
+            config.setPassword(legacyMatcher.group(1));
+            config.setBid(Long.parseLong(legacyMatcher.group(2)));
+            config.setBgroup(legacyMatcher.group(3));
+            config.setRoute(route);
+            return config;
+        }
+        return null;
     }
 
 }

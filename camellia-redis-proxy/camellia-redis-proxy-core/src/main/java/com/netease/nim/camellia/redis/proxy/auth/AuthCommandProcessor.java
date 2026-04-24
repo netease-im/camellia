@@ -71,7 +71,7 @@ public record AuthCommandProcessor(RouteConfProvider provider) {
             channelInfo.setBid(clientIdentity.getBid());
             channelInfo.setBgroup(clientIdentity.getBgroup());
             if (logger.isDebugEnabled()) {
-                logger.debug("channel init with bid/bgroup = {}/{}, consid = {} by password",
+                logger.debug("channel init with bid/bgroup = {}/{}, consid = {} by username/password",
                         clientIdentity.getBid(),
                         clientIdentity.getBgroup(),
                         channelInfo.getConsid());

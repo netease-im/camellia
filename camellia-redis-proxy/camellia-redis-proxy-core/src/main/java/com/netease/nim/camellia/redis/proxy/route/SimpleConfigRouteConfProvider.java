@@ -19,7 +19,8 @@ public class SimpleConfigRouteConfProvider extends MultiTenantsRouteConfProvider
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleConfigRouteConfProvider.class);
 
-    private static final Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)\\.password\\.(\\d+)\\.([a-zA-Z0-9_]+)\\.route\\.conf\\.biz");
+    private static final Pattern LEGACY_PATTERN = Pattern.compile("^([a-zA-Z0-9_]+)\\.password\\.(\\d+)\\.([a-zA-Z0-9_]+)\\.route\\.conf\\.biz$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^username\\.([a-zA-Z0-9_]+)\\.password\\.([a-zA-Z0-9_]+)\\.(\\d+)\\.([a-zA-Z0-9_]+)\\.route\\.conf\\.biz$");
 
     private final ConcurrentHashMap<String, SimpleConfigFetcher> fetcherMap = new ConcurrentHashMap<>();
 
@@ -36,12 +37,9 @@ public class SimpleConfigRouteConfProvider extends MultiTenantsRouteConfProvider
             Map<String, String> map = ProxyDynamicConf.getAll();
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 String entryKey = entry.getKey();
-                Matcher matcher = pattern.matcher(entryKey);
-                if (matcher.matches()) {
-                    String password = matcher.group(1);
-                    long bid = Long.parseLong(matcher.group(2));
-                    String bgroup = matcher.group(3);
-                    String biz = entry.getValue();
+                MultiTenantConfig config = tryBuildConfig(entryKey, entry.getValue());
+                if (config != null) {
+                    String biz = config.getRoute();
 
                     String url = ProxyDynamicConf.getString("simple.config.fetch.url", null);
                     String key = ProxyDynamicConf.getString("simple.config.fetch.key", null);
@@ -54,10 +52,6 @@ public class SimpleConfigRouteConfProvider extends MultiTenantsRouteConfProvider
                     }
                     String route = fetcher.getConfig();
 
-                    MultiTenantConfig config = new MultiTenantConfig();
-                    config.setBid(bid);
-                    config.setBgroup(bgroup);
-                    config.setPassword(password);
                     config.setRoute(route);
                     checkValid(config);
                     list.add(config);
@@ -69,5 +63,28 @@ public class SimpleConfigRouteConfProvider extends MultiTenantsRouteConfProvider
             logger.error("multi config error", e);
             return null;
         }
+    }
+
+    private MultiTenantConfig tryBuildConfig(String entryKey, String biz) {
+        Matcher usernameMatcher = USERNAME_PATTERN.matcher(entryKey);
+        if (usernameMatcher.matches()) {
+            MultiTenantConfig config = new MultiTenantConfig();
+            config.setUsername(usernameMatcher.group(1));
+            config.setPassword(usernameMatcher.group(2));
+            config.setBid(Long.parseLong(usernameMatcher.group(3)));
+            config.setBgroup(usernameMatcher.group(4));
+            config.setRoute(biz);
+            return config;
+        }
+        Matcher legacyMatcher = LEGACY_PATTERN.matcher(entryKey);
+        if (legacyMatcher.matches()) {
+            MultiTenantConfig config = new MultiTenantConfig();
+            config.setPassword(legacyMatcher.group(1));
+            config.setBid(Long.parseLong(legacyMatcher.group(2)));
+            config.setBgroup(legacyMatcher.group(3));
+            config.setRoute(biz);
+            return config;
+        }
+        return null;
     }
 }

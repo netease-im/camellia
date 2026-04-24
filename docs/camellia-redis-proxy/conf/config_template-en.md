@@ -116,10 +116,14 @@ camellia.dashboard.headers={"k1":"v1"}
 pass123.password.1.default.route.conf=redis://@127.0.0.1:6379
 #### Indicates that password pass456 points to bid=2/bgroup=default, route is a complex configuration
 pass456.password.2.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
+#### Optional username-aware rule, exact (username,password) match wins, then falls back to password-only
+username.userA.password.pass123.3.userA.route.conf=redis://@127.0.0.1:6380
 
 ### multi_tenants_v2
 #### Points to a json array containing 3 route groups
 multi.tenant.route.config=[{"bid":1,"bgroup":"route1","password":"passwd1","route":"redis://passxx@127.0.0.1:16379"},{"bid":1,"bgroup":"route2","password":"passwd2","route":"redis-cluster://@127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382"},{"bid":1,"bgroup":"route3","password":"passwd3","route":{"type":"simple","operation":{"read":"redis://passwd123@127.0.0.1:6379","type":"rw_separate","write":"redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}}]
+#### Optional username field is also supported
+multi.tenant.route.config=[{"bid":1,"bgroup":"route1","password":"passwd1","route":"redis://passxx@127.0.0.1:16379"},{"bid":1,"bgroup":"route2","username":"userA","password":"passwd1","route":"redis://@127.0.0.1:6380"}]
 
 ### multi_tenants_simple_config
 #### External system (just need to meet the interface specification of simple_config)
@@ -130,6 +134,8 @@ simple.config.fetch.secret=xxx
 pass123.password.1.default.route.conf.biz=biz1
 #### Indicates that password pass456 points to bid=2/bgroup=default, route biz=biz2, route configuration is obtained through external system
 pass456.password.2.default.route.conf.biz=biz2
+#### Optional username-aware rule for finer routing split
+username.userA.password.pass123.3.userA.route.conf.biz=biz3
 
 
 ############# Plugin Configuration ##################
