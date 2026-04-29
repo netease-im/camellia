@@ -26,26 +26,29 @@ public class CommandDecoder extends ByteToMessageDecoder {
     private byte[][] bytes;
     private int index = 0;
 
-    private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
-    private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
+    private static int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
+    private static int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
+
+    static {
+        updateConf();
+        ProxyDynamicConf.registerCallback(CommandDecoder::updateConf);
+    }
 
     public CommandDecoder() {
         super();
-        updateConf();
-        ProxyDynamicConf.registerCallback(this::updateConf);
-        this.commands = new ArrayList<>(this.commandDecodeBufferInitializerSize);
+        this.commands = new ArrayList<>(CommandDecoder.commandDecodeBufferInitializerSize);
     }
 
-    private void updateConf() {
+    private static void updateConf() {
         int commandDecodeMaxBatchSize = ProxyDynamicConf.getInt("command.decode.max.batch.size", Constants.Server.commandDecodeMaxBatchSize);
-        if (commandDecodeMaxBatchSize > 0 && commandDecodeMaxBatchSize != this.commandDecodeMaxBatchSize) {
-            logger.info("command.decode.max.batch.size updated, {} -> {}", this.commandDecodeMaxBatchSize, commandDecodeMaxBatchSize);
-            this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
+        if (commandDecodeMaxBatchSize > 0 && commandDecodeMaxBatchSize != CommandDecoder.commandDecodeMaxBatchSize) {
+            logger.info("command.decode.max.batch.size updated, {} -> {}", CommandDecoder.commandDecodeMaxBatchSize, commandDecodeMaxBatchSize);
+            CommandDecoder.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
         }
         int commandDecodeBufferInitializerSize = ProxyDynamicConf.getInt("command.decode.buffer.initializer.size", Constants.Server.commandDecodeBufferInitializerSize);
-        if (commandDecodeBufferInitializerSize > 0 && commandDecodeBufferInitializerSize != this.commandDecodeBufferInitializerSize) {
-            logger.info("command.decode.buffer.initializer.size updated, {} -> {}", this.commandDecodeBufferInitializerSize, commandDecodeBufferInitializerSize);
-            this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
+        if (commandDecodeBufferInitializerSize > 0 && commandDecodeBufferInitializerSize != CommandDecoder.commandDecodeBufferInitializerSize) {
+            logger.info("command.decode.buffer.initializer.size updated, {} -> {}", CommandDecoder.commandDecodeBufferInitializerSize, commandDecodeBufferInitializerSize);
+            CommandDecoder.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
         }
     }
 
