@@ -1,6 +1,24 @@
 [ENGLISH](update-en.md)
 
 
+# 1.4.1（2026/04/30）
+### 新增
+* camellia-redis-proxy，多租户路由支持按 `username` + `password` 做更细粒度匹配，未命中时回退到仅 `password`
+* camellia-redis-proxy，新增 `pending_commands` 监控，支持通过 `info`、JSON 和 Prometheus 输出
+* camellia-redis-proxy，补充 Helm 部署文档和示例
+* camellia-redis-proxy、camellia-delay-queue、camellia-hot-key-server、camellia-id-gen-server 等服务统一支持模板化 banner 输出
+
+### 更新
+* Redis 资源解析增强，支持配置中的密码包含 `@`
+* camellia-discovery 及 nacos/zk 相关实现增强健壮性
+* README 增加 DeepWiki 入口，部署文档补充 Helm 使用说明
+
+### fix
+* 修复 camellia-redis-proxy 在 disconf 继承配置场景下的解析失败问题
+* 修复注册中心快速切换场景下的定时任务泄漏问题，避免同一 `serviceName` 重复创建 discovery
+* 修复 camellia-redis-proxy 中 `CommandDecoder` 按连接重复注册动态配置回调导致的内存泄漏问题
+
+
 # 1.4.0（2026/02/27）
 ### 新增
 * camellia-redis-proxy支持FT._LIST命令

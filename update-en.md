@@ -1,6 +1,24 @@
 [中文版](update-zh.md)
 
 
+# 1.4.1 (2026/04/30)
+### New Features
+* camellia-redis-proxy multi-tenant routing now supports finer-grained selection by `username` + `password`, with fallback to password-only matching
+* camellia-redis-proxy adds the `pending_commands` metric, available through `info`, JSON output, and Prometheus
+* Added Helm deployment documentation and examples for camellia-redis-proxy
+* camellia-redis-proxy, camellia-delay-queue, camellia-hot-key-server, and camellia-id-gen-server now use a unified template banner on startup
+
+### Updates
+* Redis resource parsing is enhanced to support passwords containing `@`
+* Improved robustness for camellia-discovery and related nacos/zk integrations
+* Added a DeepWiki entry to the README and expanded deployment docs with Helm guidance
+
+### Fixes
+* Fixed parsing failure in camellia-redis-proxy when using inherited disconf configuration
+* Fixed scheduled task leakage during fast registry switching by reusing discovery instances for the same `serviceName`
+* Fixed a camellia-redis-proxy memory leak caused by `CommandDecoder` registering dynamic configuration callbacks per connection
+
+
 # 1.4.0 (2026/02/27)
 ### New Features
 * camellia-redis-proxy supports FT._LIST command
