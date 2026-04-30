@@ -28,7 +28,7 @@
 	</modules>
 
 	<properties>
-		<revision>1.4.1-SNAPSHOT</revision>
+		<revision>1.4.1</revision>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>21</java.version>

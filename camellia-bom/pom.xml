@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-bom</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.4.1</version>
     <packaging>pom</packaging>
 
     <name>Camellia BOM</name>
     <description>Camellia Bill of Materials</description>
 
     <properties>
-        <camellia.version>1.4.1-SNAPSHOT</camellia.version>
+        <camellia.version>1.4.1</camellia.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
         <maven-source-plugin.version>3.1.0</maven-source-plugin.version>
