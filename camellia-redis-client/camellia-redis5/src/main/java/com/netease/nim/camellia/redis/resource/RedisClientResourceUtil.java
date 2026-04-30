@@ -78,10 +78,13 @@ public class RedisClientResourceUtil {
             Map<String, String> paramMap = RedisResourceUtil.getParamMap(substring);
 
             CamelliaRedisProxyResource camelliaRedisProxyResource;
-            String bid = paramMap.get("bid");
+            String bidStr = paramMap.get("bid");
             String bgroup = paramMap.get("bgroup");
-            if (bid != null && bgroup != null) {
-                camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName, Long.parseLong(bid), bgroup);
+            String dbStr = paramMap.get("db");
+            if (bidStr != null || bgroup != null || dbStr != null) {
+                long bid = bidStr == null ? -1 : Long.parseLong(bidStr);
+                int db = dbStr == null ? 0 : Integer.parseInt(dbStr);
+                camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName, bid, bgroup, db);
             } else {
                 camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
             }
