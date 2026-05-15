@@ -35,13 +35,29 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-hot-key-common</artifactId>
+			<version>${revision}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-hot-key-sdk</artifactId>
+			<version>${revision}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-hot-key-server</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-discovery-spring</artifactId>
 			<version>${revision}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
