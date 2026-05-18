@@ -132,6 +132,7 @@ public class CamelliaDelayQueueSdkTest {
         });
         Assert.assertTrue(consumed.await(2, TimeUnit.SECONDS));
         Assert.assertEquals("before-remove", consumedId.get());
+        assertEventually(() -> api.ackRequests.size() == 1, 2000);
 
         Assert.assertTrue(sdk.removeMsgListener(listenerId));
         int ackCount = api.ackRequests.size();
