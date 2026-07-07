@@ -140,7 +140,8 @@ public class GlobalCamelliaFeignEnv {
                 if (resourceList == null || resourceList.isEmpty()) {
                     return -1;
                 }
-                return Math.abs(loadBalanceKey.hashCode()) % resourceList.size();
+                int hash = loadBalanceKey.hashCode();
+                return (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % resourceList.size();
             }
             return -1;
         }

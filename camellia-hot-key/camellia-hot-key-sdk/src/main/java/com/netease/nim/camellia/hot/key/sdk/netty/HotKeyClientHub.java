@@ -140,7 +140,8 @@ public class HotKeyClientHub {
             if (addrs == null || addrs.isEmpty()) {
                 return null;
             }
-            int index = Math.abs(key.hashCode()) % addrs.size();
+            int hash = key.hashCode();
+            int index = (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % addrs.size();
             ServerNode addr = addrs.get(index);
             ConcurrentHashMap<ServerNode, HotKeyClientGroup> map = clientGroupMap.get(name);
             if (map == null || map.isEmpty()) {

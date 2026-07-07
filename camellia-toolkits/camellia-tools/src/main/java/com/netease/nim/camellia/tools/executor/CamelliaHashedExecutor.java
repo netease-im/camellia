@@ -131,7 +131,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
             throw new IllegalStateException("executor has shutdown");
         }
         initWorkThreads();
-        return Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        return positiveHash(Arrays.hashCode(hashKey)) % workThreads.size();
     }
 
     /**
@@ -145,7 +145,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
             throw new IllegalStateException("executor has shutdown");
         }
         initWorkThreads();
-        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        int index = positiveHash(Arrays.hashCode(hashKey)) % workThreads.size();
         FutureTask<Void> task = new FutureTask<>(runnable, null);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
@@ -176,7 +176,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
             throw new IllegalStateException("executor has shutdown");
         }
         initWorkThreads();
-        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        int index = positiveHash(Arrays.hashCode(hashKey)) % workThreads.size();
         FutureTask<T> task = new FutureTask<>(callable);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
@@ -250,7 +250,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
      */
     public int getQueueSize(byte[] hashKey) {
         if (!initOk.get()) return 0;
-        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        int index = positiveHash(Arrays.hashCode(hashKey)) % workThreads.size();
         WorkThread workThread = workThreads.get(index);
         return workThread.queueSize();
     }
@@ -293,6 +293,10 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
             stats.setCompletedTaskCount(0);
         }
         return stats;
+    }
+
+    private int positiveHash(int hash) {
+        return hash == Integer.MIN_VALUE ? 0 : Math.abs(hash);
     }
 
     public static interface RejectedExecutionHandler {

@@ -354,7 +354,7 @@ public class AdminController {
             int bucketSize = shardingTable.getBucketSize();
             DefaultShardingFunc shardingFunc = new DefaultShardingFunc();
             int shardingCode = shardingFunc.shardingCode(key.getBytes(StandardCharsets.UTF_8));
-            int index = Math.abs(shardingCode) % bucketSize;
+            int index = (shardingCode == Integer.MIN_VALUE ? 0 : Math.abs(shardingCode)) % bucketSize;
             ResourceOperation resourceOperation = shardingTable.getResourceOperationMap().get(index);
             Object ret = ReadableResourceTableUtil.readableResourceOperation(resourceOperation);
             LogBean.get().addProps("ret", ret);

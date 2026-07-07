@@ -149,7 +149,8 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     private void renew0() {
         try {
             if (!masterListenerList.isEmpty()) {
-                int index = Math.abs(renewIndex.getAndIncrement()) % masterListenerList.size();
+                int hash = renewIndex.getAndIncrement();
+                int index = (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % masterListenerList.size();
                 RedisSentinelMasterListener masterListener = masterListenerList.get(index);
                 masterListener.renew();
             }

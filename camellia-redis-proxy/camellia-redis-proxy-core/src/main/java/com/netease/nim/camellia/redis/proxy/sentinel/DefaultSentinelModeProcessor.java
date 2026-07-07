@@ -439,7 +439,8 @@ public class DefaultSentinelModeProcessor implements SentinelModeProcessor {
                 id = UUID.randomUUID().toString();
             }
             int size = onlineNodes.size();
-            int index = Math.abs(id.hashCode()) % size;
+            int hash = id.hashCode();
+            int index = (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % size;
             target = onlineNodes.get(index);
         } catch (Exception e) {
             try {

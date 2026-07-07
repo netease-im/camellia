@@ -42,7 +42,8 @@ public class KafkaProducerWrapper {
     public void send(ProducerRecord<byte[], byte[]> record, MqPack mqPack) {
         if (!isValid()) return;
         byte[] key = record.key();
-        KafkaProducer<byte[], byte[]> producer = list.get(Math.abs(Arrays.hashCode(key)) % list.size());
+        int hash = Arrays.hashCode(key);
+        KafkaProducer<byte[], byte[]> producer = list.get((hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % list.size());
         producer.send(record, (recordMetadata, e) -> {
             if (e != null) {
                 valid = false;

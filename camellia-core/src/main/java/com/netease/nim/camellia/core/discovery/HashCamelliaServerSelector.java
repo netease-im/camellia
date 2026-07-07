@@ -27,7 +27,8 @@ public class HashCamelliaServerSelector<T> implements CamelliaServerSelector<T> 
             if (loadBalanceKey == null) {
                 index = ThreadLocalRandom.current().nextInt(list.size());
             } else {
-                index = Math.abs(loadBalanceKey.hashCode()) % list.size();
+                int hash = loadBalanceKey.hashCode();
+                index = (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % list.size();
             }
             if (GlobalDiscoveryEnv.logInfoEnable) {
                 logger.info("pick server by hash, loadBalanceKey = {}, index = {}, list = {}", loadBalanceKey, index, list);

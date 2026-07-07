@@ -138,7 +138,8 @@ public class ClusterModeCommandMoveInvoker {
             if (slotCache != null && System.currentTimeMillis() - slotCache.updateTime <= cacheMillis) {
                 return slotCache.slots.contains(slot);
             }
-            int lockIndex = Math.abs(node.toString().hashCode()) % 32;
+            int hash = node.toString().hashCode();
+            int lockIndex = (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % 32;
             ReentrantLock lock = lockArray[lockIndex];
             lock.lock();
             try {

@@ -57,7 +57,8 @@ public class RedisWorkerIdGen implements WorkerIdGen {
         } catch (Exception e) {
             hostAddress = UUID.randomUUID().toString();
         }
-        long initialId = Math.abs(hostAddress.hashCode()) % (maxWorkerId + 1);
+        int hash = hostAddress.hashCode();
+        long initialId = (hash == Integer.MIN_VALUE ? 0 : Math.abs(hash)) % (maxWorkerId + 1);
         long workerId = initialId;
         do {
             CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(template, lockKey(workerId), lockExpireMillis, lockExpireMillis);
@@ -67,7 +68,7 @@ public class RedisWorkerIdGen implements WorkerIdGen {
                 return workerId;
             }
             workerId++;
-            workerId = Math.abs(workerId) % (maxWorkerId + 1);
+            workerId = (workerId == Long.MIN_VALUE ? 0 : Math.abs(workerId)) % (maxWorkerId + 1);
         } while (workerId != initialId);
 
         throw new CamelliaIdGenException("workerId gen fail");
