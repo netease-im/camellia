@@ -11,6 +11,7 @@
 |CamelliaDynamicIsolationExecutor|thread pool utils with dynamic isolation to fast/slow tasks|基于任务快慢自动隔离的线程池|[QUICK START](/docs/camellia-tools/dynamic_isolation.md)|
 |CamelliaCircuitBreaker|circuit breaker utils|熔断器|[QUICK START](/docs/camellia-tools/circuit_breaker.md)|
 |CamelliaRedisLock<br>CamelliaRedisLockManager|distribution lock|分布式锁|[QUICK START](/docs/camellia-tools/distribution_lock.md)|
+|CamelliaRedisSemaphore|distribution semaphore|分布式信号量|[QUICK START](/docs/camellia-tools/distribution_semaphore.md)|
 |CamelliaCounterCache|counter cache|计数器缓存|[QUICK START](/docs/camellia-tools/counter_cache.md)|
 |CamelliaFreq|freq utils, both support local/redis|频控工具类|[QUICK START](/docs/camellia-tools/freq.md)|
 |CamelliaMergeTask<br>CamelliaMergeTaskExecutor|merge task executor|并发场景下的任务合并执行器|[QUICK START](/docs/camellia-tools/merge_task.md)|
