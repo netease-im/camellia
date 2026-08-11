@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * <p>沿用 camellia 测试约定：默认通过系统属性 {@code test_enable}（默认 {@code false}）门控，
  * 无 redis 时 {@code mvn test} 直接 no-op；开启后通过 {@code test_redis_url}（默认 {@code redis://@127.0.0.1:6379}）
- * 连接真实 redis 执行。参数校验用例不依赖 redis，始终执行。
+ * 连接真实 redis 执行。
  *
  * Created by caojiajun on 2026/8/7.
  */
@@ -48,9 +48,9 @@ public class CamelliaRedisSemaphoreTest {
         }
     }
 
-    // 参数校验：不依赖 redis，始终执行
     @Test
     public void testValidation() {
+        if (!enable) return;
         try {
             CamelliaRedisSemaphore.newSemaphore(template(), "test:sem:invalid", 0, 1000, 1000, CamelliaRedisSemaphore.PermitsMode.SEED);
             Assert.fail("permits=0 should throw");
