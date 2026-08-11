@@ -81,7 +81,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/resourceTable/{tid}")
-    public WebResult deleteResourceTable(@PathVariable long tid) {
+    public WebResult deleteResourceTable(@PathVariable("tid") long tid) {
         LogBean.get().addProps("tid", tid);
         tableService.delete(tid);
         return WebResult.success();
