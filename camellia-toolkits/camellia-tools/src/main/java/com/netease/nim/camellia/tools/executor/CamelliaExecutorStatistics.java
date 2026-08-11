@@ -97,6 +97,7 @@ public class CamelliaExecutorStatistics {
         ThreadPoolExecutor,
         CamelliaDynamicExecutor,
         CamelliaHashedExecutor,
+        CamelliaHashedBatchExecutor,
         CamelliaDynamicIsolationExecutor,
         CamelliaLinearInitializationExecutor,
         ;
