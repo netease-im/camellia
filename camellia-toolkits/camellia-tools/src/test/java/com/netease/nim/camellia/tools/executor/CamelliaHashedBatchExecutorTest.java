@@ -198,12 +198,86 @@ public class CamelliaHashedBatchExecutorTest {
 
             allowFirstBatchFinish.countDown();
             Assert.assertTrue(done.await(3, TimeUnit.SECONDS));
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+            while (executor.getInflightTaskCount() > 0 && System.nanoTime() < deadline) {
+                Thread.sleep(10);
+            }
             Assert.assertEquals(0, executor.getQueueSize());
             Assert.assertEquals(0, executor.getInflightTaskCount());
             Assert.assertEquals(0, executor.getOutstandingTaskCount());
         } finally {
             executor.shutdown();
         }
+    }
+
+    @Test
+    public void testCallerRunsKeepsSameQueueSerial() throws Exception {
+        CountDownLatch firstTaskStarted = new CountDownLatch(1);
+        CountDownLatch allowFirstTaskFinish = new CountDownLatch(1);
+        CountDownLatch allDone = new CountDownLatch(3);
+        CountDownLatch callerRunsDone = new CountDownLatch(1);
+        AtomicInteger concurrent = new AtomicInteger(0);
+        AtomicInteger maxConcurrent = new AtomicInteger(0);
+        CamelliaHashedBatchExecutorConfig<Integer> config = new CamelliaHashedBatchExecutorConfig<>("caller-runs", tasks -> {
+            int current = concurrent.incrementAndGet();
+            maxConcurrent.updateAndGet(value -> Math.max(value, current));
+            try {
+                for (Integer task : tasks) {
+                    if (task == 1) {
+                        firstTaskStarted.countDown();
+                        allowFirstTaskFinish.await(3, TimeUnit.SECONDS);
+                    }
+                    allDone.countDown();
+                }
+            } finally {
+                concurrent.decrementAndGet();
+            }
+        });
+        config.setQueueCount(1);
+        config.setWorkerCount(1);
+        config.setDynamicQueueCapacity(() -> 1);
+        config.setMaxBatchSize(1);
+        config.setMinBatchSize(1);
+        config.setIdleWaitMillis(1);
+        config.setRejectedExecutionHandler(CamelliaHashedBatchExecutor.CallerRunsPolicy::new);
+        CamelliaHashedBatchExecutor<Integer> executor = new CamelliaHashedBatchExecutor<>(config);
+        try {
+            Assert.assertTrue(executor.submit("same", 1));
+            Assert.assertTrue(firstTaskStarted.await(3, TimeUnit.SECONDS));
+            Assert.assertTrue(executor.submit("same", 2));
+            Thread callerThread = new Thread(() -> {
+                executor.submit("same", 3);
+                callerRunsDone.countDown();
+            });
+            callerThread.start();
+            Thread.sleep(100);
+            Assert.assertEquals(1, callerRunsDone.getCount());
+            Assert.assertEquals(1, maxConcurrent.get());
+            allowFirstTaskFinish.countDown();
+            Assert.assertTrue(callerRunsDone.await(3, TimeUnit.SECONDS));
+            Assert.assertTrue(allDone.await(3, TimeUnit.SECONDS));
+            Assert.assertEquals(1, maxConcurrent.get());
+        } finally {
+            allowFirstTaskFinish.countDown();
+            executor.shutdown();
+        }
+    }
+
+    @Test
+    public void testShutdownTerminatesWorkers() throws Exception {
+        CountDownLatch handled = new CountDownLatch(1);
+        CamelliaHashedBatchExecutorConfig<Integer> config = new CamelliaHashedBatchExecutorConfig<>("shutdown", tasks -> handled.countDown());
+        config.setQueueCount(1);
+        config.setWorkerCount(1);
+        config.setMaxBatchSize(1);
+        config.setMinBatchSize(1);
+        config.setIdleWaitMillis(1);
+        CamelliaHashedBatchExecutor<Integer> executor = new CamelliaHashedBatchExecutor<>(config);
+        Assert.assertTrue(executor.submit("same", 1));
+        Assert.assertTrue(handled.await(3, TimeUnit.SECONDS));
+        executor.shutdown();
+        Assert.assertTrue(executor.awaitTermination(3, TimeUnit.SECONDS));
+        Assert.assertTrue(executor.isShutdown());
     }
 
     private static class FixedHashKey {

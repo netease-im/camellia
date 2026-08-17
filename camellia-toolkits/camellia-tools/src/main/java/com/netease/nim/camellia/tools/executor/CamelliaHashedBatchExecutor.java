@@ -48,6 +48,7 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
     private final List<DynamicCapacityLinkedBlockingQueue<T>> queues;
     private final AtomicBoolean[] queueRunning;
     private final List<WorkThread> workThreads;
+    private final ThreadLocal<List<Integer>> handlingQueueIndexes = new ThreadLocal<>();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private final AtomicBoolean initOk = new AtomicBoolean(false);
     private final AtomicInteger queuedTaskCount = new AtomicInteger(0);
@@ -161,11 +162,12 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
         }
         int index = index(hashKey);
         BlockingQueue<T> queue = queues.get(index);
+        queuedTaskCount.incrementAndGet();
         boolean success = queue.offer(task);
         if (success) {
-            queuedTaskCount.incrementAndGet();
             return true;
         }
+        queuedTaskCount.decrementAndGet();
         reject(hashKey, task, handler);
         return false;
     }
@@ -173,6 +175,40 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
     private void reject(Object hashKey, T task, RejectedExecutionHandler<T> handler) {
         if (handler != null) {
             handler.rejectedExecution(hashKey, task, this);
+        }
+    }
+
+    private void callerRuns(Object hashKey, T task) {
+        int queueIndex = index(hashKey);
+        List<Integer> currentQueueIndexes = handlingQueueIndexes.get();
+        if (currentQueueIndexes != null && currentQueueIndexes.contains(queueIndex)) {
+            handleCallerRunsTask(hashKey, task);
+            return;
+        }
+        boolean interrupted = false;
+        while (!queueRunning[queueIndex].compareAndSet(false, true)) {
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1));
+            if (Thread.interrupted()) {
+                interrupted = true;
+            }
+        }
+        try {
+            handleCallerRunsTask(hashKey, task);
+        } finally {
+            queueRunning[queueIndex].set(false);
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void handleCallerRunsTask(Object hashKey, T task) {
+        List<T> tasks = new ArrayList<>(1);
+        tasks.add(task);
+        try {
+            batchHandler.handle(tasks);
+        } catch (Exception e) {
+            throw new RejectedExecutionException("Task " + task + " rejected and caller runs error from " + name + ", hashKey = " + hashKey, e);
         }
     }
 
@@ -341,10 +377,12 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
                     waitMoreIfNecessary(batch);
                     active.set(true);
                     inflightTaskCount.addAndGet(batch.tasks.size());
+                    handlingQueueIndexes.set(batch.queueIndexes);
                     try {
                         batchHandler.handle(batch.tasks);
                         completedTaskCount.addAndGet(batch.tasks.size());
                     } finally {
+                        handlingQueueIndexes.remove();
                         inflightTaskCount.addAndGet(-batch.tasks.size());
                         active.set(false);
                     }
@@ -492,13 +530,7 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
     public static class CallerRunsPolicy<T> implements RejectedExecutionHandler<T> {
         @Override
         public void rejectedExecution(Object hashKey, T task, CamelliaHashedBatchExecutor<T> executor) {
-            List<T> list = new ArrayList<>(1);
-            list.add(task);
-            try {
-                executor.batchHandler.handle(list);
-            } catch (Exception e) {
-                throw new RejectedExecutionException("Task " + task + " rejected and caller runs error from " + executor.name + ", hashKey = " + hashKey, e);
-            }
+            executor.callerRuns(hashKey, task);
         }
     }
 }
