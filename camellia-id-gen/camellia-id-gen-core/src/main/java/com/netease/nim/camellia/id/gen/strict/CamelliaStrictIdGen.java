@@ -168,6 +168,32 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         throw new CamelliaIdGenException("exceed maxRetry=" + maxRetry);
     }
 
+    public Long genIdIfCached(String tag) {
+        try {
+            String seq = template.rpop(cacheKey(tag));
+            if (seq == null) {
+                return null;
+            }
+            return Long.parseLong(seq);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new CamelliaIdGenException(e);
+        }
+    }
+
+    public Long peekIdIfCached(String tag) {
+        try {
+            String seq = template.lindex(cacheKey(tag), -1);
+            if (seq == null) {
+                return null;
+            }
+            return Long.parseLong(seq);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new CamelliaIdGenException(e);
+        }
+    }
+
     @Override
     public long decodeRegionId(long id) {
         if (regionBits == 0) {

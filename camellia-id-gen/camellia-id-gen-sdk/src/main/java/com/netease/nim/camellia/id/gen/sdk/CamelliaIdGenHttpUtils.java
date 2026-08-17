@@ -39,6 +39,20 @@ public class CamelliaIdGenHttpUtils {
         }
     }
 
+    public static Long genIdIfPresent(OkHttpClient okHttpClient, String url) {
+        try {
+            JSONObject json = invokeGet(okHttpClient, url, true);
+            if (json.getLongValue("code") == 404L) {
+                return null;
+            }
+            return json.getLong("data");
+        } catch (CamelliaIdGenException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaIdGenException(e);
+        }
+    }
+
     public static List<Long> genIds(OkHttpClient okHttpClient, String url) {
         try {
             JSONObject json = invokeGet(okHttpClient, url);
@@ -62,6 +76,10 @@ public class CamelliaIdGenHttpUtils {
     }
 
     public static JSONObject invokeGet(OkHttpClient okHttpClient, String url) {
+        return invokeGet(okHttpClient, url, false);
+    }
+
+    private static JSONObject invokeGet(OkHttpClient okHttpClient, String url, boolean allowNotFound) {
         try {
             Request request = new Request.Builder()
                     .url(url)
@@ -75,7 +93,7 @@ public class CamelliaIdGenHttpUtils {
             String string = response.body().string();
             JSONObject json = JSONObject.parseObject(string);
             Integer code = json.getInteger("code");
-            if (code == null || code != 200) {
+            if (code == null || (code != 200 && (!allowNotFound || code != 404))) {
                 throw new CamelliaIdGenException("code=" + code);
             }
             return json;

@@ -40,6 +40,29 @@ public class CamelliaIdGenStrictController {
         }
     }
 
+    @GetMapping("/genIdIfCached")
+    public IdGenResult genIdIfCached(@RequestParam("tag") String tag) {
+        String uri = "/camellia/id/gen/strict/genIdIfCached";
+        long startTime = System.currentTimeMillis();
+        try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
+            Long id = camelliaStrictIdGen.genIdIfCached(tag);
+            if (id == null) {
+                return IdGenResult.notFound(uri, startTime);
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("genIdIfCached, tag = {}, id = {}", tag, id);
+            }
+            return IdGenResult.success(uri, startTime, id);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(uri, startTime, e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(uri, startTime, "internal error");
+        }
+    }
+
     @GetMapping("/peekId")
     public IdGenResult peekId(@RequestParam("tag") String tag) {
         String uri = "/camellia/id/gen/strict/peekId";
@@ -49,6 +72,29 @@ public class CamelliaIdGenStrictController {
             long id = camelliaStrictIdGen.peekId(tag);
             if (logger.isDebugEnabled()) {
                 logger.debug("peekId, tag = {}, id = {}", tag, id);
+            }
+            return IdGenResult.success(uri, startTime, id);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(uri, startTime, e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(uri, startTime, "internal error");
+        }
+    }
+
+    @GetMapping("/peekIdIfCached")
+    public IdGenResult peekIdIfCached(@RequestParam("tag") String tag) {
+        String uri = "/camellia/id/gen/strict/peekIdIfCached";
+        long startTime = System.currentTimeMillis();
+        try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
+            Long id = camelliaStrictIdGen.peekIdIfCached(tag);
+            if (id == null) {
+                return IdGenResult.notFound(uri, startTime);
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("peekIdIfCached, tag = {}, id = {}", tag, id);
             }
             return IdGenResult.success(uri, startTime, id);
         } catch (CamelliaIdGenException e) {

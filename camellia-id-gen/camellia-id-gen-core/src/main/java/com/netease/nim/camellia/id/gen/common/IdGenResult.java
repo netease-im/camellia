@@ -49,4 +49,9 @@ public class IdGenResult {
         IdGenMonitor.update(uri, System.currentTimeMillis() - startTime, 500);
         return new IdGenResult(500, null, msg);
     }
+
+    public static IdGenResult notFound(String uri, long startTime) {
+        IdGenMonitor.update(uri, System.currentTimeMillis() - startTime, 404);
+        return new IdGenResult(404, null, "not found");
+    }
 }

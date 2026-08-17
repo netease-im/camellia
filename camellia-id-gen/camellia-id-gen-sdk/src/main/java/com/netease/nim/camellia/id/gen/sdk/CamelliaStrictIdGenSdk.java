@@ -34,11 +34,25 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
         }, config.getMaxRetry());
     }
 
+    public Long genIdIfCached(String tag) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/strict/genIdIfCached?tag=" + URLEncoder.encode(tag, "utf-8");
+            return CamelliaIdGenHttpUtils.genIdIfPresent(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
+
     @Override
     public long peekId(String tag) {
         return invoker.invoke(server -> {
             String fullUrl = server.getUrl() + "/camellia/id/gen/strict/peekId?tag=" + URLEncoder.encode(tag, "utf-8");
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
+
+    public Long peekIdIfCached(String tag) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/strict/peekIdIfCached?tag=" + URLEncoder.encode(tag, "utf-8");
+            return CamelliaIdGenHttpUtils.genIdIfPresent(okHttpClient, fullUrl);
         }, config.getMaxRetry());
     }
 
