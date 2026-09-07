@@ -48,12 +48,13 @@ public class DefaultRouteConfProvider extends RouteConfProvider {
                 }
                 routeConf = fileInfo.getFileContent();
             }
-            if (Objects.equals(routeConf, this.routeConf)) {
-                return;
-            }
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(routeConf);
             checkResourceTable(resourceTable);
-            this.routeConf = ReadableResourceTableUtil.readableResourceTable(resourceTable);
+            String parsedRouteConf = ReadableResourceTableUtil.readableResourceTable(resourceTable);
+            if (Objects.equals(parsedRouteConf, this.routeConf)) {
+                return;
+            }
+            this.routeConf = parsedRouteConf;
             logger.info("route conf updated, conf = {}", routeConf);
             invokeUpdateResourceTable(this.routeConf);
         } catch (Exception e) {
