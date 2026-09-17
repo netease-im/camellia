@@ -682,7 +682,15 @@ public class UpstreamInfoUtils {
                             String[] s = subStr.split(" ");
                             ClusterNodeInfo nodeInfo = new ClusterNodeInfo();
                             nodeInfo.master = s[1];
-                            nodeInfo.slots = s[8];
+                            if (s.length > 8) {
+                                StringBuilder builder = new StringBuilder();
+                                for (int i=8; i<s.length; i++) {
+                                    builder.append(s[i]).append(" ");
+                                }
+                                nodeInfo.slots = builder.toString().trim();
+                            } else {
+                                nodeInfo.slots = "";
+                            }
                             map.put(s[0], nodeInfo);
                         }
                     }
