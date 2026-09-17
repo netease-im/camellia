@@ -699,7 +699,9 @@ public class UpstreamInfoUtils {
                             String[] s = subStr.split(" ");
                             String masterId = s[3];
                             ClusterNodeInfo nodeInfo = map.get(masterId);
-                            nodeInfo.slaves.add(s[1]);
+                            if (nodeInfo != null) {
+                                nodeInfo.slaves.add(s[1]);
+                            }
                         }
                     }
                     return new ArrayList<>(map.values());
@@ -727,5 +729,125 @@ public class UpstreamInfoUtils {
             }
         }
         return map;
+    }
+
+    private static class MasterNode {
+        Resource resource;
+        RedisConnectionAddr addr;
+
+        MasterNode(Resource resource, RedisConnectionAddr addr) {
+            this.resource = resource;
+            this.addr = addr;
+        }
+    }
+
+    private static List<MasterNode> getMasterNodes(Resource resource, Resource redisResource) {
+        List<MasterNode> nodes = new ArrayList<>();
+        if (redisResource instanceof RedisResource) {
+            RedisResource r = (RedisResource) redisResource;
+            nodes.add(new MasterNode(resource, new RedisConnectionAddr(r.getHost(), r.getPort(), r.getUserName(), r.getPassword(), false, 0, false)));
+        } else if (redisResource instanceof RedisSentinelResource) {
+            RedisSentinelResource r = (RedisSentinelResource) redisResource;
+            RedisSentinelInfo sentinelInfo = getRedisSentinelInfo(resource, r.getNodes(), r.getUserName(), r.getPassword(),
+                    r.getMaster(), r.getSentinelUserName(), r.getSentinelPassword());
+            if (sentinelInfo.master != null) {
+                nodes.add(new MasterNode(resource, sentinelInfo.master));
+            }
+        } else if (redisResource instanceof RedisSentinelSlavesResource) {
+            RedisSentinelSlavesResource r = (RedisSentinelSlavesResource) redisResource;
+            RedisSentinelInfo sentinelInfo = getRedisSentinelInfo(resource, r.getNodes(), r.getUserName(), r.getPassword(),
+                    r.getMaster(), r.getSentinelUserName(), r.getSentinelPassword());
+            if (sentinelInfo.master != null) {
+                nodes.add(new MasterNode(resource, sentinelInfo.master));
+            }
+        } else if (redisResource instanceof RedisClusterResource) {
+            RedisClusterResource r = (RedisClusterResource) redisResource;
+            nodes.addAll(getClusterMasterNodes(resource, r.getNodes(), r.getUserName(), r.getPassword()));
+        } else if (redisResource instanceof RedisClusterSlavesResource) {
+            RedisClusterSlavesResource r = (RedisClusterSlavesResource) redisResource;
+            nodes.addAll(getClusterMasterNodes(resource, r.getNodes(), r.getUserName(), r.getPassword()));
+        } else if (redisResource instanceof RedissClusterResource) {
+            RedissClusterResource r = (RedissClusterResource) redisResource;
+            nodes.addAll(getClusterMasterNodes(resource, r.getNodes(), r.getUserName(), r.getPassword()));
+        } else if (redisResource instanceof RedissClusterSlavesResource) {
+            RedissClusterSlavesResource r = (RedissClusterSlavesResource) redisResource;
+            nodes.addAll(getClusterMasterNodes(resource, r.getNodes(), r.getUserName(), r.getPassword()));
+        }
+        return nodes;
+    }
+
+    private static List<MasterNode> getClusterMasterNodes(Resource resource, List<RedisClusterResource.Node> nodes, String userName, String password) {
+        List<MasterNode> addrs = new ArrayList<>();
+        for (RedisClusterResource.Node node : nodes) {
+            List<ClusterNodeInfo> clusterNodeInfos = clusterNodes(resource, node.getHost(), node.getPort(), userName, password);
+            if (clusterNodeInfos == null || clusterNodeInfos.isEmpty()) continue;
+            for (ClusterNodeInfo info : clusterNodeInfos) {
+                try {
+                    String[] splits = info.master.split("@");
+                    String[] hp = splits[0].split(":");
+                    String host = hp[0];
+                    int port = Integer.parseInt(hp[1]);
+                    addrs.add(new MasterNode(resource, new RedisConnectionAddr(host, port, userName, password, false, 0, false)));
+                } catch(Exception ignore) {
+                }
+            }
+            return addrs;
+        }
+        return addrs;
+    }
+
+    private static List<MasterNode> getAllMasterNodes(ResourceTable resourceTable) {
+        List<MasterNode> masters = new ArrayList<>();
+        Map<String, Resource> resourceMap = new HashMap<>();
+        List<Resource> resources = new ArrayList<>(ResourceUtil.getAllReadResources(resourceTable));
+        for (Resource resource : resources) {
+            Resource redisResource = RedisResourceUtil.parseResourceByUrl(resource);
+            List<MasterNode> nodes = getMasterNodes(resource, redisResource);
+            for (MasterNode node : nodes) {
+                // 去除重复的主节点
+                String checkKey = node.addr.getHost() + ":" + node.addr.getPort();
+                if (!resourceMap.containsKey(checkKey)) {
+                    masters.add(node);
+                    resourceMap.put(checkKey, resource);
+                }
+            }
+        }
+        return masters;
+    }
+
+    public static long getDbSize(Long bid, String bgroup, IUpstreamClientTemplateFactory factory) {
+        try {
+            IUpstreamClientTemplate clientTemplate = factory.getOrInitialize(bid, bgroup);
+            if (!(clientTemplate instanceof IUpstreamRedisClientTemplate template)) {
+                return 0;
+            }
+            ResourceTable resourceTable = template.getResourceTable();
+            List<MasterNode> masters = getAllMasterNodes(resourceTable);
+            if (masters.isEmpty()) {
+                return 0;
+            }
+
+            long total = 0;
+            for (MasterNode master : masters) {
+                RedisConnectionAddr addr = master.addr;
+                Resource resource = master.resource;
+                Map<String, String> keyspaceMap = getInfoMap(resource, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(),
+                        new byte[][] {RedisCommand.INFO.raw(), Utils.stringToBytes("keyspace")});
+                if (keyspaceMap != null) {
+                    for (Map.Entry<String, String> entry : keyspaceMap.entrySet()) {
+                        String key = entry.getKey();
+                        String value = entry.getValue();
+                        if (key.startsWith("db") && value != null && value.startsWith("keys=")) {
+                            String[] splits = value.trim().split(",");
+                            total += Long.parseLong(splits[0].split("=")[1]);
+                        }
+                    }
+                }
+            }
+            return total;
+        } catch(Exception e) {
+            logger.error(e.getMessage(), e);
+            return 0;
+        }
     }
 }
