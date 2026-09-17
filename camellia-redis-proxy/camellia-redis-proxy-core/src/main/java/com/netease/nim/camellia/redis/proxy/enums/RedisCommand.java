@@ -255,7 +255,7 @@ public enum RedisCommand {
     CF_MEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     CF_SCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     CF_RESERVE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-
+    DBSIZE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
 
     /**
      * Restrictive Support
@@ -389,7 +389,6 @@ public enum RedisCommand {
      * NOT_SUPPORT
      */
     FLUSHDB(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, Blocking.FALSE, null),
-    DBSIZE(CommandSupportType.NOT_SUPPORT, Type.READ, null, Blocking.FALSE, null),
     FLUSHALL(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, Blocking.FALSE, null),
     SAVE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     BGSAVE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
