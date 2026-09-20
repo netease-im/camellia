@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.conf.EventLoopGroupResult;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ServerConf;
 import com.netease.nim.camellia.redis.proxy.conf.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
@@ -100,21 +99,6 @@ public class ProxyInfoUtils {
             return future;
         } catch (Exception e) {
             ErrorLogCollector.collect(ProxyInfoUtils.class, "submit generateInfoReply task error", e);
-            future.complete(ErrorReply.TOO_BUSY);
-            return future;
-        }
-    }
-
-    public static CompletableFuture<Reply> getDbSizeReply(Command command, IUpstreamClientTemplateFactory factory) {
-        CompletableFuture<Reply> future = new CompletableFuture<>();
-        try {
-            executor.submit(() -> {
-                Reply reply = generateDbSizeReply(command, factory);
-                future.complete(reply);
-            });
-            return future;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(ProxyInfoUtils.class, "submit generateDbSizeReply task error", e);
             future.complete(ErrorReply.TOO_BUSY);
             return future;
         }
@@ -277,25 +261,6 @@ public class ProxyInfoUtils {
         } catch (Exception e) {
             ErrorLogCollector.collect(ProxyInfoUtils.class, "getInfoReply error", e);
             return new ErrorReply("generate proxy info error");
-        }
-    }
-
-    public static Reply generateDbSizeReply(Command command, IUpstreamClientTemplateFactory factory) {
-        try {
-            long total;
-            byte[][] objects = command.getObjects();
-            if (objects.length == 1) {
-                Long bid = command.getChannelInfo().getBid();
-                String bgroup = command.getChannelInfo().getBgroup();
-                total = UpstreamInfoUtils.getDbSize(bid, bgroup, factory);
-            } else {
-                ErrorLogCollector.collect(ProxyInfoUtils.class, "dbsize command syntax error, illegal arg len");
-                return ErrorReply.SYNTAX_ERROR;
-            }
-            return new IntegerReply(total);
-        } catch (Exception e) {
-            ErrorLogCollector.collect(ProxyInfoUtils.class, "generateDbSizeReply error", e);
-            return new ErrorReply("generate dbsize error");
         }
     }
 

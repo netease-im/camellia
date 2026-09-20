@@ -337,14 +337,6 @@ public class CommandsRouter {
                         continue;
                     }
 
-                    //dbsize命令
-                    if (redisCommand == RedisCommand.DBSIZE) {
-                        CompletableFuture<Reply> future = ProxyInfoUtils.getDbSizeReply(command, factory);
-                        future.thenAccept(task::replyCompleted);
-                        hasCommandsSkip = true;
-                        continue;
-                    }
-
                     //sentinel不往后发
                     if (redisCommand == RedisCommand.SENTINEL || redisCommand == RedisCommand.PROXY) {
                         task.replyCompleted(Utils.commandNotSupport(redisCommand));
