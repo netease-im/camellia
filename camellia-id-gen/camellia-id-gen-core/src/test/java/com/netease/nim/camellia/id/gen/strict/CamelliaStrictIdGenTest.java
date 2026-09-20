@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class CamelliaStrictIdGenTest {
@@ -29,6 +30,26 @@ public class CamelliaStrictIdGenTest {
 
         Assert.assertEquals(Long.valueOf(102L), idGen.peekIdIfCached("tagA"));
         Assert.assertNull(idGen.peekIdIfCached("tagA"));
+    }
+
+    @Test
+    public void isLoadingShouldCheckExactLoadLockKey() {
+        CamelliaRedisTemplate template = mock(CamelliaRedisTemplate.class);
+        when(template.exists("test|tagA~lock")).thenReturn(true);
+        CamelliaStrictIdGen idGen = newIdGen(template);
+
+        Assert.assertTrue(idGen.isLoading("tagA"));
+        verify(template).exists("test|tagA~lock");
+    }
+
+    @Test
+    public void isLoadingShouldTreatMissingLockAsNotLoading() {
+        CamelliaRedisTemplate template = mock(CamelliaRedisTemplate.class);
+        when(template.exists("test|tagA~lock")).thenReturn(false).thenReturn(null);
+        CamelliaStrictIdGen idGen = newIdGen(template);
+
+        Assert.assertFalse(idGen.isLoading("tagA"));
+        Assert.assertFalse(idGen.isLoading("tagA"));
     }
 
     private CamelliaStrictIdGen newIdGen(CamelliaRedisTemplate template) {

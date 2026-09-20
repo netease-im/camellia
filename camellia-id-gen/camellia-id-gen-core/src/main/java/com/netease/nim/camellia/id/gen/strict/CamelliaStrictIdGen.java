@@ -194,6 +194,16 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         }
     }
 
+    public boolean isLoading(String tag) {
+        try {
+            String cacheKey = cacheKey(tag);
+            return Boolean.TRUE.equals(template.exists(lockKey(cacheKey)));
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new CamelliaIdGenException(e);
+        }
+    }
+
     @Override
     public long decodeRegionId(long id) {
         if (regionBits == 0) {
