@@ -304,8 +304,11 @@ public class CommandsRouter {
                                 task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
                             } else {
                                 IUpstreamClientTemplate template = factory.tryGet(channelInfo.getBid(), channelInfo.getBgroup());
-                                if (template != null && !template.isMultiDBSupport() && db != 0) {
-                                    task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
+                                if (template == null) {
+                                    template = factory.getOrInitialize(channelInfo.getBid(), channelInfo.getBgroup());
+                                }
+                                if (template != null && !template.isMultiDBSupport()) {
+                                    task.replyCompleted(StatusReply.OK);
                                 } else if (isDbChangeNotAllowed(channelInfo, db)) {
                                     task.replyCompleted(ErrorReply.DB_CHANGE_NOT_ALLOWED);
                                 } else {
