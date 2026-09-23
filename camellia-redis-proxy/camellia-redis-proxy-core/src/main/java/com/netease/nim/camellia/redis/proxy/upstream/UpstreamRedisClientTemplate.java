@@ -415,16 +415,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
 
             if (redisCommand == RedisCommand.DBSIZE) {
-                try {
-                    List<Resource> writeResources = new ArrayList<>();
-                    writeResources.add(resourceSelector.getAllWriteResources().getFirst());
-                    CompletableFuture<Reply> future = doWrite(writeResources, commandFlusher, command);
-                    futureList.add(future);
-                } catch (Exception e) {
-                    CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(new IntegerReply(0L));
-                    futureList.add(future);
-                }
+                futureList.add(dbSize(commandFlusher, command));
                 continue;
             }
 
@@ -821,6 +812,53 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         return CompletableFutureUtils.finalReply(list, multiWriteMode);
+    }
+
+    /**
+     * dbsize命令
+     * <p>
+     * dbsize需要汇总所有的写资源（分片、读写分离等配置下可能会有多个写资源，同一个集群只会统计一次）；
+     * cluster类型的资源，client内部会汇总其所有的master节点，其他类型的资源则只统计一个节点（如proxy类型的资源，则是任选一个节点）
+     *
+     * @param commandFlusher commandFlusher
+     * @param command command
+     * @return reply
+     */
+    private CompletableFuture<Reply> dbSize(UpstreamClientCommandFlusher commandFlusher, Command command) {
+        CompletableFuture<Reply> future = new CompletableFuture<>();
+        try {
+            byte[][] objects = command.getObjects();
+            if (objects.length != 1) {
+                future.complete(ErrorReply.argNumWrong(RedisCommand.DBSIZE));
+                return future;
+            }
+            List<Resource> writeResources = resourceSelector.getAllWriteResources();
+            if (writeResources.isEmpty()) {
+                future.complete(new IntegerReply(0L));
+                return future;
+            }
+            List<CompletableFuture<Reply>> list = new ArrayList<>(writeResources.size());
+            for (Resource resource : writeResources) {
+                IUpstreamClient client = factory.get(resource.getUrl());
+                CompletableFuture<Reply> subFuture = commandFlusher.sendCommand(client, command);
+                list.add(subFuture);
+                incrRead(resource.getUrl(), command);
+                if (ProxyMonitorCollector.isMonitorEnable()) {
+                    UpstreamFailMonitor.stats(resource.getUrl(), command, subFuture);
+                }
+            }
+            if (list.size() == 1) {
+                list.getFirst().thenAccept(future::complete);
+                return future;
+            }
+            //把所有写资源的dbsize加起来返回给客户端
+            CompletableFutureUtils.allOf(list).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
+        } catch (Exception e) {
+            String log = "dbsize error, bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
+            ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, log, e);
+            future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
+        }
+        return future;
     }
 
     private CompletableFuture<Reply> mset(Command command, UpstreamClientCommandFlusher commandFlusher) {

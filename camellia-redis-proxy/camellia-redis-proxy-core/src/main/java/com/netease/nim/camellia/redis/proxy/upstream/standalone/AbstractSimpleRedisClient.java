@@ -53,7 +53,15 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
      */
     public abstract Resource getResource();
 
-    private RedisConnectionAddr getAddr(int db) {
+    /**
+     * get addr with db
+     * <p>
+     * db小于0（client没有执行过select）或者db和资源url里配置的db一致时，返回资源url里配置的addr，否则返回db对应的addr
+     *
+     * @param db db
+     * @return addr
+     */
+    public RedisConnectionAddr getAddr(int db) {
         RedisConnectionAddr addr = getAddr();
         if (addr == null) {
             renew();
@@ -65,7 +73,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         String key = addr.getUrl() + "|" + db;
         RedisConnectionAddr target = cache.get(key);
         if (target == null) {
-            target = cache.computeIfAbsent(key, s -> new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), db));
+            target = cache.computeIfAbsent(key, s -> {
+                if (addr.getUdsPath() != null) {
+                    return new RedisConnectionAddr(addr.getUdsPath(), addr.getUserName(), addr.getPassword(), addr.isReadonly(), db, true);
+                }
+                return new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.isReadonly(), db, true);
+            });
         }
         return target;
     }
