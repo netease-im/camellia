@@ -414,6 +414,20 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 continue;
             }
 
+            if (redisCommand == RedisCommand.DBSIZE) {
+                try {
+                    List<Resource> writeResources = new ArrayList<>();
+                    writeResources.add(resourceSelector.getAllWriteResources().getFirst());
+                    CompletableFuture<Reply> future = doWrite(writeResources, commandFlusher, command);
+                    futureList.add(future);
+                } catch (Exception e) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(new IntegerReply(0L));
+                    futureList.add(future);
+                }
+                continue;
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
                 if (redisCommand == RedisCommand.SCRIPT) {
                     byte[][] objects = command.getObjects();

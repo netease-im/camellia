@@ -699,7 +699,9 @@ public class UpstreamInfoUtils {
                             String[] s = subStr.split(" ");
                             String masterId = s[3];
                             ClusterNodeInfo nodeInfo = map.get(masterId);
-                            nodeInfo.slaves.add(s[1]);
+                            if (nodeInfo != null) {
+                                nodeInfo.slaves.add(s[1]);
+                            }
                         }
                     }
                     return new ArrayList<>(map.values());

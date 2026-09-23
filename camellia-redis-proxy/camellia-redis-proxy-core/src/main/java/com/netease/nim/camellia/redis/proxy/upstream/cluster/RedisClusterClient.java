@@ -286,6 +286,11 @@ public class RedisClusterClient implements IUpstreamClient {
                 continue;
             }
 
+            if (redisCommand == RedisCommand.DBSIZE) {
+                dbSize(commandFlusher, command, future, db);
+                continue;
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
                 List<byte[]> keys = command.getKeys();
                 int slot;
@@ -1045,4 +1050,20 @@ public class RedisClusterClient implements IUpstreamClient {
         connection.startIdleCheck();
     }
 
+    private void dbSize(RedisConnectionCommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future, int db) {
+        List<CompletableFuture<Reply>> futureList = new ArrayList<>();
+        for (RedisClusterSlotInfo.Node node : clusterSlotInfo.getMasterNodeList()) {
+            RedisConnection connection = RedisConnectionHub.getInstance().get(this, clusterSlotInfo.addrWithDb(node, db));
+            CompletableFuture<Reply> subFuture = new CompletableFuture<>();
+            CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, subFuture, command, db);
+            commandFlusher.sendCommand(connection, command, futureWrapper);
+            futureList.add(subFuture);
+        }
+        if (futureList.size() == 1) {
+            CompletableFuture<Reply> completableFuture = futureList.getFirst();
+            completableFuture.thenAccept(future::complete);
+            return;
+        }
+        CompletableFutureUtils.allOf(futureList).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
+    }
 }

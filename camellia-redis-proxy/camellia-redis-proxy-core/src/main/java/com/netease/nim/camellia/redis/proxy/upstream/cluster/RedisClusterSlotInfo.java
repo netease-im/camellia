@@ -257,6 +257,10 @@ public class RedisClusterSlotInfo {
         return masterSlaveMap;
     }
 
+    public List<Node> getMasterNodeList() {
+        return masterNodeList;
+    }
+
     /**
      * get client by index, node list is sorted by url.
      * @param index index
