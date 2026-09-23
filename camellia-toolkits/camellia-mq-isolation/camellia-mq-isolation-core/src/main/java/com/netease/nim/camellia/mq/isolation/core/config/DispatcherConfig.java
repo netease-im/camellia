@@ -19,6 +19,7 @@ public class DispatcherConfig {
     private int reloadConfigIntervalSeconds = 30;
     private double maxPermitPercent = 0.5;
     private int retryLevelThreshold = 5;
+    private boolean virtualThreadEnable;
 
     public int getThreads() {
         return threads;
@@ -90,5 +91,13 @@ public class DispatcherConfig {
 
     public void setRetryLevelThreshold(int retryLevelThreshold) {
         this.retryLevelThreshold = retryLevelThreshold;
+    }
+
+    public boolean isVirtualThreadEnable() {
+        return virtualThreadEnable;
+    }
+
+    public void setVirtualThreadEnable(boolean virtualThreadEnable) {
+        this.virtualThreadEnable = virtualThreadEnable;
     }
 }

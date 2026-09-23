@@ -8,6 +8,7 @@ public class ExecutorStats {
     private int threads;
     private int currentThreads;
     private int activeThreads;
+    private String executorType;
 
     public String getName() {
         return name;
@@ -39,5 +40,13 @@ public class ExecutorStats {
 
     public void setActiveThreads(int activeThreads) {
         this.activeThreads = activeThreads;
+    }
+
+    public String getExecutorType() {
+        return executorType;
+    }
+
+    public void setExecutorType(String executorType) {
+        this.executorType = executorType;
     }
 }

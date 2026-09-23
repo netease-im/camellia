@@ -18,6 +18,10 @@ public class MsgExecutorMonitor {
         map.put(executor.getName(), executor);
     }
 
+    public static void unregister(String name) {
+        map.remove(name);
+    }
+
     public static List<ExecutorStats> getStats() {
         List<ExecutorStats> list = new ArrayList<>();
         map.forEach((key, value) -> list.add(value.getStats()));

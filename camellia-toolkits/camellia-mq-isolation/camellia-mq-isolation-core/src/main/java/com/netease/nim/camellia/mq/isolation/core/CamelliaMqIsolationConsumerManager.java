@@ -78,22 +78,43 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
         }
         lock.lock();
         try {
+            // Set the flag before touching instanceMap so a concurrent initConsumers can never
+            // register a consumer after this stop attempt took the lock.
+            stop.set(true);
             if (future != null) {
                 future.cancel(false);
             }
+            RuntimeException stopFailure = null;
             Set<MqInfo> set = new HashSet<>(instanceMap.keySet());
             for (MqInfo mqInfo: set) {
                 logger.info("try stop consumer, namespace = {}, mqInfo = {}", namespace, mqInfo);
-                Consumer instance = instanceMap.remove(mqInfo);
+                Consumer instance = instanceMap.get(mqInfo);
                 if (instance != null) {
-                    instance.stop();
-                    logger.info("stop consumer success, namespace = {}, mqInfo = {}", namespace, mqInfo);
+                    try {
+                        instance.stop();
+                        instanceMap.remove(mqInfo, instance);
+                        logger.info("stop consumer success, namespace = {}, mqInfo = {}", namespace, mqInfo);
+                    } catch (RuntimeException e) {
+                        if (stopFailure == null) {
+                            stopFailure = new IllegalStateException("stop consumer error, mqInfo=" + mqInfo, e);
+                        } else {
+                            stopFailure.addSuppressed(e);
+                        }
+                        logger.error("stop consumer error, namespace = {}, mqInfo = {}", namespace, mqInfo, e);
+                    }
                 }
             }
+            if (stopFailure != null) {
+                logger.error("mq isolation consumer manager stop finished with error, namespace = {}", namespace, stopFailure);
+                throw stopFailure;
+            }
             logger.info("mq isolation consumer manager stop success");
-            stop.set(true);
         } finally {
-            lock.unlock();
+            try {
+                dispatcher.shutdown();
+            } finally {
+                lock.unlock();
+            }
         }
     }
 
@@ -105,6 +126,9 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
         }
         lock.lock();
         try {
+            if (stop.get()) {
+                return false;
+            }
             ConsumerMqInfoConfig mqInfoConfig = config.getMqInfoConfig();
             ConsumerManagerType type = mqInfoConfig.getType();
             MqIsolationConfig mqIsolationConfig = controller.getMqIsolationConfig(namespace);

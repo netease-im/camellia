@@ -34,6 +34,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationMsgDispatcher.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new CamelliaThreadFactory("camellia-mq-isolation-dispatcher"));
+    private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
 
     private final DispatcherConfig dispatcherConfig;
     private final MsgHandler msgHandler;
@@ -46,6 +47,9 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private final String namespace;
     private final MqIsolationController controller;
     private final ConsumerBizStatsCollector collector;
+    private final boolean virtualThreadEnable;
+    private ScheduledFuture<?> reloadFuture;
+    private volatile boolean shutdown;
 
     private ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
     private MqIsolationConfig mqIsolationConfig;
@@ -60,12 +64,18 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
         this.maxPermitPercent = config.getMaxPermitPercent();
         this.mqSender = config.getMqSender();
         this.strategy = config.getStrategy();
+        this.virtualThreadEnable = config.isVirtualThreadEnable();
+        if (virtualThreadEnable) {
+            MsgExecutor.validateVirtualThreadSupport();
+        }
+        logger.info("mq isolation dispatcher init, namespace = {}, virtualThreadEnable = {}, threads = {}",
+                namespace, virtualThreadEnable, threads);
         this.collector = new ConsumerBizStatsCollector(controller);
         boolean success = initMqInfoConfig();
         if (!success) {
             throw new IllegalArgumentException("init mq config error");
         }
-        scheduler.scheduleAtFixedRate(this::initMqInfoConfig,
+        reloadFuture = scheduler.scheduleAtFixedRate(this::initMqInfoConfig,
                 config.getReloadConfigIntervalSeconds(), config.getReloadConfigIntervalSeconds(), TimeUnit.SECONDS);
         ConsumerMonitor.init(MqIsolationEnv.monitorIntervalSeconds);
     }
@@ -90,7 +100,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
             MsgExecutor executor = selectExecutor(context);
             //try submit executor
             String bizId = packet.getMsg().getBizId();
-            boolean success = executor.submit(bizId, topicInfo.autoIsolation, () -> {
+            boolean success = executor != null && executor.submit(bizId, topicInfo.autoIsolation, () -> {
                 try {
                     long handlerBeginTime = System.currentTimeMillis();
                     MsgHandlerResult result;
@@ -197,7 +207,26 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
         if (executor != null) {
             return executor;
         }
-        return executorMap.computeIfAbsent(name, k -> new MsgExecutor(name, threads, maxPermitPercent, strategy));
+        if (shutdown) {
+            return null;
+        }
+        return executorMap.computeIfAbsent(name,
+                k -> new MsgExecutor(name, threads, maxPermitPercent, strategy, virtualThreadEnable));
+    }
+
+    public void shutdown() {
+        if (shutdown) {
+            return;
+        }
+        shutdown = true;
+        if (reloadFuture != null) {
+            reloadFuture.cancel(false);
+        }
+        // Bound the total drain time instead of waiting 30s per executor, so a single stuck
+        // executor cannot push the graceful shutdown past the deployment grace period.
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(SHUTDOWN_TIMEOUT_SECONDS);
+        executorMap.values().forEach(executor ->
+                executor.shutdown(Math.max(deadline - System.nanoTime(), 0), TimeUnit.NANOSECONDS));
     }
 
     private void sendRetryMq(MqIsolationMsgPacket packet) {

@@ -4,12 +4,9 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.mq.isolation.core.stats.MsgExecutorMonitor;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ExecutorStats;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by caojiajun on 2024/2/6
@@ -19,16 +16,20 @@ public class MsgExecutor {
     private final String name;
     private final int threads;
     private final double maxPermitPercent;
-    private final ThreadPoolExecutor executor;
+    private final MsgTaskExecutor executor;
     private final ThreadContextSwitchStrategy strategy;
 
     private final ConcurrentLinkedHashMap<String, Semaphore> semaphoreMap;
 
     public MsgExecutor(String name, int threads, double maxPermitPercent, ThreadContextSwitchStrategy strategy) {
+        this(name, threads, maxPermitPercent, strategy, false);
+    }
+
+    public MsgExecutor(String name, int threads, double maxPermitPercent, ThreadContextSwitchStrategy strategy,
+                       boolean virtualThreadEnable) {
         this.name = name;
         this.strategy = strategy;
-        this.executor = new ThreadPoolExecutor(threads, threads, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<>(), new CamelliaThreadFactory("camellia-mq-isolation[" + name + "]"), new ThreadPoolExecutor.CallerRunsPolicy());
+        this.executor = new MsgTaskExecutor(name, threads, virtualThreadEnable);
         this.threads = threads;
         this.maxPermitPercent = maxPermitPercent;
         this.semaphoreMap = new ConcurrentLinkedHashMap.Builder<String, Semaphore>()
@@ -40,21 +41,38 @@ public class MsgExecutor {
 
     public boolean submit(String bizId, boolean autoIsolation, Runnable runnable) {
         if (!autoIsolation) {
-            executor.submit(strategy.wrapperRunnable(runnable));
-            return true;
+            return executor.execute(strategy.wrapperRunnable(runnable));
         }
         Semaphore semaphore = tryAcquire(bizId);
         if (semaphore == null) {
             return false;
         }
-        executor.submit(strategy.wrapperRunnable(() -> {
+        AtomicBoolean released = new AtomicBoolean(false);
+        Runnable task = () -> {
             try {
                 runnable.run();
             } finally {
-                semaphore.release();
+                releaseOnce(semaphore, released);
             }
-        }));
-        return true;
+        };
+        boolean delivered;
+        try {
+            delivered = executor.execute(strategy.wrapperRunnable(task));
+        } catch (Throwable e) {
+            releaseOnce(semaphore, released);
+            throw e;
+        }
+        if (!delivered) {
+            // The task never ran, so the permit must be returned to keep the isolation quota accurate.
+            releaseOnce(semaphore, released);
+        }
+        return delivered;
+    }
+
+    private static void releaseOnce(Semaphore semaphore, AtomicBoolean released) {
+        if (released.compareAndSet(false, true)) {
+            semaphore.release();
+        }
     }
 
     public String getName() {
@@ -65,9 +83,30 @@ public class MsgExecutor {
         ExecutorStats executorStats = new ExecutorStats();
         executorStats.setName(name);
         executorStats.setThreads(threads);
-        executorStats.setCurrentThreads(executor.getPoolSize());
-        executorStats.setActiveThreads(executor.getActiveCount());
+        executorStats.setCurrentThreads(executor.getCurrentThreads());
+        executorStats.setActiveThreads(executor.getActiveTasks());
+        executorStats.setExecutorType(executor.getMode());
         return executorStats;
+    }
+
+    public void shutdown() {
+        try {
+            executor.shutdown();
+        } finally {
+            MsgExecutorMonitor.unregister(name);
+        }
+    }
+
+    public void shutdown(long timeout, java.util.concurrent.TimeUnit unit) {
+        try {
+            executor.shutdown(timeout, unit);
+        } finally {
+            MsgExecutorMonitor.unregister(name);
+        }
+    }
+
+    public static void validateVirtualThreadSupport() {
+        VirtualThreadExecutorFactory.validate();
     }
 
 
