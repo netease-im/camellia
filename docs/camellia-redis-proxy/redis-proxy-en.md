@@ -15,7 +15,7 @@ camellia-redis-proxy is a high-performance redis proxy developed with netty4, re
 * Supports dual (multiple) writes - can directly write to two proxies, or use MQ (like kafka) for dual-write, or customize dual-write rules based on the plugin system
 * Supports dual (multiple) reads
 * Supports password authentication
-* Supports SELECT command (currently only when backend redis does not include redis-cluster, in which case only SELECT 0 is supported); can be redis-standalone/redis-sentinel/redis-proxies or their combinations (sharding/read-write separation)
+* Supports SELECT command; can be redis-standalone/redis-sentinel/redis-proxies or their combinations (sharding/read-write separation). When the backend includes redis-cluster, only SELECT 0 is supported by default (vanilla redis-cluster only supports db 0), and multi-db can be enabled by the dynamic conf cluster.multidb.support=true, which requires the backend cluster itself to support multi-db (e.g. a valkey cluster with cluster-databases enabled), see: [redis resources](/docs/camellia-redis-proxy/route/redis-resources.md)
 * Supports blocking commands like BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX, etc.
 * Supports PUBSUB series commands (supported when proxying to redis-standalone/redis-sentinel/redis-cluster)
 * Supports transaction commands (MULTI/EXEC/DISCARD/WATCH/UNWATCH) (supported when proxying to redis-standalone/redis-sentinel/redis-cluster)
