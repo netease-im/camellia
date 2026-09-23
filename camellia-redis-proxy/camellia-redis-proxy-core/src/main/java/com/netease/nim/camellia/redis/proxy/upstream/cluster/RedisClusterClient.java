@@ -126,6 +126,16 @@ public class RedisClusterClient implements IUpstreamClient {
         return db < 0 ? Math.max(defaultDb, 0) : db;
     }
 
+    /**
+     * 写命令必须路由到master节点（读命令在redis-cluster-slaves资源下可以分摊到slave节点）
+     *
+     * @param redisCommand redisCommand
+     * @return 是否必须路由到master
+     */
+    static boolean mustRouteToMaster(RedisCommand redisCommand) {
+        return redisCommand != null && redisCommand.getType() == RedisCommand.Type.WRITE;
+    }
+
 
     /**
      * get resource
@@ -1007,11 +1017,13 @@ public class RedisClusterClient implements IUpstreamClient {
 
     private void simpleIntegerReplyMerge(Command command, RedisConnectionCommandFlusher commandFlusher, CompletableFuture<Reply> future, int db) {
         byte[][] args = command.getObjects();
+        //EXISTS等读命令保留主从路由（redis-cluster-slaves资源可以分摊到slave），DEL/UNLINK/TOUCH等写命令必须路由到master
+        boolean routeToMaster = mustRouteToMaster(command.getRedisCommand());
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
         for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
             int slot = RedisClusterCRC16Utils.getSlot(key);
-            RedisConnection connection = getMasterConnection(slot, db);
+            RedisConnection connection = routeToMaster ? getMasterConnection(slot, db) : getConnection(slot, db);
             Command subCommand = new Command(new byte[][]{args[0], key});
 
             CompletableFuture<Reply> subFuture = new CompletableFuture<>();
