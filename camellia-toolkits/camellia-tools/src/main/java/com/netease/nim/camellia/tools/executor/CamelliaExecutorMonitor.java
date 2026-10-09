@@ -25,6 +25,7 @@ public class CamelliaExecutorMonitor {
     private static final ConcurrentHashMap<String, CamelliaDynamicIsolationExecutor> dynamicIsolationExecutorMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, CamelliaHashedExecutor> hashedExecutorMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, CamelliaHashedBatchExecutor<?>> hashedBatchExecutorMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, CamelliaMergingExecutor<?>> mergingExecutorMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, CamelliaLinearInitializationExecutor<?, ?>> linerInitializationExecutorMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, ThreadPoolExecutor> executorMap = new ConcurrentHashMap<>();
 
@@ -97,6 +98,13 @@ public class CamelliaExecutorMonitor {
      */
     public static void register(CamelliaLinearInitializationExecutor<?, ?> executor) {
         linerInitializationExecutorMap.put(executor.getName(), executor);
+    }
+
+    /**
+     * 注册一个CamelliaMergingExecutor
+     */
+    public static void register(CamelliaMergingExecutor<?> executor) {
+        mergingExecutorMap.put(executor.getName(), executor);
     }
 
     private static CamelliaExecutorStatistics statistics = new CamelliaExecutorStatistics();
@@ -207,6 +215,14 @@ public class CamelliaExecutorMonitor {
                 CamelliaExecutorStatistics.ExecutorStats stats = new CamelliaExecutorStatistics.ExecutorStats();
                 stats.setName(entry.getKey());
                 stats.setExecutorType(CamelliaExecutorStatistics.ExecutorType.CamelliaHashedBatchExecutor);
+                stats.setStats(toStats(entry.getKey(), entry.getValue().getStats()));
+                executorStatsList.add(stats);
+            }
+
+            for (Map.Entry<String, CamelliaMergingExecutor<?>> entry : mergingExecutorMap.entrySet()) {
+                CamelliaExecutorStatistics.ExecutorStats stats = new CamelliaExecutorStatistics.ExecutorStats();
+                stats.setName(entry.getKey());
+                stats.setExecutorType(CamelliaExecutorStatistics.ExecutorType.CamelliaMergingExecutor);
                 stats.setStats(toStats(entry.getKey(), entry.getValue().getStats()));
                 executorStatsList.add(stats);
             }

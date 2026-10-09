@@ -2,13 +2,11 @@
 # CamelliaHashedBatchExecutor
 
 ## 简介
-在某些使用线程池的场景下，我们希望其中部分任务是顺序执行的，而常规的线程池是按照提交顺序执行的，如果线程池线程数超过1个，则可能导致乱序或者并发  
-CamelliaHashedExecutor通过hashKey把任务路由到固定的线程，可以解决这个问题，但是每个任务仍然是单独执行的，无法做批量处理  
-CamelliaHashedBatchExecutor在CamelliaHashedExecutor的基础上做了增强：提交任务时额外提供hashKey参数，相同hashKey的任务会被路由到同一个队列并串行执行；同时工作线程会一次性从队列中收集多个任务，聚合成一个批次后交给BatchHandler处理，从而支持批量操作（如批量读写DB、批量mget等）  
+常规线程池按提交顺序执行，线程数超过1个时，相同业务主体的任务可能乱序并发  
+CamelliaHashedBatchExecutor在提交任务时额外提供hashKey参数：相同hashKey的任务被路由到同一个队列、串行执行；工作线程按批次从队列中收集任务，聚合成一个批次后交给BatchHandler处理，从而支持批量操作（批量读写DB、批量mget等）  
 
-同时要注意和CamelliaHashedExecutor的差异：
-* 相同hashKey的任务保证串行执行，且执行顺序与提交顺序一致，但不保证始终由同一个线程执行（不同批次可能由不同工作线程处理）
-* 一个批次可能包含多个不同hashKey的任务，同一个hashKey在一个批次内不会出现两次
+注意：本执行器是**流式批量**——任务提交即入队、按批次取出执行，**批次内的去重/合并需要业务自己写在BatchHandler里**  
+如果一个批次可能包含同一个hashKey的多条任务，且希望"同一个key在一段时间内只处理一次"，请使用[CamelliaMergingExecutor](/docs/camellia-tools/merging_executor.md)  
 
 ## maven
 ```
@@ -38,56 +36,28 @@ CamelliaHashedBatchExecutor在CamelliaHashedExecutor的基础上做了增强：�
 |batchHandler|-|批次处理器，接收一个任务列表|
 |rejectedExecutionHandler|-|拒绝策略，支持动态获取|
 
+## 批次的组成
+一个批次由drainTo决定：**第一轮是"每个非空队列各取1条，凑满maxBatchSize即停止"**，第二轮才按perQueueMaxDrainSize从每个队列深挖  
+因此当"同时非空队列数 &gt;= maxBatchSize"时，一个批次恰好是maxBatchSize条来自不同队列的任务，也就是maxBatchSize个不同的hashKey，**业务写在BatchHandler里的去重逻辑会完全失效**  
+另外：同一个hashKey在一个批次里不会出现两次；同一个hashKey的相对顺序保持不变；跨队列的先后顺序没有业务含义  
+
 ## 示例
 ```java
 public class CamelliaHashedBatchExecutorSamples {
 
     public static void main(String[] args) throws InterruptedException {
-        String name = "sample";
-        int queueCount = 32;
-        int workerCount = 8;
-        int maxBatchSize = 100;
-
-        CamelliaHashedBatchExecutor<String> executor = new CamelliaHashedBatchExecutor<>(name, queueCount, workerCount, maxBatchSize,
-                //BatchHandler：接收一个批次的任务列表，可能来自不同的hashKey
+        CamelliaHashedBatchExecutor<String> executor = new CamelliaHashedBatchExecutor<>("sample", 32, 8, 128,
                 tasks -> {
-                    System.out.println("batch handle, size = " + tasks.size() + ", thread = " + Thread.currentThread().getName());
+                    //一个批次可能包含多个不同hashKey的任务
                     for (String task : tasks) {
                         System.out.println("handle task = " + task);
                     }
                 });
 
-        //相同hashKey的任务确保是串行执行的，且顺序与提交顺序一致
+        //相同hashKey的任务确保串行执行，顺序与提交顺序一致
         executor.submit("key1", "task1-1");
         executor.submit("key2", "task2-1");
         executor.submit("key1", "task1-2");
-        executor.submit("key2", "task2-2");
-
-        executor.shutdown();
-        executor.awaitTermination(10, TimeUnit.SECONDS);
-    }
-}
-```
-
-如果需要更精细地控制批次行为，可以使用CamelliaHashedBatchExecutorConfig进行配置：  
-```java
-public class CamelliaHashedBatchExecutorConfigSamples {
-
-    public static void main(String[] args) throws InterruptedException {
-        CamelliaHashedBatchExecutorConfig<String> config = new CamelliaHashedBatchExecutorConfig<>("sample", 32, 8, 100, tasks -> {
-            //批量处理
-        });
-        //批次期望的最小任务数，以及等待时间，任务数不足时会等待一小段时间以凑批
-        config.setMinBatchSize(10);
-        config.setMaxBatchWaitMillis(10);
-        //每个队列的容量，支持动态调整
-        config.setDynamicQueueCapacity(() -> 100000);
-        //拒绝策略，支持动态获取
-        config.setRejectedExecutionHandler(() -> new CamelliaHashedBatchExecutor.CallerRunsPolicy<>());
-
-        CamelliaHashedBatchExecutor<String> executor = new CamelliaHashedBatchExecutor<>(config);
-
-        executor.submit("key1", "task1");
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
