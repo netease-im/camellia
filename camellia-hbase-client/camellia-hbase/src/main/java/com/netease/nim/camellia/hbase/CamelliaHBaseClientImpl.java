@@ -41,11 +41,93 @@ public class CamelliaHBaseClientImpl {
         }
     }
 
+    //HBase的Put/Delete/Append/Increment/RowMutations都是可变对象且非线程安全
+    //camellia多写(MultiWriteInvoker)会把同一批参数交给多个线程并发写多个集群
+    //同时javaagent(如skywalking的hbase插件会给mutation设置attribute)也会修改这些对象
+    //因此每个写请求都复制一份，保证每个线程/每个集群操作的是独立对象
+    private static Put copyPut(Put put) {
+        Put copy = new Put(put);
+        //拷贝构造函数不会拷贝durability，需要手动设置
+        copy.setDurability(put.getDurability());
+        return copy;
+    }
+
+    private static List<Put> copyPuts(List<Put> puts) {
+        List<Put> list = new ArrayList<>(puts.size());
+        for (Put put : puts) {
+            list.add(copyPut(put));
+        }
+        return list;
+    }
+
+    private static Delete copyDelete(Delete delete) {
+        Delete copy = new Delete(delete);
+        //拷贝构造函数不会拷贝durability，需要手动设置
+        copy.setDurability(delete.getDurability());
+        return copy;
+    }
+
+    private static List<Delete> copyDeletes(List<Delete> deletes) {
+        List<Delete> list = new ArrayList<>(deletes.size());
+        for (Delete delete : deletes) {
+            list.add(copyDelete(delete));
+        }
+        return list;
+    }
+
+    private static Append copyAppend(Append append) {
+        Append copy = new Append(append);
+        //拷贝构造函数不会拷贝durability，需要手动设置
+        copy.setDurability(append.getDurability());
+        return copy;
+    }
+
+    private static Increment copyIncrement(Increment increment) {
+        Increment copy = new Increment(increment);
+        //拷贝构造函数不会拷贝durability，需要手动设置
+        copy.setDurability(increment.getDurability());
+        return copy;
+    }
+
+    private static Row copyRow(Row row) {
+        if (row instanceof Put) {
+            return copyPut((Put) row);
+        }
+        if (row instanceof Delete) {
+            return copyDelete((Delete) row);
+        }
+        if (row instanceof Append) {
+            return copyAppend((Append) row);
+        }
+        if (row instanceof Increment) {
+            return copyIncrement((Increment) row);
+        }
+        throw new CamelliaHBaseException("not support row type: " + row.getClass().getName());
+    }
+
+    private static RowMutations copyRowMutations(RowMutations rm) {
+        try {
+            RowMutations copy = new RowMutations(rm.getRow());
+            for (Mutation mutation : rm.getMutations()) {
+                if (mutation instanceof Put) {
+                    copy.add(copyPut((Put) mutation));
+                } else if (mutation instanceof Delete) {
+                    copy.add(copyDelete((Delete) mutation));
+                } else {
+                    throw new CamelliaHBaseException("not support mutation type: " + mutation.getClass().getName());
+                }
+            }
+            return copy;
+        } catch (IOException e) {
+            throw new CamelliaHBaseException(e);
+        }
+    }
+
     @WriteOp
     public void put(String tableName, Put put) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.put(put);
+                table.put(copyPut(put));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -59,7 +141,7 @@ public class CamelliaHBaseClientImpl {
 
     @WriteOp
     public void put(String tableName, List<Put> puts) {
-        List<Put> list = new ArrayList<>(puts);
+        List<Put> list = copyPuts(puts);
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
                 table.put(list);
@@ -77,7 +159,7 @@ public class CamelliaHBaseClientImpl {
     public void delete(String tableName, Delete delete) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.delete(delete);
+                table.delete(copyDelete(delete));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -91,7 +173,7 @@ public class CamelliaHBaseClientImpl {
 
     @WriteOp
     public void delete(String tableName, List<Delete> deletes) {
-        List<Delete> list = new ArrayList<>(deletes);
+        List<Delete> list = copyDeletes(deletes);
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
                 table.delete(list);
@@ -112,14 +194,22 @@ public class CamelliaHBaseClientImpl {
                 throw new CamelliaHBaseException("not support GET");
             }
         }
-        List<? extends Row> list = new ArrayList<>(actions);
+        List<Row> list = new ArrayList<>(actions.size());
+        for (Row action : actions) {
+            list.add(copyRow(action));
+        }
+        //results是调用方传入的数组，多写时会被多个线程共享，这里先用本地数组，最后再回填
+        Object[] localResults = new Object[actions.size()];
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.batch(list, results);
+                table.batch(list, localResults);
             }
         } catch (IOException | InterruptedException e) {
             throw new CamelliaHBaseException(e);
         } finally {
+            if (results != null) {
+                System.arraycopy(localResults, 0, results, 0, Math.min(localResults.length, results.length));
+            }
             if (logger.isDebugEnabled()) {
                 logger.debug("{} batchWriteOpe, resource = {}, size = {}", tableName, resource.getUrl(), actions.size());
             }
@@ -130,7 +220,7 @@ public class CamelliaHBaseClientImpl {
     public boolean checkAndDelete(String tableName, byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.checkAndDelete(row, family, qualifier, value, delete);
+                return table.checkAndDelete(row, family, qualifier, value, copyDelete(delete));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -147,7 +237,7 @@ public class CamelliaHBaseClientImpl {
                                   CompareFilter.CompareOp compareOp, byte[] value, Delete delete) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.checkAndDelete(row, family, qualifier, compareOp, value, delete);
+                return table.checkAndDelete(row, family, qualifier, compareOp, value, copyDelete(delete));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -211,7 +301,7 @@ public class CamelliaHBaseClientImpl {
     public boolean checkAndPut(String tableName, byte[] row, byte[] family, byte[] qualifier, byte[] value, Put put) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.checkAndPut(row, family, qualifier, value, put);
+                return table.checkAndPut(row, family, qualifier, value, copyPut(put));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -228,7 +318,7 @@ public class CamelliaHBaseClientImpl {
                                CompareFilter.CompareOp compareOp, byte[] value, Put put) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.checkAndPut(row, family, qualifier, compareOp, value, put);
+                return table.checkAndPut(row, family, qualifier, compareOp, value, copyPut(put));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -278,7 +368,7 @@ public class CamelliaHBaseClientImpl {
                                   CompareFilter.CompareOp compareOp, byte[] value, RowMutations mutation) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.checkAndMutate(row, family, qualifier, compareOp, value, mutation);
+                return table.checkAndMutate(row, family, qualifier, compareOp, value, copyRowMutations(mutation));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -294,7 +384,7 @@ public class CamelliaHBaseClientImpl {
     public void mutateRow(String tableName, RowMutations rm) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.mutateRow(rm);
+                table.mutateRow(copyRowMutations(rm));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -310,7 +400,7 @@ public class CamelliaHBaseClientImpl {
     public Result append(String tableName, Append append) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.append(append);
+                return table.append(copyAppend(append));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -326,7 +416,7 @@ public class CamelliaHBaseClientImpl {
     public Result increment(String tableName, Increment increment) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.increment(increment);
+                return table.increment(copyIncrement(increment));
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
