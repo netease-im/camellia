@@ -1,6 +1,33 @@
 [ENGLISH](update-en.md)
 
 
+# 1.4.3（2026/10/13）
+### 新增
+* camellia-redis-proxy支持redis-cluster多db，资源url支持配置`?db=1`，客户端可通过`select`切换db（动态配置`cluster.multidb.support`），`redis-cluster`和`redis-cluster-slaves`均支持
+* camellia-redis-proxy支持`DBSIZE`命令，会汇总所有写资源（redis-cluster仅master节点）的dbsize，优先使用客户端选择的db，否则使用资源url中配置的db
+* camellia-redis-proxy支持tls insecure模式，新增`InsecureUpstreamTlsProvider`，用于后端使用自签名证书时跳过证书校验
+* camellia-tools新增Redis分布式信号量`CamelliaRedisSemaphore`，支持permit租约、动态调整permit上限、阻塞/快速失败获取
+* camellia-tools新增`CamelliaHashedBatchExecutor`，按hashKey分片、队列级串行、可攒批提交的批量执行器
+* camellia-tools新增`CamelliaMergingExecutor`，支持按hashKey合并+时间窗批量提交，并接入`CamelliaExecutorMonitor`
+* camellia-id-gen的`CamelliaStrictIdGen`支持只从缓存取号（不补号）的`genIdIfCached`/`peekIdIfCached`，并支持`isLoading`
+* camellia-mq-isolation支持虚拟线程
+* 补充文档：camellia-tools新增`distribution_semaphore.md`、`hashed_batch_executor.md`、`merging_executor.md`，camellia-redis-proxy补充集群多db、tls insecure、dbsize相关文档
+
+### 更新
+* 升级netty到`4.1.136.Final`/`4.2.16.Final`，spring-boot3升级到`3.5.16`
+* camellia-redis-proxy路由配置更新改为比较解析后的资源表内容，避免配置格式/顺序变化导致的无效刷新
+* `RedisClusterClient`在redis-cluster模式下支持按db建立和管理连接
+
+### fix
+* 修复hashKey的hashCode为`Integer.MIN_VALUE`时`Math.abs`返回负数导致的数组下标越界风险，涉及`CamelliaHashedExecutor`等多个模块
+* 修复camellia-hbase在多写（多集群并发写）场景下，共享可变mutation对象导致的并发异常（`ConcurrentModificationException`），写入前复制mutation并隔离每个family的cell列表（#501）
+* 修复redis-cluster-slaves模式下多key`EXISTS`被强制路由到master的问题，读命令重新走slave连接
+* 修复redis-cluster多db场景下的db路由、切换校验、地址缓存上限、redirect时保留db等一系列问题
+* 修复redis-cluster上游info解析多个slot区间时只取第一个区间的问题
+* 修复`CamelliaHashedBatchExecutor`中caller-runs任务未按hash队列串行的问题（#490）
+* 修复dashboard资源表删除接口`@PathVariable`未显式指定变量名的问题（#489）
+
+
 # 1.4.2（2026/06/11）
 ### 新增
 * camellia-feign-client，新增泳道能力，支持通过 `FeignLaneIdProvider` 和 `FeignLaneRouteResolver` 按泳道选择目标实例，并支持失败回退策略

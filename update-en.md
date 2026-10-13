@@ -1,6 +1,33 @@
 [中文版](update-zh.md)
 
 
+# 1.4.3 (2026/10/13)
+### New Features
+* camellia-redis-proxy supports multiple databases in redis-cluster: the resource url accepts `?db=1`, and clients can switch db via `select` (dynamic config `cluster.multidb.support`); both `redis-cluster` and `redis-cluster-slaves` are supported
+* camellia-redis-proxy supports the `DBSIZE` command, aggregating dbsize over all write resources (master nodes only in redis-cluster mode); the db selected by the client wins, otherwise the db in the resource url is used
+* camellia-redis-proxy supports tls insecure mode via `InsecureUpstreamTlsProvider`, skipping certificate validation when the upstream uses a self-signed certificate
+* camellia-tools adds a Redis distributed semaphore `CamelliaRedisSemaphore`, with permit leases, dynamic permit limit adjustment, and blocking/fast-fail acquisition
+* camellia-tools adds `CamelliaHashedBatchExecutor`, a hashed batch executor with per-hashKey sharding, per-queue serialization, and batching
+* camellia-tools adds `CamelliaMergingExecutor`, merging tasks by hashKey within a time window, and registers it with `CamelliaExecutorMonitor`
+* camellia-id-gen `CamelliaStrictIdGen` supports cache-only ID operations `genIdIfCached`/`peekIdIfCached` (without generating new IDs), and adds `isLoading`
+* camellia-mq-isolation supports virtual threads
+* Added docs: `camellia-tools` gains `distribution_semaphore.md`, `hashed_batch_executor.md`, and `merging_executor.md`, while `camellia-redis-proxy` documents cluster multi-db, tls insecure, and dbsize
+
+### Updates
+* Upgraded netty to `4.1.136.Final`/`4.2.16.Final` and spring-boot3 to `3.5.16`
+* camellia-redis-proxy route conf refresh now compares the parsed resource table, avoiding unnecessary refreshes caused by formatting/order changes
+* `RedisClusterClient` now creates and manages connections per db in redis-cluster mode
+
+### Fixes
+* Fixed negative array index risk when the hashCode of a hashKey is `Integer.MIN_VALUE` and `Math.abs` returns a negative value, affecting `CamelliaHashedExecutor` and several other modules
+* Fixed concurrent exceptions (`ConcurrentModificationException`) in camellia-hbase multi-write (concurrent writes to multiple clusters) caused by sharing mutable mutation objects; mutations are now copied before write and per-family cell lists are isolated (#501)
+* Fixed multi-key `EXISTS` being forced to the master in redis-cluster-slaves mode; read commands now use the slave connection again
+* Fixed a series of db issues in redis-cluster multi-db mode, including db routing, switch validation, the address cache bound, and preserving db on redirects
+* Fixed upstream info parsing for redis-cluster nodes with multiple slot ranges, which previously kept only the first range
+* Fixed `CamelliaHashedBatchExecutor` caller-runs tasks not being serialized by hash queue (#490)
+* Fixed the dashboard resource table delete endpoint, whose `@PathVariable` did not specify the variable name explicitly (#489)
+
+
 # 1.4.2 (2026/06/11)
 ### New Features
 * camellia-feign-client adds lane routing support, allowing target instance selection by lane through `FeignLaneIdProvider` and `FeignLaneRouteResolver`, with configurable failure fallback behavior
