@@ -19,6 +19,10 @@ public interface ICamelliaHBaseTemplate {
 
     void delete(String tableName, List<Delete> deletes);
 
+    /**
+     * 批量写，actions支持Put/Delete/Append/Increment/RowMutations，不支持Get
+     * results为调用方传入的结果数组，长度必须与actions一致；多写场景下只有主集群的结果对调用方有意义
+     */
     void batchWriteOpe(String tableName, List<? extends Row> actions, Object[] results);
 
     boolean checkAndDelete(String tableName, byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete);
