@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.converter;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
@@ -43,14 +44,20 @@ public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {
     private static final byte[] OPEN_CURLY_BRACE = Utils.stringToBytes("{");
     private static final byte[] CLOSE_CURLY_BRACE = Utils.stringToBytes("}");
 
+
+    private boolean disable(Long bid, String bgroup) {
+        return ProxyDynamicConf.getBoolean(bid + "." + bgroup + ".key.converter.disable", false);
+    }
+
     @Override
-    public byte[] convert(
-            CommandContext commandContext, RedisCommand redisCommand, byte[] originalKey) {
-        if (commandContext.getBid() == null
-                || commandContext.getBgroup() == null
-                || commandContext.getBid() <= 0) {
+    public byte[] convert(CommandContext commandContext, RedisCommand redisCommand, byte[] originalKey) {
+        if (commandContext.getBid() == null || commandContext.getBgroup() == null || commandContext.getBid() <= 0) {
             return originalKey;
         }
+        if (disable(commandContext.getBid(), commandContext.getBgroup())) {
+            return originalKey;
+        }
+
         byte[] prefix = buildPrefix(commandContext);
 
         // Add a prefix to the original key
@@ -82,13 +89,15 @@ public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {
     }
 
     @Override
-    public byte[] reverseConvert(
-            CommandContext commandContext, RedisCommand redisCommand, byte[] convertedKey) {
-        if (commandContext.getBid() == null
-                || commandContext.getBgroup() == null
-                || commandContext.getBid() <= 0) {
+    public byte[] reverseConvert(CommandContext commandContext, RedisCommand redisCommand, byte[] convertedKey) {
+        if (commandContext.getBid() == null || commandContext.getBgroup() == null || commandContext.getBid() <= 0) {
             return convertedKey;
         }
+
+        if (disable(commandContext.getBid(), commandContext.getBgroup())) {
+            return convertedKey;
+        }
+
         byte[] prefix = buildPrefix(commandContext);
         if (convertedKey.length < prefix.length) {
             return convertedKey;
