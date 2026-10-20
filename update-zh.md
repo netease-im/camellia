@@ -6,7 +6,7 @@
 * camellia-redis-proxy支持redis-cluster多db，资源url支持配置`?db=1`，客户端可通过`select`切换db（动态配置`cluster.multidb.support`），`redis-cluster`和`redis-cluster-slaves`均支持
 * camellia-redis-proxy支持`DBSIZE`命令，会汇总所有写资源（redis-cluster仅master节点）的dbsize，优先使用客户端选择的db，否则使用资源url中配置的db
 * camellia-redis-proxy支持tls insecure模式，新增`InsecureUpstreamTlsProvider`，用于后端使用自签名证书时跳过证书校验
-* camellia-tools新增Redis分布式信号量`CamelliaRedisSemaphore`，支持permit租约、动态调整permit上限、阻塞/快速失败获取
+* camellia-redis-toolkit新增Redis分布式信号量`CamelliaRedisSemaphore`，支持permit租约、动态调整permit上限、阻塞/快速失败获取
 * camellia-tools新增`CamelliaHashedBatchExecutor`，按hashKey分片、队列级串行、可攒批提交的批量执行器
 * camellia-tools新增`CamelliaMergingExecutor`，支持按hashKey合并+时间窗批量提交，并接入`CamelliaExecutorMonitor`
 * camellia-id-gen的`CamelliaStrictIdGen`支持只从缓存取号（不补号）的`genIdIfCached`/`peekIdIfCached`，并支持`isLoading`

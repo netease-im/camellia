@@ -6,7 +6,7 @@
 * camellia-redis-proxy supports multiple databases in redis-cluster: the resource url accepts `?db=1`, and clients can switch db via `select` (dynamic config `cluster.multidb.support`); both `redis-cluster` and `redis-cluster-slaves` are supported
 * camellia-redis-proxy supports the `DBSIZE` command, aggregating dbsize over all write resources (master nodes only in redis-cluster mode); the db selected by the client wins, otherwise the db in the resource url is used
 * camellia-redis-proxy supports tls insecure mode via `InsecureUpstreamTlsProvider`, skipping certificate validation when the upstream uses a self-signed certificate
-* camellia-tools adds a Redis distributed semaphore `CamelliaRedisSemaphore`, with permit leases, dynamic permit limit adjustment, and blocking/fast-fail acquisition
+* camellia-redis-toolkit adds a Redis distributed semaphore `CamelliaRedisSemaphore`, with permit leases, dynamic permit limit adjustment, and blocking/fast-fail acquisition
 * camellia-tools adds `CamelliaHashedBatchExecutor`, a hashed batch executor with per-hashKey sharding, per-queue serialization, and batching
 * camellia-tools adds `CamelliaMergingExecutor`, merging tasks by hashKey within a time window, and registers it with `CamelliaExecutorMonitor`
 * camellia-id-gen `CamelliaStrictIdGen` supports cache-only ID operations `genIdIfCached`/`peekIdIfCached` (without generating new IDs), and adds `isLoading`

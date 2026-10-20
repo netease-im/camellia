@@ -126,6 +126,7 @@ converter.string.class.name=com.xxxx.CustomStringConverter
 #以bid=1,bgroup=default为例，key=abc，会被转换为key=1|default|abc
 converter.key.class.name=com.netease.nim.camellia.redis.proxy.plugin.converter.DefaultMultiTenantNamespaceKeyConverter
 ```
+如果需要关闭某个bid/bgroup的key前缀转换，可以配置`bid.bgroup.key.converter.disable=true`；该开关只支持租户粒度，如果所有租户都不需要转换，直接不启用该converter即可
 
 ### 使用CamelliaCompressor/CamelliaEncryptor来做透明的解压缩或者加解密
 首先，你需要引入：

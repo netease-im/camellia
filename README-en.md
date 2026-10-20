@@ -101,10 +101,10 @@ email: zj_caojiajun@163.com
 
 ## Stargazers Over Time
 
-<a href="https://www.star-history.com/?repos=apache%2Fshenyu&amp;type=date">
+<a href="https://www.star-history.com/?repos=netease-im%2Fcamellia&amp;type=date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=apache/shenyu&amp;type=date&amp;theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=apache/shenyu&amp;type=date" />
-    <img alt="Apache ShenYu star history" src="https://api.star-history.com/chart?repos=apache/shenyu&amp;type=date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=netease-im/camellia&amp;type=date&amp;theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=netease-im/camellia&amp;type=date" />
+    <img alt="Camellia star history" src="https://api.star-history.com/chart?repos=netease-im/camellia&amp;type=date" />
   </picture>
 </a>
