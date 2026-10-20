@@ -181,34 +181,107 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
         }
         int index = index(hashKey);
         long now = System.currentTimeMillis();
+        WindowQueue<T> windowQueue = windowQueues.get(index);
         AtomicLong nextFlushTime = queueNextFlushTime[index];
-        if (nextFlushTime.get() == 0) {
-            //首次提交才开窗，窗口是"每队列滚动窗口"
-            nextFlushTime.set(now + windowMillis);
-        }
-        Map<Object, Slot<T>> slots = windowQueues.get(index).slots;
+        Map<Object, Slot<T>> slots = windowQueue.slots;
         int maxAccumulateSize = this.maxAccumulateSize;
-        Slot<T> result = slots.compute(hashKey, (key, oldValue) -> {
-            if (oldValue == null) {
-                //新增 hashKey：槽位已达上限时拒绝，保证内存上界为 queueCount * maxAccumulateSize
-                //同一个 hashKey 的重复提交只是合并、不新增槽位，任何时候都不会被拒绝
-                if (slots.size() >= maxAccumulateSize) {
-                    return null;
-                }
-                return new Slot<>(task);
+        Slot<T> result;
+        //窗口状态和槽位必须在同一把队列锁内更新：否则工作线程可能在"提交方判断窗口已打开"之后、
+        //"提交方插入槽位"之前把窗口关掉，槽位就会滞留在 nextFlushTime = 0 的队列里，既不按窗口刷新也不参与停机刷新
+        synchronized (windowQueue.lock) {
+            if (nextFlushTime.get() == 0) {
+                //首次提交才开窗，窗口是"每队列滚动窗口"
+                nextFlushTime.set(now + windowMillis);
             }
-            return new Slot<>(merger.merge(oldValue.value, task));
-        });
+            result = slots.compute(hashKey, (key, oldValue) -> {
+                if (oldValue == null) {
+                    //新增 hashKey：槽位已达上限时拒绝，保证内存上界为 queueCount * maxAccumulateSize
+                    //同一个 hashKey 的重复提交只是合并、不新增槽位，任何时候都不会被拒绝
+                    if (slots.size() >= maxAccumulateSize) {
+                        return null;
+                    }
+                    return new Slot<>(task);
+                }
+                return new Slot<>(merger.merge(oldValue.value, task));
+            });
+            if (result == null || slots.size() >= maxAccumulateSize) {
+                //槽位已满：催一次刷新
+                nextFlushTime.set(now);
+            }
+        }
         if (result == null) {
-            //槽位已满：催一次刷新，并把这条提交交给拒绝策略做背压
-            nextFlushTime.set(now);
+            //拒绝策略在锁外执行，避免在持有队列锁时回调用户代码
             reject(hashKey, task, handler);
             return false;
         }
-        if (slots.size() >= maxAccumulateSize) {
-            nextFlushTime.set(now);
+        if (shutdown.get()) {
+            //提交与停机并发：进入这里说明已经通过了前面的停机检查，工作线程可能刚好做完最终刷新并退出，
+            //由当前线程兜底刷掉该队列的残留槽位，避免任务滞留在队列里
+            flushQueueAfterShutdown(index);
         }
         return true;
+    }
+
+    /**
+     * 提交与停机并发时的兜底：工作线程可能已经完成最终刷新并退出，当前线程把该队列剩余的槽位同步刷掉
+     * 和CallerRunsPolicy一样会等待队列令牌，保证同一个队列的BatchHandler不会被并发调用
+     */
+    private void flushQueueAfterShutdown(int queueIndex) {
+        List<Integer> currentQueueIndexes = handlingQueueIndexes.get();
+        if (currentQueueIndexes != null && currentQueueIndexes.contains(queueIndex)) {
+            //当前线程正在处理该队列的批次，工作线程退出前还会做最终刷新
+            return;
+        }
+        WindowQueue<T> windowQueue = windowQueues.get(queueIndex);
+        boolean interrupted = false;
+        while (!queueRunning[queueIndex].compareAndSet(false, true)) {
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1));
+            if (Thread.interrupted()) {
+                interrupted = true;
+            }
+        }
+        try {
+            Batch<T> batch = new Batch<>(maxBatchSize);
+            batch.addQueueIndex(queueIndex);
+            while (true) {
+                boolean empty;
+                synchronized (windowQueue.lock) {
+                    drainSlots(batch, windowQueue.slots);
+                    empty = windowQueue.slots.isEmpty();
+                    if (empty) {
+                        queueNextFlushTime[queueIndex].set(0);
+                    }
+                }
+                handleBatchOnCurrentThread(batch);
+                if (empty) {
+                    return;
+                }
+                batch = new Batch<>(maxBatchSize);
+                batch.addQueueIndex(queueIndex);
+            }
+        } finally {
+            queueRunning[queueIndex].set(false);
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void handleBatchOnCurrentThread(Batch<T> batch) {
+        if (batch.tasks.isEmpty()) return;
+        List<Integer> previous = handlingQueueIndexes.get();
+        handlingQueueIndexes.set(batch.queueIndexes);
+        try {
+            batchHandler.handle(batch.tasks);
+        } catch (Exception e) {
+            logger.error("camellia merging executor flush on shutdown error, name = {}", name, e);
+        } finally {
+            if (previous != null) {
+                handlingQueueIndexes.set(previous);
+            } else {
+                handlingQueueIndexes.remove();
+            }
+        }
     }
 
     private void reject(Object hashKey, T task, RejectedExecutionHandler<T> handler) {
@@ -299,9 +372,8 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
     public int getQueueSize() {
         int size = 0;
         for (int i = 0; i < queueCount; i++) {
-            if (queueNextFlushTime[i].get() != 0) {
-                size += windowQueues.get(i).slots.size();
-            }
+            //直接以槽位为准，不依赖窗口状态，避免窗口状态异常时监控看不到滞留任务
+            size += windowQueues.get(i).slots.size();
         }
         return size;
     }
@@ -440,7 +512,8 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
                         if (flushTime == 0) {
                             continue;
                         }
-                        Map<Object, Slot<T>> slots = windowQueues.get(queueIndex).slots;
+                        WindowQueue<T> windowQueue = windowQueues.get(queueIndex);
+                        Map<Object, Slot<T>> slots = windowQueue.slots;
                         boolean sizeTrigger = slots.size() >= maxAccumulateSize;
                         if (now < flushTime && !sizeTrigger && !backlogTrigger) {
                             nextDeadline = Math.min(nextDeadline, flushTime);
@@ -449,10 +522,13 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
                         if (!tryLockQueue(batch, queueIndex)) {
                             continue;
                         }
-                        drainSlots(batch, slots);
-                        //还有残留说明本批没取完，或者遍历期间有新提交，标记为立即到期，下一轮继续处理；
-                        //取空则回到空闲状态，等下一个提交重新开窗
-                        nextFlushTime.set(slots.isEmpty() ? 0 : now);
+                        //与提交方使用同一把队列锁，保证"取槽位"和"关窗口"之间不会插入新的槽位
+                        synchronized (windowQueue.lock) {
+                            drainSlots(batch, slots);
+                            //还有残留说明本批没取完，标记为立即到期，下一轮继续处理；
+                            //取空则回到空闲状态，等下一个提交重新开窗
+                            nextFlushTime.set(slots.isEmpty() ? 0 : now);
+                        }
                     }
                     if (batch.tasks.isEmpty()) {
                         release(batch.queueIndexes);
@@ -478,42 +554,49 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
 
         /**
          * 停机时把还停留在窗口内的槽位做一次最终刷新，避免丢失更新；
-         * 多个工作线程并发进入也没问题：队列级别的 queueRunning 保证同一个队列只被刷新一次
+         * 多个工作线程并发进入也没问题：队列级别的 queueRunning 保证同一个队列只被一个线程刷新
+         *
+         * 单个队列的槽位数可能超过 maxBatchSize，必须循环取到队列为空为止，不能只取一批；
+         * 同时以"槽位是否为空"为准，不依赖 nextFlushTime，避免窗口状态异常时跳过残留任务
          */
         private void flushRemainingOnShutdown() {
             Batch<T> batch = new Batch<>(maxBatchSize);
             for (int queueIndex = 0; queueIndex < queueCount; queueIndex++) {
-                if (queueNextFlushTime[queueIndex].get() == 0) continue;
-                if (!queueRunning[queueIndex].compareAndSet(false, true)) continue;
+                WindowQueue<T> windowQueue = windowQueues.get(queueIndex);
+                if (!queueRunning[queueIndex].compareAndSet(false, true)) {
+                    //其他工作线程正在刷新该队列，它会把该队列取空
+                    continue;
+                }
                 try {
-                    drainSlots(batch, windowQueues.get(queueIndex).slots);
-                    if (!batch.contains(queueIndex)) {
-                        batch.addQueueIndex(queueIndex);
+                    while (true) {
+                        int sizeBefore = batch.tasks.size();
+                        boolean empty;
+                        synchronized (windowQueue.lock) {
+                            drainSlots(batch, windowQueue.slots);
+                            empty = windowQueue.slots.isEmpty();
+                            if (empty) {
+                                queueNextFlushTime[queueIndex].set(0);
+                            }
+                        }
+                        if (batch.tasks.size() > sizeBefore && !batch.contains(queueIndex)) {
+                            batch.addQueueIndex(queueIndex);
+                        }
+                        if (empty) {
+                            break;
+                        }
+                        //本批已满：先把当前批次交出去，再继续取同一个队列剩余的槽位
+                        handleBatchQuietly(batch);
+                        batch = new Batch<>(maxBatchSize);
+                    }
+                    if (batch.tasks.size() >= maxBatchSize) {
+                        handleBatchQuietly(batch);
+                        batch = new Batch<>(maxBatchSize);
                     }
                 } finally {
                     queueRunning[queueIndex].set(false);
                 }
-                if (batch.tasks.size() >= maxBatchSize) {
-                    handleBatchQuietly(batch);
-                    batch = new Batch<>(maxBatchSize);
-                }
             }
             handleBatchQuietly(batch);
-        }
-
-        /**
-         * 取出槽位：用 remove(key, snapshot) 保证"遍历期间被合并过（对象已被替换）的 key"留到下一轮，不会丢更新
-         */
-        private void drainSlots(Batch<T> batch, Map<Object, Slot<T>> slots) {
-            for (Map.Entry<Object, Slot<T>> entry : slots.entrySet()) {
-                if (batch.tasks.size() >= maxBatchSize) {
-                    break;
-                }
-                Slot<T> snapshot = entry.getValue();
-                if (slots.remove(entry.getKey(), snapshot)) {
-                    batch.tasks.add(snapshot.value);
-                }
-            }
         }
 
         private boolean tryLockQueue(Batch<T> batch, int queueIndex) {
@@ -551,6 +634,21 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
         }
     }
 
+    /**
+     * 取出槽位：调用方需要持有对应队列的锁，保证"取槽位"与"提交方插入/合并"不会交错
+     */
+    private void drainSlots(Batch<T> batch, Map<Object, Slot<T>> slots) {
+        for (Map.Entry<Object, Slot<T>> entry : slots.entrySet()) {
+            if (batch.tasks.size() >= maxBatchSize) {
+                break;
+            }
+            Slot<T> snapshot = entry.getValue();
+            if (slots.remove(entry.getKey(), snapshot)) {
+                batch.tasks.add(snapshot.value);
+            }
+        }
+    }
+
     private static class Batch<T> {
 
         private final List<T> tasks;
@@ -571,6 +669,8 @@ public class CamelliaMergingExecutor<T> implements CamelliaExecutor {
 
     private static class WindowQueue<T> {
         private final Map<Object, Slot<T>> slots = new ConcurrentHashMap<>();
+        //保护"窗口状态 + 槽位"的原子更新：提交方在这里插入并开窗，工作线程在这里取槽位并关窗
+        private final Object lock = new Object();
     }
 
     private static class Slot<T> {

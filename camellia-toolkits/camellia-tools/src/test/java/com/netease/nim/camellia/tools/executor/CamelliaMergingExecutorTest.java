@@ -12,6 +12,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by caojiajun on 2026/10/9
@@ -244,6 +245,88 @@ public class CamelliaMergingExecutorTest {
         Assert.assertEquals(2, handled.size());
         Assert.assertTrue(handled.contains(5));
         Assert.assertTrue(handled.contains(7));
+    }
+
+    @Test
+    public void testFlushRemainingOnShutdownMoreThanMaxBatchSize() throws Exception {
+        int total = 10;
+        Set<Integer> handled = Collections.synchronizedSet(new HashSet<>());
+        CamelliaMergingExecutorConfig<Integer> config = new CamelliaMergingExecutorConfig<>("shutdown-multi-batch",
+                Math::max,
+                tasks -> handled.addAll(tasks));
+        config.setQueueCount(1);
+        config.setWorkerCount(1);
+        config.setMaxBatchSize(2);
+        config.setIdleWaitMillis(1);
+        //窗口很长，只有停机时的最终刷新会处理这些槽位
+        config.setWindowMillis(60000);
+        CamelliaMergingExecutor<Integer> executor = new CamelliaMergingExecutor<>(config);
+        try {
+            for (int i = 0; i < total; i++) {
+                Assert.assertTrue(executor.submit("key-" + i, i));
+            }
+            //单队列槽位数超过 maxBatchSize，停机刷新必须循环取到队列为空
+            Assert.assertEquals(total, executor.getQueueSize());
+            executor.shutdown();
+            Assert.assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+            Assert.assertEquals("handled=" + handled, total, handled.size());
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    @Test
+    public void testSubmitConcurrentWithWindowFlushDoesNotStrandTask() throws Exception {
+        int threadCount = 4;
+        int perThread = 2000;
+        int total = threadCount * perThread;
+        Set<Integer> handled = Collections.synchronizedSet(new HashSet<>());
+        CamelliaMergingExecutorConfig<Integer> config = new CamelliaMergingExecutorConfig<>("window-race",
+                Math::max,
+                tasks -> handled.addAll(tasks));
+        config.setQueueCount(1);
+        config.setWorkerCount(1);
+        config.setMaxBatchSize(64);
+        config.setIdleWaitMillis(1);
+        //窗口极短，让"提交"和"窗口到期后的关闭"持续并发发生
+        config.setWindowMillis(1);
+        CamelliaMergingExecutor<Integer> executor = new CamelliaMergingExecutor<>(config);
+        CountDownLatch start = new CountDownLatch(1);
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        List<Thread> threads = new ArrayList<>();
+        try {
+            for (int t = 0; t < threadCount; t++) {
+                final int threadIndex = t;
+                Thread thread = new Thread(() -> {
+                    try {
+                        start.await();
+                        for (int i = 0; i < perThread; i++) {
+                            int value = threadIndex * perThread + i;
+                            executor.submit("key-" + value, value);
+                        }
+                    } catch (Throwable e) {
+                        error.set(e);
+                    }
+                });
+                threads.add(thread);
+                thread.start();
+            }
+            start.countDown();
+            for (Thread thread : threads) {
+                thread.join(TimeUnit.SECONDS.toMillis(10));
+                Assert.assertFalse(thread.isAlive());
+            }
+            Assert.assertNull(error.get());
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            while (handled.size() < total && System.nanoTime() < deadline) {
+                Thread.sleep(5);
+            }
+            //不能有槽位滞留在 nextFlushTime = 0 的队列里
+            Assert.assertEquals("handled=" + handled.size(), total, handled.size());
+            Assert.assertEquals(0, executor.getQueueSize());
+        } finally {
+            executor.shutdown();
+        }
     }
 
     private static class FixedHashKey {
