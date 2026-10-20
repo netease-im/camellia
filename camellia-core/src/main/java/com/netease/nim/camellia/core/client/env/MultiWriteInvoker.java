@@ -135,6 +135,7 @@ public class MultiWriteInvoker {
     }
 
     private static Object invoke0(Invoker invoker, Resource resource, FailedCallback failedCallback, int index, AtomicBoolean lock) throws Exception {
+        MultiWriteContext.setIndex(index);
         try {
             return invoker.invoke(resource, index);
         } catch (Throwable e) {
@@ -144,6 +145,8 @@ public class MultiWriteInvoker {
             } else {
                 throw new ExecutionException(e);
             }
+        } finally {
+            MultiWriteContext.clear();
         }
     }
 

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.hbase;
 
 import com.netease.nim.camellia.core.client.annotation.ReadOp;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
+import com.netease.nim.camellia.core.client.env.MultiWriteContext;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.hbase.connection.CamelliaHBaseConnectionFactory;
 import com.netease.nim.camellia.hbase.exception.CamelliaHBaseException;
@@ -121,8 +122,8 @@ public class CamelliaHBaseClientImpl {
         for (Row action : actions) {
             list.add(HBaseMutationCopyUtil.copyRow(action));
         }
-        //results是调用方传入的数组，多写时会被多个线程共享，这里先用本地数组接收HBase的返回结果，最后再回填
-        //注意：多写场景下每个集群都会回填一次，只有主集群(index=0)的结果对调用方有意义
+        //results 是调用方传入的数组，多写时会被多个线程共享，这里先用本地数组接收 HBase 的返回结果
+        //只有主集群(index=0)回填，避免多个集群互相覆盖，以及异步多写场景下方法返回后出参仍被修改
         Object[] localResults = new Object[actions.size()];
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
@@ -131,7 +132,7 @@ public class CamelliaHBaseClientImpl {
         } catch (IOException | InterruptedException e) {
             throw new CamelliaHBaseException(e);
         } finally {
-            if (results != null) {
+            if (results != null && MultiWriteContext.isPrimary()) {
                 System.arraycopy(localResults, 0, results, 0, localResults.length);
             }
             if (logger.isDebugEnabled()) {
