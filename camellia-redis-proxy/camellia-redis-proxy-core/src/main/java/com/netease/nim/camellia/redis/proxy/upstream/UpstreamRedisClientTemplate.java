@@ -415,6 +415,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
 
             if (redisCommand == RedisCommand.DBSIZE) {
+                if (shouldRejectDbSize(command.getChannelInfo())) {
+                    //事务内不做fan-out汇总，直接返回不支持，避免绕过MULTI导致响应错位
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(new ErrorReply("ERR DBSIZE is not supported in MULTI/EXEC"));
+                    futureList.add(future);
+                    continue;
+                }
                 futureList.add(dbSize(commandFlusher, command));
                 continue;
             }
@@ -757,6 +764,10 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         if (proxyRouteType == ProxyRouteType.COMPLEX || proxyRouteType == ProxyRouteType.SINGLE_READ_UPSTREAM_STANDALONE_OR_SENTINEL) return false;
         for (Command command : commands) {
             RedisCommand redisCommand = command.getRedisCommand();
+            if (redisCommand == RedisCommand.DBSIZE) {
+                //DBSIZE统一走主流程：既保证多写资源汇总，也保证同批次MULTI+DBSIZE时按命令顺序判定事务
+                return false;
+            }
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
                     || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2
                     || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_3) {
@@ -859,6 +870,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
         }
         return future;
+    }
+
+    /**
+     * 事务内 DBSIZE 需要 fan-out 汇总，无法作为单条命令放进 MULTI，直接返回不支持。
+     */
+    static boolean shouldRejectDbSize(ChannelInfo channelInfo) {
+        return channelInfo.isInTransaction();
     }
 
     private CompletableFuture<Reply> mset(Command command, UpstreamClientCommandFlusher commandFlusher) {

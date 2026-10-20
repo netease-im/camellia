@@ -90,6 +90,7 @@ rediss-cluster://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379?db
     * 事务内是否可以SELECT取决于事务是否已经绑定连接，绑定后只能使用绑定连接的db，否则返回错误`ERR DB cannot be changed while a connection is bound or transaction is active`：
         * standalone/sentinel：MULTI时会立即绑定连接（db取当前已选db，未选过则取url里的db），因此MULTI之后只能SELECT与该连接相同的db
         * redis-cluster：MULTI后延迟到事务内第一条带key的命令才绑定连接，因此在该命令之前可以SELECT任意db（受cluster.multidb.support限制）并决定事务最终使用的db；绑定之后再SELECT不同的db会返回上述错误
+    * 事务内不支持`DBSIZE`（它需要跨资源汇总），会直接返回`ERR DBSIZE is not supported in MULTI/EXEC`
     * 开启多db后，每个db都会在后端每个master节点上建立独立的连接（连接数近似为db个数*master节点数），请评估后端的连接数
 
 ### redis-sentinel-slaves

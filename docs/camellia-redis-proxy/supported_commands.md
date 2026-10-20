@@ -133,6 +133,7 @@ READONLY,
 #proxy info
 INFO,
 #the proxy sums dbsize of all write resources(master nodes only for redis-cluster); the db selected by client is preferred, otherwise the db in the resource url is used;
+#not supported inside MULTI/EXEC (returns 'ERR DBSIZE is not supported in MULTI/EXEC')
 #not support if the upstream resource is kv type
 DBSIZE,
 ``` 
