@@ -56,6 +56,13 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
         }, config.getMaxRetry());
     }
 
+    public boolean isLoading(String tag) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/strict/isLoading?tag=" + URLEncoder.encode(tag, "utf-8");
+            return CamelliaIdGenHttpUtils.genBoolean(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
+
     @Override
     public long decodeRegionId(long id) {
         return invoker.invoke(server -> {

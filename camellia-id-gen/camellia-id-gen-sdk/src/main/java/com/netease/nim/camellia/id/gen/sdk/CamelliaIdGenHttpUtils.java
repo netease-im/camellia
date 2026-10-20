@@ -53,6 +53,17 @@ public class CamelliaIdGenHttpUtils {
         }
     }
 
+    public static boolean genBoolean(OkHttpClient okHttpClient, String url) {
+        try {
+            JSONObject json = invokeGet(okHttpClient, url);
+            return json.getBooleanValue("data");
+        } catch (CamelliaIdGenException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaIdGenException(e);
+        }
+    }
+
     public static List<Long> genIds(OkHttpClient okHttpClient, String url) {
         try {
             JSONObject json = invokeGet(okHttpClient, url);

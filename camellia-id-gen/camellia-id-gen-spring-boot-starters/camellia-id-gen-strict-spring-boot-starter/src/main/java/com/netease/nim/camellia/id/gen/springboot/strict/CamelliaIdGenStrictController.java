@@ -106,6 +106,26 @@ public class CamelliaIdGenStrictController {
         }
     }
 
+    @GetMapping("/isLoading")
+    public IdGenResult isLoading(@RequestParam("tag") String tag) {
+        String uri = "/camellia/id/gen/strict/isLoading";
+        long startTime = System.currentTimeMillis();
+        try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
+            boolean loading = camelliaStrictIdGen.isLoading(tag);
+            if (logger.isDebugEnabled()) {
+                logger.debug("isLoading, tag = {}, loading = {}", tag, loading);
+            }
+            return IdGenResult.success(uri, startTime, loading);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(uri, startTime, e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(uri, startTime, "internal error");
+        }
+    }
+
     @GetMapping("/decodeRegionId")
     public IdGenResult decodeRegionId(@RequestParam("id") long id) {
         String uri = "/camellia/id/gen/strict/decodeRegionId";
