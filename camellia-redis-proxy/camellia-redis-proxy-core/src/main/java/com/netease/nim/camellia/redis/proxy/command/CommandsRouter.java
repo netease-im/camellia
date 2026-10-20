@@ -306,7 +306,7 @@ public class CommandsRouter {
                                 IUpstreamClientTemplate template = factory.tryGet(channelInfo.getBid(), channelInfo.getBgroup());
                                 if (template != null && !template.isMultiDBSupport() && db != 0) {
                                     task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
-                                } else if (isDbChangeNotAllowed(channelInfo, db)) {
+                                } else if (isDbChangeNotAllowed(channelInfo, db, tasks)) {
                                     task.replyCompleted(ErrorReply.DB_CHANGE_NOT_ALLOWED);
                                 } else {
                                     //需要把之前db的命令先发出去
@@ -597,6 +597,24 @@ public class CommandsRouter {
             }
         }
         return channelInfo.getBindConnection() != null && channelInfo.getBindConnection().getAddr().getDb() != db;
+    }
+
+    static boolean isDbChangeNotAllowed(ChannelInfo channelInfo, int db, List<CommandTask> pendingTasks) {
+        // MULTI may still be in this batch, so ChannelInfo has not entered transaction state yet.
+        // Reject a DB change before flushing it; otherwise the transaction binds to the old DB.
+        boolean pendingTransaction = false;
+        for (CommandTask task : pendingTasks) {
+            RedisCommand redisCommand = task.getCommand().getRedisCommand();
+            if (redisCommand == RedisCommand.MULTI) {
+                pendingTransaction = true;
+            } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
+                pendingTransaction = false;
+            }
+        }
+        if (pendingTransaction && (channelInfo.getDb() < 0 || channelInfo.getDb() != db)) {
+            return true;
+        }
+        return isDbChangeNotAllowed(channelInfo, db);
     }
 
     private Reply cportAuth(Command command) {
