@@ -306,20 +306,32 @@ public class CommandsRouter {
                                 IUpstreamClientTemplate template = factory.tryGet(channelInfo.getBid(), channelInfo.getBgroup());
                                 if (template != null && !template.isMultiDBSupport() && db != 0) {
                                     task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
-                                } else if (isDbChangeNotAllowed(channelInfo, db, tasks)) {
-                                    task.replyCompleted(ErrorReply.DB_CHANGE_NOT_ALLOWED);
                                 } else {
-                                    //需要把之前db的命令先发出去
+                                    //先下发旧 DB 的命令，让 MULTI/WATCH 的绑定状态生效，再判断是否允许切库。
                                     if (!tasks.isEmpty() && channelInfo.getDb() != db) {
+                                        if (template == null && hasPendingBindingCommand(tasks)) {
+                                            //懒初始化尚未完成时 flush 可能是异步的，不能用未更新的绑定状态判断 SELECT。
+                                            task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
+                                            hasCommandsSkip = true;
+                                            continue;
+                                        }
                                         List<Command> list = new ArrayList<>(tasks.size());
                                         for (CommandTask asyncTask : tasks) {
                                             list.add(asyncTask.getCommand());
                                         }
-                                        flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                                        if (template != null) {
+                                            flush0(template, channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                                        } else {
+                                            flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                                        }
                                         tasks = new ArrayList<>();
                                     }
-                                    channelInfo.setDb(db);
-                                    task.replyCompleted(StatusReply.OK);
+                                    if (isDbChangeNotAllowed(channelInfo, db)) {
+                                        task.replyCompleted(ErrorReply.DB_CHANGE_NOT_ALLOWED);
+                                    } else {
+                                        channelInfo.setDb(db);
+                                        task.replyCompleted(StatusReply.OK);
+                                    }
                                 }
                             }
                         } else {
@@ -599,22 +611,15 @@ public class CommandsRouter {
         return channelInfo.getBindConnection() != null && channelInfo.getBindConnection().getAddr().getDb() != db;
     }
 
-    static boolean isDbChangeNotAllowed(ChannelInfo channelInfo, int db, List<CommandTask> pendingTasks) {
-        // MULTI may still be in this batch, so ChannelInfo has not entered transaction state yet.
-        // Reject a DB change before flushing it; otherwise the transaction binds to the old DB.
-        boolean pendingTransaction = false;
+    static boolean hasPendingBindingCommand(List<CommandTask> pendingTasks) {
         for (CommandTask task : pendingTasks) {
-            RedisCommand redisCommand = task.getCommand().getRedisCommand();
-            if (redisCommand == RedisCommand.MULTI) {
-                pendingTransaction = true;
-            } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
-                pendingTransaction = false;
+            Command command = task.getCommand();
+            RedisCommand redisCommand = command.getRedisCommand();
+            if (redisCommand == RedisCommand.MULTI || redisCommand == RedisCommand.WATCH || command.isBlocking()) {
+                return true;
             }
         }
-        if (pendingTransaction && (channelInfo.getDb() < 0 || channelInfo.getDb() != db)) {
-            return true;
-        }
-        return isDbChangeNotAllowed(channelInfo, db);
+        return false;
     }
 
     private Reply cportAuth(Command command) {
