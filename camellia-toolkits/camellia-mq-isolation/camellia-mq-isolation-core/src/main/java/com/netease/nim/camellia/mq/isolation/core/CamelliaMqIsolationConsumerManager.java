@@ -34,6 +34,7 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean initOk = new AtomicBoolean(false);
     private final AtomicBoolean stop = new AtomicBoolean(false);
+    private boolean stopCompleted;
     private ScheduledFuture<?> future;
 
     public CamelliaMqIsolationConsumerManager(ConsumerManagerConfig config) {
@@ -70,16 +71,17 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
      */
     @Override
     public void stop() {
-        if (stop.get()) {
-            throw new IllegalStateException("mq isolation consumer stop twice!");
-        }
         if (!initOk.get()) {
             throw new IllegalStateException("mq isolation consumer not start!");
         }
         lock.lock();
         try {
+            if (stopCompleted) {
+                throw new IllegalStateException("mq isolation consumer stop twice!");
+            }
             // Set the flag before touching instanceMap so a concurrent initConsumers can never
-            // register a consumer after this stop attempt took the lock.
+            // register a consumer after this stop attempt took the lock. Keep it set on failure;
+            // later stop calls may retry the consumers still present in instanceMap.
             stop.set(true);
             if (future != null) {
                 future.cancel(false);
@@ -112,6 +114,7 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
         } finally {
             try {
                 dispatcher.shutdown();
+                stopCompleted = instanceMap.isEmpty();
             } finally {
                 lock.unlock();
             }
