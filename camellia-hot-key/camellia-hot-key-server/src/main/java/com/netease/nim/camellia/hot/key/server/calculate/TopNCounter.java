@@ -70,7 +70,7 @@ public class TopNCounter {
                 cache = cache1List.get(0);
             }
         } else {
-            int code = Math.abs(counter.getKey().hashCode());
+            int code = counter.getKey().hashCode() == Integer.MIN_VALUE ? 0 : Math.abs(counter.getKey().hashCode());
             int index = MathUtil.mod(is2Power, code, cacheCount);
             if (backup.get()) {
                 cache = cache2List.get(index);
