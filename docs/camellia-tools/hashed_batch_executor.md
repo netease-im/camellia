@@ -65,6 +65,10 @@ public class CamelliaHashedBatchExecutorSamples {
 }
 ```
 
+## 停机
+shutdown后会先把队列里剩余的任务刷给BatchHandler，再退出工作线程；因此submit成功后立即shutdown也不会丢任务  
+可以调用awaitTermination等待所有工作线程完成最后的刷新  
+
 ## 监控
 CamelliaHashedBatchExecutor在创建时会自动注册到CamelliaExecutorMonitor，通过executor.getStats()可以获取活跃线程数、线程数、已完成任务数、排队任务数等指标  
 如果需要定期汇总输出，可以调用CamelliaExecutorMonitor.init(intervalSeconds)启动监控  

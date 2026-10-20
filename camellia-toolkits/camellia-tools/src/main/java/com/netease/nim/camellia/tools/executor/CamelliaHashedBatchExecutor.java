@@ -394,8 +394,50 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
                     }
                 }
             }
+            flushRemainingOnShutdown();
             int size = getQueueSize();
             logger.warn("camellia hashed batch executor work thread shutdown, thread.name = {}, skip.task.size = {}", getName(), size);
+        }
+
+        /**
+         * 停机时把队列里还没处理的任务刷出去，避免shutdown之后提交成功的任务被静默丢弃；
+         * 多个工作线程并发进入也没问题：队列级别的queueRunning保证同一个队列只会被一个线程处理
+         */
+        private void flushRemainingOnShutdown() {
+            while (true) {
+                Batch<T> batch = drainBatch();
+                if (batch.tasks.isEmpty()) {
+                    release(batch.queueIndexes);
+                    if (allQueuesEmpty()) {
+                        return;
+                    }
+                    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1));
+                    continue;
+                }
+                active.set(true);
+                inflightTaskCount.addAndGet(batch.tasks.size());
+                handlingQueueIndexes.set(batch.queueIndexes);
+                try {
+                    batchHandler.handle(batch.tasks);
+                    completedTaskCount.addAndGet(batch.tasks.size());
+                } catch (Exception e) {
+                    logger.error("camellia hashed batch executor flush on shutdown error, name = {}", name, e);
+                } finally {
+                    handlingQueueIndexes.remove();
+                    inflightTaskCount.addAndGet(-batch.tasks.size());
+                    active.set(false);
+                    release(batch.queueIndexes);
+                }
+            }
+        }
+
+        private boolean allQueuesEmpty() {
+            for (int i = 0; i < queueCount; i++) {
+                if (!queues.get(i).isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void waitMoreIfNecessary(Batch<T> batch) {

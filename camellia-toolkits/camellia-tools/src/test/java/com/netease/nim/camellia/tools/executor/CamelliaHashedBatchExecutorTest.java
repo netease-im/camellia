@@ -280,6 +280,25 @@ public class CamelliaHashedBatchExecutorTest {
         Assert.assertTrue(executor.isShutdown());
     }
 
+    @Test
+    public void testFlushRemainingOnShutdown() throws Exception {
+        int total = 10;
+        Set<Integer> handled = Collections.synchronizedSet(new HashSet<>());
+        CamelliaHashedBatchExecutorConfig<Integer> config = new CamelliaHashedBatchExecutorConfig<>("shutdown-drain",
+                tasks -> handled.addAll(tasks));
+        config.setQueueCount(1);
+        config.setWorkerCount(1);
+        config.setMaxBatchSize(2);
+        config.setIdleWaitMillis(1);
+        CamelliaHashedBatchExecutor<Integer> executor = new CamelliaHashedBatchExecutor<>(config);
+        for (int i = 0; i < total; i++) {
+            Assert.assertTrue(executor.submit("key-" + i, i));
+        }
+        executor.shutdown();
+        Assert.assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+        Assert.assertEquals("handled=" + handled, total, handled.size());
+    }
+
     private static class FixedHashKey {
         private final int hash;
 
