@@ -114,7 +114,7 @@ KEYS,RANDOMKEY,
   only support in special case or special parameter
 ```
 ##DataBase
-#if upstream contains redis-cluster, only support 'select 0' by default; 'select xx' can be enabled by dynamic conf cluster.multidb.support=true (default false), which requires the backend cluster itself to support multi-db (e.g. a valkey cluster with cluster-databases enabled); select is rejected while a transaction is active or a connection is bound
+#if upstream contains redis-cluster, only support 'select 0' by default; 'select xx' can be enabled by dynamic conf cluster.multidb.support=true (default false), which requires the backend cluster itself to support multi-db (e.g. a valkey cluster with cluster-databases enabled); select is rejected once the transaction is bound to a connection with a different db (standalone binds at MULTI, redis-cluster binds at the first keyed command inside the transaction)
 #other-wise, support select xx
 SELECT,
 #only support 'CONFIG GET XXX'

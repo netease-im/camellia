@@ -87,7 +87,9 @@ rediss-cluster://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379?db
 * 关于db参数（原生redis-cluster只支持db0，仅当后端为支持多db的集群时才可以使用，如开启了cluster-databases参数的valkey cluster）：
     * db参数表示该资源的默认db：客户端执行过SELECT时以客户端select的db为准，否则使用url里配置的db（proxy会在后端连接上自动执行SELECT）；db=0等价于不配置db参数
     * 客户端如果需要自己执行SELECT命令，还需要开启proxy的动态配置：cluster.multidb.support=true（默认为false，可以按bid/bgroup级别配置，如1.default.cluster.multidb.support=true）；未开启时，客户端执行SELECT非0会返回错误`ERR DB index is out of range`
-    * 同一个连接在事务（MULTI）期间、或者已经绑定连接（如订阅、阻塞命令）时，不允许切换db，否则返回错误`ERR DB cannot be changed while a connection is bound or transaction is active`
+    * 事务内是否可以SELECT取决于事务是否已经绑定连接，绑定后只能使用绑定连接的db，否则返回错误`ERR DB cannot be changed while a connection is bound or transaction is active`：
+        * standalone/sentinel：MULTI时会立即绑定连接（db取当前已选db，未选过则取url里的db），因此MULTI之后只能SELECT与该连接相同的db
+        * redis-cluster：MULTI后延迟到事务内第一条带key的命令才绑定连接，因此在该命令之前可以SELECT任意db（受cluster.multidb.support限制）并决定事务最终使用的db；绑定之后再SELECT不同的db会返回上述错误
     * 开启多db后，每个db都会在后端每个master节点上建立独立的连接（连接数近似为db个数*master节点数），请评估后端的连接数
 
 ### redis-sentinel-slaves

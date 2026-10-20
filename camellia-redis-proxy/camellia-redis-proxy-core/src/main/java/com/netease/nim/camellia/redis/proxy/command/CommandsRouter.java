@@ -589,8 +589,12 @@ public class CommandsRouter {
     }
 
     static boolean isDbChangeNotAllowed(ChannelInfo channelInfo, int db) {
-        if (channelInfo.isInTransaction() && channelInfo.getDb() != db) {
-            return true;
+        if (channelInfo.isInTransaction()) {
+            int currentDb = channelInfo.getDb();
+            //db = -1 表示客户端还没有执行过 select，此时事务内仍允许首次 select
+            if (currentDb >= 0 && currentDb != db) {
+                return true;
+            }
         }
         return channelInfo.getBindConnection() != null && channelInfo.getBindConnection().getAddr().getDb() != db;
     }
