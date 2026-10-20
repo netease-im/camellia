@@ -48,6 +48,8 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private final MqIsolationController controller;
     private final ConsumerBizStatsCollector collector;
     private final boolean virtualThreadEnable;
+    private final Object executorLock = new Object();
+    private final MsgExecutorFactory executorFactory;
     private ScheduledFuture<?> reloadFuture;
     private volatile boolean shutdown;
 
@@ -55,6 +57,10 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private MqIsolationConfig mqIsolationConfig;
 
     public CamelliaMqIsolationMsgDispatcher(DispatcherConfig config) {
+        this(config, null);
+    }
+
+    CamelliaMqIsolationMsgDispatcher(DispatcherConfig config, MsgExecutorFactory executorFactory) {
         this.dispatcherConfig = config;
         this.namespace = config.getNamespace();
         this.controller = config.getController();
@@ -65,6 +71,8 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
         this.mqSender = config.getMqSender();
         this.strategy = config.getStrategy();
         this.virtualThreadEnable = config.isVirtualThreadEnable();
+        this.executorFactory = executorFactory != null ? executorFactory :
+                name -> new MsgExecutor(name, this.threads, this.maxPermitPercent, this.strategy, this.virtualThreadEnable);
         if (virtualThreadEnable) {
             MsgExecutor.validateVirtualThreadSupport();
         }
@@ -201,32 +209,50 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
         return context;
     }
 
-    private MsgExecutor selectExecutor(ConsumerContext context) {
+    MsgExecutor selectExecutor(ConsumerContext context) {
         String name = context.getMqInfo().getMq() + "#" + context.getMqInfo().getTopic();
         MsgExecutor executor = executorMap.get(name);
         if (executor != null) {
             return executor;
         }
-        if (shutdown) {
-            return null;
+        // 创建 executor 与 shutdown 需要在同一把锁内串行，否则可能在 shutdown 排空之后又创建出一个不会被关闭的 executor
+        synchronized (executorLock) {
+            if (shutdown) {
+                return null;
+            }
+            executor = executorMap.get(name);
+            if (executor != null) {
+                return executor;
+            }
+            executor = executorFactory.newExecutor(name);
+            executorMap.put(name, executor);
+            return executor;
         }
-        return executorMap.computeIfAbsent(name,
-                k -> new MsgExecutor(name, threads, maxPermitPercent, strategy, virtualThreadEnable));
     }
 
     public void shutdown() {
-        if (shutdown) {
-            return;
-        }
-        shutdown = true;
-        if (reloadFuture != null) {
-            reloadFuture.cancel(false);
+        List<MsgExecutor> executors;
+        synchronized (executorLock) {
+            if (shutdown) {
+                return;
+            }
+            shutdown = true;
+            if (reloadFuture != null) {
+                reloadFuture.cancel(false);
+            }
+            // 在锁内快照，保证 shutdown 之后不会再创建新的 executor，同时避免在锁内等待排空
+            executors = new ArrayList<>(executorMap.values());
         }
         // Bound the total drain time instead of waiting 30s per executor, so a single stuck
         // executor cannot push the graceful shutdown past the deployment grace period.
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(SHUTDOWN_TIMEOUT_SECONDS);
-        executorMap.values().forEach(executor ->
-                executor.shutdown(Math.max(deadline - System.nanoTime(), 0), TimeUnit.NANOSECONDS));
+        for (MsgExecutor executor : executors) {
+            executor.shutdown(Math.max(deadline - System.nanoTime(), 0), TimeUnit.NANOSECONDS);
+        }
+    }
+
+    interface MsgExecutorFactory {
+        MsgExecutor newExecutor(String name);
     }
 
     private void sendRetryMq(MqIsolationMsgPacket packet) {
