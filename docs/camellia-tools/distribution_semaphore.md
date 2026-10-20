@@ -94,10 +94,11 @@ public class SemaphoreSamples {
 ```
 
 ## 注意事项
-* redis 数据结构：`key`（ZSET，member=permitId，score=过期时间戳）；`key:max`（string，permit 上限 N，仅 SEED 模式使用）。
+* redis 数据结构：`key`（ZSET，member=permitId，score=过期时间戳，TTL=租约）；`key:max`（string，permit 上限 N，仅 SEED 模式使用，TTL=租约的 10 倍，每次 acquire/renew/setPermits 刷新）。因此 permit 租约到期只会清理 ZSET 中的持有者，不会丢失上限配置；`key:max` 空闲超过 10 倍租约后也会自动清理，之后首次 acquire 会按实例本地 `permits` 重新播种（若此前用 `setPermits` 调整过，需要重新设置）。
 * redis cluster 部署时，`key` 需包含 hash tag（例如 `{rate-limit}:foo`），使 `key` 与 `key:max` 落在同一 slot；通过 camellia-redis-proxy / 单机 / 主从部署则无此要求。
 * 一个 `CamelliaRedisSemaphore` 实例最多持有 1 个 permit，`acquire`/`tryAcquire` 幂等（已持有则直接返回 true）；如需并发持有多个 permit，请使用多个实例。
 * `release`/`renew` 仅作用于自己持有的 permit。
 * 长任务需在 `expireTimeoutMillis` 到期前调用 `renew` 续期，建议 renew 间隔显著小于 `expireTimeoutMillis`，否则 permit 可能在续期前被回收。
+* permit 的过期时间戳由客户端时钟生成和判断，各实例需做好时钟同步（如 NTP）；时钟偏差会造成租约提前/延后到期，偏差相对 `expireTimeoutMillis` 越小影响越小。
 * SEED 模式下 `getPermits()` 读取 redis `key:max` 实际值；LOCAL 模式返回本实例 `permits`。
 * 默认非公平排队（非 FIFO），高并发下可能出现饥饿。

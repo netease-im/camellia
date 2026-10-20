@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -258,7 +259,7 @@ public class CamelliaRedisSemaphoreTest {
         sleep(600); // > 300ms TTL
         // key 被 redis 自动过期删除，不依赖后续 tryAcquire（对齐 CamelliaRedisLock 的 PX 行为）
         Assert.assertFalse("key should auto-expire without subsequent acquire", t.exists(key));
-        // 新实例首次 acquire 会重新初始化（key:max 也已自过期）
+        // 新实例首次 acquire 会重新初始化（permit 的 key 已自过期；key:max 仍保留，其 TTL 是租约的 10 倍）
         CamelliaRedisSemaphore s2 = CamelliaRedisSemaphore.newSemaphore(t, key, 1, 1000, 1000, CamelliaRedisSemaphore.PermitsMode.SEED);
         Assert.assertTrue(s2.tryAcquire());
         s2.clear();
@@ -373,6 +374,86 @@ public class CamelliaRedisSemaphoreTest {
                 SafeEncoder.encode(key + ":max"), SafeEncoder.encode("7"));
         Assert.assertEquals("SEED 模式 getPermits 应读取 redis 实际值", 7, s1.getPermits());
         s1.clear();
+    }
+
+    @Test
+    public void testSeedKeyMaxSurvivesPermitLease() {
+        if (!enable) return;
+        CamelliaRedisTemplate t = template();
+        String key = newKey();
+        byte[] keyMax = SafeEncoder.encode(key + ":max");
+        // permit 租约很短，释放后空闲超过租约，key 会过期，但 key:max 的 TTL 是租约的 10 倍，不应过期
+        CamelliaRedisSemaphore s1 = semaphore(key, 3, 1000, 100);
+        try {
+            Assert.assertTrue(s1.tryAcquire());
+            Assert.assertTrue(s1.release());
+            Long ttl = t.ttl(keyMax);
+            Assert.assertTrue("key:max 应有 TTL，实际 ttl=" + ttl, ttl != null && ttl > 0 && ttl <= 1000);
+            sleep(250);
+            Assert.assertTrue("空闲超过租约后 key:max 仍应存在", t.exists(keyMax));
+            Assert.assertTrue("key:max 仍应有 TTL", t.ttl(keyMax) != null && t.ttl(keyMax) > 0);
+        } finally {
+            s1.clear();
+        }
+    }
+
+    @Test
+    public void testSeedKeyMaxAutoExpireAfterIdle() {
+        if (!enable) return;
+        String key = newKey();
+        byte[] keyMax = SafeEncoder.encode(key + ":max");
+        // 租约 50ms，key:max TTL 为 500ms，空闲后应自动清理，不留下无 TTL 的 key
+        CamelliaRedisSemaphore s1 = semaphore(key, 1, 1000, 50);
+        try {
+            Assert.assertTrue(s1.tryAcquire());
+            sleep(700);
+            Assert.assertFalse("key:max 空闲超过 10 倍租约后应自动过期", template().exists(keyMax));
+        } finally {
+            s1.clear();
+        }
+    }
+
+    @Test
+    public void testSeedSetPermitsSurvivesIdle() {
+        if (!enable) return;
+        String key = newKey();
+        CamelliaRedisSemaphore s1 = semaphore(key, 1, 1000, 100);
+        try {
+            Assert.assertTrue(s1.setPermits(3));
+            // 空闲超过 permit 租约，key 和 permit 都会过期
+            sleep(250);
+            // 另一个仍持有旧配置 permits=1 的实例获取时，不应把上限重新播种回 1
+            CamelliaRedisSemaphore s2 = semaphore(key, 1, 1000, 100);
+            Assert.assertTrue(s2.tryAcquire());
+            Assert.assertEquals("setPermits 调整后的上限不应被重新播种覆盖", 3, s2.getPermits());
+        } finally {
+            s1.clear();
+        }
+    }
+
+    @Test
+    public void testAcquireRestoresInterruptFlag() throws Exception {
+        if (!enable) return;
+        String key = newKey();
+        CamelliaRedisSemaphore holder = semaphore(key, 1, 1000, 60000);
+        try {
+            Assert.assertTrue(holder.tryAcquire());
+            final CamelliaRedisSemaphore waiter = semaphore(key, 1, 60000, 60000);
+            final AtomicBoolean acquired = new AtomicBoolean(true);
+            final AtomicBoolean interrupted = new AtomicBoolean(false);
+            Thread thread = new Thread(() -> {
+                acquired.set(waiter.acquire());
+                interrupted.set(Thread.currentThread().isInterrupted());
+            });
+            thread.start();
+            sleep(300);
+            thread.interrupt();
+            thread.join(3000);
+            Assert.assertFalse("中断后 acquire 应立即返回 false", acquired.get());
+            Assert.assertTrue("acquire 应恢复中断标志", interrupted.get());
+        } finally {
+            holder.clear();
+        }
     }
 
     @Test

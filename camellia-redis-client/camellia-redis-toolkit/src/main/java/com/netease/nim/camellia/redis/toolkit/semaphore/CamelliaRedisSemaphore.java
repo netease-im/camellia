@@ -24,7 +24,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>redis 数据结构：
  * <ul>
  *     <li>{@code key}（ZSET）：member = permitId，score = 过期时间戳(ms)</li>
- *     <li>{@code key:max}（string）：permit 上限 N，仅 {@link PermitsMode#SEED} 模式使用；{@link PermitsMode#LOCAL} 模式不持久化上限</li>
+ *     <li>{@code key:max}（string）：permit 上限 N，仅 {@link PermitsMode#SEED} 模式使用；该 key 的 TTL 为单个
+ *         permit 租约的 {@value #KEY_MAX_TTL_FACTOR} 倍（每次 acquire/renew/setPermits 刷新），
+ *         因此不会随 permit 租约（1 倍）过期而丢失，空闲超过该时间后会自清理；{@link PermitsMode#LOCAL} 模式不持久化上限</li>
  * </ul>
  * redis cluster 部署时，{@code key} 需包含 hash tag（例如 {@code {rate-limit}:foo}），使两个 key 落在同一 slot；
  * 通过 camellia-redis-proxy / 单机 / 主从部署则无此要求。
@@ -64,6 +66,7 @@ public class CamelliaRedisSemaphore {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisSemaphore.class);
 
     private static final byte[] MAX_SUFFIX = SafeEncoder.encode(":max");
+    private static final int KEY_MAX_TTL_FACTOR = 10;
 
     private final CamelliaRedisTemplate template;//redis客户端
     private final byte[] key;//信号量key，ZSET 存放 permit 持有者
@@ -71,6 +74,7 @@ public class CamelliaRedisSemaphore {
     private int permits;//permit 上限（初始值，仅在上限 key 缺失时播种；setPermits 可调整）
     private final long acquireTimeoutMillis;//阻塞获取许可的最大等待时间
     private final long expireTimeoutMillis;//单个 permit 的租约过期时间
+    private final long keyMaxTtlMillis;//key:max 的 TTL，为 permit 租约的 KEY_MAX_TTL_FACTOR 倍
     private final long tryIntervalMillis;//阻塞获取时的重试间隔
     private final PermitsMode permitsMode;//permit 上限的确定方式
     private String permitId = null;//当前持有 permit 的唯一标识
@@ -102,6 +106,7 @@ public class CamelliaRedisSemaphore {
         this.permits = permits;
         this.acquireTimeoutMillis = acquireTimeoutMillis;
         this.expireTimeoutMillis = expireTimeoutMillis;
+        this.keyMaxTtlMillis = expireTimeoutMillis * KEY_MAX_TTL_FACTOR;
         this.tryIntervalMillis = tryIntervalMillis;
         this.permitsMode = permitsMode;
     }
@@ -168,13 +173,14 @@ public class CamelliaRedisSemaphore {
         return new CamelliaRedisSemaphore(template, key, permits, acquireTimeoutMillis, expireTimeoutMillis, tryIntervalMillis, permitsMode);
     }
 
-    // 先回收过期 permit，再按 permitsMode 确定上限后分配；ARGV[6]=permitsMode(seed/local)
+    // 先回收过期 permit，再按 permitsMode 确定上限后分配；ARGV[6]=permitsMode(seed/local)，ARGV[7]=key:max TTL
+    // key:max 的 TTL 为 permit 租约的 KEY_MAX_TTL_FACTOR 倍，PEXPIRE 会覆盖旧版本残留的无 TTL 状态
     private static final byte[] ACQUIRE_SCRIPT = SafeEncoder.encode(
             "redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1]) " +
                     "local max " +
-                    "if ARGV[6] == 'local' then max = tonumber(ARGV[4]) else if redis.call('EXISTS', KEYS[2]) == 0 then redis.call('SET', KEYS[2], ARGV[4]) end max = tonumber(redis.call('GET', KEYS[2])) end " +
+                    "if ARGV[6] == 'local' then max = tonumber(ARGV[4]) else if redis.call('EXISTS', KEYS[2]) == 0 then redis.call('SET', KEYS[2], ARGV[4]) end redis.call('PEXPIRE', KEYS[2], ARGV[7]) max = tonumber(redis.call('GET', KEYS[2])) end " +
                     "local current = redis.call('ZCARD', KEYS[1]) " +
-                    "if current < max then redis.call('ZADD', KEYS[1], ARGV[3], ARGV[2]) redis.call('PEXPIRE', KEYS[1], ARGV[5]) if ARGV[6] ~= 'local' then redis.call('PEXPIRE', KEYS[2], ARGV[5]) end return 1 else return 0 end");
+                    "if current < max then redis.call('ZADD', KEYS[1], ARGV[3], ARGV[2]) redis.call('PEXPIRE', KEYS[1], ARGV[5]) return 1 else return 0 end");
     /**
      * 尝试获取一个 permit，若获取不到，则立即返回
      * @return 成功/失败
@@ -193,7 +199,8 @@ public class CamelliaRedisSemaphore {
                         SafeEncoder.encode(String.valueOf(expireTimestamp)),
                         SafeEncoder.encode(String.valueOf(permits)),
                         SafeEncoder.encode(String.valueOf(expireTimeoutMillis)),
-                        SafeEncoder.encode(permitsMode == PermitsMode.LOCAL ? "local" : "seed"));
+                        SafeEncoder.encode(permitsMode == PermitsMode.LOCAL ? "local" : "seed"),
+                        SafeEncoder.encode(String.valueOf(keyMaxTtlMillis)));
                 boolean ok = result != null && String.valueOf(result).equals("1");
                 if (ok) {
                     this.permitId = permitId;
@@ -275,7 +282,10 @@ public class CamelliaRedisSemaphore {
                 try {
                     Thread.sleep(tryIntervalMillis);
                 } catch (InterruptedException e) {
-                    logger.error("sleep error", e);
+                    //恢复中断标志并立即返回，避免调用方感知不到中断而继续阻塞
+                    Thread.currentThread().interrupt();
+                    logger.warn("acquire interrupted, key = {}", key);
+                    return false;
                 }
                 if (System.currentTimeMillis() - start > acquireTimeoutMillis) {
                     return false;
@@ -286,9 +296,10 @@ public class CamelliaRedisSemaphore {
         }
     }
 
-    // 仅续期自己持有的 permit（permitId 为持有方私有凭据，他人无法续期），并刷新 key 租约
+    // 仅续期自己持有的 permit（permitId 为持有方私有凭据，他人无法续期），并刷新 key 租约；
+    // 同时刷新 key:max 的 TTL（ARGV[4]），避免活跃信号量的上限配置过期
     private static final byte[] RENEW_SCRIPT = SafeEncoder.encode(
-            "if redis.call('ZSCORE', KEYS[1], ARGV[1]) then redis.call('ZADD', KEYS[1], ARGV[2], ARGV[1]) redis.call('PEXPIRE', KEYS[1], ARGV[3]) redis.call('PEXPIRE', KEYS[2], ARGV[3]) return 1 else return 0 end");
+            "if redis.call('ZSCORE', KEYS[1], ARGV[1]) then redis.call('ZADD', KEYS[1], ARGV[2], ARGV[1]) redis.call('PEXPIRE', KEYS[1], ARGV[3]) redis.call('PEXPIRE', KEYS[2], ARGV[4]) return 1 else return 0 end");
     /**
      * 尝试对自己持有的 permit 进行续期，刷新租约过期时间
      * @return 成功/失败
@@ -303,7 +314,8 @@ public class CamelliaRedisSemaphore {
                 long newExpireTimestamp = System.currentTimeMillis() + expireTimeoutMillis;
                 Object result = template.eval(RENEW_SCRIPT, 2, key, keyMax,
                         SafeEncoder.encode(permitId), SafeEncoder.encode(String.valueOf(newExpireTimestamp)),
-                        SafeEncoder.encode(String.valueOf(expireTimeoutMillis)));
+                        SafeEncoder.encode(String.valueOf(expireTimeoutMillis)),
+                        SafeEncoder.encode(String.valueOf(keyMaxTtlMillis)));
                 if (result != null && String.valueOf(result).equals("1")) {
                     this.expireTimestamp = newExpireTimestamp;
                     return true;
@@ -351,10 +363,10 @@ public class CamelliaRedisSemaphore {
         }
     }
 
-    // 先回收过期 permit，再更新上限，并刷新 key 租约
+    // 先回收过期 permit，再更新上限，并刷新 key 与 key:max 的 TTL
     private static final byte[] SET_PERMITS_SCRIPT = SafeEncoder.encode(
             "redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[2]) " +
-                    "redis.call('SET', KEYS[2], ARGV[1]) redis.call('PEXPIRE', KEYS[1], ARGV[3]) redis.call('PEXPIRE', KEYS[2], ARGV[3]) return 1");
+                    "redis.call('SET', KEYS[2], ARGV[1]) redis.call('PEXPIRE', KEYS[1], ARGV[3]) redis.call('PEXPIRE', KEYS[2], ARGV[4]) return 1");
     /**
      * 运行时调整 permit 上限 N（软缩容：不强制回收已发放的 permit，新上限对后续 acquire 立即生效）
      * @param permits 新的 permit 上限，必须大于 0
@@ -376,7 +388,8 @@ public class CamelliaRedisSemaphore {
                 Object result = template.eval(SET_PERMITS_SCRIPT, 2, key, keyMax,
                         SafeEncoder.encode(String.valueOf(permits)),
                         SafeEncoder.encode(String.valueOf(now)),
-                        SafeEncoder.encode(String.valueOf(expireTimeoutMillis)));
+                        SafeEncoder.encode(String.valueOf(expireTimeoutMillis)),
+                        SafeEncoder.encode(String.valueOf(keyMaxTtlMillis)));
                 boolean ok = result != null && String.valueOf(result).equals("1");
                 if (ok) {
                     this.permits = permits;
@@ -541,4 +554,5 @@ public class CamelliaRedisSemaphore {
         System.arraycopy(b, 0, r, a.length, b.length);
         return r;
     }
+
 }
