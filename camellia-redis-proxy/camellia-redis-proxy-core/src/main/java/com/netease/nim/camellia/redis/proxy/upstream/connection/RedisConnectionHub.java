@@ -284,7 +284,7 @@ public class RedisConnectionHub {
             }
             workThread = result.workThread();
             workGroup = result.workGroup();
-            addr = new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), false, addr.getDb(), false);
+            addr = new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.isReadonly(), addr.getDb(), false);
         } else if (channelType == ChannelType.uds) {
             EventLoopGroupResult result = GlobalRedisProxyEnv.getUdsEventLoopGroupResult();
             if (result == null) {
@@ -292,7 +292,7 @@ public class RedisConnectionHub {
             }
             workThread = result.workThread();
             workGroup = result.workGroup();
-            addr = new RedisConnectionAddr(addr.getUdsPath(), addr.getUserName(), addr.getPassword(), false, addr.getDb(), false);
+            addr = new RedisConnectionAddr(addr.getUdsPath(), addr.getUserName(), addr.getPassword(), addr.isReadonly(), addr.getDb(), false);
         } else {
             return false;
         }
