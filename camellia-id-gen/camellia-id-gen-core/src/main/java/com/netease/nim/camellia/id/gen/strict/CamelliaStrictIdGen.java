@@ -168,6 +168,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         throw new CamelliaIdGenException("exceed maxRetry=" + maxRetry);
     }
 
+    @Override
     public Long genIdIfCached(String tag) {
         try {
             String seq = template.rpop(cacheKey(tag));
@@ -181,6 +182,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         }
     }
 
+    @Override
     public Long peekIdIfCached(String tag) {
         try {
             String seq = template.lindex(cacheKey(tag), -1);
@@ -194,6 +196,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         }
     }
 
+    @Override
     public boolean isLoading(String tag) {
         try {
             String cacheKey = cacheKey(tag);

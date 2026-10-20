@@ -34,6 +34,7 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
         }, config.getMaxRetry());
     }
 
+    @Override
     public Long genIdIfCached(String tag) {
         return invoker.invoke(server -> {
             String fullUrl = server.getUrl() + "/camellia/id/gen/strict/genIdIfCached?tag=" + URLEncoder.encode(tag, "utf-8");
@@ -49,6 +50,7 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
         }, config.getMaxRetry());
     }
 
+    @Override
     public Long peekIdIfCached(String tag) {
         return invoker.invoke(server -> {
             String fullUrl = server.getUrl() + "/camellia/id/gen/strict/peekIdIfCached?tag=" + URLEncoder.encode(tag, "utf-8");
@@ -56,6 +58,7 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
         }, config.getMaxRetry());
     }
 
+    @Override
     public boolean isLoading(String tag) {
         return invoker.invoke(server -> {
             String fullUrl = server.getUrl() + "/camellia/id/gen/strict/isLoading?tag=" + URLEncoder.encode(tag, "utf-8");
