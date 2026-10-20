@@ -14,8 +14,7 @@ public class TimeCache implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(TimeCache.class);
 
     public static volatile long currentMillis = System.currentTimeMillis();
-    private static volatile long lastPublishedMillis = currentMillis;
-    private static volatile boolean externalTimeOverride;
+    private static volatile boolean manualModeForTest;
 
     static {
         Thread thread = new Thread(new TimeCache(), "camellia-time-cache");
@@ -26,25 +25,9 @@ public class TimeCache implements Runnable {
     @Override
     public void run() {
         while (true) {
-            long now = System.currentTimeMillis();
-            long current = currentMillis;
-            // Tests and embedders may inject a clock value through currentMillis. Do not
-            // immediately overwrite that value with wall-clock time.
-            if (!externalTimeOverride && Math.abs(current - lastPublishedMillis) > 1000) {
-                externalTimeOverride = true;
+            if (!manualModeForTest) {
+                currentMillis = System.currentTimeMillis();
             }
-            if (externalTimeOverride) {
-                // Resume normal updates once the injected value has been restored to
-                // the current wall-clock range.
-                if (Math.abs(current - now) <= 1000) {
-                    externalTimeOverride = false;
-                } else {
-                    sleep();
-                    continue;
-                }
-            }
-            currentMillis = now;
-            lastPublishedMillis = now;
             sleep();
         }
     }
@@ -55,5 +38,16 @@ public class TimeCache implements Runnable {
             } catch (InterruptedException e) {
                 logger.error(e.getMessage(), e);
             }
+    }
+
+    /** Enables the deterministic clock used by hot-key unit tests. */
+    public static void enableManualModeForTest() {
+        manualModeForTest = true;
+    }
+
+    /** Restores the normal wall-clock updater after a test. */
+    public static void disableManualModeForTest() {
+        manualModeForTest = false;
+        currentMillis = System.currentTimeMillis();
     }
 }

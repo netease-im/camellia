@@ -10,8 +10,8 @@ public class HotKeyCounterTest {
 
     @Test
     public void shouldCountWithinSlidingWindowAndResetAfterWindow() {
-        long oldTime = TimeCache.currentMillis;
         try {
+            TimeCache.enableManualModeForTest();
             TimeCache.currentMillis = 1000;
             HotKeyCounter counter = new HotKeyCounter(300);
 
@@ -26,14 +26,14 @@ public class HotKeyCounterTest {
             TimeCache.currentMillis += 400;
             Assert.assertEquals(4, counter.update(4, "source-d"));
         } finally {
-            TimeCache.currentMillis = oldTime;
+            TimeCache.disableManualModeForTest();
         }
     }
 
     @Test
     public void shouldClearSourceSetWhenItReachesLimit() {
-        long oldTime = TimeCache.currentMillis;
         try {
+            TimeCache.enableManualModeForTest();
             TimeCache.currentMillis = 2000;
             HotKeyCounter counter = new HotKeyCounter(300);
             for (int i = 0; i < HotKeyConstants.Server.maxHotKeySourceSetSize + 1; i++) {
@@ -44,7 +44,7 @@ public class HotKeyCounterTest {
             Assert.assertTrue(counter.getSourceSet().size() < HotKeyConstants.Server.maxHotKeySourceSetSize);
             Assert.assertTrue(counter.getSourceSet().contains("source-" + HotKeyConstants.Server.maxHotKeySourceSetSize));
         } finally {
-            TimeCache.currentMillis = oldTime;
+            TimeCache.disableManualModeForTest();
         }
     }
 }
