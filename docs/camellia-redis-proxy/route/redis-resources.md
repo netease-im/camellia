@@ -92,6 +92,7 @@ rediss-cluster://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379?db
         * redis-cluster：MULTI后延迟到事务内第一条带key的命令才绑定连接，因此在该命令之前可以SELECT任意db（受cluster.multidb.support限制）并决定事务最终使用的db；绑定之后再SELECT不同的db会返回上述错误
     * 事务内不支持`DBSIZE`（它需要跨资源汇总），会直接返回`ERR DBSIZE is not supported in MULTI/EXEC`
     * 开启多db后，每个db都会在后端每个master节点上建立独立的连接（连接数近似为db个数*master节点数），请评估后端的连接数
+    * 多db模式下，proxy的资源预热和健康检查只覆盖资源url中配置的db（未配置则为db0）；客户端select的其他db连接按需创建，首次访问会有一次建连开销
 
 ### redis-sentinel-slaves
 不带tls

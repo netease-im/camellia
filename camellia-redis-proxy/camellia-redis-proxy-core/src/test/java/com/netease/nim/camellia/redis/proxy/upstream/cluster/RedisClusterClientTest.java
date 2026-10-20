@@ -1,8 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.upstream.cluster;
 
+import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Collections;
 
 public class RedisClusterClientTest {
 
@@ -25,5 +28,21 @@ public class RedisClusterClientTest {
     @Test
     public void shouldRouteUnknownCommandToSlave() {
         Assert.assertFalse(RedisClusterClient.mustRouteToMaster(null));
+    }
+
+    @Test
+    public void preheatAndCheckValidShouldUseDbInResourceUrl() {
+        RedisClusterResource resource = new RedisClusterResource(
+                Collections.singletonList(new RedisClusterResource.Node("127.0.0.1", 6379)), null, null, 2);
+        RedisClusterClient client = new RedisClusterClient(resource, 1);
+        Assert.assertEquals(2, client.getDefaultDb());
+
+        RedisClusterSlotInfo slotInfo = new RedisClusterSlotInfo(resource, client);
+        RedisClusterSlotInfo.Node node = new RedisClusterSlotInfo.Node("127.0.0.1", 6379, null, null, false);
+        Assert.assertEquals(2, slotInfo.addrWithDb(node, client.getDefaultDb()).getDb());
+
+        RedisClusterResource resourceWithoutDb = new RedisClusterResource(
+                Collections.singletonList(new RedisClusterResource.Node("127.0.0.1", 6379)), null, null, 0);
+        Assert.assertEquals(0, new RedisClusterClient(resourceWithoutDb, 1).getDefaultDb());
     }
 }

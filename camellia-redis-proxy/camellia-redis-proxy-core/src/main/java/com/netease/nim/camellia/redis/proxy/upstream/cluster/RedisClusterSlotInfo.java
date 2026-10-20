@@ -674,7 +674,8 @@ public class RedisClusterSlotInfo {
 
     private boolean checkValid(Node node) {
         if (node == null) return false;
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(redisClusterClient, node.getAddr());
+        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(redisClusterClient,
+                addrWithDb(node, redisClusterClient.getDefaultDb()));
         if (redisConnection == null) {
             return false;
         }

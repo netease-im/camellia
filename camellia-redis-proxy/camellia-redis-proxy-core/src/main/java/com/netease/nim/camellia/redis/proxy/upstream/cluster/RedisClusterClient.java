@@ -126,6 +126,10 @@ public class RedisClusterClient implements IUpstreamClient {
         return db < 0 ? Math.max(defaultDb, 0) : db;
     }
 
+    int getDefaultDb() {
+        return Math.max(defaultDb, 0);
+    }
+
     /**
      * 写命令必须路由到master节点（读命令在redis-cluster-slaves资源下可以分摊到slave节点）
      *
@@ -150,9 +154,10 @@ public class RedisClusterClient implements IUpstreamClient {
         logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(url));
         Set<RedisClusterSlotInfo.Node> nodes = this.clusterSlotInfo.getNodes();
         for (RedisClusterSlotInfo.Node node : nodes) {
-            logger.info("try preheat, url = {}, node = {}", PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(node.getAddr()));
-            boolean result = RedisConnectionHub.getInstance().preheat(this, node.getAddr());
-            logger.info("preheat result = {}, url = {}, node = {}", result, PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(node.getAddr()));
+            RedisConnectionAddr addr = clusterSlotInfo.addrWithDb(node, getDefaultDb());
+            logger.info("try preheat, url = {}, node = {}", PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(addr));
+            boolean result = RedisConnectionHub.getInstance().preheat(this, addr);
+            logger.info("preheat result = {}, url = {}, node = {}", result, PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(addr));
         }
         logger.info("preheat ok, url = {}", PasswordMaskUtils.maskResource(url));
     }
