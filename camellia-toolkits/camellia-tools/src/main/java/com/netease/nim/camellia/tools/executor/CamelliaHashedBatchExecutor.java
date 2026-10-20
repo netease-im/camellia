@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +48,8 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
     private final DynamicValueGetter<RejectedExecutionHandler<T>> rejectedExecutionHandler;
     private final List<DynamicCapacityLinkedBlockingQueue<T>> queues;
     private final AtomicBoolean[] queueRunning;
-    private final List<WorkThread> workThreads;
+    //initWorkThreads 是懒加载的，使用 COW 列表保证 shutdown/监控读取与初始化并发时不会出现并发修改异常
+    private final List<WorkThread> workThreads = new CopyOnWriteArrayList<>();
     private final ThreadLocal<List<Integer>> handlingQueueIndexes = new ThreadLocal<>();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private final AtomicBoolean initOk = new AtomicBoolean(false);
@@ -79,7 +81,6 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
         this.rejectedExecutionHandler = config.getRejectedExecutionHandler();
         this.queues = new ArrayList<>(queueCount);
         this.queueRunning = new AtomicBoolean[queueCount];
-        this.workThreads = new ArrayList<>(workerCount);
         for (int i = 0; i < queueCount; i++) {
             queues.add(new DynamicCapacityLinkedBlockingQueue<>(config.getDynamicQueueCapacity()));
             queueRunning[i] = new AtomicBoolean(false);
@@ -151,25 +152,33 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
         if (task == null) {
             throw new NullPointerException("task is null");
         }
-        if (shutdown.get()) {
-            reject(hashKey, task, handler);
-            return false;
-        }
-        initWorkThreads();
-        if (shutdown.get()) {
-            reject(hashKey, task, handler);
-            return false;
-        }
-        int index = index(hashKey);
-        BlockingQueue<T> queue = queues.get(index);
+        //先计数再检查 shutdown：worker 停机排空时会等待该计数归零，
+        //避免通过 shutdown 检查后、真正入队前 worker 已完成最终排空导致任务滞留
         queuedTaskCount.incrementAndGet();
-        boolean success = queue.offer(task);
-        if (success) {
-            return true;
+        boolean handedOff = false;
+        try {
+            if (shutdown.get()) {
+                reject(hashKey, task, handler);
+                return false;
+            }
+            initWorkThreads();
+            if (shutdown.get()) {
+                reject(hashKey, task, handler);
+                return false;
+            }
+            int index = index(hashKey);
+            BlockingQueue<T> queue = queues.get(index);
+            handedOff = queue.offer(task);
+            if (handedOff) {
+                return true;
+            }
+            reject(hashKey, task, handler);
+            return false;
+        } finally {
+            if (!handedOff) {
+                queuedTaskCount.decrementAndGet();
+            }
         }
-        queuedTaskCount.decrementAndGet();
-        reject(hashKey, task, handler);
-        return false;
     }
 
     private void reject(Object hashKey, T task, RejectedExecutionHandler<T> handler) {
@@ -408,7 +417,8 @@ public class CamelliaHashedBatchExecutor<T> implements CamelliaExecutor {
                 Batch<T> batch = drainBatch();
                 if (batch.tasks.isEmpty()) {
                     release(batch.queueIndexes);
-                    if (allQueuesEmpty()) {
+                    //queuedTaskCount 在入队前就自增，因此归零才能确认没有 submit 正在入队的任务
+                    if (allQueuesEmpty() && queuedTaskCount.get() == 0) {
                         return;
                     }
                     LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1));

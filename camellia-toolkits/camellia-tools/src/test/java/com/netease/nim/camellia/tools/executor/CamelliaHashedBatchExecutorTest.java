@@ -12,6 +12,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by caojiajun on 2026/8/10
@@ -299,6 +300,53 @@ public class CamelliaHashedBatchExecutorTest {
         Assert.assertEquals("handled=" + handled, total, handled.size());
     }
 
+    @Test
+    public void testSubmitInFlightDuringShutdownIsNotLost() throws Exception {
+        CountDownLatch offerEntered = new CountDownLatch(1);
+        CountDownLatch allowOffer = new CountDownLatch(1);
+        AtomicBoolean blockOffer = new AtomicBoolean(true);
+        AtomicInteger handled = new AtomicInteger();
+        AtomicInteger rejected = new AtomicInteger();
+        CamelliaHashedBatchExecutorConfig<Integer> config = new CamelliaHashedBatchExecutorConfig<>("shutdown-race",
+                tasks -> handled.addAndGet(tasks.size()));
+        config.setQueueCount(1);
+        config.setWorkerCount(1);
+        config.setMaxBatchSize(1);
+        config.setMinBatchSize(1);
+        config.setIdleWaitMillis(1);
+        // 卡在 queue.offer 内部，模拟 submit 通过 shutdown 检查后、真正入队前 shutdown 完成排空的窄窗口
+        config.setDynamicQueueCapacity(() -> {
+            if (blockOffer.compareAndSet(true, false)) {
+                offerEntered.countDown();
+                await(allowOffer);
+            }
+            return Integer.MAX_VALUE;
+        });
+        config.setRejectedExecutionHandler(() -> (hashKey, task, executor) -> rejected.incrementAndGet());
+        CamelliaHashedBatchExecutor<Integer> executor = new CamelliaHashedBatchExecutor<>(config);
+        try {
+            AtomicReference<Boolean> submitResult = new AtomicReference<>();
+            Thread submitter = new Thread(() -> submitResult.set(executor.submit("key", 1)));
+            submitter.start();
+            Assert.assertTrue("submit should reach queue.offer", offerEntered.await(5, TimeUnit.SECONDS));
+
+            executor.shutdown();
+            //给 worker 足够时间完成旧实现里的最终排空（新实现会等待 queuedTaskCount 归零，不会退出）
+            Thread.sleep(100);
+            allowOffer.countDown();
+            submitter.join(5000);
+            Assert.assertEquals(Boolean.TRUE, submitResult.get());
+            Assert.assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+            Assert.assertEquals("in-flight task should be handled during shutdown", 1, handled.get());
+            Assert.assertEquals(0, rejected.get());
+            Assert.assertEquals("task should not be stranded in queue", 0, executor.getQueueSize());
+            Assert.assertEquals(0, executor.getOutstandingTaskCount());
+        } finally {
+            allowOffer.countDown();
+            executor.shutdown();
+        }
+    }
+
     private static class FixedHashKey {
         private final int hash;
 
@@ -309,6 +357,14 @@ public class CamelliaHashedBatchExecutorTest {
         @Override
         public int hashCode() {
             return hash;
+        }
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }
