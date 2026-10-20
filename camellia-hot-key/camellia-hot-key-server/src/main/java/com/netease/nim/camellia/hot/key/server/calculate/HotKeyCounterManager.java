@@ -44,7 +44,7 @@ public class HotKeyCounterManager {
         if (cacheCount == 1) {
             counter = list.get(0).get(key, k -> new HotKeyCounter(rule.getCheckMillis()));
         } else {
-            int code = Math.abs(key.hashCode());
+            int code = key.hashCode() == Integer.MIN_VALUE ? 0 : Math.abs(key.hashCode());
             int index = MathUtil.mod(is2Power, code, cacheCount);
             counter = list.get(index).get(key, k -> new HotKeyCounter(rule.getCheckMillis()));
         }
