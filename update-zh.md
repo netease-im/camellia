@@ -1,30 +1,39 @@
 [ENGLISH](update-en.md)
 
 
-# 1.4.3（2026/10/13）
+# 1.4.3（2026/10/21）
 ### 新增
 * camellia-redis-proxy支持redis-cluster多db，资源url支持配置`?db=1`，客户端可通过`select`切换db（动态配置`cluster.multidb.support`），`redis-cluster`和`redis-cluster-slaves`均支持
-* camellia-redis-proxy支持`DBSIZE`命令，会汇总所有写资源（redis-cluster仅master节点）的dbsize，优先使用客户端选择的db，否则使用资源url中配置的db
+* camellia-redis-proxy支持`DBSIZE`命令，会汇总所有写资源（redis-cluster仅master节点）的dbsize，优先使用客户端选择的db，否则使用资源url中配置的db；事务内不支持，会返回`ERR DBSIZE is not supported in MULTI/EXEC`
 * camellia-redis-proxy支持tls insecure模式，新增`InsecureUpstreamTlsProvider`，用于后端使用自签名证书时跳过证书校验
+* camellia-redis-proxy支持按租户关闭key转换，动态配置`{bid}.{bgroup}.key.converter.disable=true`时，`DefaultMultiTenantNamespaceKeyConverter`直接透传原始key，可用于关闭指定租户的namespace隔离（#502）
 * camellia-redis-toolkit新增Redis分布式信号量`CamelliaRedisSemaphore`，支持permit租约、动态调整permit上限、阻塞/快速失败获取
 * camellia-tools新增`CamelliaHashedBatchExecutor`，按hashKey分片、队列级串行、可攒批提交的批量执行器
 * camellia-tools新增`CamelliaMergingExecutor`，支持按hashKey合并+时间窗批量提交，并接入`CamelliaExecutorMonitor`
-* camellia-id-gen的`CamelliaStrictIdGen`支持只从缓存取号（不补号）的`genIdIfCached`/`peekIdIfCached`，并支持`isLoading`
+* camellia-id-gen的`CamelliaStrictIdGen`支持只从缓存取号（不补号）的`genIdIfCached`/`peekIdIfCached`，并支持`isLoading`；同时提供HTTP接口`/camellia/id/gen/strict/isLoading`和SDK方法`CamelliaStrictIdGenSdk#isLoading`
 * camellia-mq-isolation支持虚拟线程
-* 补充文档：camellia-tools新增`distribution_semaphore.md`、`hashed_batch_executor.md`、`merging_executor.md`，camellia-redis-proxy补充集群多db、tls insecure、dbsize相关文档
+* 补充文档：camellia-tools新增`distribution_semaphore.md`、`hashed_batch_executor.md`、`merging_executor.md`，camellia-redis-proxy补充集群多db、tls insecure、dbsize、租户级key converter disable相关文档
 
 ### 更新
-* 升级netty到`4.1.136.Final`/`4.2.16.Final`，spring-boot3升级到`3.5.16`
+* 升级netty到`4.1.139.Final`/`4.2.19.Final`，spring-boot3升级到`3.5.16`
 * camellia-redis-proxy路由配置更新改为比较解析后的资源表内容，避免配置格式/顺序变化导致的无效刷新
 * `RedisClusterClient`在redis-cluster模式下支持按db建立和管理连接
+* `ICamelliaStrictIdGen`补充`genIdIfCached`、`peekIdIfCached`、`isLoading`的default实现，保持已有实现兼容
 
 ### fix
-* 修复hashKey的hashCode为`Integer.MIN_VALUE`时`Math.abs`返回负数导致的数组下标越界风险，涉及`CamelliaHashedExecutor`等多个模块
+* 修复hashKey的hashCode为`Integer.MIN_VALUE`时`Math.abs`返回负数导致的数组下标越界风险，涉及`CamelliaHashedExecutor`、camellia-hot-key等多个模块
 * 修复camellia-hbase在多写（多集群并发写）场景下，共享可变mutation对象导致的并发异常（`ConcurrentModificationException`），写入前复制mutation并隔离每个family的cell列表（#501）
+* 修复camellia-hbase多写时多个集群互相覆盖`batchWriteOpe`出参的问题，仅由主集群回填结果（#501）
 * 修复redis-cluster-slaves模式下多key`EXISTS`被强制路由到master的问题，读命令重新走slave连接
-* 修复redis-cluster多db场景下的db路由、切换校验、地址缓存上限、redirect时保留db等一系列问题
+* 修复redis-cluster多db场景下的db路由、切换校验、地址缓存上限、redirect时保留db、预热和健康检查使用资源url中的db、从节点预热保留readonly等一系列问题
+* 修复redis-cluster多db下事务和流水线的切库判断：允许事务内首次`SELECT`，连接绑定后拒绝切换到其他db，并阻止流水线事务切换数据库
 * 修复redis-cluster上游info解析多个slot区间时只取第一个区间的问题
 * 修复`CamelliaHashedBatchExecutor`中caller-runs任务未按hash队列串行的问题（#490）
+* 修复`CamelliaHashedBatchExecutor`停机时未排空队列，以及submit与shutdown竞态导致任务丢失的问题
+* 修复`CamelliaMergingExecutor`窗口状态竞争及停机刷新不完整导致的任务丢失问题
+* 修复`CamelliaRedisSemaphore`的`key:max`缺少TTL，以及等待被中断后未恢复中断标志的问题
+* 修复camellia-mq-isolation中executor创建与shutdown竞态导致executor泄漏的问题
+* 修复camellia-mq-isolation停止消费者失败后无法重试的问题
 * 修复dashboard资源表删除接口`@PathVariable`未显式指定变量名的问题（#489）
 
 

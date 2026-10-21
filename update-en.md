@@ -1,30 +1,39 @@
 [中文版](update-zh.md)
 
 
-# 1.4.3 (2026/10/13)
+# 1.4.3 (2026/10/21)
 ### New Features
 * camellia-redis-proxy supports multiple databases in redis-cluster: the resource url accepts `?db=1`, and clients can switch db via `select` (dynamic config `cluster.multidb.support`); both `redis-cluster` and `redis-cluster-slaves` are supported
-* camellia-redis-proxy supports the `DBSIZE` command, aggregating dbsize over all write resources (master nodes only in redis-cluster mode); the db selected by the client wins, otherwise the db in the resource url is used
+* camellia-redis-proxy supports the `DBSIZE` command, aggregating dbsize over all write resources (master nodes only in redis-cluster mode); the db selected by the client wins, otherwise the db in the resource url is used; it is not supported inside `MULTI/EXEC` and returns `ERR DBSIZE is not supported in MULTI/EXEC`
 * camellia-redis-proxy supports tls insecure mode via `InsecureUpstreamTlsProvider`, skipping certificate validation when the upstream uses a self-signed certificate
+* camellia-redis-proxy supports disabling key conversion per tenant: when `{bid}.{bgroup}.key.converter.disable=true`, `DefaultMultiTenantNamespaceKeyConverter` passes the original key through, disabling namespace isolation for that tenant (#502)
 * camellia-redis-toolkit adds a Redis distributed semaphore `CamelliaRedisSemaphore`, with permit leases, dynamic permit limit adjustment, and blocking/fast-fail acquisition
 * camellia-tools adds `CamelliaHashedBatchExecutor`, a hashed batch executor with per-hashKey sharding, per-queue serialization, and batching
 * camellia-tools adds `CamelliaMergingExecutor`, merging tasks by hashKey within a time window, and registers it with `CamelliaExecutorMonitor`
-* camellia-id-gen `CamelliaStrictIdGen` supports cache-only ID operations `genIdIfCached`/`peekIdIfCached` (without generating new IDs), and adds `isLoading`
+* camellia-id-gen `CamelliaStrictIdGen` supports cache-only ID operations `genIdIfCached`/`peekIdIfCached` (without generating new IDs), and adds `isLoading`; the HTTP endpoint `/camellia/id/gen/strict/isLoading` and the SDK method `CamelliaStrictIdGenSdk#isLoading` are also available
 * camellia-mq-isolation supports virtual threads
-* Added docs: `camellia-tools` gains `distribution_semaphore.md`, `hashed_batch_executor.md`, and `merging_executor.md`, while `camellia-redis-proxy` documents cluster multi-db, tls insecure, and dbsize
+* Added docs: `camellia-tools` gains `distribution_semaphore.md`, `hashed_batch_executor.md`, and `merging_executor.md`, while `camellia-redis-proxy` documents cluster multi-db, tls insecure, dbsize, and per-tenant key converter disable
 
 ### Updates
-* Upgraded netty to `4.1.136.Final`/`4.2.16.Final` and spring-boot3 to `3.5.16`
+* Upgraded netty to `4.1.139.Final`/`4.2.19.Final` and spring-boot3 to `3.5.16`
 * camellia-redis-proxy route conf refresh now compares the parsed resource table, avoiding unnecessary refreshes caused by formatting/order changes
 * `RedisClusterClient` now creates and manages connections per db in redis-cluster mode
+* `ICamelliaStrictIdGen` adds default implementations of `genIdIfCached`, `peekIdIfCached`, and `isLoading`, preserving compatibility with existing implementations
 
 ### Fixes
-* Fixed negative array index risk when the hashCode of a hashKey is `Integer.MIN_VALUE` and `Math.abs` returns a negative value, affecting `CamelliaHashedExecutor` and several other modules
+* Fixed negative array index risk when the hashCode of a hashKey is `Integer.MIN_VALUE` and `Math.abs` returns a negative value, affecting `CamelliaHashedExecutor`, camellia-hot-key, and several other modules
 * Fixed concurrent exceptions (`ConcurrentModificationException`) in camellia-hbase multi-write (concurrent writes to multiple clusters) caused by sharing mutable mutation objects; mutations are now copied before write and per-family cell lists are isolated (#501)
+* Fixed camellia-hbase multi-write results being overwritten across clusters; only the primary cluster now fills the `batchWriteOpe` output (#501)
 * Fixed multi-key `EXISTS` being forced to the master in redis-cluster-slaves mode; read commands now use the slave connection again
-* Fixed a series of db issues in redis-cluster multi-db mode, including db routing, switch validation, the address cache bound, and preserving db on redirects
+* Fixed a series of db issues in redis-cluster multi-db mode, including db routing, switch validation, the address cache bound, preserving db on redirects, using the resource-url db for preheating and health checks, and preserving `readonly` when preheating slave connections
+* Fixed db switching checks for transactions and pipelines in redis-cluster multi-db mode: the first `SELECT` inside a transaction is allowed, switching after the connection is bound is rejected, and pipeline transactions can no longer switch databases
 * Fixed upstream info parsing for redis-cluster nodes with multiple slot ranges, which previously kept only the first range
 * Fixed `CamelliaHashedBatchExecutor` caller-runs tasks not being serialized by hash queue (#490)
+* Fixed `CamelliaHashedBatchExecutor` not draining queues on shutdown and task loss caused by the submit/shutdown race
+* Fixed `CamelliaMergingExecutor` task loss caused by window state races and incomplete shutdown flushing
+* Fixed `CamelliaRedisSemaphore` `key:max` lacking a TTL and the interrupt flag not being restored when waiting is interrupted
+* Fixed an executor leak in camellia-mq-isolation caused by the create/shutdown race
+* Fixed the inability to retry stopping consumers in camellia-mq-isolation after a failed stop
 * Fixed the dashboard resource table delete endpoint, whose `@PathVariable` did not specify the variable name explicitly (#489)
 
 
