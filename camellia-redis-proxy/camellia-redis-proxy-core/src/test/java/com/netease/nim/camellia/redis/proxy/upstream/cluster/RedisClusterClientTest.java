@@ -23,6 +23,7 @@ public class RedisClusterClientTest {
         Assert.assertTrue(RedisClusterClient.mustRouteToMaster(RedisCommand.UNLINK));
         Assert.assertTrue(RedisClusterClient.mustRouteToMaster(RedisCommand.TOUCH));
         Assert.assertTrue(RedisClusterClient.mustRouteToMaster(RedisCommand.MSET));
+        Assert.assertTrue(RedisClusterClient.mustRouteToMaster(RedisCommand.COPY));
     }
 
     @Test

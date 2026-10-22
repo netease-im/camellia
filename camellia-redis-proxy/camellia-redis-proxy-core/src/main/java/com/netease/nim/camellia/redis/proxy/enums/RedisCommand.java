@@ -270,6 +270,7 @@ public enum RedisCommand {
     PFMERGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.HYPER_LOG_LOG, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
     RENAME(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
     RENAMENX(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
+    COPY(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.COMPLEX),
     SINTER(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
     SINTERSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
     SUNION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),

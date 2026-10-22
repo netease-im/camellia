@@ -5,6 +5,7 @@
 ### New Features
 * camellia-redis-proxy supports multiple databases in redis-cluster: the resource url accepts `?db=1`, and clients can switch db via `select` (dynamic config `cluster.multidb.support`); both `redis-cluster` and `redis-cluster-slaves` are supported
 * camellia-redis-proxy supports the `DBSIZE` command, aggregating dbsize over all write resources (master nodes only in redis-cluster mode); the db selected by the client wins, otherwise the db in the resource url is used; it is not supported inside `MULTI/EXEC` and returns `ERR DBSIZE is not supported in MULTI/EXEC`
+* camellia-redis-proxy supports the `COPY` command, including the `DB` and `REPLACE` options; in sharding or redis-cluster mode, the source and destination keys must route to the same resource or slot
 * camellia-redis-proxy supports tls insecure mode via `InsecureUpstreamTlsProvider`, skipping certificate validation when the upstream uses a self-signed certificate
 * camellia-redis-proxy supports disabling key conversion per tenant: when `{bid}.{bgroup}.key.converter.disable=true`, `DefaultMultiTenantNamespaceKeyConverter` passes the original key through, disabling namespace isolation for that tenant (#502)
 * camellia-redis-toolkit adds a Redis distributed semaphore `CamelliaRedisSemaphore`, with permit leases, dynamic permit limit adjustment, and blocking/fast-fail acquisition

@@ -167,6 +167,7 @@ public class Converters {
                     break;
                 case RENAME:
                 case RENAMENX:
+                case COPY:
                 case GEOSEARCHSTORE:
                 case SMOVE:
                 case LMOVE:

@@ -55,7 +55,7 @@ CF.INSERTNX,CF.LOADCHUNK,CF.MEXISTS,CF.SCANDUMP,CF.RESERVE,
   especially, blocking command don't support multi-write
 ```
 ##DataBase
-RENAME,RENAMENX,
+COPY,RENAME,RENAMENX,
 ##String
 MSETNX,LCS,
 ##Set
