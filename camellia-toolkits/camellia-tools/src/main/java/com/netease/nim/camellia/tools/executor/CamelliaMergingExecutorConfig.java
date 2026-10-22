@@ -81,7 +81,7 @@ public class CamelliaMergingExecutorConfig<T> {
     }
 
     /**
-     * 待合并的不同 key 总数达到该值时，所有队列立即刷新，避免延迟累积；<=0 表示不启用
+     * 待合并的不同 key 总数达到该值时，所有队列立即刷新，避免延迟累积；{@code <=0} 表示不启用
      */
     public void setSkipWaitPendingThreshold(int skipWaitPendingThreshold) {
         this.skipWaitPendingThreshold = skipWaitPendingThreshold;

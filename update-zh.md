@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.4.3（2026/10/21）
+# 1.4.3（2026/10/22）
 ### 新增
 * camellia-redis-proxy支持redis-cluster多db，资源url支持配置`?db=1`，客户端可通过`select`切换db（动态配置`cluster.multidb.support`），`redis-cluster`和`redis-cluster-slaves`均支持
 * camellia-redis-proxy支持`DBSIZE`命令，会汇总所有写资源（redis-cluster仅master节点）的dbsize，优先使用客户端选择的db，否则使用资源url中配置的db；事务内不支持，会返回`ERR DBSIZE is not supported in MULTI/EXEC`

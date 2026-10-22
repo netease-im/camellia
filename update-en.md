@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.4.3 (2026/10/21)
+# 1.4.3 (2026/10/22)
 ### New Features
 * camellia-redis-proxy supports multiple databases in redis-cluster: the resource url accepts `?db=1`, and clients can switch db via `select` (dynamic config `cluster.multidb.support`); both `redis-cluster` and `redis-cluster-slaves` are supported
 * camellia-redis-proxy supports the `DBSIZE` command, aggregating dbsize over all write resources (master nodes only in redis-cluster mode); the db selected by the client wins, otherwise the db in the resource url is used; it is not supported inside `MULTI/EXEC` and returns `ERR DBSIZE is not supported in MULTI/EXEC`

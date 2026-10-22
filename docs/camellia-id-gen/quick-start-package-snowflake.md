@@ -1,10 +1,10 @@
 
 
-下载最新版安装包并解压（v1.4.2）：
+下载最新版安装包并解压（v1.4.3）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.4.2/camellia-id-gen-snowflake-server-1.4.2.tar.gz
-tar zxvf camellia-id-gen-snowflake-server-1.4.2.tar.gz
-cd camellia-id-gen-snowflake-server-1.4.2/
+wget https://github.com/netease-im/camellia/releases/download/1.4.3/camellia-id-gen-snowflake-server-1.4.3.tar.gz
+tar zxvf camellia-id-gen-snowflake-server-1.4.3.tar.gz
+cd camellia-id-gen-snowflake-server-1.4.3/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
