@@ -5,6 +5,28 @@
 * 支持proxy到后端redis启用ssl/tls
 * 对于redis-sentinel/redis-sentinel-slave的后端类型，sentinel和redis可以分开进行tls配置
 
+### 切换 TLS 实现（JDK / tcnative）
+
+默认使用 JDK JSSE。内置的 OpenSSL Provider 使用 `netty-tcnative-boringssl-static`（BoringSSL），
+在 `camellia-redis-proxy.properties` 中按需切换前端、上游，重启生效：
+
+```properties
+server.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.frontend.OpenSslServerTlsProvider
+upstream.tls.provider.class.name=com.netease.nim.camellia.redis.proxy.tls.upstream.OpenSslUpstreamTlsProvider
+```
+
+* 两侧可以独立选择；删除对应配置即可恢复默认 JDK 实现。
+* 证书配置完全一致：继续使用下文的 classpath / 绝对路径、`server.tls.password` / `upstream.tls.password`、
+  `upstream.tls.config` 中的证书映射及 `password`。支持原有 PEM 私钥格式和加密私钥。
+* 前端默认仍开启双向认证；单向认证仍通过 `server.tls.need.client.auth=false` 和
+  `server.tls.want.client.auth=false` 配置。上游不配置客户端 cert/key 时使用单向认证。
+* 依赖已包含 tcnative 原生包；部署平台需受到该版本支持。选择 OpenSSL Provider 后，原生库不可用会报错，不自动回退 JDK。
+* 证书映射仍按原逻辑只新增、不替换；切换 Provider 或更新已有证书需要重启。
+* `server.tls.startTls.enable`、`upstream.tls.startTls.enable` 和 TLS executor 配置继续生效。
+  前端协议、密码套件配置继续通过 `server.tls.enable.protocols`、`server.tls.enable.cipher.suites` 指定，
+  可用值取决于 BoringSSL 支持范围。
+* Netty OpenSSL 不支持 `server.tls.enable.session.creation=true`；使用该 Provider 时请保持此项未配置。
+
 ### client到proxy
 
 #### step1，生成证书
@@ -39,7 +61,7 @@ public interface ServerTlsProvider {
 
     boolean init();
 
-    SslHandler createSslHandler(SSLContext sslContext);
+    SslHandler createSslHandler();
 }
 ```
 ```properties
@@ -95,7 +117,7 @@ json示例：
 ```
 
 
-上述描述的是默认配置方法，你也可以自定义，实现ProxyUpstreamTlsProvider接口即可，然后配置到application.yml里，如下：
+上述描述的是默认配置方法，你也可以自定义，实现UpstreamTlsProvider接口即可，然后配置到camellia-redis-proxy.properties里，如下：
 ```java
 public interface UpstreamTlsProvider {
 

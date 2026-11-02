@@ -30,6 +30,12 @@
 			<version>${netty42.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-tcnative-boringssl-static</artifactId>
+			<version>${netty-tcnative.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk18on</artifactId>
 			<version>${bouncycastle.version}</version>

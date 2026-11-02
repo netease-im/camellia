@@ -35,6 +35,22 @@ public class SSLContextUtil {
 
     public static SSLContext genSSLContext(final String caCrtFilePath, final String crtFilePath,
                                            final String keyFilePath, final String password) {
+        try {
+            TlsManagers managers = loadTlsManagers(caCrtFilePath, crtFilePath, keyFilePath, password);
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(managers.keyManagerFactory().getKeyManagers(),
+                    managers.trustManagerFactory().getTrustManagers(), new SecureRandom());
+            return context;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    // Shared by JSSE and tcnative so certificate parsing and password handling stay identical.
+    public record TlsManagers(KeyManagerFactory keyManagerFactory, TrustManagerFactory trustManagerFactory) { }
+
+    public static TlsManagers loadTlsManagers(String caCrtFilePath, String crtFilePath,
+                                              String keyFilePath, String password) {
         char[] pass;
         if (password != null) {
             pass = password.toCharArray();
@@ -94,9 +110,7 @@ public class SSLContextUtil {
             }
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             kmf.init(ks, pass);
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
-            return context;
+            return new TlsManagers(kmf, tmf);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }

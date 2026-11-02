@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * Created by caojiajun on 2023/8/9
@@ -26,8 +27,8 @@ public class DefaultUpstreamTlsProvider implements UpstreamTlsProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultUpstreamTlsProvider.class);
 
-    private SSLContext defaultSSLContext;
-    private final ConcurrentHashMap<String, SSLContext> sslContextMap = new ConcurrentHashMap<>();
+    private volatile Supplier<SSLEngine> defaultSslEngineFactory;
+    private final ConcurrentHashMap<String, Supplier<SSLEngine>> sslEngineFactoryMap = new ConcurrentHashMap<>();
     private boolean startTls = false;
     private Executor executor = ImmediateExecutor.INSTANCE;
 
@@ -50,24 +51,24 @@ public class DefaultUpstreamTlsProvider implements UpstreamTlsProvider {
 
     @Override
     public SslHandler createSslHandler(Resource resource) {
-        SSLContext sslContext = getSSLContext(resource);
-        SSLEngine sslEngine = sslContext.createSSLEngine();
+        Supplier<SSLEngine> sslEngineFactory = getSslEngineFactory(resource);
+        SSLEngine sslEngine = sslEngineFactory.get();
         sslEngine.setUseClientMode(true);
         return new SslHandler(sslEngine, startTls, executor);
     }
 
-    private SSLContext getSSLContext(Resource resource) {
-        SSLContext sslContext = sslContextMap.get(resource.getUrl());
-        if (sslContext != null) {
-            return sslContext;
+    private Supplier<SSLEngine> getSslEngineFactory(Resource resource) {
+        Supplier<SSLEngine> sslEngineFactory = sslEngineFactoryMap.get(resource.getUrl());
+        if (sslEngineFactory != null) {
+            return sslEngineFactory;
         }
-        return defaultSSLContext;
+        return defaultSslEngineFactory;
     }
 
     //只会初始化一次，新增的可以通过动态配置添加
     private synchronized void reload() {
         try {
-            if (defaultSSLContext == null) {
+            if (defaultSslEngineFactory == null) {
                 try {
                     initDefaultSSLContext();
                 } catch (Exception e) {
@@ -92,7 +93,7 @@ public class DefaultUpstreamTlsProvider implements UpstreamTlsProvider {
                             logger.warn("illegal upstream ssl config, tls disable, resource = {}", PasswordMaskUtils.maskResource(resource));
                             continue;
                         }
-                        if (sslContextMap.containsKey(resource)) {
+                        if (sslEngineFactoryMap.containsKey(resource)) {
                             continue;
                         }
                         String caCertFilePath;
@@ -120,8 +121,8 @@ public class DefaultUpstreamTlsProvider implements UpstreamTlsProvider {
                             keyFilePath = FileUtils.getClasspathFilePath(keyFile);
                         }
                         String password = json.getString("password");
-                        SSLContext sslContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
-                        sslContextMap.put(resource, sslContext);
+                        Supplier<SSLEngine> sslEngineFactory = createSslEngineFactory(caCertFilePath, certFilePath, keyFilePath, password);
+                        sslEngineFactoryMap.put(resource, sslEngineFactory);
                         logger.info("proxy upstream SSLContext init success, resource = {}, caCertFilePath = {}, certFilePath = {}, keyFilePath = {}",
                                 PasswordMaskUtils.maskResource(resource), caCertFilePath, certFilePath, keyFilePath);
                     } catch (Exception e) {
@@ -160,11 +161,16 @@ public class DefaultUpstreamTlsProvider implements UpstreamTlsProvider {
             keyFilePath = FileUtils.getClasspathFilePath(keyFile);
         }
         String password = ProxyDynamicConf.getString("upstream.tls.password", null);
-        defaultSSLContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
+        defaultSslEngineFactory = createSslEngineFactory(caCertFilePath, certFilePath, keyFilePath, password);
         logger.info("proxy upstream default SSLContext init success, caFilePath = {}, crtFilePath = {}, keyFilePath = {}",
                 caCertFilePath, certFilePath, keyFilePath);
     }
 
 
+    protected Supplier<SSLEngine> createSslEngineFactory(String caCertFilePath, String certFilePath,
+                                                         String keyFilePath, String password) {
+        SSLContext context = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
+        return context::createSSLEngine;
+    }
 
 }

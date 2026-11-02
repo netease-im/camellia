@@ -4,11 +4,13 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.tls.SSLContextUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.ImmediateExecutor;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import java.util.function.Supplier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -19,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultServerTlsProvider implements ServerTlsProvider {
 
-    private SSLContext sslContext;
+    private Supplier<SSLEngine> sslEngineFactory;
     private boolean startTls = false;
     private Executor executor = ImmediateExecutor.INSTANCE;
 
@@ -41,7 +43,17 @@ public class DefaultServerTlsProvider implements ServerTlsProvider {
 
     @Override
     public SslHandler createSslHandler() {
-        SSLEngine sslEngine = sslContext.createSSLEngine();
+        SSLEngine sslEngine = sslEngineFactory.get();
+        try {
+            configureSslEngine(sslEngine);
+            return new SslHandler(sslEngine, startTls, executor);
+        } catch (RuntimeException | Error e) {
+            ReferenceCountUtil.release(sslEngine);
+            throw e;
+        }
+    }
+
+    private void configureSslEngine(SSLEngine sslEngine) {
         String needClientAuth = ProxyDynamicConf.getString("server.tls.need.client.auth", "true");
         if (needClientAuth != null) {
             if (needClientAuth.equalsIgnoreCase("true")) {
@@ -77,7 +89,6 @@ public class DefaultServerTlsProvider implements ServerTlsProvider {
             sslEngine.setEnabledCipherSuites(cipherSuites);
         }
         sslEngine.setUseClientMode(false);
-        return new SslHandler(sslEngine, startTls, executor);
     }
 
     private void createSSLContext() {
@@ -109,8 +120,13 @@ public class DefaultServerTlsProvider implements ServerTlsProvider {
             throw new IllegalArgumentException("keyFilePath not found");
         }
         String password = ProxyDynamicConf.getString("server.tls.password", null);
-        this.sslContext = SSLContextUtil.genSSLContext(caCertFilePath, crtFilePath, keyFilePath, password);
+        this.sslEngineFactory = createSslEngineFactory(caCertFilePath, crtFilePath, keyFilePath, password);
     }
 
+    protected Supplier<SSLEngine> createSslEngineFactory(String caCertFilePath, String certFilePath,
+                                                         String keyFilePath, String password) {
+        SSLContext context = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
+        return context::createSSLEngine;
+    }
 
 }
