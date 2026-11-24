@@ -53,6 +53,8 @@ ARSET,ARMSET,ARINSERT,ARDEL,ARDELRANGE,ARRING,ARSEEK,ARGET,ARMGET,ARGETRANGE,
 ARLEN,ARCOUNT,ARINFO,ARNEXT,ARLASTITEMS,ARSCAN,ARGREP,AROP,
 ##VectorSet
 VADD,VREM,VSIM,VDIM,VCARD,VEMB,VLINKS,VINFO,VSETATTR,VGETATTR,VRANDMEMBER,VISMEMBER,VRANGE,
+##RedisSearchSuggestion
+FT.SUGADD,FT.SUGGET,FT.SUGDEL,FT.SUGLEN,
 ##CountMinSketch
 CMS.INITBYDIM,CMS.INITBYPROB,CMS.INCRBY,CMS.QUERY,CMS.INFO,
 ##TopK
@@ -130,8 +132,12 @@ MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 FT.LIST,FT.AGGREGATE,FT.ALIASADD,FT.ALIASDEL,FT.ALIASUPDATE,FT.ALTER,FT.CONFIG,
 FT.CREATE,FT.CURSOR,FT.DICTADD,FT.DICTDEL,FT.DICTDUMP,FT.DROPINDEX,FT.EXPLAIN,
 FT.EXPLAINCLI,FT.INFO,FT.PROFILE,FT.SEARCH,FT.SPELLCHECK,FT.SYNDUMP,
-FT.SYNUPDATE,FT.TAGVALS,
+FT.SYNUPDATE,FT.TAGVALS,FT.ALIASLIST,FT.HYBRID,
 ```
+
+`FT.SUG*` commands operate on a single dictionary key and support custom sharding and key conversion.
+`FT.ALIASLIST` (Redis Query Engine 8.10+) and `FT.HYBRID` (8.4+) operate on index names and require a single upstream without custom sharding.
+The index names, query arguments, suggestion strings and payloads are forwarded unchanged. All six commands are non-blocking.
 
 * Partially Supported 3   
   only support while have singleton-read-upstream(no custom sharding) (redis-standalone or redis-sentinel)

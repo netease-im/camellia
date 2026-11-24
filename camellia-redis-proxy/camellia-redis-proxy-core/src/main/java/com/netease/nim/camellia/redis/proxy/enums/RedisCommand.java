@@ -346,6 +346,10 @@ public enum RedisCommand {
     XCFGSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     XNACK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     JSON_MERGE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    FT_SUGADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    FT_SUGGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    FT_SUGDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    FT_SUGLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support
@@ -451,6 +455,7 @@ public enum RedisCommand {
     FT_AGGREGATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_ALIASADD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_ALIASDEL(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_ALIASLIST(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_ALIASUPDATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_ALTER(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_CONFIG(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
@@ -463,6 +468,7 @@ public enum RedisCommand {
     FT_EXPLAIN(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_EXPLAINCLI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_INFO(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_HYBRID(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_PROFILE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_SEARCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_SPELLCHECK(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),

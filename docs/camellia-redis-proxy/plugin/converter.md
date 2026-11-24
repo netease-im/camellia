@@ -16,6 +16,8 @@
 带key的命令都支持，特别的：
 * 对于KEYS和SCAN命令，回调给KeyConverter接口的是pattern，而不是实际的key
 * 对于PUBSUB系列命令，回调给KeyConverter接口的是pattern或者channel，而不是实际的key
+* 对于 `FT.SUGADD/SUGGET/SUGDEL/SUGLEN`，只转换词典 key，建议词、查询前缀、score 和 payload 保持原样
+* `FT.ALIASLIST/FT.HYBRID` 的索引名不属于数据 key，不调用 KeyConverter；查询参数和响应原样透传
 
 感谢[@yangxb2010000](https://github.com/yangxb2010000)对key转换功能的增强
 
