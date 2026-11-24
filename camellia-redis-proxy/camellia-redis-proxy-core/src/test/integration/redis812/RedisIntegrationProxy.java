@@ -18,6 +18,12 @@ public class RedisIntegrationProxy {
         if (!args[2].equals("off")) {
             config.put("proxy.plugin.list", "converterPlugin");
             config.put("converter.key.className", PrefixKey.class.getName());
+            if (args[2].equals("namespace") || args[2].equals("namespace-disabled")) {
+                config.put("converter.key.className", NamespaceKey.class.getName());
+                if (args[2].equals("namespace-disabled")) {
+                    config.put("1.default.key.converter.disable", "true");
+                }
+            }
             if (args[2].equals("values")) {
                 for (String type : new String[]{"string", "hash", "set", "list", "zset"}) {
                     config.put("converter." + type + ".className", PrefixValue.class.getName());
@@ -43,6 +49,26 @@ public class RedisIntegrationProxy {
             throw new IllegalArgumentException("Unexpected integration converter prefix");
         }
         return Arrays.copyOfRange(value, head.length, value.length);
+    }
+
+    /** Fixed tenant context for exercising the built-in converter without authentication setup. */
+    public static class NamespaceKey extends DefaultMultiTenantNamespaceKeyConverter {
+        private final CommandContext tenant = new CommandContext(1L, "default", null);
+
+        @Override
+        public boolean isRandomKeySupported(CommandContext context) {
+            return super.isRandomKeySupported(tenant);
+        }
+
+        @Override
+        public byte[] convert(CommandContext context, RedisCommand command, byte[] key) {
+            return super.convert(tenant, command, key);
+        }
+
+        @Override
+        public byte[] reverseConvert(CommandContext context, RedisCommand command, byte[] key) {
+            return super.reverseConvert(tenant, command, key);
+        }
     }
 
     public static class PrefixKey implements KeyConverter {

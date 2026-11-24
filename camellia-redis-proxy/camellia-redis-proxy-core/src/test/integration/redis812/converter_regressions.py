@@ -15,7 +15,8 @@ def run(env):
                     str(pathlib.Path(__file__).with_name("RedisIntegrationProxy.java"))], check=True)
     port = env.server()
     direct = env.client(port)
-    values = env.client(env.proxy("redis://@127.0.0.1:%d" % port, "values"))
+    values_port = env.proxy("redis://@127.0.0.1:%d" % port, "values")
+    values = env.client(values_port)
     keys = env.client(env.proxy("redis://@127.0.0.1:%d" % port, "keys"))
 
     def increments():
@@ -74,11 +75,78 @@ def run(env):
         equal(direct.cmd("ZSCORE", "e2e:geo-dist", "a"), b"0")
         equal(direct.cmd("EXISTS", "geo-dest", "geo-dist"), 0)
 
+    def missing_values():
+        for args in [("LPOP", "nil-list"), ("RPOP", "nil-list"), ("LINDEX", "nil-list", 0),
+                     ("SPOP", "nil-set"), ("SRANDMEMBER", "nil-set"), ("ZRANDMEMBER", "nil-zset")]:
+            equal(values.cmd(*args), None)
+        for name in ["BZPOPMIN", "BZPOPMAX"]:
+            equal(values.cmd(name, "nil-zset", 0.01), None)
+        equal(values.cmd("GET", "nil-string"), None)
+        equal(values.cmd("PING"), b"PONG")
+
+    def conditional_set():
+        values.cmd("SET", "conditional", "old")
+        equal(values.cmd("SET", "conditional", "new", "IFEQ", "old", "GET"), b"old")
+        equal(values.cmd("SET", "conditional", "skip", "IFNE", "new"), None)
+        equal(values.cmd("SET", "conditional", "last", "IFNE", "different", "PX", 10000, "GET"), b"new")
+        digest = direct.cmd("DIGEST", "e2e:conditional")
+        equal(values.cmd("SET", "conditional", "digest-new", "IFDEQ", digest, "GET"), b"last")
+        digest = direct.cmd("DIGEST", "e2e:conditional")
+        equal(values.cmd("SET", "conditional", "skip", "IFDNE", digest), None)
+
+    def set_algebra():
+        values.cmd("SADD", "set-a", "a", "b")
+        values.cmd("SADD", "set-b", "b", "c")
+        equal(sorted(values.cmd("SUNION", "set-a", "set-b")), [b"a", b"b", b"c"])
+        equal(values.cmd("SINTER", "set-a", "set-b"), [b"b"])
+        equal(values.cmd("SDIFF", "set-a", "set-b"), [b"a"])
+        equal(values.cmd("SMOVE", "set-a", "set-dest", "a"), 1)
+        equal(values.cmd("SMEMBERS", "set-dest"), [b"a"])
+        equal(direct.cmd("SMEMBERS", "e2e:set-dest"), [b"v:a"])
+        equal(values.cmd("SMOVE", "set-a", "set-dest", "missing"), 0)
+
+    def list_moves():
+        for name, tail in [("LMOVE", ["LEFT", "RIGHT"]), ("BLMOVE", ["LEFT", "RIGHT", 0.01]),
+                           ("RPOPLPUSH", []), ("BRPOPLPUSH", [0.01])]:
+            source = "legacy-" + name
+            destination = source + "-dest"
+            values.cmd("RPUSH", source, "a")
+            equal(values.cmd(name, source, destination, *tail), b"a")
+            equal(values.cmd("LRANGE", destination, 0, -1), [b"a"])
+            equal(values.cmd(name, source, destination, *tail), None)
+
+    def multi_pops():
+        for name in ["LMPOP", "BLMPOP", "ZMPOP", "BZMPOP"]:
+            first, second = "empty-" + name, "pop-" + name
+            if "ZMPOP" in name:
+                values.cmd("ZADD", second, 1, "a", 2, "b")
+                side, payload = "MIN", [[b"a", b"1"], [b"b", b"2"]]
+            else:
+                values.cmd("RPUSH", second, "a", "b")
+                side, payload = "LEFT", [b"a", b"b"]
+            prefix = [0.01] if name.startswith("B") else []
+            equal(values.cmd(name, *prefix, 2, first, second, side, "COUNT", 2), [second.encode(), payload])
+            equal(values.cmd(name, *prefix, 2, first, second, side), None)
+
     for name, test in [("Hash numeric increments", increments), ("HSTRLEN field conversion", strlen),
                        ("HRANDFIELD WITHVALUES and nil", random_fields), ("HSCAN NOVALUES", scan),
                        ("SET GET", set_get), ("ZRANK/ZREVRANK WITHSCORE", ranks),
-                       ("SORT/GEO store destinations and namespace isolation", stores)]:
+                       ("SORT/GEO store destinations and namespace isolation", stores),
+                       ("Missing values and legacy blocking timeouts", missing_values),
+                       ("SET IFEQ/IFNE and digest conditions", conditional_set),
+                       ("Set algebra decoding and SMOVE member conversion", set_algebra),
+                       ("Legacy List moves and nil responses", list_moves),
+                       ("Multi-key List/ZSet pops use the actual source", multi_pops)]:
         env.check(name, test)
+
+    env.check("BLMPOP wakeup decodes the actual source", lambda: env.blocking(
+        values_port, direct, "BLMPOP", [2, 2, "blocked-list-empty", "blocked-list-source", "LEFT", "COUNT", 2],
+        lambda producer: producer.cmd("RPUSH", "blocked-list-source", "a", "b"),
+        [b"blocked-list-source", [b"a", b"b"]]))
+    env.check("BZMPOP wakeup decodes members and preserves scores", lambda: env.blocking(
+        values_port, direct, "BZMPOP", [2, 2, "blocked-zset-empty", "blocked-zset-source", "MIN", "COUNT", 2],
+        lambda producer: producer.cmd("ZADD", "blocked-zset-source", 1, "a", 2, "b"),
+        [b"blocked-zset-source", [[b"a", b"1"], [b"b", b"2"]]]))
 
     nodes = [env.server(True) for _ in range(3)]
     with (env.directory / "cluster-create.log").open("w") as log:

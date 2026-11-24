@@ -18,6 +18,17 @@ public interface KeyConverter {
     byte[] convert(CommandContext commandContext, RedisCommand redisCommand, byte[] originalKey);
 
     /**
+     * Whether RANDOMKEY can safely sample the entire upstream database.
+     * Namespace converters must return false while namespace isolation is active.
+     *
+     * @param commandContext 上下文
+     * @return 是否允许 RANDOMKEY
+     */
+    default boolean isRandomKeySupported(CommandContext commandContext) {
+        return false;
+    }
+
+    /**
      * key反向转换
      * @param commandContext 上下文
      * @param redisCommand 所属命令

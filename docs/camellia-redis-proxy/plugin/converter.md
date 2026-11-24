@@ -19,6 +19,12 @@
 * 对于 `FT.SUGADD/SUGGET/SUGDEL/SUGLEN`，只转换词典 key，建议词、查询前缀、score 和 payload 保持原样
 * `FT.ALIASLIST/FT.HYBRID` 的索引名不属于数据 key，不调用 KeyConverter；查询参数和响应原样透传
 
+`PUBSUB CHANNELS` 未指定 pattern 时，会补充经过 KeyConverter 转换的 `*`，避免查询整个后端的频道列表；显式 pattern 也会转换，返回的频道名会逆转换。和 `KEYS/SCAN` 一样，自定义 converter 需要支持 pattern 转换。
+
+`RANDOMKEY` 无法按命名空间筛选，配置 key converter 时默认在请求阶段拒绝，返回 `ERR RANDOMKEY is not supported by the active key converter`，不会转发到后端。
+`DefaultMultiTenantNamespaceKeyConverter` 在当前租户转换关闭、bid/bgroup 缺失或 bid 不大于 0 时允许透传。未配置 key converter 时行为保持不变。
+自定义 KeyConverter 只有在确认可以安全地从整个后端数据库采样时，才应重写 `isRandomKeySupported(CommandContext)` 返回 `true`；启用租户隔离时必须保持 `false`。
+
 TimeSeries 的单 key、多 key（含 `TS.MADD`、`TS.NRANGE/NREVRANGE`）和规则源/目标 key 均支持转换。
 `TS.QUERYINDEX`、`TS.MGET`、未分组的 `TS.MRANGE/MREVRANGE` 返回的 key，以及 `TS.INFO` 的 `sourceKey`、`rules` 和 `keySelfName` 会逆转换。
 时间戳、数值、标签和过滤表达式原样透传，不调用 String/Hash 等 value converter。
@@ -43,9 +49,9 @@ TimeSeries 的单 key、多 key（含 `TS.MADD`、`TS.NRANGE/NREVRANGE`）和规
 SET,GETSET,SETNX,SETEX,PSETEX,MSET,MSETNX,GET,MGET,GETDEL,GETEX,
 #List
 RPUSH,LPUSH,LLEN,LRANGE,LINDEX,LSET,LREM,LPOP,RPOP,LINSERT,LPUSHX,RPUSHX,LPOS,BRPOP,BLPOP,
-LMOVEM,BLMOVEM,
+LMOVEM,BLMOVEM,LMOVE,BLMOVE,RPOPLPUSH,BRPOPLPUSH,LMPOP,BLMPOP,
 #Set
-SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,SMISMEMBER,
+SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,SMISMEMBER,SMOVE,SUNION,SINTER,SDIFF,
 #Hash
 HSET,HGET,HSETNX,HMSET,HMGET,HINCRBY,HEXISTS,HDEL,HKEYS,
 HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,HRANDFIELD,
@@ -54,12 +60,18 @@ ZADD,ZINCRBY,ZRANK,ZSCORE,ZMSCORE,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZSCAN,
 ZPOPMAX,ZPOPMIN,BZPOPMAX,BZPOPMIN,ZRANDMEMBER,
-ZMOVE,BZMOVE,ZMOVEMEMBER,
+ZMOVE,BZMOVE,ZMOVEMEMBER,ZMPOP,BZMPOP,
 ```
 
 `LMOVEM`/`BLMOVEM` 和 `ZMOVE`/`BZMOVE`/`ZMOVEMEMBER` 会转换源 key 和目标 key，返回的元素/member 使用源 key 进行逆转换，score 保持原样。
 `ZMOVEMEMBER` 还会转换 `MEMBERS` 数量指定的 member 参数，保留 `NX/XX` 等选项。
 这些命令在 Redis 内部直接搬移数据，源和目标必须使用兼容的 value/member 编码规则；proxy 不会在搬移时重新编码目标数据。
+
+`SET IFEQ/IFNE` 会转换比较值，过期参数以及 `IFDEQ/IFDNE` 的 digest 参数保持原样。比较条件要求 value 编码具有确定性；digest 对应 Redis 中的编码后值，可通过 `DIGEST` 获取。
+`SMOVE` 按源 key 转换 member；`SUNION/SINTER/SDIFF` 按第一个源 key 逆转换结果，参与集合必须使用兼容的成员编码，proxy 不会替这些运算重新编码成员。
+`LMOVE/BLMOVE/RPOPLPUSH/BRPOPLPUSH` 按源 key 逆转换返回元素，要求源/目标编码兼容。
+`LMPOP/BLMPOP/ZMPOP/BZMPOP` 按响应中实际弹出的 key 逆转换嵌套元素/member，再逆转换该 key；ZSet score 保持原样。
+缺值和超时的 nil 响应直接保留，不调用 value converter，避免修改共享的 nil 对象。
 
 ### 如何使用
 你需要实现相关的Converter接口，包括：

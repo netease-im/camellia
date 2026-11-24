@@ -17,12 +17,17 @@
 * Clarified that `SORT/SORT_RO` support conversion of the source key and, where applicable, the STORE destination, but do not support external keys referenced by BY/GET patterns; `BY nosort` and `GET #` are supported, and sorting does not invoke element value converters
 
 ### Fixes
+* Fixed discovery isolation with namespace converters: `PUBSUB CHANNELS` without a pattern now supplies a converted `*`; key converters reject `RANDOMKEY` by default because it cannot be scoped to a namespace, while the built-in converter allows it when tenant conversion is disabled and custom converters can explicitly opt in via `isRandomKeySupported`
+* Fixed nil values reaching converters for `LPOP/RPOP/LINDEX/SPOP/SRANDMEMBER/ZRANDMEMBER`, which could mutate the shared nil reply, and null-array access on legacy `BZPOPMIN/MAX` timeouts
+* Added comparison-value conversion for `SET IFEQ/IFNE`, preserving expiry arguments and `IFDEQ/IFDNE` digests
+* Added member conversion for `SMOVE`, result decoding for `SUNION/SINTER/SDIFF`, and returned-element decoding for `LMOVE/BLMOVE/RPOPLPUSH/BRPOPLPUSH`
+* Added nested result decoding for `LMPOP/BLMPOP/ZMPOP/BZMPOP`, using the actual popped key for conversion and preserving ZSet scores
 * Fixed single-member `ZADD` invoking the value converter twice
 * Fixed `HINCRBY/HINCRBYFLOAT` converting numeric increments as fields and `HSTRLEN` omitting field conversion
 * Fixed `HRANDFIELD WITHVALUES` using the field decoder for values and mishandling nil replies, and `HSCAN NOVALUES` parsing field-only arrays as field/value pairs
 * Fixed missing old-value decoding for `SET ... GET` and accidental option conversion for `ZRANK/ZREVRANK WITHSCORE`
 * Fixed missing destination key conversion for `SORT STORE` and `GEORADIUS/GEORADIUSBYMEMBER STORE/STOREDIST`; corrected their write-command classification and included source/destination keys in shard-resource and cluster-slot checks
-* Added regression tests for legacy converter issues and STORE routing: all 58 related unit tests and 8 real Redis standalone/cluster scenarios passed
+* Added regression tests for legacy converter issues and STORE routing: all 80 related unit tests and 20 real Redis standalone/cluster scenarios passed
 
 
 # 1.4.3 (2026/10/22)

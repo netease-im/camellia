@@ -69,7 +69,12 @@ public class ConverterProxyPlugin implements ProxyPlugin {
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
         Command command = request.getCommand();
         if (command != null) {
-            converters.convertRequest(request.getCommand());
+            KeyConverter keyConverter = converters.getKeyConverter();
+            if (command.getRedisCommand() == RedisCommand.RANDOMKEY && keyConverter != null
+                    && !keyConverter.isRandomKeySupported(command.getCommandContext())) {
+                return new ProxyPluginResponse(false, "ERR RANDOMKEY is not supported by the active key converter");
+            }
+            converters.convertRequest(command);
         }
         return ProxyPluginResponse.SUCCESS;
     }

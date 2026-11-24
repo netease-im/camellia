@@ -68,7 +68,20 @@ python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redi
   --report /tmp/camellia-converter-regressions.json
 ```
 
-覆盖 Hash 自增参数、HSTRLEN field、HRANDFIELD WITHVALUES、HSCAN NOVALUES、SET GET、ZRANK/ZREVRANK WITHSCORE，以及 SORT/GEORADIUS/GEORADIUSBYMEMBER 的目标 key 转换、前缀外数据保护和集群同 slot/跨 slot 路由。
+覆盖 Hash 自增参数、HSTRLEN field、HRANDFIELD WITHVALUES、HSCAN NOVALUES、SET GET/IFEQ/IFNE、ZRANK/ZREVRANK WITHSCORE、nil 响应、Set 运算、旧 List 搬移、多 key pop 及阻塞唤醒，以及 SORT/GEORADIUS/GEORADIUSBYMEMBER 的目标 key 转换、前缀外数据保护和集群同 slot/跨 slot 路由。
 HSTRLEN 校验的是编码后存储值的长度；Hash 自增直接预置数值，避免将 value 编码限制误判为 field 转换问题。SORT 仅验证主 key 和 STORE 目标，不验证外部 BY/GET key 模式，限制见 [converter 文档](../../../../../../docs/camellia-redis-proxy/plugin/converter.md)。
 
-2026-11-24：真实 Redis 8.12.0 上 8 项场景全部通过；相关 Maven 单测 58 项通过（0 失败、0 错误）。
+2026-11-24：真实 Redis 8.12.0 上 converter 回归脚本 15 项场景、下方命名空间脚本 5 项场景全部通过；相关 Maven 单测 80 项通过（0 失败、0 错误）。
+
+
+## 命名空间发现命令回归
+
+以下脚本无需额外模块，使用固定租户上下文调用内置 `DefaultMultiTenantNamespaceKeyConverter`，覆盖 RANDOMKEY 请求拒绝、CHANNELS 隐式/显式 pattern 隔离、租户转换关闭和无 converter 场景。检查 Redis commandstats，确认被拒绝的 RANDOMKEY 没有转发到后端。
+
+```bash
+python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redis812/namespace_regressions.py \
+  --redis-home /path/to/redis-8.12.0 \
+  --classpath-file /tmp/camellia-e2e-classpath \
+  --java-home /path/to/jdk-21 \
+  --report /tmp/camellia-namespace-regressions.json
+```

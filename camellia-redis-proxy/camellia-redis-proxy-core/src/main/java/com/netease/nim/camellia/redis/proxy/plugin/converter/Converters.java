@@ -384,7 +384,10 @@ public class Converters {
                         }
                     }
                 } else if (subCommand.equalsIgnoreCase("CHANNELS")) {
-                    if (objects.length == 3) {
+                    if (objects.length == 2 && convert) {
+                        byte[] pattern = convert(commandContext, redisCommand, Utils.stringToBytes("*"), true);
+                        command.updateObjects(new byte[][]{objects[0], objects[1], pattern});
+                    } else if (objects.length == 3) {
                         byte[] convertedChannels = convert(commandContext, redisCommand, objects[2], convert);
                         objects[2] = convertedChannels;
                     }
@@ -648,6 +651,23 @@ public class Converters {
                         objects[2] = convertedValue;
                     }
                 }
+                if (redisCommand == RedisCommand.SET) {
+                    for (int i = 3; i < objects.length; i++) {
+                        String option = Utils.bytesToString(objects[i]);
+                        if ("IFEQ".equalsIgnoreCase(option) || "IFNE".equalsIgnoreCase(option)) {
+                            if (i + 1 < objects.length) {
+                                byte[] value = stringConverter.valueConvert(commandContext, objects[1], objects[++i]);
+                                if (value != null) {
+                                    objects[i] = value;
+                                }
+                            }
+                        } else if ("EX".equalsIgnoreCase(option) || "PX".equalsIgnoreCase(option)
+                                || "EXAT".equalsIgnoreCase(option) || "PXAT".equalsIgnoreCase(option)
+                                || "IFDEQ".equalsIgnoreCase(option) || "IFDNE".equalsIgnoreCase(option)) {
+                            i++;
+                        }
+                    }
+                }
                 break;
             case SETEX:
             case PSETEX:
@@ -674,6 +694,14 @@ public class Converters {
         if (setConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case SMOVE:
+                if (objects.length >= 4) {
+                    byte[] value = setConverter.valueConvert(commandContext, objects[1], objects[3]);
+                    if (value != null) {
+                        objects[3] = value;
+                    }
+                }
+                break;
             case SADDEX:
             case SEXPIRE:
             case SPEXPIRE:
@@ -715,6 +743,9 @@ public class Converters {
         if (setConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case SUNION:
+            case SINTER:
+            case SDIFF:
             case SMEMBERS:
                 if (reply instanceof MultiBulkReply) {
                     updateSetMultiBulkReply(commandContext, objects[1], (MultiBulkReply) reply);
@@ -726,8 +757,10 @@ public class Converters {
                     updateSetMultiBulkReply(commandContext, objects[1], (MultiBulkReply) reply);
                 } else if (reply instanceof BulkReply) {
                     byte[] raw = ((BulkReply) reply).getRaw();
-                    byte[] bytes = setConverter.valueReverseConvert(commandContext, objects[1], raw);
-                    ((BulkReply) reply).updateRaw(bytes);
+                    if (raw != null) {
+                        byte[] bytes = setConverter.valueReverseConvert(commandContext, objects[1], raw);
+                        ((BulkReply) reply).updateRaw(bytes);
+                    }
                 }
                 break;
             case SSCAN:
@@ -751,6 +784,9 @@ public class Converters {
         for (Reply reply : replies) {
             if (reply instanceof BulkReply) {
                 byte[] raw = ((BulkReply) reply).getRaw();
+                if (raw == null) {
+                    continue;
+                }
                 byte[] bytes = setConverter.valueReverseConvert(commandContext, key, raw);
                 ((BulkReply) reply).updateRaw(bytes);
             }
@@ -800,6 +836,25 @@ public class Converters {
         if (listConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case LMPOP:
+            case BLMPOP:
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] entries = ((MultiBulkReply) reply).getReplies();
+                    if (entries != null && entries.length == 2 && entries[0] instanceof BulkReply
+                            && ((BulkReply) entries[0]).getRaw() != null && entries[1] instanceof MultiBulkReply) {
+                        byte[] key = ((BulkReply) entries[0]).getRaw();
+                        Reply[] elements = ((MultiBulkReply) entries[1]).getReplies();
+                        if (elements != null) {
+                            for (Reply element : elements) {
+                                if (element instanceof BulkReply && ((BulkReply) element).getRaw() != null) {
+                                    byte[] value = listConverter.valueReverseConvert(commandContext, key, ((BulkReply) element).getRaw());
+                                    ((BulkReply) element).updateRaw(value);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
             case LMOVEM:
             case BLMOVEM:
                 if (reply instanceof MultiBulkReply) {
@@ -820,13 +875,13 @@ public class Converters {
                     Reply[] replies = ((MultiBulkReply) reply).getReplies();
                     if (replies != null) {
                         for (Reply reply1 : replies) {
-                            if (reply1 instanceof BulkReply) {
+                            if (reply1 instanceof BulkReply && ((BulkReply) reply1).getRaw() != null) {
                                 byte[] bytes = listConverter.valueReverseConvert(commandContext, objects[1], ((BulkReply) reply1).getRaw());
                                 ((BulkReply) reply1).updateRaw(bytes);
                             }
                         }
                     }
-                } else if (reply instanceof BulkReply) {
+                } else if (reply instanceof BulkReply && ((BulkReply) reply).getRaw() != null) {
                     byte[] bytes = listConverter.valueReverseConvert(commandContext, objects[1], ((BulkReply) reply).getRaw());
                     ((BulkReply) reply).updateRaw(bytes);
                 }
@@ -846,8 +901,12 @@ public class Converters {
                     }
                 }
                 break;
+            case LMOVE:
+            case BLMOVE:
+            case RPOPLPUSH:
+            case BRPOPLPUSH:
             case LINDEX:
-                if (reply instanceof BulkReply) {
+                if (reply instanceof BulkReply && ((BulkReply) reply).getRaw() != null) {
                     byte[] bytes = listConverter.valueReverseConvert(commandContext, objects[1], ((BulkReply) reply).getRaw());
                     ((BulkReply) reply).updateRaw(bytes);
                 }
@@ -1112,6 +1171,29 @@ public class Converters {
         if (zSetConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case ZMPOP:
+            case BZMPOP:
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] entries = ((MultiBulkReply) reply).getReplies();
+                    if (entries != null && entries.length == 2 && entries[0] instanceof BulkReply
+                            && ((BulkReply) entries[0]).getRaw() != null && entries[1] instanceof MultiBulkReply) {
+                        byte[] key = ((BulkReply) entries[0]).getRaw();
+                        Reply[] elements = ((MultiBulkReply) entries[1]).getReplies();
+                        if (elements != null) {
+                            for (Reply element : elements) {
+                                if (element instanceof MultiBulkReply) {
+                                    Reply[] pair = ((MultiBulkReply) element).getReplies();
+                                    if (pair != null && pair.length == 2 && pair[0] instanceof BulkReply
+                                            && ((BulkReply) pair[0]).getRaw() != null) {
+                                        byte[] value = zSetConverter.valueReverseConvert(commandContext, key, ((BulkReply) pair[0]).getRaw());
+                                        ((BulkReply) pair[0]).updateRaw(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
             case ZMOVE:
             case BZMOVE:
             case ZMOVEMEMBER:
@@ -1137,7 +1219,7 @@ public class Converters {
             case BZPOPMIN:
                 if (reply instanceof MultiBulkReply) {
                     Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                    if (replies.length == 3) {
+                    if (replies != null && replies.length == 3) {
                         Reply reply1 = replies[0];
                         Reply reply2 = replies[1];
                         if (reply1 instanceof BulkReply && reply2 instanceof BulkReply) {
@@ -1169,7 +1251,7 @@ public class Converters {
             case ZREVRANGE:
             case ZREVRANGEBYLEX:
             case ZREVRANGEBYSCORE:
-                if (reply instanceof BulkReply) {
+                if (reply instanceof BulkReply && ((BulkReply) reply).getRaw() != null) {
                     byte[] bytes = zSetConverter.valueReverseConvert(commandContext, objects[1], ((BulkReply) reply).getRaw());
                     ((BulkReply) reply).updateRaw(bytes);
                 } else if (reply instanceof MultiBulkReply) {

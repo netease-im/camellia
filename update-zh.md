@@ -17,12 +17,17 @@
 * 明确`SORT/SORT_RO`只支持主key及适用的STORE目标key转换，不支持通过BY/GET模式引用外部key；`BY nosort`和`GET #`可用，排序不适配元素value converter
 
 ### fix
+* 修复命名空间converter下发现命令的隔离问题：`PUBSUB CHANNELS`未指定pattern时补充转换后的`*`；key converter默认拒绝无法按命名空间筛选的`RANDOMKEY`，内置converter在租户转换关闭时允许透传，自定义converter可通过`isRandomKeySupported`显式声明支持
+* 修复`LPOP/RPOP/LINDEX/SPOP/SRANDMEMBER/ZRANDMEMBER`将nil传入converter而可能污染共享nil响应的问题，以及旧`BZPOPMIN/MAX`超时nil数组的空指针问题
+* 补齐`SET IFEQ/IFNE`比较值转换，保留过期参数和`IFDEQ/IFDNE`的digest参数原样
+* 补齐`SMOVE` member转换、`SUNION/SINTER/SDIFF`返回成员解码，以及`LMOVE/BLMOVE/RPOPLPUSH/BRPOPLPUSH`返回元素解码
+* 补齐`LMPOP/BLMPOP/ZMPOP/BZMPOP`嵌套返回值解码，按实际弹出的key选择converter上下文，保留ZSet score
 * 修复单member的`ZADD`重复调用value converter的问题
 * 修复`HINCRBY/HINCRBYFLOAT`将数字增量误当field转换，以及`HSTRLEN`遗漏field转换的问题
 * 修复`HRANDFIELD WITHVALUES`混用field/value逆转换器及空值处理，修复`HSCAN NOVALUES`将field数组误当field/value对解析的问题
 * 修复`SET ... GET`遗漏旧值逆转换，以及`ZRANK/ZREVRANK WITHSCORE`误转换选项的问题
 * 修复`SORT STORE`及`GEORADIUS/GEORADIUSBYMEMBER STORE/STOREDIST`遗漏目标key转换的问题，同时修正写命令分类，使源/目标key参与分片资源和集群slot校验
-* 补充converter历史问题回归及STORE路由测试：58项相关单测、8项真实Redis单实例/集群场景全部通过
+* 补充converter历史问题回归及STORE路由测试：80项相关单测、20项真实Redis单实例/集群场景全部通过
 
 
 # 1.4.3（2026/10/22）

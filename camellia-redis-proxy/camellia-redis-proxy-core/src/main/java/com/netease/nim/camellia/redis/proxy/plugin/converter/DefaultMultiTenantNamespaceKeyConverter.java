@@ -50,6 +50,12 @@ public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {
     }
 
     @Override
+    public boolean isRandomKeySupported(CommandContext commandContext) {
+        return commandContext.getBid() == null || commandContext.getBgroup() == null
+                || commandContext.getBid() <= 0 || disable(commandContext.getBid(), commandContext.getBgroup());
+    }
+
+    @Override
     public byte[] convert(CommandContext commandContext, RedisCommand redisCommand, byte[] originalKey) {
         if (commandContext.getBid() == null || commandContext.getBgroup() == null || commandContext.getBid() <= 0) {
             return originalKey;
