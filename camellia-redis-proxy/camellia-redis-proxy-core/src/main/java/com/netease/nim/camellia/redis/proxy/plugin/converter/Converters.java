@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.KeyParser;
 
 
 /**
@@ -131,6 +132,16 @@ public class Converters {
             }
         } else if (commandKeyType == RedisCommand.CommandKeyType.COMPLEX) {
             switch (redisCommand) {
+                case SORT:
+                case GEORADIUS:
+                case GEORADIUSBYMEMBER:
+                    if (objects.length >= 2) {
+                        objects[1] = convert(commandContext, redisCommand, objects[1], convert);
+                        for (int index : KeyParser.storeKeyIndexes(redisCommand, objects)) {
+                            objects[index] = convert(commandContext, redisCommand, objects[index], convert);
+                        }
+                    }
+                    break;
                 case MSETEX:
                     convertCountedKeys(redisCommand, commandContext, objects, 1, 2, 2, false, convert);
                     break;
@@ -571,6 +582,7 @@ public class Converters {
         if (stringConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case SET:
             case GET:
             case GETSET:
             case GETDEL:
@@ -882,10 +894,15 @@ public class Converters {
                     }
                 }
                 break;
-            case HDEL:
-            case HEXISTS:
             case HINCRBY:
             case HINCRBYFLOAT:
+            case HSTRLEN:
+                if (objects.length >= 3) {
+                    objects[2] = hashConverter.fieldConvert(commandContext, objects[1], objects[2]);
+                }
+                break;
+            case HDEL:
+            case HEXISTS:
             case HGET:
             case HMGET:
                 if (objects.length >= 3) {
@@ -946,10 +963,16 @@ public class Converters {
             case HRANDFIELD:
                 if (reply instanceof BulkReply) {
                     byte[] raw = ((BulkReply) reply).getRaw();
-                    byte[] bytes = hashConverter.fieldReverseConvert(commandContext, objects[1], raw);
-                    ((BulkReply) reply).updateRaw(bytes);
+                    if (raw != null) {
+                        byte[] bytes = hashConverter.fieldReverseConvert(commandContext, objects[1], raw);
+                        ((BulkReply) reply).updateRaw(bytes);
+                    }
                 } else if (reply instanceof MultiBulkReply) {
-                    updateHashFields(commandContext, objects[1], (MultiBulkReply) reply);
+                    if (objects.length > 3 && "WITHVALUES".equalsIgnoreCase(Utils.bytesToString(objects[3]))) {
+                        updateHashKVs(commandContext, objects[1], (MultiBulkReply) reply);
+                    } else {
+                        updateHashFields(commandContext, objects[1], (MultiBulkReply) reply);
+                    }
                 }
                 break;
             case HSCAN:
@@ -958,12 +981,29 @@ public class Converters {
                     if (replies.length == 2) {
                         Reply reply1 = replies[1];
                         if (reply1 instanceof MultiBulkReply) {
-                            updateHashKVs(commandContext, objects[1], (MultiBulkReply) reply1);
+                            if (hashScanNoValues(objects)) {
+                                updateHashFields(commandContext, objects[1], (MultiBulkReply) reply1);
+                            } else {
+                                updateHashKVs(commandContext, objects[1], (MultiBulkReply) reply1);
+                            }
                         }
                     }
                 }
                 break;
         }
+    }
+
+    private static boolean hashScanNoValues(byte[][] objects) {
+        for (int i = 3; i < objects.length; i++) {
+            String option = Utils.bytesToString(objects[i]);
+            if ("NOVALUES".equalsIgnoreCase(option)) {
+                return true;
+            }
+            if ("MATCH".equalsIgnoreCase(option) || "COUNT".equalsIgnoreCase(option)) {
+                i++;
+            }
+        }
+        return false;
     }
 
     private void updateHashKVs(CommandContext commandContext, byte[] key, MultiBulkReply reply) {
@@ -1049,11 +1089,15 @@ public class Converters {
                     objects[3] = bytes;
                 }
                 break;
-            case ZMSCORE:
             case ZSCORE:
             case ZRANK:
-            case ZREM:
             case ZREVRANK:
+                if (objects.length >= 3) {
+                    objects[2] = zSetConverter.valueConvert(commandContext, objects[1], objects[2]);
+                }
+                break;
+            case ZMSCORE:
+            case ZREM:
                 if (objects.length >= 3) {
                     for (int i = 2; i < objects.length; i++) {
                         byte[] bytes = zSetConverter.valueConvert(commandContext, objects[1], objects[i]);

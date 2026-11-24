@@ -1,6 +1,30 @@
 [中文版](update-zh.md)
 
 
+# 1.4.4-SNAPSHOT
+### New Features
+* camellia-redis-proxy adds 126 Redis and module commands, including command registration, key parsing, cluster routing, converter integration, and supported-command documentation (#509)
+* Added Array (`ARSET/ARGET` and 16 others), Vector Set (`VADD/VSIM` and 11 others), Count-Min Sketch (6 `CMS.*` commands), Top-K (7 `TOPK.*` commands), and t-digest (13 `TDIGEST.*` commands)
+* Added String commands `DELEX/MSETEX/INCREX/DIGEST/BITRANGEINTARRAY`, 12 Hash commands for field expiration and operations such as `HSETEX/HGETEX/HGETDEL`, and 12 Set commands for member expiration and operations such as `SADDEX/SDIFFCARD/SUNIONCARD`
+* Added Stream commands `XACKDEL/XAUTOCLAIM/XCFGSET/XDELEX/XNACK` and JSON commands `JSON.MERGE/JSON.MSET`
+* Added List/ZSet move commands `LMOVEM/BLMOVEM/ZMOVE/BZMOVE/ZMOVEMEMBER`, with source/destination key and returned element/member conversion; blocking commands use dedicated connections and support timeout and wakeup
+* Added Search commands `FT.SUGADD/FT.SUGGET/FT.SUGDEL/FT.SUGLEN/FT.ALIASLIST/FT.HYBRID`, distinguishing dictionary keys from index names and documenting sharding restrictions
+* Added 21 TimeSeries `TS.*` commands for time-series reads/writes, queries, aggregation, and rule management, with multi-key conversion, returned-key decoding, and `TS.READ BLOCK` support
+* Added reusable real Redis 8.12 integration scripts covering standalone Redis, a three-master cluster, blocking, and key/value converters; 120 of the 126 new commands were executed against Redis, while the 6 Search commands were not tested against a real module because it was unavailable in the test environment
+
+### Updates
+* Documented converter compatibility requirements: moves and STORE require compatible encodings, Hash increments require numeric stored values, and HSTRLEN returns the encoded storage length
+* Clarified that `SORT/SORT_RO` support conversion of the source key and, where applicable, the STORE destination, but do not support external keys referenced by BY/GET patterns; `BY nosort` and `GET #` are supported, and sorting does not invoke element value converters
+
+### Fixes
+* Fixed single-member `ZADD` invoking the value converter twice
+* Fixed `HINCRBY/HINCRBYFLOAT` converting numeric increments as fields and `HSTRLEN` omitting field conversion
+* Fixed `HRANDFIELD WITHVALUES` using the field decoder for values and mishandling nil replies, and `HSCAN NOVALUES` parsing field-only arrays as field/value pairs
+* Fixed missing old-value decoding for `SET ... GET` and accidental option conversion for `ZRANK/ZREVRANK WITHSCORE`
+* Fixed missing destination key conversion for `SORT STORE` and `GEORADIUS/GEORADIUSBYMEMBER STORE/STOREDIST`; corrected their write-command classification and included source/destination keys in shard-resource and cluster-slot checks
+* Added regression tests for legacy converter issues and STORE routing: all 58 related unit tests and 8 real Redis standalone/cluster scenarios passed
+
+
 # 1.4.3 (2026/10/22)
 ### New Features
 * camellia-redis-proxy supports multiple databases in redis-cluster: the resource url accepts `?db=1`, and clients can switch db via `select` (dynamic config `cluster.multidb.support`); both `redis-cluster` and `redis-cluster-slaves` are supported

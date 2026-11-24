@@ -55,3 +55,20 @@ python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redi
 - TimeSeries 查询结果、`TS.INFO` 的规则源/目标 key 逆转换，以及 `GROUPBY` 合成组名保持原样。
 
 测试 converter 使用二进制安全的固定前缀：key 为 `e2e:`、field 为 `f:`、value/member 为 `v:`。不会转换 TS 数值、JSON 内容或 Search 查询。固定前缀让源/目标编码兼容，避免把跨 key 重新编码误算为 Redis 搬移命令的能力。
+
+## Converter 历史问题回归
+
+复用上面的 classpath，以下脚本无需额外 Redis 模块，会独立启动 Redis、3 主节点集群和 proxy，并在结束时清理进程：
+
+```bash
+python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redis812/converter_regressions.py \
+  --redis-home /path/to/redis-8.12.0 \
+  --classpath-file /tmp/camellia-e2e-classpath \
+  --java-home /path/to/jdk-21 \
+  --report /tmp/camellia-converter-regressions.json
+```
+
+覆盖 Hash 自增参数、HSTRLEN field、HRANDFIELD WITHVALUES、HSCAN NOVALUES、SET GET、ZRANK/ZREVRANK WITHSCORE，以及 SORT/GEORADIUS/GEORADIUSBYMEMBER 的目标 key 转换、前缀外数据保护和集群同 slot/跨 slot 路由。
+HSTRLEN 校验的是编码后存储值的长度；Hash 自增直接预置数值，避免将 value 编码限制误判为 field 转换问题。SORT 仅验证主 key 和 STORE 目标，不验证外部 BY/GET key 模式，限制见 [converter 文档](../../../../../../docs/camellia-redis-proxy/plugin/converter.md)。
+
+2026-11-24：真实 Redis 8.12.0 上 8 项场景全部通过；相关 Maven 单测 58 项通过（0 失败、0 错误）。

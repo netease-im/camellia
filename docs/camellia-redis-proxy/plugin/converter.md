@@ -13,7 +13,7 @@
 在该接口下，用户可以自己实现从convertedValue/convertedKey到originalValue/originalKey的变换逻辑，proxy会将转换后的originalValue/originalKey回给客户端
 
 ### 当前支持对key转换的命令
-带key的命令都支持，特别的：
+大部分带 key 的命令支持，特别的：
 * 对于KEYS和SCAN命令，回调给KeyConverter接口的是pattern，而不是实际的key
 * 对于PUBSUB系列命令，回调给KeyConverter接口的是pattern或者channel，而不是实际的key
 * 对于 `FT.SUGADD/SUGGET/SUGDEL/SUGLEN`，只转换词典 key，建议词、查询前缀、score 和 payload 保持原样
@@ -23,6 +23,16 @@ TimeSeries 的单 key、多 key（含 `TS.MADD`、`TS.NRANGE/NREVRANGE`）和规
 `TS.QUERYINDEX`、`TS.MGET`、未分组的 `TS.MRANGE/MREVRANGE` 返回的 key，以及 `TS.INFO` 的 `sourceKey`、`rules` 和 `keySelfName` 会逆转换。
 时间戳、数值、标签和过滤表达式原样透传，不调用 String/Hash 等 value converter。
 `GROUPBY` 的结果名是 `label=value`，不按 key 逆转换；分组响应内的标签（包括 `__source__`）也保持上游原样。
+
+`SORT` 支持主 key 和 `STORE` 目标 key 的转换；`GEORADIUS/GEORADIUSBYMEMBER` 支持主 key 和 `STORE/STOREDIST` 目标 key 的转换。源和目标必须位于同一分片资源，Redis Cluster 下必须位于同一 slot。
+这些可能写入数据的命令按写命令路由；纯读场景可使用 `SORT_RO`、`GEORADIUS_RO`、`GEORADIUSBYMEMBER_RO`。
+
+**SORT 的限制（也适用于 SORT_RO）：** 启用 key converter 后，不支持通过 `BY/GET` 模式引用外部 key（包括 `pattern->field`）。Redis 在内部用元素值替换 `*` 后查找实际 key，proxy 无法对这些实际 key 调用任意 KeyConverter；模式参数会原样透传，不保证命名空间隔离。`BY nosort` 和 `GET #` 不引用外部 key，可以使用。
+`SORT/SORT_RO` 不调用 List/Set/ZSet value converter，也不转换排序结果；启用元素编码后，不保证排序语义。`STORE` 直接写入 Redis 中的元素，要求源和目标的编码规则兼容。
+
+`SET ... GET` 会逆转换返回的旧值；`HRANDFIELD ... WITHVALUES` 分别逆转换 field 和 value；`HSCAN ... NOVALUES` 只逆转换 field。
+`HINCRBY/HINCRBYFLOAT` 仅转换 field，增量保持原样，存储值必须仍是 Redis 可识别的数字；`HSTRLEN` 转换 field 后返回存储值的字节长度，不保证等于编码前长度。
+`ZRANK/ZREVRANK ... WITHSCORE` 只转换 member，选项、rank 和 score 保持原样。
 
 感谢[@yangxb2010000](https://github.com/yangxb2010000)对key转换功能的增强
 

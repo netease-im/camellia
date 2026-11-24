@@ -35,6 +35,16 @@ public class KeyParser {
             List<byte[]> keys = new ArrayList<>();
             byte[][] objects = command.getObjects();
             switch (redisCommand) {
+                case SORT:
+                case GEORADIUS:
+                case GEORADIUSBYMEMBER:
+                    if (objects.length >= 2) {
+                        keys.add(objects[1]);
+                        for (int index : storeKeyIndexes(redisCommand, objects)) {
+                            keys.add(objects[index]);
+                        }
+                    }
+                    break;
                 case MSET:
                 case MSETNX:
                     msetOrMsetNx(command, keys);
@@ -208,6 +218,43 @@ public class KeyParser {
         for (int i = 0; i < count; i++) {
             keys.add(objects[firstKey + i * step]);
         }
+    }
+
+    /** Explicit STORE destinations only; SORT BY/GET patterns are evaluated inside Redis. */
+    public static List<Integer> storeKeyIndexes(RedisCommand command, byte[][] objects) {
+        int start;
+        switch (command) {
+            case SORT:
+                start = 2;
+                break;
+            case GEORADIUS:
+                start = 6;
+                break;
+            case GEORADIUSBYMEMBER:
+                start = 5;
+                break;
+            default:
+                return Collections.emptyList();
+        }
+        List<Integer> indexes = new ArrayList<>();
+        for (int i = start; i < objects.length; i++) {
+            String option = Utils.bytesToString(objects[i]);
+            if ("STORE".equalsIgnoreCase(option)
+                    || (command != RedisCommand.SORT && "STOREDIST".equalsIgnoreCase(option))) {
+                if (i + 1 < objects.length) {
+                    indexes.add(++i);
+                }
+            } else if (command == RedisCommand.SORT) {
+                if ("BY".equalsIgnoreCase(option) || "GET".equalsIgnoreCase(option)) {
+                    i++;
+                } else if ("LIMIT".equalsIgnoreCase(option)) {
+                    i += 2;
+                }
+            } else if ("COUNT".equalsIgnoreCase(option)) {
+                i++;
+            }
+        }
+        return indexes;
     }
 
     private static void dynamicKey(Command command, List<byte[]> keys, int start, int end) {

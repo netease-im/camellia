@@ -1,6 +1,30 @@
 [ENGLISH](update-en.md)
 
 
+# 1.4.4-SNAPSHOT
+### 新增
+* camellia-redis-proxy新增126个Redis及模块命令，补齐命令注册、key解析、集群路由、converter适配和支持命令文档（#509）
+* 新增Array（`ARSET/ARGET`等18个）、Vector Set（`VADD/VSIM`等13个）、Count-Min Sketch（`CMS.*`共6个）、Top-K（`TOPK.*`共7个）和t-digest（`TDIGEST.*`共13个）命令
+* 补充String的`DELEX/MSETEX/INCREX/DIGEST/BITRANGEINTARRAY`，Hash的字段过期及`HSETEX/HGETEX/HGETDEL`等12个命令，Set的成员过期及`SADDEX/SDIFFCARD/SUNIONCARD`等12个命令
+* 补充Stream的`XACKDEL/XAUTOCLAIM/XCFGSET/XDELEX/XNACK`和JSON的`JSON.MERGE/JSON.MSET`
+* 新增List/ZSet搬移命令`LMOVEM/BLMOVEM/ZMOVE/BZMOVE/ZMOVEMEMBER`，适配源/目标key和返回元素/member转换，阻塞命令使用独立连接并支持超时、唤醒
+* 新增Search的`FT.SUGADD/FT.SUGGET/FT.SUGDEL/FT.SUGLEN/FT.ALIASLIST/FT.HYBRID`，区分词典key与索引名，补充分片路由限制
+* 新增TimeSeries的`TS.*`共21个命令，包含时序读写、查询、聚合和规则管理，适配多key、返回key及`TS.READ BLOCK`阻塞行为
+* 新增可复用的真实Redis 8.12端到端验证脚本，覆盖单实例、3主节点集群、blocking及key/value converter；新增命令中120/126已真实执行，Search的6个命令因测试环境模块不可用未实测
+
+### 更新
+* 完善converter兼容性说明：搬移及STORE要求编码规则兼容，Hash自增值必须保持数字格式，HSTRLEN返回编码后的存储长度
+* 明确`SORT/SORT_RO`只支持主key及适用的STORE目标key转换，不支持通过BY/GET模式引用外部key；`BY nosort`和`GET #`可用，排序不适配元素value converter
+
+### fix
+* 修复单member的`ZADD`重复调用value converter的问题
+* 修复`HINCRBY/HINCRBYFLOAT`将数字增量误当field转换，以及`HSTRLEN`遗漏field转换的问题
+* 修复`HRANDFIELD WITHVALUES`混用field/value逆转换器及空值处理，修复`HSCAN NOVALUES`将field数组误当field/value对解析的问题
+* 修复`SET ... GET`遗漏旧值逆转换，以及`ZRANK/ZREVRANK WITHSCORE`误转换选项的问题
+* 修复`SORT STORE`及`GEORADIUS/GEORADIUSBYMEMBER STORE/STOREDIST`遗漏目标key转换的问题，同时修正写命令分类，使源/目标key参与分片资源和集群slot校验
+* 补充converter历史问题回归及STORE路由测试：58项相关单测、8项真实Redis单实例/集群场景全部通过
+
+
 # 1.4.3（2026/10/22）
 ### 新增
 * camellia-redis-proxy支持redis-cluster多db，资源url支持配置`?db=1`，客户端可通过`select`切换db（动态配置`cluster.multidb.support`），`redis-cluster`和`redis-cluster-slaves`均支持
