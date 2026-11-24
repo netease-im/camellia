@@ -257,6 +257,96 @@ public enum RedisCommand {
     CF_RESERVE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     DBSIZE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
 
+    // Additional core and bundled data type commands
+    ARCOUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARDELRANGE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARGETRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARGREP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARINSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARLASTITEMS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARMGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARMSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARNEXT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    AROP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARRING(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARSCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARSEEK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    ARSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ARRAY, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VREM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VSIM(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VDIM(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VCARD(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VEMB(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VLINKS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VSETATTR(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VGETATTR(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VISMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    VRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.VECTOR_SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CMS_INITBYDIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CMS, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CMS_INITBYPROB(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CMS, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CMS_INCRBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CMS, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CMS_QUERY(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CMS, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CMS_INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CMS, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_RESERVE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_ADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_INCRBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_QUERY(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_COUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_LIST(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TOPK_INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TOPK, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_CREATE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_RESET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_ADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_MIN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_MAX(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_QUANTILE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_CDF(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_TRIMMED_MEAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_RANK(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_REVRANK(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_BYRANK(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_BYREVRANK(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TDIGEST_INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HEXPIRE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HPEXPIRE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HEXPIREAT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HPEXPIREAT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HPERSIST(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HTTL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HPTTL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HEXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HPEXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HGETDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HGETEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    HSETEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SADDEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SEXPIRE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SPEXPIRE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SEXPIREAT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SPEXPIREAT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SPERSIST(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    STTL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SPTTL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SEXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SPEXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    DELEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    DIGEST(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    INCREX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BITRANGEINTARRAY(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    XAUTOCLAIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    XACKDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    XDELEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    XCFGSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    XNACK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_MERGE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+
     /**
      * Restrictive Support
      * only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
@@ -320,6 +410,13 @@ public enum RedisCommand {
     TFUNCTION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.None),
     SINTERCARD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.COMPLEX),
     LCS(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.COMPLEX),
+
+    CMS_MERGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.CMS, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TDIGEST_MERGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TDIGEST, Blocking.FALSE, CommandKeyType.COMPLEX),
+    SDIFFCARD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.COMPLEX),
+    SUNIONCARD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.COMPLEX),
+    MSETEX(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.COMPLEX),
+    JSON_MSET(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.COMPLEX),
 
     /**
      * Partially Support-1
@@ -426,6 +523,12 @@ public enum RedisCommand {
             this.strRaw = "ft." + name().toLowerCase().substring(3);
         } else if (commandType == CommandType.CF) {
             this.strRaw = "cf." + name().toLowerCase().substring(3);
+        } else if (commandType == CommandType.CMS) {
+            this.strRaw = "cms." + name().toLowerCase().substring(4);
+        } else if (commandType == CommandType.TOPK) {
+            this.strRaw = "topk." + name().toLowerCase().substring(5);
+        } else if (commandType == CommandType.TDIGEST) {
+            this.strRaw = "tdigest." + name().toLowerCase().substring(8);
         } else {
             this.strRaw = name().toLowerCase();
         }
@@ -500,6 +603,11 @@ public enum RedisCommand {
         FUNCTION,
         TFUNCTION,
         CF,
+        ARRAY,
+        VECTOR_SET,
+        CMS,
+        TOPK,
+        TDIGEST,
         ;
     }
 

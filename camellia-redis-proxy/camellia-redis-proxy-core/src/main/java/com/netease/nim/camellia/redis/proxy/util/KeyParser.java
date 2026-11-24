@@ -39,6 +39,24 @@ public class KeyParser {
                 case MSETNX:
                     msetOrMsetNx(command, keys);
                     break;
+                case MSETEX:
+                    countedKeys(objects, keys, 1, 2, 2, false);
+                    break;
+                case CMS_MERGE:
+                case TDIGEST_MERGE:
+                    countedKeys(objects, keys, 2, 3, 1, true);
+                    break;
+                case SDIFFCARD:
+                case SUNIONCARD:
+                    countedKeys(objects, keys, 1, 2, 1, false);
+                    break;
+                case JSON_MSET:
+                    if (objects.length >= 4 && (objects.length - 1) % 3 == 0) {
+                        for (int i = 1; i < objects.length; i += 3) {
+                            keys.add(objects[i]);
+                        }
+                    }
+                    break;
                 case EVAL:
                 case EVALSHA:
                 case EVAL_RO:
@@ -157,6 +175,28 @@ public class KeyParser {
             return keys;
         } else {
             return Collections.emptyList();
+        }
+    }
+
+    private static void countedKeys(byte[][] objects, List<byte[]> keys, int countIndex, int firstKey, int step, boolean destination) {
+        if (objects.length <= countIndex) {
+            return;
+        }
+        long count;
+        try {
+            count = Long.parseLong(Utils.bytesToString(objects[countIndex]));
+        } catch (NumberFormatException e) {
+            return;
+        }
+        // Check complete key/value groups before indexing, including oversized counts.
+        if (count <= 0 || count > (objects.length - firstKey) / step) {
+            return;
+        }
+        if (destination) {
+            keys.add(objects[1]);
+        }
+        for (int i = 0; i < count; i++) {
+            keys.add(objects[firstKey + i * step]);
         }
     }
 

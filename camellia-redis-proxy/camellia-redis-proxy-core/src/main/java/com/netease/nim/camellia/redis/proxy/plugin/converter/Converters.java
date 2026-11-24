@@ -131,6 +131,24 @@ public class Converters {
             }
         } else if (commandKeyType == RedisCommand.CommandKeyType.COMPLEX) {
             switch (redisCommand) {
+                case MSETEX:
+                    convertCountedKeys(redisCommand, commandContext, objects, 1, 2, 2, false, convert);
+                    break;
+                case CMS_MERGE:
+                case TDIGEST_MERGE:
+                    convertCountedKeys(redisCommand, commandContext, objects, 2, 3, 1, true, convert);
+                    break;
+                case SDIFFCARD:
+                case SUNIONCARD:
+                    convertCountedKeys(redisCommand, commandContext, objects, 1, 2, 1, false, convert);
+                    break;
+                case JSON_MSET:
+                    if (objects.length >= 4 && (objects.length - 1) % 3 == 0) {
+                        for (int i = 1; i < objects.length; i += 3) {
+                            objects[i] = convert(commandContext, redisCommand, objects[i], convert);
+                        }
+                    }
+                    break;
                 case MSET:
                 case MSETNX:
                     if (objects.length >= 3 && objects.length % 2 == 1) {
@@ -438,6 +456,47 @@ public class Converters {
         }
     }
 
+    private static int countedArgumentCount(byte[][] objects, int countIndex, int firstIndex, int step) {
+        if (countIndex < 0 || objects.length <= countIndex) {
+            return 0;
+        }
+        try {
+            long count = Long.parseLong(Utils.bytesToString(objects[countIndex]));
+            if (count > 0 && count <= (objects.length - firstIndex) / step) {
+                return (int) count;
+            }
+        } catch (NumberFormatException ignored) {
+            // Leave invalid requests to the upstream command's argument validation.
+        }
+        return 0;
+    }
+
+    private void convertCountedKeys(RedisCommand redisCommand, CommandContext commandContext, byte[][] objects,
+                                    int countIndex, int firstKey, int step, boolean destination, boolean convert) {
+        int count = countedArgumentCount(objects, countIndex, firstKey, step);
+        if (count == 0) {
+            return;
+        }
+        if (destination) {
+            objects[1] = convert(commandContext, redisCommand, objects[1], convert);
+        }
+        for (int i = 0; i < count; i++) {
+            int index = firstKey + i * step;
+            objects[index] = convert(commandContext, redisCommand, objects[index], convert);
+        }
+    }
+
+    // Options precede FIELDS/MEMBERS; stop at the marker so data bearing the same
+    // name is never interpreted as another option.
+    private static int argumentSection(byte[][] objects, String marker) {
+        for (int i = 2; i < objects.length; i++) {
+            if (marker.equalsIgnoreCase(Utils.bytesToString(objects[i]))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private void stringConvertReply(RedisCommand redisCommand, CommandContext commandContext, Command command, Reply reply) {
         if (stringConverter == null) return;
         byte[][] objects = command.getObjects();
@@ -479,6 +538,25 @@ public class Converters {
         if (stringConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case DELEX:
+                if (objects.length == 4 && ("IFEQ".equalsIgnoreCase(Utils.bytesToString(objects[2]))
+                        || "IFNE".equalsIgnoreCase(Utils.bytesToString(objects[2])))) {
+                    byte[] value = stringConverter.valueConvert(commandContext, objects[1], objects[3]);
+                    if (value != null) {
+                        objects[3] = value;
+                    }
+                }
+                break;
+            case MSETEX:
+                int count = countedArgumentCount(objects, 1, 2, 2);
+                for (int i = 0; i < count; i++) {
+                    int index = 3 + i * 2;
+                    byte[] value = stringConverter.valueConvert(commandContext, objects[index - 1], objects[index]);
+                    if (value != null) {
+                        objects[index] = value;
+                    }
+                }
+                break;
             case SET:
             case SETNX:
             case GETSET:
@@ -514,6 +592,27 @@ public class Converters {
         if (setConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case SADDEX:
+            case SEXPIRE:
+            case SPEXPIRE:
+            case SEXPIREAT:
+            case SPEXPIREAT:
+            case SPERSIST:
+            case STTL:
+            case SPTTL:
+            case SEXPIRETIME:
+            case SPEXPIRETIME:
+                int section = argumentSection(objects, "MEMBERS");
+                if (section >= 0) {
+                    int count = countedArgumentCount(objects, section + 1, section + 2, 1);
+                    for (int i = section + 2; i < section + 2 + count; i++) {
+                        byte[] value = setConverter.valueConvert(commandContext, objects[1], objects[i]);
+                        if (value != null) {
+                            objects[i] = value;
+                        }
+                    }
+                }
+                break;
             case SADD:
             case SREM:
             case SISMEMBER:
@@ -674,6 +773,31 @@ public class Converters {
         if (hashConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case HEXPIRE:
+            case HPEXPIRE:
+            case HEXPIREAT:
+            case HPEXPIREAT:
+            case HPERSIST:
+            case HTTL:
+            case HPTTL:
+            case HEXPIRETIME:
+            case HPEXPIRETIME:
+            case HGETDEL:
+            case HGETEX:
+            case HSETEX:
+                int section = argumentSection(objects, "FIELDS");
+                if (section >= 0) {
+                    int step = redisCommand == RedisCommand.HSETEX ? 2 : 1;
+                    int count = countedArgumentCount(objects, section + 1, section + 2, step);
+                    for (int i = 0; i < count; i++) {
+                        int index = section + 2 + i * step;
+                        objects[index] = hashConverter.fieldConvert(commandContext, objects[1], objects[index]);
+                        if (step == 2) {
+                            objects[index + 1] = hashConverter.valueConvert(commandContext, objects[1], objects[index + 1]);
+                        }
+                    }
+                }
+                break;
             case HDEL:
             case HEXISTS:
             case HINCRBY:
@@ -719,6 +843,8 @@ public class Converters {
                 break;
             case HVALS:
             case HMGET:
+            case HGETDEL:
+            case HGETEX:
                 if (reply instanceof MultiBulkReply) {
                     updateHashValues(commandContext, objects[1], (MultiBulkReply) reply);
                 }
@@ -777,9 +903,15 @@ public class Converters {
     }
 
     private void updateHashValues(CommandContext commandContext, byte[] key, MultiBulkReply reply) {
+        if (reply.getReplies() == null) {
+            return;
+        }
         for (Reply reply1 : reply.getReplies()) {
             if (reply1 instanceof BulkReply) {
                 byte[] raw = ((BulkReply) reply1).getRaw();
+                if (raw == null) {
+                    continue;
+                }
                 byte[] bytes = hashConverter.valueReverseConvert(commandContext, key, raw);
                 ((BulkReply) reply1).updateRaw(bytes);
 
