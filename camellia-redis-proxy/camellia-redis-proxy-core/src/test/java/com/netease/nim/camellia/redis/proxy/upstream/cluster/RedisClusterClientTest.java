@@ -60,7 +60,12 @@ public class RedisClusterClientTest {
                 {"BLMOVEM", "{a}:source", "{b}:dest", "LEFT", "RIGHT", "0"},
                 {"ZMOVE", "{a}:source", "{b}:dest", "MIN"},
                 {"BZMOVE", "{a}:source", "{b}:dest", "MIN", "0"},
-                {"ZMOVEMEMBER", "{a}:source", "{b}:dest", "MEMBERS", "1", "member"}
+                {"ZMOVEMEMBER", "{a}:source", "{b}:dest", "MEMBERS", "1", "member"},
+                {"TS.MADD", "{a}:series", "1", "1.25", "{b}:series", "2", "2.5"},
+                {"TS.CREATERULE", "{a}:source", "{b}:dest", "AGGREGATION", "AVG", "1000"},
+                {"TS.DELETERULE", "{a}:source", "{b}:dest"},
+                {"TS.NRANGE", "2", "{a}:series", "{b}:series", "-", "+"},
+                {"TS.NREVRANGE", "2", "{a}:series", "{b}:series", "-", "+"}
         };
         for (String[] args : requests) {
             Command command = new Command(Arrays.stream(args).map(Utils::stringToBytes).toArray(byte[][]::new));
@@ -69,6 +74,22 @@ public class RedisClusterClientTest {
             Assert.assertTrue(args[0], future.isDone());
             Assert.assertTrue(args[0], future.join() instanceof ErrorReply);
             Assert.assertTrue(args[0], future.join().toString().contains("CROSSSLOT"));
+        }
+    }
+
+    @Test
+    public void timeSeriesBlockingReadsUseDedicatedConnectionPath() {
+        RedisClusterResource resource = new RedisClusterResource(
+                Collections.singletonList(new RedisClusterResource.Node("127.0.0.1", 6379)), null, null, 0);
+        RedisClusterClient client = new RedisClusterClient(resource, 1);
+        // An uninitialized slot table makes the two paths return distinct errors,
+        // without opening any network connections.
+        for (String timeout : new String[]{"0", "100"}) {
+            Command command = new Command(new byte[][]{Utils.stringToBytes("TS.READ"), Utils.stringToBytes("series"),
+                    Utils.stringToBytes("$"), Utils.stringToBytes("BLOCK"), Utils.stringToBytes(timeout), Utils.stringToBytes("1")});
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            client.sendCommand(0, Collections.singletonList(command), Collections.singletonList(future));
+            Assert.assertSame(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL, future.join());
         }
     }
 

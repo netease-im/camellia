@@ -19,6 +19,11 @@
 * 对于 `FT.SUGADD/SUGGET/SUGDEL/SUGLEN`，只转换词典 key，建议词、查询前缀、score 和 payload 保持原样
 * `FT.ALIASLIST/FT.HYBRID` 的索引名不属于数据 key，不调用 KeyConverter；查询参数和响应原样透传
 
+TimeSeries 的单 key、多 key（含 `TS.MADD`、`TS.NRANGE/NREVRANGE`）和规则源/目标 key 均支持转换。
+`TS.QUERYINDEX`、`TS.MGET`、未分组的 `TS.MRANGE/MREVRANGE` 返回的 key，以及 `TS.INFO` 的 `sourceKey`、`rules` 和 `keySelfName` 会逆转换。
+时间戳、数值、标签和过滤表达式原样透传，不调用 String/Hash 等 value converter。
+`GROUPBY` 的结果名是 `label=value`，不按 key 逆转换；分组响应内的标签（包括 `__source__`）也保持上游原样。
+
 感谢[@yangxb2010000](https://github.com/yangxb2010000)对key转换功能的增强
 
 ### 当前支持value转换的数据结构和命令

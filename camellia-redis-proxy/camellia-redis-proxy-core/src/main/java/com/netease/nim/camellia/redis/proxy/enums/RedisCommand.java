@@ -351,6 +351,17 @@ public enum RedisCommand {
     FT_SUGDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     FT_SUGLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
 
+    TS_CREATE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_DEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_ALTER(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_ADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_INCRBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_DECRBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_RANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_REVRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_GET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    TS_INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+
     /**
      * Restrictive Support
      * only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
@@ -427,6 +438,13 @@ public enum RedisCommand {
     MSETEX(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.COMPLEX),
     JSON_MSET(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.COMPLEX),
 
+    TS_MADD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TS_CREATERULE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TS_DELETERULE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TS_NRANGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TS_NREVRANGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TS_READ(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.TIME_SERIES, Blocking.DYNAMIC, CommandKeyType.SIMPLE_SINGLE),
+
     /**
      * Partially Support-1
      * only support while no custom sharding
@@ -475,6 +493,12 @@ public enum RedisCommand {
     FT_SYNDUMP(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_SYNUPDATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
     FT_TAGVALS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+
+    TS_MRANGE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.None),
+    TS_MREVRANGE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.None),
+    TS_MGET(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.None),
+    TS_QUERYINDEX(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.None),
+    TS_QUERYLABELS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TIME_SERIES, Blocking.FALSE, CommandKeyType.None),
 
     /**
      * Partially Support-3
@@ -540,6 +564,8 @@ public enum RedisCommand {
             this.strRaw = "topk." + name().toLowerCase().substring(5);
         } else if (commandType == CommandType.TDIGEST) {
             this.strRaw = "tdigest." + name().toLowerCase().substring(8);
+        } else if (commandType == CommandType.TIME_SERIES) {
+            this.strRaw = "ts." + name().toLowerCase().substring(3);
         } else {
             this.strRaw = name().toLowerCase();
         }
@@ -619,6 +645,7 @@ public enum RedisCommand {
         CMS,
         TOPK,
         TDIGEST,
+        TIME_SERIES,
         ;
     }
 

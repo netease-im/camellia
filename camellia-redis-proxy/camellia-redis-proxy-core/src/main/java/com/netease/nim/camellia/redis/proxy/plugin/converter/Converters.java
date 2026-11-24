@@ -140,9 +140,12 @@ public class Converters {
                     break;
                 case SDIFFCARD:
                 case SUNIONCARD:
+                case TS_NRANGE:
+                case TS_NREVRANGE:
                     convertCountedKeys(redisCommand, commandContext, objects, 1, 2, 1, false, convert);
                     break;
                 case JSON_MSET:
+                case TS_MADD:
                     if (objects.length >= 4 && (objects.length - 1) % 3 == 0) {
                         for (int i = 1; i < objects.length; i += 3) {
                             objects[i] = convert(commandContext, redisCommand, objects[i], convert);
@@ -196,6 +199,8 @@ public class Converters {
                 case ZMOVE:
                 case BZMOVE:
                 case ZMOVEMEMBER:
+                case TS_CREATERULE:
+                case TS_DELETERULE:
                 case LCS:
                     if (command.getObjects().length >= 3) {
                         byte[] convertedKey1 = convert(commandContext, redisCommand, objects[1], convert);
@@ -379,7 +384,9 @@ public class Converters {
 
     private void keyConvertReply(RedisCommand redisCommand, CommandContext commandContext, Command command, Reply reply) {
         if (keyConverter == null) return;
-        if (redisCommand == RedisCommand.RANDOMKEY) {
+        if (redisCommand.getCommandType() == RedisCommand.CommandType.TIME_SERIES) {
+            timeSeriesKeyConvertReply(redisCommand, commandContext, command, reply);
+        } else if (redisCommand == RedisCommand.RANDOMKEY) {
             reverseConvertKey(redisCommand, commandContext, reply);
         } else if (redisCommand == RedisCommand.KEYS) {
             if (!(reply instanceof MultiBulkReply)) {
@@ -436,6 +443,60 @@ public class Converters {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private void timeSeriesKeyConvertReply(RedisCommand redisCommand, CommandContext context, Command command, Reply reply) {
+        if (!(reply instanceof MultiBulkReply)) {
+            return;
+        }
+        Reply[] replies = ((MultiBulkReply) reply).getReplies();
+        if (replies == null) {
+            return;
+        }
+        switch (redisCommand) {
+            case TS_QUERYINDEX:
+                reverseConvertKeyList(redisCommand, context, (MultiBulkReply) reply);
+                break;
+            case TS_MRANGE:
+            case TS_MREVRANGE:
+                byte[][] args = command.getObjects();
+                // GROUPBY results are named after label=value, not Redis keys.
+                if (args.length >= 4 && "GROUPBY".equalsIgnoreCase(Utils.bytesToString(args[args.length - 4]))
+                        && "REDUCE".equalsIgnoreCase(Utils.bytesToString(args[args.length - 2]))) {
+                    break;
+                }
+                reverseTimeSeriesEntryKeys(redisCommand, context, replies);
+                break;
+            case TS_MGET:
+                reverseTimeSeriesEntryKeys(redisCommand, context, replies);
+                break;
+            case TS_INFO:
+                for (int i = 0; i + 1 < replies.length; i += 2) {
+                    String name = replies[i].toString();
+                    if ("sourceKey".equalsIgnoreCase(name) || "keySelfName".equalsIgnoreCase(name)) {
+                        reverseConvertKey(redisCommand, context, replies[i + 1]);
+                    } else if ("rules".equalsIgnoreCase(name) && replies[i + 1] instanceof MultiBulkReply) {
+                        Reply[] rules = ((MultiBulkReply) replies[i + 1]).getReplies();
+                        if (rules != null) {
+                            reverseTimeSeriesEntryKeys(redisCommand, context, rules);
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void reverseTimeSeriesEntryKeys(RedisCommand redisCommand, CommandContext context, Reply[] entries) {
+        for (Reply entry : entries) {
+            if (entry instanceof MultiBulkReply) {
+                Reply[] values = ((MultiBulkReply) entry).getReplies();
+                if (values != null && values.length > 0) {
+                    reverseConvertKey(redisCommand, context, values[0]);
                 }
             }
         }

@@ -108,7 +108,16 @@ public class Command {
             return this.blocking;
         }
         //下面这些命令是否blocking取决于参数
-        if (redisCommand == RedisCommand.XREAD || redisCommand == RedisCommand.XREADGROUP) {
+        if (redisCommand == RedisCommand.TS_READ) {
+            // Skip the command name, key and timestamp. BLOCK 0 also waits.
+            byte[][] args = getObjects();
+            for (int i = 3; i < args.length; i++) {
+                if (RedisKeyword.BLOCK.name().equalsIgnoreCase(Utils.bytesToString(args[i]))) {
+                    this.blocking = true;
+                    break;
+                }
+            }
+        } else if (redisCommand == RedisCommand.XREAD || redisCommand == RedisCommand.XREADGROUP) {
             for (byte[] object : getObjects()) {
                 String string = new String(object, Utils.utf8Charset);
                 if (string.equalsIgnoreCase(RedisKeyword.BLOCK.name())) {

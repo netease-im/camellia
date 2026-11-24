@@ -48,9 +48,12 @@ public class KeyParser {
                     break;
                 case SDIFFCARD:
                 case SUNIONCARD:
+                case TS_NRANGE:
+                case TS_NREVRANGE:
                     countedKeys(objects, keys, 1, 2, 1, false);
                     break;
                 case JSON_MSET:
+                case TS_MADD:
                     if (objects.length >= 4 && (objects.length - 1) % 3 == 0) {
                         for (int i = 1; i < objects.length; i += 3) {
                             keys.add(objects[i]);
@@ -80,6 +83,8 @@ public class KeyParser {
                 case ZMOVE:
                 case BZMOVE:
                 case ZMOVEMEMBER:
+                case TS_CREATERULE:
+                case TS_DELETERULE:
                 case LCS:
                     if (command.getObjects().length >= 3) {
                         dynamicKey(command, keys, 1, 2);

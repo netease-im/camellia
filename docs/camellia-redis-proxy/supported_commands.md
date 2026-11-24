@@ -53,6 +53,8 @@ ARSET,ARMSET,ARINSERT,ARDEL,ARDELRANGE,ARRING,ARSEEK,ARGET,ARMGET,ARGETRANGE,
 ARLEN,ARCOUNT,ARINFO,ARNEXT,ARLASTITEMS,ARSCAN,ARGREP,AROP,
 ##VectorSet
 VADD,VREM,VSIM,VDIM,VCARD,VEMB,VLINKS,VINFO,VSETATTR,VGETATTR,VRANDMEMBER,VISMEMBER,VRANGE,
+##TimeSeries
+TS.CREATE,TS.DEL,TS.ALTER,TS.ADD,TS.INCRBY,TS.DECRBY,TS.RANGE,TS.REVRANGE,TS.GET,TS.INFO,
 ##RedisSearchSuggestion
 FT.SUGADD,FT.SUGGET,FT.SUGDEL,FT.SUGLEN,
 ##CountMinSketch
@@ -106,6 +108,8 @@ JSON.MSET,
 CMS.MERGE,
 ##TDigest
 TDIGEST.MERGE,
+##TimeSeries
+TS.MADD,TS.CREATERULE,TS.DELETERULE,TS.NRANGE,TS.NREVRANGE,TS.READ,
 ##FUNCTION
 FUNCTION,FCALL,FCALL_RO,
 ```
@@ -133,6 +137,8 @@ FT.LIST,FT.AGGREGATE,FT.ALIASADD,FT.ALIASDEL,FT.ALIASUPDATE,FT.ALTER,FT.CONFIG,
 FT.CREATE,FT.CURSOR,FT.DICTADD,FT.DICTDEL,FT.DICTDUMP,FT.DROPINDEX,FT.EXPLAIN,
 FT.EXPLAINCLI,FT.INFO,FT.PROFILE,FT.SEARCH,FT.SPELLCHECK,FT.SYNDUMP,
 FT.SYNUPDATE,FT.TAGVALS,FT.ALIASLIST,FT.HYBRID,
+##TimeSeries
+TS.MRANGE,TS.MREVRANGE,TS.MGET,TS.QUERYINDEX,TS.QUERYLABELS,
 ```
 
 `FT.SUG*` commands operate on a single dictionary key and support custom sharding and key conversion.
@@ -173,3 +179,7 @@ INFO,
 #not support if the upstream resource is kv type
 DBSIZE,
 ``` 
+
+TimeSeries commands require the corresponding upstream module. `TS.NRANGE`/`TS.NREVRANGE`, `TS.READ` and `TS.QUERYLABELS` require Redis TimeSeries 8.10+.
+Explicit multi-key commands require the same upstream resource or cluster slot; label queries require a single upstream without custom sharding.
+`TS.READ` is non-blocking unless `BLOCK` is specified. `BLOCK 0` waits indefinitely and uses a dedicated blocking connection.
