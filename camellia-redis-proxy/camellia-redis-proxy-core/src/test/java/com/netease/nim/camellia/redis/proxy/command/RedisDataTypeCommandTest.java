@@ -84,6 +84,33 @@ public class RedisDataTypeCommandTest {
         }
     }
 
+    @Test
+    public void moveCommandsUseOnlySourceAndDestinationAsKeys() {
+        String[][] requests = {
+                {"LMOVEM", "source", "destination", "LEFT", "RIGHT", "COUNT", "2", "BULK"},
+                {"BLMOVEM", "source", "destination", "RIGHT", "LEFT", "0.5", "EXACTLY", "2", "OBO"},
+                {"ZMOVE", "source", "destination", "BYSCORE", "-inf", "+inf", "COUNT", "2"},
+                {"BZMOVE", "source", "destination", "MAX", "0.5", "COUNT", "2"},
+                {"ZMOVEMEMBER", "source", "destination", "MEMBERS", "2", "NX", "MEMBERS", "XX"}
+        };
+        for (String[] args : requests) {
+            Command command = command(args);
+            assertKeys(command, "source", "destination");
+            assertRestricted(command, RedisCommand.Type.WRITE);
+        }
+    }
+
+    @Test
+    public void blockingMovesRemainBlockingWithZeroOrFiniteTimeout() {
+        for (String timeout : new String[]{"0", "0.5"}) {
+            Assert.assertTrue(command("BLMOVEM", "s", "d", "LEFT", "RIGHT", timeout).isBlocking());
+            Assert.assertTrue(command("BZMOVE", "s", "d", "MIN", timeout).isBlocking());
+        }
+        Assert.assertFalse(command("LMOVEM", "s", "d", "LEFT", "RIGHT").isBlocking());
+        Assert.assertFalse(command("ZMOVE", "s", "d", "MIN").isBlocking());
+        Assert.assertFalse(command("ZMOVEMEMBER", "s", "d", "MEMBERS", "1", "a").isBlocking());
+    }
+
     private static void assertRestricted(Command command, RedisCommand.Type type) {
         Assert.assertEquals(RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT, command.getRedisCommand().getSupportType());
         Assert.assertEquals(type, command.getRedisCommand().getType());

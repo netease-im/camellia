@@ -75,6 +75,11 @@ public class KeyParser {
                 case LMOVE:
                 case ZRANGESTORE:
                 case BLMOVE:
+                case LMOVEM:
+                case BLMOVEM:
+                case ZMOVE:
+                case BZMOVE:
+                case ZMOVEMEMBER:
                 case LCS:
                     if (command.getObjects().length >= 3) {
                         dynamicKey(command, keys, 1, 2);

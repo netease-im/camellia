@@ -55,7 +55,12 @@ public class RedisClusterClientTest {
                 {"CMS.MERGE", "{a}:dest", "1", "{b}:source"},
                 {"TDIGEST.MERGE", "{a}:dest", "1", "{b}:source"},
                 {"SDIFFCARD", "2", "{a}:1", "{b}:2"},
-                {"SUNIONCARD", "2", "{a}:1", "{b}:2"}
+                {"SUNIONCARD", "2", "{a}:1", "{b}:2"},
+                {"LMOVEM", "{a}:source", "{b}:dest", "LEFT", "RIGHT", "COUNT", "2", "BULK"},
+                {"BLMOVEM", "{a}:source", "{b}:dest", "LEFT", "RIGHT", "0"},
+                {"ZMOVE", "{a}:source", "{b}:dest", "MIN"},
+                {"BZMOVE", "{a}:source", "{b}:dest", "MIN", "0"},
+                {"ZMOVEMEMBER", "{a}:source", "{b}:dest", "MEMBERS", "1", "member"}
         };
         for (String[] args : requests) {
             Command command = new Command(Arrays.stream(args).map(Utils::stringToBytes).toArray(byte[][]::new));

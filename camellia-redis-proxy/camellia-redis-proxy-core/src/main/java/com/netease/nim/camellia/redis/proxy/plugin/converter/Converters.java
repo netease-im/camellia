@@ -191,6 +191,11 @@ public class Converters {
                 case LMOVE:
                 case ZRANGESTORE:
                 case BLMOVE:
+                case LMOVEM:
+                case BLMOVEM:
+                case ZMOVE:
+                case BZMOVE:
+                case ZMOVEMEMBER:
                 case LCS:
                     if (command.getObjects().length >= 3) {
                         byte[] convertedKey1 = convert(commandContext, redisCommand, objects[1], convert);
@@ -486,10 +491,14 @@ public class Converters {
         }
     }
 
-    // Options precede FIELDS/MEMBERS; stop at the marker so data bearing the same
-    // name is never interpreted as another option.
+    // Stop at the first FIELDS/MEMBERS marker so data bearing the same name
+    // is never interpreted as another option.
     private static int argumentSection(byte[][] objects, String marker) {
-        for (int i = 2; i < objects.length; i++) {
+        return argumentSection(objects, marker, 2);
+    }
+
+    private static int argumentSection(byte[][] objects, String marker, int start) {
+        for (int i = start; i < objects.length; i++) {
             if (marker.equalsIgnoreCase(Utils.bytesToString(objects[i]))) {
                 return i;
             }
@@ -718,6 +727,20 @@ public class Converters {
         if (listConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case LMOVEM:
+            case BLMOVEM:
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                    if (replies != null) {
+                        for (Reply element : replies) {
+                            if (element instanceof BulkReply && ((BulkReply) element).getRaw() != null) {
+                                byte[] value = listConverter.valueReverseConvert(commandContext, objects[1], ((BulkReply) element).getRaw());
+                                ((BulkReply) element).updateRaw(value);
+                            }
+                        }
+                    }
+                }
+                break;
             case RPOP:
             case LPOP: {
                 if (reply instanceof MultiBulkReply) {
@@ -933,6 +956,15 @@ public class Converters {
         if (zSetConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case ZMOVEMEMBER:
+                int section = argumentSection(objects, "MEMBERS", 3);
+                if (section >= 0) {
+                    int count = countedArgumentCount(objects, section + 1, section + 2, 1);
+                    for (int i = section + 2; i < section + 2 + count; i++) {
+                        objects[i] = zSetConverter.valueConvert(commandContext, objects[1], objects[i]);
+                    }
+                }
+                break;
             case ZADD:
                 if (objects.length == 4) {
                     byte[] bytes = zSetConverter.valueConvert(commandContext, objects[1], objects[3]);
@@ -979,6 +1011,27 @@ public class Converters {
         if (zSetConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case ZMOVE:
+            case BZMOVE:
+            case ZMOVEMEMBER:
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                    if (replies != null) {
+                        for (Reply entry : replies) {
+                            if (entry instanceof MultiBulkReply) {
+                                Reply[] pair = ((MultiBulkReply) entry).getReplies();
+                                if (pair != null && pair.length == 2 && pair[0] instanceof BulkReply) {
+                                    BulkReply member = (BulkReply) pair[0];
+                                    if (member.getRaw() != null) {
+                                        byte[] value = zSetConverter.valueReverseConvert(commandContext, objects[1], member.getRaw());
+                                        member.updateRaw(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
             case BZPOPMAX:
             case BZPOPMIN:
                 if (reply instanceof MultiBulkReply) {
