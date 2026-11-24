@@ -157,14 +157,7 @@ public class KeyParser {
                     break;
                 case XREAD:
                 case XREADGROUP:
-                    int index = -1;
-                    for (int i=1; i<objects.length; i++) {
-                        String string = new String(objects[i], Utils.utf8Charset);
-                        if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
-                            index = i;
-                            break;
-                        }
-                    }
+                    int index = streamOptionIndex(redisCommand, objects, "STREAMS");
                     if (index == -1) {
                         break;
                     }
@@ -218,6 +211,29 @@ public class KeyParser {
         for (int i = 0; i < count; i++) {
             keys.add(objects[firstKey + i * step]);
         }
+    }
+
+    /** Locate Stream options without interpreting group/consumer names or keys as options. */
+    public static int streamOptionIndex(RedisCommand command, byte[][] objects, String target) {
+        for (int i = 1; i < objects.length; i++) {
+            String option = Utils.bytesToString(objects[i]);
+            if (target.equalsIgnoreCase(option)) {
+                return i;
+            }
+            if ("STREAMS".equalsIgnoreCase(option)) {
+                return -1;
+            }
+            if (command == RedisCommand.XREADGROUP && "GROUP".equalsIgnoreCase(option)) {
+                i += 2;
+            } else if ("COUNT".equalsIgnoreCase(option) || "BLOCK".equalsIgnoreCase(option)
+                    || "MAXCOUNT".equalsIgnoreCase(option) || "MAXSIZE".equalsIgnoreCase(option)
+                    || (command == RedisCommand.XREADGROUP && "CLAIM".equalsIgnoreCase(option))) {
+                i++;
+            } else if (!(command == RedisCommand.XREADGROUP && "NOACK".equalsIgnoreCase(option))) {
+                return -1;
+            }
+        }
+        return -1;
     }
 
     /** Explicit STORE destinations only; SORT BY/GET patterns are evaluated inside Redis. */

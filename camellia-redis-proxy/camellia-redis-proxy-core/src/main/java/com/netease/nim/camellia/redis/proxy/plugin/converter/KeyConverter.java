@@ -29,6 +29,14 @@ public interface KeyConverter {
     }
 
     /**
+     * Whether TimeSeries label queries can safely search the entire upstream keyspace.
+     * Namespace converters must reject these queries while isolation is active.
+     */
+    default boolean isTimeSeriesLabelQuerySupported(CommandContext commandContext) {
+        return false;
+    }
+
+    /**
      * key反向转换
      * @param commandContext 上下文
      * @param redisCommand 所属命令

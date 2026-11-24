@@ -19,11 +19,14 @@
 * 对于 `FT.SUGADD/SUGGET/SUGDEL/SUGLEN`，只转换词典 key，建议词、查询前缀、score 和 payload 保持原样
 * `FT.ALIASLIST/FT.HYBRID` 的索引名不属于数据 key，不调用 KeyConverter；查询参数和响应原样透传
 
-`PUBSUB CHANNELS` 未指定 pattern 时，会补充经过 KeyConverter 转换的 `*`，避免查询整个后端的频道列表；显式 pattern 也会转换，返回的频道名会逆转换。和 `KEYS/SCAN` 一样，自定义 converter 需要支持 pattern 转换。
+`PUBSUB CHANNELS/SHARDCHANNELS` 未指定 pattern 时，会补充经过 KeyConverter 转换的 `*`，避免查询整个后端的频道列表；显式 pattern 也会转换，返回的频道名会逆转换；`NUMSUB/SHARDNUMSUB` 的请求频道和返回频道也会转换，订阅数保持原样。和 `KEYS/SCAN` 一样，自定义 converter 需要支持 pattern 转换。
 
 `RANDOMKEY` 无法按命名空间筛选，配置 key converter 时默认在请求阶段拒绝，返回 `ERR RANDOMKEY is not supported by the active key converter`，不会转发到后端。
 `DefaultMultiTenantNamespaceKeyConverter` 在当前租户转换关闭、bid/bgroup 缺失或 bid 不大于 0 时允许透传。未配置 key converter 时行为保持不变。
 自定义 KeyConverter 只有在确认可以安全地从整个后端数据库采样时，才应重写 `isRandomKeySupported(CommandContext)` 返回 `true`；启用租户隔离时必须保持 `false`。
+
+**TimeSeries 标签查询的兼容性变化：** 配置 key converter 时，`TS.QUERYINDEX/QUERYLABELS/MGET/MRANGE/MREVRANGE` 默认在请求阶段拒绝，返回 `ERR TimeSeries label queries are not supported by the active key converter`。这些命令按标签搜索整个后端，无法通用地按 key 命名空间限制，分组聚合也无法在返回阶段剔除其他租户的数据。
+未配置 key converter 时保持原行为；内置 namespace converter 在租户转换关闭或租户上下文无效时允许透传。自定义 converter 只有在确认全库标签查询安全（例如后端按租户独立部署）时，才可重写 `isTimeSeriesLabelQuerySupported(CommandContext)` 返回 `true`。
 
 TimeSeries 的单 key、多 key（含 `TS.MADD`、`TS.NRANGE/NREVRANGE`）和规则源/目标 key 均支持转换。
 `TS.QUERYINDEX`、`TS.MGET`、未分组的 `TS.MRANGE/MREVRANGE` 返回的 key，以及 `TS.INFO` 的 `sourceKey`、`rules` 和 `keySelfName` 会逆转换。
@@ -60,7 +63,7 @@ ZADD,ZINCRBY,ZRANK,ZSCORE,ZMSCORE,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZSCAN,
 ZPOPMAX,ZPOPMIN,BZPOPMAX,BZPOPMIN,ZRANDMEMBER,
-ZMOVE,BZMOVE,ZMOVEMEMBER,ZMPOP,BZMPOP,
+ZMOVE,BZMOVE,ZMOVEMEMBER,ZMPOP,BZMPOP,ZUNION,ZINTER,ZDIFF,
 ```
 
 `LMOVEM`/`BLMOVEM` 和 `ZMOVE`/`BZMOVE`/`ZMOVEMEMBER` 会转换源 key 和目标 key，返回的元素/member 使用源 key 进行逆转换，score 保持原样。
@@ -72,6 +75,20 @@ ZMOVE,BZMOVE,ZMOVEMEMBER,ZMPOP,BZMPOP,
 `LMOVE/BLMOVE/RPOPLPUSH/BRPOPLPUSH` 按源 key 逆转换返回元素，要求源/目标编码兼容。
 `LMPOP/BLMPOP/ZMPOP/BZMPOP` 按响应中实际弹出的 key 逆转换嵌套元素/member，再逆转换该 key；ZSet score 保持原样。
 缺值和超时的 nil 响应直接保留，不调用 value converter，避免修改共享的 nil 对象。
+
+`ZUNION/ZINTER/ZDIFF` 按第一个源 key 逆转换 member，score 保持原样；参与的 ZSet 必须使用兼容的成员编码。
+`XREAD/XREADGROUP` 返回的嵌套 key 会逆转换，消息 ID、field/value、group 和 consumer 保持原样，不调用 Hash/String value converter。
+
+### 异常处理的兼容性变化
+
+converter 抛出异常时，不再记录异常后继续透传。请求转换失败返回 `ERR request conversion failed`，不会转发尚未转换或部分转换的请求；响应转换失败返回 `ERR reply conversion failed`，不会将原始或部分解码的数据返回客户端，Pub/Sub 异步响应同样适用。
+如果自定义 converter 曾用抛异常表示“保持原样”，需要改为返回输入值。错误回复不携带异常详情；响应转换失败发生在 Redis 执行之后，写入可能已经完成，不应据此盲目重试写命令。
+空订阅确认中的 null 频道保持原样，不调用 KeyConverter。外部写入的、已带租户前缀但 hashtag 未带前缀的 key，逆转换会保留原 hashtag，包括短 hashtag。
+
+### 匹配和范围语义的限制
+
+`HSCAN/SSCAN/ZSCAN` 的 `MATCH` 模式原样透传，不调用 field/member converter；启用 field/member 编码后，不保证模式匹配仍具有原始语义。
+ZSet 的字典序范围参数同样原样透传，任意成员加密或压缩无法保证原始字典序。使用这些选项前需确认编码保留匹配/顺序语义，否则不应使用；proxy 不会自动解码整个数据结构后在本地执行查询。
 
 ### 如何使用
 你需要实现相关的Converter接口，包括：

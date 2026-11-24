@@ -7,6 +7,9 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginResponse;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyRequest;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
+import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.junit.Assert;
@@ -93,6 +96,8 @@ public class NamespaceCommandConvertersTest {
                     tenantCommand(991L, "namespace-test", "RANDOMKEY"), null)).isPass());
             Assert.assertFalse(plugin(keyConverter).executeRequest(new ProxyRequest(0,
                     tenantCommand(992L, "namespace-test", "RANDOMKEY"), null)).isPass());
+            Assert.assertTrue(plugin(keyConverter).executeRequest(new ProxyRequest(0,
+                    tenantCommand(991L, "namespace-test", "TS.QUERYINDEX", "app=shared"), null)).isPass());
             Command command = tenantCommand(991L, "namespace-test", "PUBSUB", "CHANNELS");
             converters(keyConverter).convertRequest(command);
             arguments(command, "PUBSUB", "CHANNELS", "*");
@@ -116,6 +121,90 @@ public class NamespaceCommandConvertersTest {
             Command command = tenantCommand(1L, "default", args);
             Assert.assertTrue(plugin.executeRequest(new ProxyRequest(0, command, null)).isPass());
             arguments(command, args);
+        }
+    }
+
+    @Test
+    public void timeSeriesLabelQueriesAreRejectedWhileExplicitKeysStillWork() throws Exception {
+        ConverterProxyPlugin plugin = plugin(new DefaultMultiTenantNamespaceKeyConverter());
+        for (String name : new String[]{"TS.QUERYINDEX", "TS.QUERYLABELS", "TS.MGET", "TS.MRANGE", "TS.MREVRANGE"}) {
+            Command command = tenantCommand(1L, "default", name, "FILTER", "app=shared");
+            ProxyPluginResponse response = plugin.executeRequest(new ProxyRequest(0, command, null));
+            Assert.assertFalse(name, response.isPass());
+            Assert.assertEquals("ERR TimeSeries label queries are not supported by the active key converter", response.getReply().toString());
+            Assert.assertTrue(plugin(null).executeRequest(new ProxyRequest(0, command, null)).isPass());
+        }
+        Command explicit = tenantCommand(1L, "default", "TS.GET", "series");
+        Assert.assertTrue(plugin.executeRequest(new ProxyRequest(0, explicit, null)).isPass());
+        arguments(explicit, "TS.GET", "1|default|series");
+    }
+
+    @Test
+    public void customTimeSeriesLabelQueriesRequireExplicitOptIn() throws Exception {
+        Assert.assertFalse(plugin(new IdentityKeyConverter()).executeRequest(
+                new ProxyRequest(0, command("TS.QUERYINDEX", "app=shared"), null)).isPass());
+        KeyConverter keyConverter = new IdentityKeyConverter() {
+            @Override
+            public boolean isTimeSeriesLabelQuerySupported(CommandContext context) {
+                return true;
+            }
+        };
+        Assert.assertTrue(plugin(keyConverter).executeRequest(
+                new ProxyRequest(0, command("TS.QUERYINDEX", "app=shared"), null)).isPass());
+        Assert.assertTrue(plugin(new DefaultMultiTenantNamespaceKeyConverter()).executeRequest(
+                new ProxyRequest(0, command("TS.QUERYINDEX", "app=shared"), null)).isPass());
+    }
+
+    @Test
+    public void shardChannelDiscoveryConvertsPatternsNamesAndCounts() {
+        Converters converters = converters(new DefaultMultiTenantNamespaceKeyConverter());
+        Command channels = tenantCommand(1L, "default", "PUBSUB", "SHARDCHANNELS");
+        converters.convertRequest(channels);
+        arguments(channels, "PUBSUB", "SHARDCHANNELS", "1|default|*");
+        BulkReply channel = bulk("1|default|own");
+        converters.convertReply(channels, new MultiBulkReply(new Reply[]{channel}));
+        Assert.assertEquals("own", channel.toString());
+        Command counts = tenantCommand(1L, "default", "PUBSUB", "SHARDNUMSUB", "own");
+        converters.convertRequest(counts);
+        arguments(counts, "PUBSUB", "SHARDNUMSUB", "1|default|own");
+        channel = bulk("1|default|own");
+        IntegerReply count = new IntegerReply(1L);
+        MultiBulkReply reply = new MultiBulkReply(new Reply[]{channel, count});
+        converters.convertReply(counts, reply);
+        Assert.assertEquals("own", channel.toString());
+        Assert.assertSame(count, reply.getReplies()[1]);
+    }
+
+    @Test
+    public void emptyUnsubscribeChannelsNeverReachKeyConverter() {
+        int[] calls = {0};
+        KeyConverter converter = new IdentityKeyConverter() {
+            @Override
+            public byte[] reverseConvert(CommandContext context, RedisCommand command, byte[] key) {
+                calls[0]++;
+                return Utils.stringToBytes("must-not-replace-nil");
+            }
+        };
+        try {
+            for (RedisCommand command : new RedisCommand[]{RedisCommand.UNSUBSCRIBE, RedisCommand.PUNSUBSCRIBE, RedisCommand.SUNSUBSCRIBE}) {
+                MultiBulkReply reply = new MultiBulkReply(new Reply[]{bulk(command.name().toLowerCase()), BulkReply.NIL_REPLY, new IntegerReply(0L)});
+                PubSubUtils.checkKeyConverter(command, new CommandContext(null, null, null), converter, reply);
+                Assert.assertNull(BulkReply.NIL_REPLY.getRaw());
+            }
+            Assert.assertEquals(0, calls[0]);
+        } finally {
+            BulkReply.NIL_REPLY.updateRaw(null);
+        }
+    }
+
+    @Test
+    public void shortExternalHashtagIsPreservedAndGeneratedKeysStillRoundTrip() {
+        KeyConverter converter = new DefaultMultiTenantNamespaceKeyConverter();
+        CommandContext context = new CommandContext(1L, "default", null);
+        Assert.assertEquals("{1}", Utils.bytesToString(converter.reverseConvert(context, RedisCommand.KEYS, Utils.stringToBytes("1|default|{1}"))));
+        for (String key : new String[]{"", "plain", "{1}", "x:{a}:b", "{}", "{{a}", "{1|default|x}"}) {
+            Assert.assertEquals(key, Utils.bytesToString(converter.reverseConvert(context, RedisCommand.GET,
+                    converter.convert(context, RedisCommand.GET, Utils.stringToBytes(key)))));
         }
     }
 

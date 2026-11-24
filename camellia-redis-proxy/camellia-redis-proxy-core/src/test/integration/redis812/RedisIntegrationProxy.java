@@ -24,9 +24,14 @@ public class RedisIntegrationProxy {
                     config.put("1.default.key.converter.disable", "true");
                 }
             }
-            if (args[2].equals("values")) {
+            if (args[2].equals("failure-key")) {
+                config.put("converter.key.className", FailingKey.class.getName());
+            }
+            if (args[2].equals("values") || args[2].equals("failure-value") || args[2].equals("failure-reply")) {
+                Class<?> valueClass = args[2].equals("failure-value") ? FailingValue.class
+                        : args[2].equals("failure-reply") ? FailingReply.class : PrefixValue.class;
                 for (String type : new String[]{"string", "hash", "set", "list", "zset"}) {
-                    config.put("converter." + type + ".className", PrefixValue.class.getName());
+                    config.put("converter." + type + ".className", valueClass.getName());
                 }
             }
         }
@@ -61,6 +66,11 @@ public class RedisIntegrationProxy {
         }
 
         @Override
+        public boolean isTimeSeriesLabelQuerySupported(CommandContext context) {
+            return super.isTimeSeriesLabelQuerySupported(tenant);
+        }
+
+        @Override
         public byte[] convert(CommandContext context, RedisCommand command, byte[] key) {
             return super.convert(tenant, command, key);
         }
@@ -72,12 +82,39 @@ public class RedisIntegrationProxy {
     }
 
     public static class PrefixKey implements KeyConverter {
+        // These tests own the entire backend; all TimeSeries keys use the same encoding.
+        @Override
+        public boolean isTimeSeriesLabelQuerySupported(CommandContext context) {
+            return true;
+        }
+
         public byte[] convert(CommandContext context, RedisCommand command, byte[] key) {
             return encode("e2e:", key);
         }
 
         public byte[] reverseConvert(CommandContext context, RedisCommand command, byte[] key) {
             return decode("e2e:", key);
+        }
+    }
+
+    public static class FailingKey extends PrefixKey {
+        @Override
+        public byte[] convert(CommandContext context, RedisCommand command, byte[] key) {
+            throw new IllegalStateException("private diagnostic");
+        }
+    }
+
+    public static class FailingValue extends PrefixValue {
+        @Override
+        public byte[] valueConvert(CommandContext context, byte[] key, byte[] value) {
+            throw new IllegalStateException("private diagnostic");
+        }
+    }
+
+    public static class FailingReply extends PrefixValue {
+        @Override
+        public byte[] valueReverseConvert(CommandContext context, byte[] key, byte[] value) {
+            throw new IllegalStateException("private diagnostic");
         }
     }
 

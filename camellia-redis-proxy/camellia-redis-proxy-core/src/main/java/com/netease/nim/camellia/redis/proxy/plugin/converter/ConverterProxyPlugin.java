@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 /**
  * Created by caojiajun on 2022/9/14
@@ -67,33 +68,65 @@ public class ConverterProxyPlugin implements ProxyPlugin {
 
     @Override
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
-        Command command = request.getCommand();
-        if (command != null) {
-            KeyConverter keyConverter = converters.getKeyConverter();
-            if (command.getRedisCommand() == RedisCommand.RANDOMKEY && keyConverter != null
-                    && !keyConverter.isRandomKeySupported(command.getCommandContext())) {
-                return new ProxyPluginResponse(false, "ERR RANDOMKEY is not supported by the active key converter");
+        try {
+            Command command = request.getCommand();
+            if (command != null) {
+                KeyConverter keyConverter = converters.getKeyConverter();
+                if (command.getRedisCommand() == RedisCommand.RANDOMKEY && keyConverter != null
+                        && !keyConverter.isRandomKeySupported(command.getCommandContext())) {
+                    return new ProxyPluginResponse(false, "ERR RANDOMKEY is not supported by the active key converter");
+                }
+                if (keyConverter != null && isTimeSeriesLabelQuery(command.getRedisCommand())
+                        && !keyConverter.isTimeSeriesLabelQuerySupported(command.getCommandContext())) {
+                    return new ProxyPluginResponse(false, "ERR TimeSeries label queries are not supported by the active key converter");
+                }
+                converters.convertRequest(command);
             }
-            converters.convertRequest(command);
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ConverterProxyPlugin.class, "request conversion failed", e);
+            return new ProxyPluginResponse(false, "ERR request conversion failed");
         }
         return ProxyPluginResponse.SUCCESS;
     }
 
+    private static boolean isTimeSeriesLabelQuery(RedisCommand command) {
+        if (command == null) {
+            return false;
+        }
+        switch (command) {
+            case TS_QUERYINDEX:
+            case TS_QUERYLABELS:
+            case TS_MGET:
+            case TS_MRANGE:
+            case TS_MREVRANGE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     @Override
     public ProxyPluginResponse executeReply(ProxyReply reply) {
-        if (reply.isFromPlugin()) return ProxyPluginResponse.SUCCESS;
-        Command command = reply.getCommand();
-        if (command != null) {
-            converters.convertReply(command, reply.getReply());
-        } else {
-            //如果是subscribe的响应，不是[请求-响应]的模式，则没有command实体
-            RedisCommand redisCommand = reply.getRedisCommand();
-            CommandContext commandContext = reply.getCommandContext();
-            if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
-                    || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
-                    || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
-                PubSubUtils.checkKeyConverter(redisCommand, commandContext, converters.getKeyConverter(), reply.getReply());
+        if (reply.isFromPlugin()) {
+            return ProxyPluginResponse.SUCCESS;
+        }
+        try {
+            Command command = reply.getCommand();
+            if (command != null) {
+                converters.convertReply(command, reply.getReply());
+            } else {
+                //如果是subscribe的响应，不是[请求-响应]的模式，则没有command实体
+                RedisCommand redisCommand = reply.getRedisCommand();
+                CommandContext commandContext = reply.getCommandContext();
+                if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
+                        || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+                        || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
+                    PubSubUtils.checkKeyConverter(redisCommand, commandContext, converters.getKeyConverter(), reply.getReply());
+                }
             }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ConverterProxyPlugin.class, "reply conversion failed", e);
+            return new ProxyPluginResponse(false, "ERR reply conversion failed");
         }
         return ProxyPluginResponse.SUCCESS;
     }

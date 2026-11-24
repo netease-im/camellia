@@ -16,7 +16,13 @@
 * Documented converter compatibility requirements: moves and STORE require compatible encodings, Hash increments require numeric stored values, and HSTRLEN returns the encoded storage length
 * Clarified that `SORT/SORT_RO` support conversion of the source key and, where applicable, the STORE destination, but do not support external keys referenced by BY/GET patterns; `BY nosort` and `GET #` are supported, and sorting does not invoke element value converters
 
+### Compatibility Changes
+* Converter exceptions now reject requests/replies instead of passing data through: request failures return `ERR request conversion failed` without forwarding, and reply failures return `ERR reply conversion failed`; custom converters must return their input to indicate no change
+* Key converters reject TimeSeries label queries `TS.QUERYINDEX/QUERYLABELS/MGET/MRANGE/MREVRANGE` by default because they cannot be isolated by key namespace; behavior is preserved without a key converter or with built-in tenant conversion disabled, and custom converters can explicitly opt in via `isTimeSeriesLabelQuerySupported`
+* `XREAD/XREADGROUP` and sharded Pub/Sub return client-facing key/channel names, and `ZUNION/ZINTER/ZDIFF` return decoded members; ZSet inputs require compatible member encodings
+
 ### Fixes
+* Added `SHARDCHANNELS/SHARDNUMSUB` channel conversion; fixed null unsubscribe channels and short namespace hashtags; decoded Stream reply keys and parsed group/consumer names and blocking options correctly; added ZSet algebra member decoding and documented encoded SCAN MATCH and lexicographic-range limitations
 * Fixed discovery isolation with namespace converters: `PUBSUB CHANNELS` without a pattern now supplies a converted `*`; key converters reject `RANDOMKEY` by default because it cannot be scoped to a namespace, while the built-in converter allows it when tenant conversion is disabled and custom converters can explicitly opt in via `isRandomKeySupported`
 * Fixed nil values reaching converters for `LPOP/RPOP/LINDEX/SPOP/SRANDMEMBER/ZRANDMEMBER`, which could mutate the shared nil reply, and null-array access on legacy `BZPOPMIN/MAX` timeouts
 * Added comparison-value conversion for `SET IFEQ/IFNE`, preserving expiry arguments and `IFDEQ/IFDNE` digests
@@ -27,7 +33,7 @@
 * Fixed `HRANDFIELD WITHVALUES` using the field decoder for values and mishandling nil replies, and `HSCAN NOVALUES` parsing field-only arrays as field/value pairs
 * Fixed missing old-value decoding for `SET ... GET` and accidental option conversion for `ZRANK/ZREVRANK WITHSCORE`
 * Fixed missing destination key conversion for `SORT STORE` and `GEORADIUS/GEORADIUSBYMEMBER STORE/STOREDIST`; corrected their write-command classification and included source/destination keys in shard-resource and cluster-slot checks
-* Added regression tests for legacy converter issues and STORE routing: all 80 related unit tests and 20 real Redis standalone/cluster scenarios passed
+* Added regression tests for legacy converter issues and STORE routing: all 97 related unit tests and 30 real Redis standalone/cluster scenarios passed
 
 
 # 1.4.3 (2026/10/22)

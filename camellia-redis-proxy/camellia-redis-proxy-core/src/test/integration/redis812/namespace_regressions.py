@@ -51,6 +51,45 @@ def run(env):
     env.check("Disabled tenant converter preserves unscoped discovery", lambda: unscoped(disabled))
     env.check("No key converter preserves original behavior", lambda: unscoped(plain))
 
+    def shard_channels():
+        foreign_shard = env.client(port)
+        own_shard = env.client(port)
+        foreign_shard.cmd("SSUBSCRIBE", "2|other|private-shard")
+        own_shard.cmd("SSUBSCRIBE", "1|default|own-shard")
+        equal(active.cmd("PUBSUB", "SHARDCHANNELS"), [b"own-shard"])
+        equal(active.cmd("PUBSUB", "SHARDCHANNELS", "own-*"), [b"own-shard"])
+        equal(active.cmd("PUBSUB", "SHARDNUMSUB", "own-shard"), [b"own-shard", 1])
+        equal(sorted(disabled.cmd("PUBSUB", "SHARDCHANNELS")), [b"1|default|own-shard", b"2|other|private-shard"])
+
+    def empty_unsubscribe():
+        client = env.client(env.proxy(route, "namespace"))
+        for name in ["UNSUBSCRIBE", "PUNSUBSCRIBE", "SUNSUBSCRIBE"]:
+            equal(client.cmd(name), [name.lower().encode(), None, 0])
+        equal(client.cmd("GET", "missing"), None)
+
+    def short_hashtag():
+        direct.cmd("SET", "1|default|{1}", "external-value")
+        equal(active.cmd("KEYS", "*"), [b"{1}"])
+
+    env.check("Shard channel discovery isolates tenants and decodes names", shard_channels)
+    env.check("Empty unsubscribe preserves null channels and shared nil", empty_unsubscribe)
+    env.check("Short externally written hashtag does not fail decoding", short_hashtag)
+
+    if env.args.timeseries_module:
+        def label_queries():
+            direct.cmd("TS.ADD", "2|other|private-series", 1, 42, "LABELS", "app", "shared")
+            active.cmd("TS.ADD", "own-series", 1, 7, "LABELS", "app", "shared")
+            equal(active.cmd("TS.GET", "own-series"), [1, b"7"])
+            for args in [("TS.QUERYINDEX", "app=shared"), ("TS.QUERYLABELS", "LABELS", "FILTER", "app=shared"),
+                         ("TS.MGET", "FILTER", "app=shared"), ("TS.MRANGE", "-", "+", "FILTER", "app=shared"),
+                         ("TS.MREVRANGE", "+", "-", "FILTER", "app=shared")]:
+                error(active, "TimeSeries label queries are not supported", *args)
+            equal(sorted(disabled.cmd("TS.QUERYINDEX", "app=shared")), [b"1|default|own-series", b"2|other|private-series"])
+            equal(sorted(plain.cmd("TS.QUERYINDEX", "app=shared")), [b"1|default|own-series", b"2|other|private-series"])
+
+        env.check("TimeSeries label queries reject active namespaces and preserve disabled behavior", label_queries)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
@@ -58,8 +97,9 @@ if __name__ == "__main__":
     parser.add_argument("--classpath-file", required=True)
     parser.add_argument("--java-home", required=True)
     parser.add_argument("--report", default="/tmp/camellia-namespace-regressions.json")
+    parser.add_argument("--timeseries-module", help="Optional RedisTimeSeries module for cross-tenant label-query checks")
     args = parser.parse_args()
-    args.module = []
+    args.module = [args.timeseries_module] if args.timeseries_module else []
     env = Environment(args)
     try:
         run(env)

@@ -293,14 +293,7 @@ public class Converters {
                     break;
                 case XREAD:
                 case XREADGROUP:
-                    int index = -1;
-                    for (int i = 1; i < objects.length; i++) {
-                        String string = new String(objects[i], Utils.utf8Charset);
-                        if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
-                            index = i;
-                            break;
-                        }
-                    }
+                    int index = KeyParser.streamOptionIndex(redisCommand, objects, "STREAMS");
                     if (index == -1) {
                         break;
                     }
@@ -376,14 +369,14 @@ public class Converters {
         } else if (redisCommand == RedisCommand.PUBSUB) {
             if (objects.length >= 2) {
                 String subCommand = Utils.bytesToString(objects[1]);
-                if (subCommand.equalsIgnoreCase("NUMSUB")) {
+                if (subCommand.equalsIgnoreCase("NUMSUB") || subCommand.equalsIgnoreCase("SHARDNUMSUB")) {
                     if (objects.length >= 3) {
                         for (int i=2; i<objects.length; i++) {
                             byte[] convertedChannels = convert(commandContext, redisCommand, objects[i], convert);
                             objects[i] = convertedChannels;
                         }
                     }
-                } else if (subCommand.equalsIgnoreCase("CHANNELS")) {
+                } else if (subCommand.equalsIgnoreCase("CHANNELS") || subCommand.equalsIgnoreCase("SHARDCHANNELS")) {
                     if (objects.length == 2 && convert) {
                         byte[] pattern = convert(commandContext, redisCommand, Utils.stringToBytes("*"), true);
                         command.updateObjects(new byte[][]{objects[0], objects[1], pattern});
@@ -400,6 +393,20 @@ public class Converters {
         if (keyConverter == null) return;
         if (redisCommand.getCommandType() == RedisCommand.CommandType.TIME_SERIES) {
             timeSeriesKeyConvertReply(redisCommand, commandContext, command, reply);
+        } else if (redisCommand == RedisCommand.XREAD || redisCommand == RedisCommand.XREADGROUP) {
+            if (reply instanceof MultiBulkReply) {
+                Reply[] entries = ((MultiBulkReply) reply).getReplies();
+                if (entries != null) {
+                    for (Reply entry : entries) {
+                        if (entry instanceof MultiBulkReply) {
+                            Reply[] values = ((MultiBulkReply) entry).getReplies();
+                            if (values != null && values.length == 2) {
+                                reverseConvertKey(redisCommand, commandContext, values[0]);
+                            }
+                        }
+                    }
+                }
+            }
         } else if (redisCommand == RedisCommand.RANDOMKEY) {
             reverseConvertKey(redisCommand, commandContext, reply);
         } else if (redisCommand == RedisCommand.KEYS) {
@@ -437,7 +444,7 @@ public class Converters {
             byte[][] objects = command.getObjects();
             if (objects.length >= 2) {
                 String subCommand = Utils.bytesToString(objects[1]);
-                if (subCommand.equalsIgnoreCase("NUMSUB")) {
+                if (subCommand.equalsIgnoreCase("NUMSUB") || subCommand.equalsIgnoreCase("SHARDNUMSUB")) {
                     if (reply instanceof MultiBulkReply) {
                         Reply[] replies = ((MultiBulkReply) reply).getReplies();
                         if (replies != null) {
@@ -448,7 +455,7 @@ public class Converters {
                             }
                         }
                     }
-                } else if (subCommand.equalsIgnoreCase("CHANNELS")) {
+                } else if (subCommand.equalsIgnoreCase("CHANNELS") || subCommand.equalsIgnoreCase("SHARDCHANNELS")) {
                     if (reply instanceof MultiBulkReply) {
                         Reply[] replies = ((MultiBulkReply) reply).getReplies();
                         if (replies != null) {
@@ -1171,6 +1178,26 @@ public class Converters {
         if (zSetConverter == null) return;
         byte[][] objects = command.getObjects();
         switch (redisCommand) {
+            case ZUNION:
+            case ZINTER:
+            case ZDIFF:
+                int count = countedArgumentCount(objects, 1, 2, 1);
+                if (count > 0 && reply instanceof MultiBulkReply) {
+                    if (argumentSection(objects, "WITHSCORES", 2 + count) >= 0) {
+                        updateZSetWithScores(commandContext, objects[2], (MultiBulkReply) reply);
+                    } else {
+                        Reply[] members = ((MultiBulkReply) reply).getReplies();
+                        if (members != null) {
+                            for (Reply member : members) {
+                                if (member instanceof BulkReply && ((BulkReply) member).getRaw() != null) {
+                                    byte[] value = zSetConverter.valueReverseConvert(commandContext, objects[2], ((BulkReply) member).getRaw());
+                                    ((BulkReply) member).updateRaw(value);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
             case ZMPOP:
             case BZMPOP:
                 if (reply instanceof MultiBulkReply) {

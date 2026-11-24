@@ -56,6 +56,12 @@ public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {
     }
 
     @Override
+    public boolean isTimeSeriesLabelQuerySupported(CommandContext commandContext) {
+        return commandContext.getBid() == null || commandContext.getBgroup() == null
+                || commandContext.getBid() <= 0 || disable(commandContext.getBid(), commandContext.getBgroup());
+    }
+
+    @Override
     public byte[] convert(CommandContext commandContext, RedisCommand redisCommand, byte[] originalKey) {
         if (commandContext.getBid() == null || commandContext.getBgroup() == null || commandContext.getBid() <= 0) {
             return originalKey;
@@ -159,6 +165,9 @@ public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {
      * @return true if key matches the prefix, otherwise false
      */
     private boolean isPrefixMatch(byte[] key, byte[] prefix) {
+        if (key.length < prefix.length) {
+            return false;
+        }
         boolean prefixMatch = true;
         for (int i = 0; i < prefix.length; i++) {
             if (prefix[i] != key[i]) {

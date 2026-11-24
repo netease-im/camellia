@@ -16,7 +16,13 @@
 * 完善converter兼容性说明：搬移及STORE要求编码规则兼容，Hash自增值必须保持数字格式，HSTRLEN返回编码后的存储长度
 * 明确`SORT/SORT_RO`只支持主key及适用的STORE目标key转换，不支持通过BY/GET模式引用外部key；`BY nosort`和`GET #`可用，排序不适配元素value converter
 
+### 兼容性变化
+* converter异常改为拒绝：请求失败返回`ERR request conversion failed`且不发送后端，响应失败返回`ERR reply conversion failed`，取消原有异常后透传行为；自定义converter应返回输入值来表示保持原样
+* key converter默认拒绝无法按命名空间隔离的TimeSeries标签查询`TS.QUERYINDEX/QUERYLABELS/MGET/MRANGE/MREVRANGE`；未配置key converter或内置租户转换关闭时保留原行为，自定义converter可通过`isTimeSeriesLabelQuerySupported`显式声明支持
+* `XREAD/XREADGROUP`和分片Pub/Sub返回客户端key/频道名，`ZUNION/ZINTER/ZDIFF`返回解码后的member；要求参与ZSet的成员编码兼容
+
 ### fix
+* 补齐`SHARDCHANNELS/SHARDNUMSUB`频道转换，修复空订阅确认中的null频道处理和namespace短hashtag越界；补齐Stream返回key逆转换，按选项语法解析group/consumer及blocking标志；补齐ZSet集合运算member解码，并明确SCAN MATCH和字典序范围的编码限制
 * 修复命名空间converter下发现命令的隔离问题：`PUBSUB CHANNELS`未指定pattern时补充转换后的`*`；key converter默认拒绝无法按命名空间筛选的`RANDOMKEY`，内置converter在租户转换关闭时允许透传，自定义converter可通过`isRandomKeySupported`显式声明支持
 * 修复`LPOP/RPOP/LINDEX/SPOP/SRANDMEMBER/ZRANDMEMBER`将nil传入converter而可能污染共享nil响应的问题，以及旧`BZPOPMIN/MAX`超时nil数组的空指针问题
 * 补齐`SET IFEQ/IFNE`比较值转换，保留过期参数和`IFDEQ/IFDNE`的digest参数原样
@@ -27,7 +33,7 @@
 * 修复`HRANDFIELD WITHVALUES`混用field/value逆转换器及空值处理，修复`HSCAN NOVALUES`将field数组误当field/value对解析的问题
 * 修复`SET ... GET`遗漏旧值逆转换，以及`ZRANK/ZREVRANK WITHSCORE`误转换选项的问题
 * 修复`SORT STORE`及`GEORADIUS/GEORADIUSBYMEMBER STORE/STOREDIST`遗漏目标key转换的问题，同时修正写命令分类，使源/目标key参与分片资源和集群slot校验
-* 补充converter历史问题回归及STORE路由测试：80项相关单测、20项真实Redis单实例/集群场景全部通过
+* 补充converter历史问题回归及STORE路由测试：97项相关单测、30项真实Redis单实例/集群场景全部通过
 
 
 # 1.4.3（2026/10/22）

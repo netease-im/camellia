@@ -128,6 +128,22 @@ def run(env):
             equal(values.cmd(name, *prefix, 2, first, second, side, "COUNT", 2), [second.encode(), payload])
             equal(values.cmd(name, *prefix, 2, first, second, side), None)
 
+    def stream_keys():
+        item = values.cmd("XADD", "reply-stream", "*", "field", "value")
+        expected = [[b"reply-stream", [[item, [b"field", b"value"]]]]]
+        equal(values.cmd("XREAD", "STREAMS", "reply-stream", 0), expected)
+        for group, consumer in [("STREAMS", "BLOCK"), ("BLOCK", "STREAMS")]:
+            values.cmd("XGROUP", "CREATE", "reply-stream", group, 0)
+            equal(values.cmd("XREADGROUP", "GROUP", group, consumer, "STREAMS", "reply-stream", ">"), expected)
+
+    def zset_algebra():
+        values.cmd("ZADD", "algebra-a", 1, "a", 2, "b")
+        values.cmd("ZADD", "algebra-b", 3, "b", 4, "c")
+        equal(values.cmd("ZUNION", 2, "algebra-a", "algebra-b"), [b"a", b"c", b"b"])
+        equal(values.cmd("ZINTER", 2, "algebra-a", "algebra-b", "WITHSCORES"), [b"b", b"5"])
+        equal(values.cmd("ZDIFF", 2, "algebra-a", "algebra-b"), [b"a"])
+        equal(values.cmd("ZDIFF", 2, "algebra-a", "algebra-b", "WITHSCORES"), [b"a", b"1"])
+
     for name, test in [("Hash numeric increments", increments), ("HSTRLEN field conversion", strlen),
                        ("HRANDFIELD WITHVALUES and nil", random_fields), ("HSCAN NOVALUES", scan),
                        ("SET GET", set_get), ("ZRANK/ZREVRANK WITHSCORE", ranks),
@@ -136,7 +152,9 @@ def run(env):
                        ("SET IFEQ/IFNE and digest conditions", conditional_set),
                        ("Set algebra decoding and SMOVE member conversion", set_algebra),
                        ("Legacy List moves and nil responses", list_moves),
-                       ("Multi-key List/ZSet pops use the actual source", multi_pops)]:
+                       ("Multi-key List/ZSet pops use the actual source", multi_pops),
+                       ("Stream reply keys and option-like group/consumer names", stream_keys),
+                       ("ZSet algebra member decoding and scores", zset_algebra)]:
         env.check(name, test)
 
     env.check("BLMPOP wakeup decodes the actual source", lambda: env.blocking(
@@ -147,6 +165,12 @@ def run(env):
         values_port, direct, "BZMPOP", [2, 2, "blocked-zset-empty", "blocked-zset-source", "MIN", "COUNT", 2],
         lambda producer: producer.cmd("ZADD", "blocked-zset-source", 1, "a", 2, "b"),
         [b"blocked-zset-source", [[b"a", b"1"], [b"b", b"2"]]]))
+
+    values.cmd("XGROUP", "CREATE", "blocking-stream", "STREAMS", 0, "MKSTREAM")
+    env.check("XREADGROUP blocking wakeup preserves logical key", lambda: env.blocking(
+        values_port, direct, "XREADGROUP", ["GROUP", "STREAMS", "BLOCK", "BLOCK", 2000, "STREAMS", "blocking-stream", ">"],
+        lambda producer: producer.cmd("XADD", "blocking-stream", "1-0", "f", "v"),
+        [[b"blocking-stream", [[b"1-0", [b"f", b"v"]]]]]))
 
     nodes = [env.server(True) for _ in range(3)]
     with (env.directory / "cluster-create.log").open("w") as log:

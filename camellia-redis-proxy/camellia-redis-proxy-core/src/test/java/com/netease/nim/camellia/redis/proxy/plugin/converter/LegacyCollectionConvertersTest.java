@@ -135,6 +135,37 @@ public class LegacyCollectionConvertersTest {
         return command(name, "2", "first", "second", side, "COUNT", "2");
     }
 
+    @Test
+    public void zsetAlgebraDecodesMembersWithFirstSourceAndPreservesScores() {
+        for (String name : new String[]{"ZUNION", "ZINTER", "ZDIFF"}) {
+            for (boolean withScores : new boolean[]{false, true}) {
+                Command command = withScores ? command(name, "2", "source", "other", "WITHSCORES")
+                        : command(name, "2", "source", "other");
+                Converters converters = converters("k:source");
+                converters.convertRequest(command);
+                BulkReply member = bulk("v:a");
+                BulkReply score = bulk("1.25");
+                MultiBulkReply reply = withScores ? array(member, score) : array(member);
+                converters.convertReply(command, reply);
+                Assert.assertEquals("a", member.toString());
+                if (withScores) {
+                    Assert.assertSame(score, reply.getReplies()[1]);
+                    Assert.assertEquals("1.25", score.toString());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void zsetSourceNamedWithScoresIsNotAnOptionWithoutKeyConversion() {
+        ConverterConfig config = new ConverterConfig();
+        config.setzSetConverter(new Values("WITHSCORES"));
+        Converters converters = new Converters(config);
+        MultiBulkReply reply = array(bulk("v:a"));
+        converters.convertReply(command("ZUNION", "1", "WITHSCORES"), reply);
+        Assert.assertEquals("a", reply.getReplies()[0].toString());
+    }
+
     private static Converters converters(String expectedKey) {
         ConverterConfig config = new ConverterConfig();
         config.setKeyConverter(new KeyConverter() {

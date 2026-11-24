@@ -118,13 +118,7 @@ public class Command {
                 }
             }
         } else if (redisCommand == RedisCommand.XREAD || redisCommand == RedisCommand.XREADGROUP) {
-            for (byte[] object : getObjects()) {
-                String string = new String(object, Utils.utf8Charset);
-                if (string.equalsIgnoreCase(RedisKeyword.BLOCK.name())) {
-                    this.blocking = true;
-                    break;
-                }
-            }
+            this.blocking = KeyParser.streamOptionIndex(redisCommand, objects, "BLOCK") >= 0;
         }
         hasCheckBlocking = true;
         return this.blocking;

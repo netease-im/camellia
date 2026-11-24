@@ -121,8 +121,10 @@ public class PubSubUtils {
                                 Reply reply1 = replies[1];
                                 if (reply1 instanceof BulkReply) {
                                     byte[] raw = ((BulkReply) reply1).getRaw();
-                                    byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
-                                    ((BulkReply) reply1).updateRaw(convert);
+                                    if (raw != null) {
+                                        byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
+                                        ((BulkReply) reply1).updateRaw(convert);
+                                    }
                                 }
                             }
                         } else if (type.equalsIgnoreCase("pmessage")) {
@@ -130,8 +132,10 @@ public class PubSubUtils {
                                 Reply reply1 = replies[1];
                                 if (reply1 instanceof BulkReply) {
                                     byte[] raw = ((BulkReply) reply1).getRaw();
-                                    byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
-                                    ((BulkReply) reply1).updateRaw(convert);
+                                    if (raw != null) {
+                                        byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
+                                        ((BulkReply) reply1).updateRaw(convert);
+                                    }
                                 }
                                 Reply reply2 = replies[2];
                                 if (reply2 instanceof BulkReply) {

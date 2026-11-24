@@ -71,7 +71,7 @@ python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redi
 覆盖 Hash 自增参数、HSTRLEN field、HRANDFIELD WITHVALUES、HSCAN NOVALUES、SET GET/IFEQ/IFNE、ZRANK/ZREVRANK WITHSCORE、nil 响应、Set 运算、旧 List 搬移、多 key pop 及阻塞唤醒，以及 SORT/GEORADIUS/GEORADIUSBYMEMBER 的目标 key 转换、前缀外数据保护和集群同 slot/跨 slot 路由。
 HSTRLEN 校验的是编码后存储值的长度；Hash 自增直接预置数值，避免将 value 编码限制误判为 field 转换问题。SORT 仅验证主 key 和 STORE 目标，不验证外部 BY/GET key 模式，限制见 [converter 文档](../../../../../../docs/camellia-redis-proxy/plugin/converter.md)。
 
-2026-11-24：真实 Redis 8.12.0 上 converter 回归脚本 15 项场景、下方命名空间脚本 5 项场景全部通过；相关 Maven 单测 80 项通过（0 失败、0 错误）。
+2026-11-24：真实 Redis 8.12.0 上 converter 回归脚本 18 项场景、命名空间脚本（含 TimeSeries）9 项场景、异常脚本 3 项场景全部通过；相关 Maven 单测 97 项通过（0 失败、0 错误）。
 
 
 ## 命名空间发现命令回归
@@ -84,4 +84,18 @@ python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redi
   --classpath-file /tmp/camellia-e2e-classpath \
   --java-home /path/to/jdk-21 \
   --report /tmp/camellia-namespace-regressions.json
+```
+
+增加 `--timeseries-module /path/to/redistimeseries.so` 可额外验证 TimeSeries 标签查询的租户隔离限制。启用 namespace 时这些全库查询返回错误，关闭转换时仍可执行，显式 key 的时序读写保留。
+
+## Converter 异常回归
+
+验证 key 转换异常时不读取/覆盖原始 key、value 转换异常时不写入部分转换的数据，以及解码异常时返回错误。行为变化及重试注意事项见 converter 文档。
+
+```bash
+python3 camellia-redis-proxy/camellia-redis-proxy-core/src/test/integration/redis812/failure_regressions.py \
+  --redis-home /path/to/redis-8.12.0 \
+  --classpath-file /tmp/camellia-e2e-classpath \
+  --java-home /path/to/jdk-21 \
+  --report /tmp/camellia-failure-regressions.json
 ```
