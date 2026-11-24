@@ -17,6 +17,17 @@ import java.util.stream.Collectors;
 public class MoveCommandConvertersTest {
 
     @Test
+    public void zaddConvertsEachMemberExactlyOnceWithOrWithoutOptions() {
+        Converters converters = converters(true);
+        Command single = command("ZADD", "source", "1.25", "a");
+        converters.convertRequest(single);
+        assertArguments(single, "ZADD", "key:source", "1.25", "value:a");
+        Command multiple = command("ZADD", "source", "NX", "1.25", "a", "2.5", "b");
+        converters.convertRequest(multiple);
+        assertArguments(multiple, "ZADD", "key:source", "NX", "1.25", "value:a", "2.5", "value:b");
+    }
+
+    @Test
     public void bothKeysConvertAndRestoreWithoutTouchingOtherArguments() {
         Converters converters = new Converters(config());
         for (String[] args : requests()) {

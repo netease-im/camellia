@@ -1027,10 +1027,6 @@ public class Converters {
                 }
                 break;
             case ZADD:
-                if (objects.length == 4) {
-                    byte[] bytes = zSetConverter.valueConvert(commandContext, objects[1], objects[3]);
-                    objects[3] = bytes;
-                }
                 if (objects.length >= 4) {
                     for (int i = 2; i < objects.length - 1; i++) {
                         byte[] object = objects[i];

@@ -1,0 +1,260 @@
+{
+  "redis": "/tmp/camellia-redis-audit/redis-8.12.0/src",
+  "modules": [
+    "/private/tmp/camellia-redis-audit/redis-8.12.0/modules/redisbloom/src/bin/macos-x64-release/redisbloom.so",
+    "/private/tmp/camellia-redis-audit/redis-8.12.0/modules/redistimeseries/src/bin/macos-x64-release/redistimeseries.so",
+    "/private/tmp/camellia-json-target/release/librejson.dylib"
+  ],
+  "inventory": {
+    "redis_version": "8.12.0",
+    "loaded_modules": [
+      {
+        "name": "timeseries",
+        "version": 81200
+      },
+      {
+        "name": "vectorset",
+        "version": 1
+      },
+      {
+        "name": "bf",
+        "version": 81200
+      },
+      {
+        "name": "ReJSON",
+        "version": 81200
+      }
+    ]
+  },
+  "logs": "/var/folders/_c/c18km3gd51n2bkj4htx4ckn00000gp/T/camellia-redis812-5dt6xn9u",
+  "results": [
+    {
+      "name": "String: MSETEX/DELEX/INCREX/DIGEST + binary value conversion",
+      "status": "PASS",
+      "seconds": 0.017
+    },
+    {
+      "name": "Hash: all 12 new commands + fields/values/null replies",
+      "status": "PASS",
+      "seconds": 0.012
+    },
+    {
+      "name": "Set: all 12 new commands + member conversion",
+      "status": "PASS",
+      "seconds": 0.008
+    },
+    {
+      "name": "Stream: all 5 new commands + key conversion",
+      "status": "PASS",
+      "seconds": 0.005
+    },
+    {
+      "name": "Array: all 18 commands + underlying key inspection",
+      "status": "PASS",
+      "seconds": 0.008
+    },
+    {
+      "name": "List/ZSet moves: member conversion and destination data",
+      "status": "PASS",
+      "seconds": 0.003
+    },
+    {
+      "name": "BLMOVEM: blocking connection isolation and wakeup",
+      "status": "PASS",
+      "seconds": 0.031
+    },
+    {
+      "name": "BZMOVE: blocking connection isolation and nested member decoding",
+      "status": "PASS",
+      "seconds": 0.026
+    },
+    {
+      "name": "Blocking timeout produces nil and keeps connection usable",
+      "status": "PASS",
+      "seconds": 0.098
+    },
+    {
+      "name": "Vector Set: real module command/converter checks",
+      "status": "PASS",
+      "seconds": 0.01
+    },
+    {
+      "name": "CMS/Top-K/t-digest: real module command/converter checks",
+      "status": "PASS",
+      "seconds": 0.014
+    },
+    {
+      "name": "JSON: real module command/converter checks",
+      "status": "PASS",
+      "seconds": 0.002
+    },
+    {
+      "name": "Search",
+      "status": "SKIP",
+      "reason": "Upstream module not loaded"
+    },
+    {
+      "name": "TimeSeries: real module command/converter checks",
+      "status": "PASS",
+      "seconds": 0.043
+    },
+    {
+      "name": "3-master cluster: same-slot success/cross-slot rejection/physical owner",
+      "status": "PASS",
+      "seconds": 0.017
+    },
+    {
+      "name": "Cluster BZMOVE: correct node, isolated connection, wakeup",
+      "status": "PASS",
+      "seconds": 0.029
+    },
+    {
+      "name": "Cluster TimeSeries: same-slot/cross-slot and TS.READ BLOCK wakeup",
+      "status": "PASS",
+      "seconds": 0.034
+    }
+  ],
+  "commands_executed": [
+    "ARCOUNT",
+    "ARDEL",
+    "ARDELRANGE",
+    "ARGET",
+    "ARGETRANGE",
+    "ARGREP",
+    "ARINFO",
+    "ARINSERT",
+    "ARLASTITEMS",
+    "ARLEN",
+    "ARMGET",
+    "ARMSET",
+    "ARNEXT",
+    "AROP",
+    "ARRING",
+    "ARSCAN",
+    "ARSEEK",
+    "ARSET",
+    "BITRANGEINTARRAY",
+    "BLMOVEM",
+    "BZMOVE",
+    "CMS.INCRBY",
+    "CMS.INFO",
+    "CMS.INITBYDIM",
+    "CMS.INITBYPROB",
+    "CMS.MERGE",
+    "CMS.QUERY",
+    "DELEX",
+    "DIGEST",
+    "HEXPIRE",
+    "HEXPIREAT",
+    "HEXPIRETIME",
+    "HGETDEL",
+    "HGETEX",
+    "HPERSIST",
+    "HPEXPIRE",
+    "HPEXPIREAT",
+    "HPEXPIRETIME",
+    "HPTTL",
+    "HSETEX",
+    "HTTL",
+    "INCREX",
+    "JSON.MERGE",
+    "JSON.MSET",
+    "LMOVEM",
+    "MSETEX",
+    "SADDEX",
+    "SDIFFCARD",
+    "SEXPIRE",
+    "SEXPIREAT",
+    "SEXPIRETIME",
+    "SPERSIST",
+    "SPEXPIRE",
+    "SPEXPIREAT",
+    "SPEXPIRETIME",
+    "SPTTL",
+    "STTL",
+    "SUNIONCARD",
+    "TDIGEST.ADD",
+    "TDIGEST.BYRANK",
+    "TDIGEST.BYREVRANK",
+    "TDIGEST.CDF",
+    "TDIGEST.CREATE",
+    "TDIGEST.INFO",
+    "TDIGEST.MAX",
+    "TDIGEST.MERGE",
+    "TDIGEST.MIN",
+    "TDIGEST.QUANTILE",
+    "TDIGEST.RANK",
+    "TDIGEST.RESET",
+    "TDIGEST.REVRANK",
+    "TDIGEST.TRIMMED_MEAN",
+    "TOPK.ADD",
+    "TOPK.COUNT",
+    "TOPK.INCRBY",
+    "TOPK.INFO",
+    "TOPK.LIST",
+    "TOPK.QUERY",
+    "TOPK.RESERVE",
+    "TS.ADD",
+    "TS.ALTER",
+    "TS.CREATE",
+    "TS.CREATERULE",
+    "TS.DECRBY",
+    "TS.DEL",
+    "TS.DELETERULE",
+    "TS.GET",
+    "TS.INCRBY",
+    "TS.INFO",
+    "TS.MADD",
+    "TS.MGET",
+    "TS.MRANGE",
+    "TS.MREVRANGE",
+    "TS.NRANGE",
+    "TS.NREVRANGE",
+    "TS.QUERYINDEX",
+    "TS.QUERYLABELS",
+    "TS.RANGE",
+    "TS.READ",
+    "TS.REVRANGE",
+    "VADD",
+    "VCARD",
+    "VDIM",
+    "VEMB",
+    "VGETATTR",
+    "VINFO",
+    "VISMEMBER",
+    "VLINKS",
+    "VRANDMEMBER",
+    "VRANGE",
+    "VREM",
+    "VSETATTR",
+    "VSIM",
+    "XACKDEL",
+    "XAUTOCLAIM",
+    "XCFGSET",
+    "XDELEX",
+    "XNACK",
+    "ZMOVE",
+    "ZMOVEMEMBER"
+  ],
+  "commands_not_executed": [
+    "FT.ALIASLIST",
+    "FT.HYBRID",
+    "FT.SUGADD",
+    "FT.SUGDEL",
+    "FT.SUGGET",
+    "FT.SUGLEN"
+  ],
+  "artifact_sha256": {
+    "/tmp/camellia-redis-audit/redis-8.12.0/src/redis-server": "70c71fd62eb2b96fe91dbd4deb4b79fab9f863eac47c1cb05462490a7ca11b98",
+    "/private/tmp/camellia-redis-audit/redis-8.12.0/modules/redisbloom/src/bin/macos-x64-release/redisbloom.so": "06f084bc33a4d9d65324b20ea691a6bf532d4ad28544af62741b890564406e2f",
+    "/private/tmp/camellia-redis-audit/redis-8.12.0/modules/redistimeseries/src/bin/macos-x64-release/redistimeseries.so": "24bb52599930c0f97ff1488ce48c983b9a5a2f64f5e10d010c242d2735ebe780",
+    "/private/tmp/camellia-json-target/release/librejson.dylib": "10accd5842dc27ca7ecc17fc466be661a5077b57962fbcbbaee90418a30fabd8"
+  },
+  "build_notes": [
+    "Redis 8.12.0 core includes Vector Set; RedisBloom and TimeSeries report version 81200.",
+    "Temporary module build copies skip shell-profile setup. GNU Make 4.4.1 was built under /tmp. TimeSeries was built with the macOS SDK C++ headers and C++17.",
+    "RedisJSON 8.12.0 was built using Rust 1.85.1, home 0.5.11 and time 0.3.44. A temporary copy of ijson uses std::str::from_utf8_unchecked instead of the newer primitive str associated function; no JSON command logic was changed.",
+    "Search C/C++ build completed, but its Rust dependencies include roaring 0.11.5 requiring Rust 1.90.0; no Search module binary was produced or loaded.",
+    "OpenSSL 4.1.0 was installed for the Search build; Homebrew upgraded ca-certificates to 2026-11-05. The extra Rust 1.94 download was stopped; the default Rust/JDK configuration was not changed."
+  ]
+}
